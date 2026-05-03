@@ -154,6 +154,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/basic_string.tcc \
   /usr/include/c++/15.2.1/bits/char_traits.h \
   /usr/include/c++/15.2.1/bits/charconv.h \
+  /usr/include/c++/15.2.1/bits/codecvt.h \
   /usr/include/c++/15.2.1/bits/concept_check.h \
   /usr/include/c++/15.2.1/bits/cpp_type_traits.h \
   /usr/include/c++/15.2.1/bits/cxxabi_forced.h \
@@ -162,6 +163,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/exception.h \
   /usr/include/c++/15.2.1/bits/exception_defines.h \
   /usr/include/c++/15.2.1/bits/exception_ptr.h \
+  /usr/include/c++/15.2.1/bits/fstream.tcc \
   /usr/include/c++/15.2.1/bits/functexcept.h \
   /usr/include/c++/15.2.1/bits/functional_hash.h \
   /usr/include/c++/15.2.1/bits/hash_bytes.h \
@@ -235,6 +237,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/ext/numeric_traits.h \
   /usr/include/c++/15.2.1/ext/string_conversions.h \
   /usr/include/c++/15.2.1/ext/type_traits.h \
+  /usr/include/c++/15.2.1/fstream \
   /usr/include/c++/15.2.1/initializer_list \
   /usr/include/c++/15.2.1/ios \
   /usr/include/c++/15.2.1/iosfwd \
@@ -271,8 +274,10 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/typeinfo \
   /usr/include/c++/15.2.1/vector \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cpu_defines.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
@@ -503,8 +508,6 @@ app: /usr/lib/Scrt1.o \
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/tsxldtrkintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/tbmintrin.h:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/smmintrin.h:
@@ -575,8 +578,6 @@ app: /usr/lib/Scrt1.o \
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512cdintrin.h:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bitalgvlintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bf16vlintrin.h:
@@ -637,8 +638,6 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/vk_video/vulkan_video_codec_av1std.h:
 
-/usr/include/time.h:
-
 /usr/include/sys/types.h:
 
 /usr/include/sys/single_threaded.h:
@@ -693,6 +692,12 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512cdintrin.h:
+
+/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h:
+
+/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h:
+
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h:
 
 /usr/include/c++/15.2.1/typeinfo:
@@ -720,6 +725,8 @@ app: /usr/lib/Scrt1.o \
 /usr/include/c++/15.2.1/tr1/hypergeometric.tcc:
 
 /usr/include/c++/15.2.1/tr1/gamma.tcc:
+
+/usr/include/c++/15.2.1/tr1/exp_integral.tcc:
 
 /usr/include/bits/struct_rwlock.h:
 
@@ -829,6 +836,10 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/c++/15.2.1/bits/cpp_type_traits.h:
 
+/usr/include/time.h:
+
+/usr/include/c++/15.2.1/bits/fstream.tcc:
+
 /usr/include/SDL2/SDL_timer.h:
 
 /usr/include/bits/atomic_wide_counter.h:
@@ -842,6 +853,8 @@ app: /usr/lib/Scrt1.o \
 /usr/include/c++/15.2.1/bits/locale_facets.tcc:
 
 /usr/include/asm/posix_types_64.h:
+
+/usr/include/c++/15.2.1/fstream:
 
 /usr/include/bits/time.h:
 
@@ -1201,6 +1214,10 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/c++/15.2.1/bits/charconv.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/tbmintrin.h:
+
+/usr/include/c++/15.2.1/bits/codecvt.h:
+
 /usr/include/c++/15.2.1/bits/cxxabi_init_exception.h:
 
 /usr/include/c++/15.2.1/bits/erase_if.h:
@@ -1396,5 +1413,3 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2-512mediaintrin.h:
 
 /usr/include/c++/15.2.1/tr1/bessel_function.tcc:
-
-/usr/include/c++/15.2.1/tr1/exp_integral.tcc:
