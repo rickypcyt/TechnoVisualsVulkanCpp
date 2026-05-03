@@ -125,6 +125,8 @@ private:
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
+        std::cout << "[GPU] Found " << deviceCount << " physical devices" << std::endl;
+
         if (deviceCount == 0) {
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
         }
@@ -136,6 +138,12 @@ private:
             if (isDeviceSuitable(device)) {
                 physicalDevice = device;
                 queueFamilyIndices = findQueueFamilies(device);
+
+                VkPhysicalDeviceProperties props;
+                vkGetPhysicalDeviceProperties(device, &props);
+                std::cout << "[GPU] Selected: " << props.deviceName << std::endl;
+                std::cout << "[GPU] Graphics queue family: " << queueFamilyIndices.graphicsFamily << std::endl;
+                std::cout << "[GPU] Present queue family: " << queueFamilyIndices.presentFamily << std::endl;
                 break;
             }
         }
@@ -298,6 +306,10 @@ private:
             imageCount = support.capabilities.maxImageCount;
         }
 
+        std::cout << "[Swapchain] Extent: " << extent.width << "x" << extent.height << std::endl;
+        std::cout << "[Swapchain] Image count: " << imageCount << std::endl;
+        std::cout << "[Swapchain] Format: " << surfaceFormat.format << std::endl;
+
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = surface;
@@ -324,10 +336,14 @@ private:
 
         swapchainImageFormat = surfaceFormat.format;
         swapchainExtent = extent;
+
+        std::cout << "[Swapchain] Created successfully" << std::endl;
     }
 
     void createImageViews() {
         swapchainImageViews.resize(swapchainImages.size());
+
+        std::cout << "[ImageViews] Creating " << swapchainImages.size() << " image views" << std::endl;
 
         for (size_t i = 0; i < swapchainImages.size(); ++i) {
             VkImageViewCreateInfo createInfo{};
@@ -349,6 +365,8 @@ private:
                 throw std::runtime_error("failed to create image views");
             }
         }
+
+        std::cout << "[ImageViews] Created successfully" << std::endl;
     }
 
     void createRenderPass() {
@@ -381,10 +399,15 @@ private:
         if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
             throw std::runtime_error("failed to create render pass");
         }
+
+        std::cout << "[RenderPass] Created successfully" << std::endl;
     }
 
     void createFramebuffers() {
         framebuffers.resize(swapchainImageViews.size());
+
+        std::cout << "[Framebuffers] Creating " << swapchainImageViews.size() << " framebuffers" << std::endl;
+        std::cout << "[Framebuffers] Size: " << swapchainExtent.width << "x" << swapchainExtent.height << std::endl;
 
         for (size_t i = 0; i < swapchainImageViews.size(); ++i) {
             VkImageView attachments[] = { swapchainImageViews[i] };
@@ -402,6 +425,8 @@ private:
                 throw std::runtime_error("failed to create framebuffer");
             }
         }
+
+        std::cout << "[Framebuffers] Created successfully" << std::endl;
     }
 
     void createCommandPool() {
@@ -413,10 +438,14 @@ private:
         if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create command pool");
         }
+
+        std::cout << "[CommandPool] Created successfully with queue family " << queueFamilyIndices.graphicsFamily << std::endl;
     }
 
     void createCommandBuffers() {
         commandBuffers.resize(framebuffers.size());
+
+        std::cout << "[CommandBuffers] Allocating " << commandBuffers.size() << " command buffers" << std::endl;
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -452,6 +481,8 @@ private:
                 throw std::runtime_error("failed to record command buffer");
             }
         }
+
+        std::cout << "[CommandBuffers] Recorded successfully" << std::endl;
     }
 
     void createSyncObjects() {
@@ -467,14 +498,26 @@ private:
             vkCreateFence(device, &fenceInfo, nullptr, &inFlightFence) != VK_SUCCESS) {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
         }
+
+        std::cout << "[SyncObjects] Created semaphores and fence" << std::endl;
     }
 
     void drawFrame() {
+        static uint32_t frameCount = 0;
+
         vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
         vkResetFences(device, 1, &inFlightFence);
 
         uint32_t imageIndex;
-        vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            std::cout << "[Swapchain] OUT_OF_DATE - recreating" << std::endl;
+            recreateSwapchain();
+            return;
+        } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("failed to acquire swapchain image!");
+        }
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -503,7 +546,20 @@ private:
         presentInfo.pSwapchains = &swapchain;
         presentInfo.pImageIndices = &imageIndex;
 
-        vkQueuePresentKHR(presentQueue, &presentInfo);
+        result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+            std::cout << "[Swapchain] Present OUT_OF_DATE/SUBOPTIMAL - recreating" << std::endl;
+            recreateSwapchain();
+            return;
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swapchain image!");
+        }
+
+        frameCount++;
+        if (frameCount % 60 == 0) {
+            std::cout << "[Render] Frame " << frameCount << " - Rendering to swapchain image " << imageIndex << std::endl;
+        }
     }
 
     void mainLoop() {
@@ -514,16 +570,54 @@ private:
                 if (event.type == SDL_QUIT) {
                     running = false;
                 } else if (event.type == SDL_WINDOWEVENT) {
-                    std::cout << "[App] SDL window event " << event.window.event << std::endl;
+                    if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
+                        event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                        std::cout << "[App] Window resized to " << event.window.data1 << "x" << event.window.data2 << std::endl;
+                        recreateSwapchain();
+                    }
                 }
             }
             drawFrame();
         }
     }
 
+    void cleanupSwapchain() {
+        vkDeviceWaitIdle(device);
+
+        for (auto framebuffer : framebuffers) {
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
+        }
+        framebuffers.clear();
+
+        for (auto imageView : swapchainImageViews) {
+            vkDestroyImageView(device, imageView, nullptr);
+        }
+        swapchainImageViews.clear();
+
+        if (swapchain != VK_NULL_HANDLE) {
+            vkDestroySwapchainKHR(device, swapchain, nullptr);
+            swapchain = VK_NULL_HANDLE;
+        }
+    }
+
+    void recreateSwapchain() {
+        std::cout << "[Swapchain] Recreating swapchain..." << std::endl;
+        vkDeviceWaitIdle(device);
+        cleanupSwapchain();
+
+        createSwapchain();
+        createImageViews();
+        createFramebuffers();
+        createCommandBuffers();
+
+        std::cout << "[Swapchain] Recreated successfully" << std::endl;
+    }
+
     void cleanup() {
         if (device != VK_NULL_HANDLE) {
             vkDeviceWaitIdle(device);
+
+            cleanupSwapchain();
 
             if (imageAvailableSemaphore != VK_NULL_HANDLE) {
                 vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
@@ -537,17 +631,8 @@ private:
             if (commandPool != VK_NULL_HANDLE) {
                 vkDestroyCommandPool(device, commandPool, nullptr);
             }
-            for (auto framebuffer : framebuffers) {
-                vkDestroyFramebuffer(device, framebuffer, nullptr);
-            }
             if (renderPass != VK_NULL_HANDLE) {
                 vkDestroyRenderPass(device, renderPass, nullptr);
-            }
-            for (auto imageView : swapchainImageViews) {
-                vkDestroyImageView(device, imageView, nullptr);
-            }
-            if (swapchain != VK_NULL_HANDLE) {
-                vkDestroySwapchainKHR(device, swapchain, nullptr);
             }
             vkDestroyDevice(device, nullptr);
         }
