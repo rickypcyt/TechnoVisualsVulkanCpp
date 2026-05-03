@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/app.dir/link.d CMakeFiles/app.dir/main.cpp.o -o app  /usr/lib/libvulkan.so /usr/lib/libSDL2-2.0.so.0.3200.68
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/app.dir/link.d CMakeFiles/app.dir/main.cpp.o -o app  /usr/lib/libvulkan.so /usr/lib/libSDL2-2.0.so.0.3200.68 /usr/lib/libglm.a

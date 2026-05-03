@@ -2803,3 +2803,239 @@ events:
         - "/usr/pkg"
         - "/opt"
 ...
+
+---
+events:
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "CMakeLists.txt:8 (find_package)"
+    name: "glm"
+    configs:
+      -
+        filename: "glm.cps"
+        kind: "cps"
+      -
+        filename: "glmConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "glm-config.cmake"
+        kind: "cmake"
+    version_request:
+      exact: false
+    settings:
+      required: "required_explicit"
+      quiet: false
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "glm"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+    found:
+      path: "/usr/lib/cmake/glm/glmConfig.cmake"
+      mode: "config"
+      version: "1.0.3"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+...

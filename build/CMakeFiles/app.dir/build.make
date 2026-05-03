@@ -98,6 +98,7 @@ app: CMakeFiles/app.dir/build.make
 app: CMakeFiles/app.dir/compiler_depend.ts
 app: /usr/lib/libvulkan.so
 app: /usr/lib/libSDL2-2.0.so.0.3200.68
+app: /usr/lib/libglm.a
 app: CMakeFiles/app.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable app"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/app.dir/link.txt --verbose=$(VERBOSE)

@@ -5,6 +5,7 @@ app: \
   CMakeFiles/app.dir/main.cpp.o \
   /usr/lib/libvulkan.so \
   /usr/lib/libSDL2-2.0.so.0.3200.68 \
+  /usr/lib/libglm.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libstdc++.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libm.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libm.so \
@@ -44,6 +45,8 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/lib/libvulkan.so:
 
 /usr/lib/libSDL2-2.0.so.0.3200.68:
+
+/usr/lib/libglm.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libstdc++.so:
 
