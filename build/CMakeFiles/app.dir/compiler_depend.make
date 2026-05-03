@@ -143,6 +143,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/bits/wordsize.h \
   /usr/include/bits/xopen_lim.h \
   /usr/include/c++/15.2.1/algorithm \
+  /usr/include/c++/15.2.1/array \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
   /usr/include/c++/15.2.1/bits/algorithmfwd.h \
@@ -222,10 +223,12 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/cerrno \
   /usr/include/c++/15.2.1/clocale \
   /usr/include/c++/15.2.1/cmath \
+  /usr/include/c++/15.2.1/compare \
   /usr/include/c++/15.2.1/concepts \
   /usr/include/c++/15.2.1/cstddef \
   /usr/include/c++/15.2.1/cstdio \
   /usr/include/c++/15.2.1/cstdlib \
+  /usr/include/c++/15.2.1/cstring \
   /usr/include/c++/15.2.1/cwchar \
   /usr/include/c++/15.2.1/cwctype \
   /usr/include/c++/15.2.1/debug/assertions.h \
@@ -666,8 +669,6 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/limits.h:
 
-/usr/include/inttypes.h:
-
 /usr/include/gnu/stubs.h:
 
 /usr/include/gnu/stubs-64.h:
@@ -727,6 +728,12 @@ app: /usr/lib/Scrt1.o \
 /usr/include/c++/15.2.1/tr1/gamma.tcc:
 
 /usr/include/c++/15.2.1/tr1/exp_integral.tcc:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2-512mediaintrin.h:
+
+/usr/include/c++/15.2.1/tr1/bessel_function.tcc:
+
+/usr/include/c++/15.2.1/string_view:
 
 /usr/include/bits/struct_rwlock.h:
 
@@ -880,6 +887,14 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/c++/15.2.1/ios:
 
+/usr/include/vulkan/vk_platform.h:
+
+/usr/include/c++/15.2.1/system_error:
+
+/usr/include/bits/stdint-uintn.h:
+
+/usr/include/asm/errno.h:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/pkuintrin.h:
 
 /usr/include/asm/bitsperlong.h:
@@ -1019,14 +1034,6 @@ app: /usr/lib/Scrt1.o \
 /usr/include/SDL2/SDL_thread.h:
 
 /usr/include/c++/15.2.1/bits/new_allocator.h:
-
-/usr/include/vulkan/vk_platform.h:
-
-/usr/include/bits/stdint-uintn.h:
-
-/usr/include/asm/errno.h:
-
-/usr/include/c++/15.2.1/system_error:
 
 /usr/include/SDL2/SDL_assert.h:
 
@@ -1204,6 +1211,8 @@ app: /usr/lib/Scrt1.o \
 
 /usr/include/SDL2/SDL_vulkan.h:
 
+/usr/include/c++/15.2.1/array:
+
 /usr/include/c++/15.2.1/bits/algorithmfwd.h:
 
 /usr/include/c++/15.2.1/bit:
@@ -1364,7 +1373,13 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/cstddef:
 
+/usr/include/inttypes.h:
+
+/usr/include/c++/15.2.1/cstring:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vlintrin.h:
+
+/usr/include/c++/15.2.1/compare:
 
 /usr/include/c++/15.2.1/cwctype:
 
@@ -1407,9 +1422,3 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fp16intrin.h:
 
 /usr/include/c++/15.2.1/string:
-
-/usr/include/c++/15.2.1/string_view:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2-512mediaintrin.h:
-
-/usr/include/c++/15.2.1/tr1/bessel_function.tcc:
