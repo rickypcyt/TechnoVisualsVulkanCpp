@@ -18,6 +18,78 @@ const int WIDTH = 800;
 const int HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
+
+const std::vector<const char*> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"
+};
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+    VkDebugUtilsMessageTypeFlagsEXT type,
+    const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+    void* userData) {
+
+    std::cerr << "[VULKAN] " << callbackData->pMessage << std::endl;
+    return VK_FALSE;
+}
+
+bool checkValidationLayerSupport() {
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    for (const char* layerName : validationLayers) {
+        bool found = false;
+
+        for (const auto& layerProps : availableLayers) {
+            if (strcmp(layerName, layerProps.layerName) == 0) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) return false;
+    }
+
+    return true;
+}
+
+VkResult CreateDebugUtilsMessengerEXT(
+    VkInstance instance,
+    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator,
+    VkDebugUtilsMessengerEXT* pDebugMessenger) {
+
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+void DestroyDebugUtilsMessengerEXT(
+    VkInstance instance,
+    VkDebugUtilsMessengerEXT debugMessenger,
+    const VkAllocationCallbacks* pAllocator) {
+
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
 struct Vertex {
     float pos[2];
     float color[3];
@@ -35,6 +107,7 @@ public:
         initSDL();
         createWindow();
         createVulkanInstance();
+        setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
@@ -86,6 +159,7 @@ private:
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkFence> inFlightFences;
+    std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
     bool running = true;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
@@ -94,6 +168,7 @@ private:
     VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
     VkBuffer stagingBuffer = VK_NULL_HANDLE;
     VkDeviceMemory stagingBufferMemory = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -125,21 +200,69 @@ private:
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_2;
 
+        if (enableValidationLayers && !checkValidationLayerSupport()) {
+            throw std::runtime_error("validation layers not available");
+        }
+
+        std::vector<const char*> extensions = getRequiredExtensions();
+
+        VkInstanceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.pApplicationInfo = &appInfo;
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
+        createInfo.enabledLayerCount = enableValidationLayers ?
+            static_cast<uint32_t>(validationLayers.size()) : 0;
+        createInfo.ppEnabledLayerNames = enableValidationLayers ?
+            validationLayers.data() : nullptr;
+
+        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create instance!");
+        }
+    }
+
+    std::vector<const char*> getRequiredExtensions() {
         uint32_t extensionCount = 0;
         SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, nullptr);
 
         std::vector<const char*> extensions(extensionCount);
         SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, extensions.data());
 
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = extensionCount;
-        createInfo.ppEnabledExtensionNames = extensions.data();
-
-        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create instance!");
+        if (enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
+
+        return extensions;
+    }
+
+    void setupDebugMessenger() {
+        if (!enableValidationLayers) {
+            return;
+        }
+
+        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity =
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType =
+            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+
+        if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+            throw std::runtime_error("failed to set up debug messenger");
+        }
+    }
+
+    void destroyDebugMessenger() {
+        if (!enableValidationLayers || debugMessenger == VK_NULL_HANDLE) {
+            return;
+        }
+
+        DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+        debugMessenger = VK_NULL_HANDLE;
     }
 
     void createSurface() {
@@ -363,6 +486,8 @@ private:
 
         swapchainImageFormat = surfaceFormat.format;
         swapchainExtent = extent;
+
+        imagesInFlight.assign(swapchainImages.size(), VK_NULL_HANDLE);
 
         std::cout << "[Swapchain] Created successfully" << std::endl;
     }
@@ -704,6 +829,12 @@ private:
             throw std::runtime_error("failed to acquire swapchain image!");
         }
 
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        }
+
+        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
         VkSubmitInfo submitInfo{};
@@ -789,6 +920,8 @@ private:
             vkDestroySwapchainKHR(device, swapchain, nullptr);
             swapchain = VK_NULL_HANDLE;
         }
+
+        imagesInFlight.clear();
     }
 
     void cleanupPipeline() {
@@ -982,6 +1115,7 @@ private:
             vkDestroySurfaceKHR(instance, surface, nullptr);
         }
         if (instance != VK_NULL_HANDLE) {
+            destroyDebugMessenger();
             vkDestroyInstance(instance, nullptr);
         }
 
