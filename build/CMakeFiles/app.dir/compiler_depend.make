@@ -211,6 +211,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
   /usr/include/c++/15.2.1/bits/stl_multiset.h \
   /usr/include/c++/15.2.1/bits/stl_pair.h \
+  /usr/include/c++/15.2.1/bits/stl_relops.h \
   /usr/include/c++/15.2.1/bits/stl_set.h \
   /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
   /usr/include/c++/15.2.1/bits/stl_tree.h \
@@ -292,6 +293,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/type_traits \
   /usr/include/c++/15.2.1/typeinfo \
   /usr/include/c++/15.2.1/unordered_map \
+  /usr/include/c++/15.2.1/utility \
   /usr/include/c++/15.2.1/vector \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
@@ -757,6 +759,10 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vp2intersectintrin.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vnniintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vlintrin.h:
+
 /usr/include/c++/15.2.1/initializer_list:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2bf16intrin.h:
@@ -776,8 +782,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/glm/detail/type_mat2x3.inl:
 
 /usr/include/glm/detail/type_vec2.hpp:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vlintrin.h:
 
 /usr/include/c++/15.2.1/ext/aligned_buffer.h:
 
@@ -895,6 +899,14 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/hash_bytes.h:
 
+/usr/lib/libc.so:
+
+/usr/include/c++/15.2.1/bits/basic_string.h:
+
+/usr/include/asm-generic/types.h:
+
+/usr/include/glm/mat2x4.hpp:
+
 /usr/include/c++/15.2.1/bits/functional_hash.h:
 
 /usr/include/c++/15.2.1/bits/exception_defines.h:
@@ -962,6 +974,10 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/glm/detail/type_vec1.hpp:
 
 /usr/include/c++/15.2.1/iosfwd:
+
+/usr/include/c++/15.2.1/tr1/hypergeometric.tcc:
+
+/usr/include/bits/types/struct_timespec.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/sm3intrin.h:
 
@@ -1217,14 +1233,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/system_error:
 
-/usr/include/c++/15.2.1/ios:
-
-/usr/include/bits/thread-shared-types.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/amxfp16intrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2minmaxintrin.h:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/clflushoptintrin.h:
 
 /usr/include/c++/15.2.1/bits/invoke.h:
@@ -1298,8 +1306,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/bits/flt-eval-method.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/amxavx512intrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vnniintrin.h:
 
 /usr/include/glm/mat3x2.hpp:
 
@@ -1380,6 +1386,14 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/debug/debug.h:
 
 /usr/include/glm/ext/vector_bool3_precision.hpp:
+
+/usr/include/bits/thread-shared-types.h:
+
+/usr/include/c++/15.2.1/ios:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/amxfp16intrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2minmaxintrin.h:
 
 /usr/include/bits/time64.h:
 
@@ -1465,18 +1479,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/tr1/gamma.tcc:
 
-/usr/include/bits/types/struct_timespec.h:
-
-/usr/include/c++/15.2.1/tr1/hypergeometric.tcc:
-
-/usr/lib/libc.so:
-
-/usr/include/c++/15.2.1/bits/basic_string.h:
-
-/usr/include/asm-generic/types.h:
-
-/usr/include/glm/mat2x4.hpp:
-
 /usr/include/SDL2/SDL_gesture.h:
 
 /usr/include/c++/15.2.1/tr1/modified_bessel_func.tcc:
@@ -1508,6 +1510,8 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/typeinfo:
 
 /usr/include/c++/15.2.1/unordered_map:
+
+/usr/include/c++/15.2.1/utility:
 
 /usr/include/glm/detail/_vectorize.hpp:
 
@@ -1552,6 +1556,8 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/glm/detail/func_packing.inl:
 
 /usr/include/glm/detail/func_vector_relational.inl:
+
+/usr/include/c++/15.2.1/bits/stl_relops.h:
 
 /usr/include/glm/detail/qualifier.hpp:
 
