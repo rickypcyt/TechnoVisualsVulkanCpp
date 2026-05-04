@@ -109,10 +109,11 @@ const std::vector<Vertex> vertices = {
     {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 };
 
-struct UniformBufferObject {
+struct GlobalUBO {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
+    alignas(16) glm::vec4 resolutionTime;
 };
 
 struct FrameContext {
@@ -291,6 +292,7 @@ public:
         if (!initialized) {
             return;
         }
+
         VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
 
         VkRenderPassBeginInfo renderPassInfo{};
@@ -345,6 +347,81 @@ private:
     VkPipeline* pipeline = nullptr;
     VkPipelineLayout* pipelineLayout = nullptr;
     ResourceHandle* vertexBuffer = nullptr;
+    std::vector<VkDescriptorSet>* descriptorSets = nullptr;
+};
+
+class FullscreenPass : public RenderPass {
+public:
+    FullscreenPass() = default;
+
+    void setup(VkRenderPass* renderPass,
+               std::vector<VkFramebuffer>* framebuffers,
+               VkExtent2D* extent,
+               VkPipeline* pipeline,
+               VkPipelineLayout* pipelineLayout,
+               std::vector<VkDescriptorSet>* descriptorSets) {
+        this->renderPass = renderPass;
+        this->framebuffers = framebuffers;
+        this->extent = extent;
+        this->pipeline = pipeline;
+        this->pipelineLayout = pipelineLayout;
+        this->descriptorSets = descriptorSets;
+        initialized = true;
+    }
+
+    void execute(VkCommandBuffer commandBuffer, FrameContext& frame) override {
+        if (!initialized) {
+            return;
+        }
+
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = *renderPass;
+        renderPassInfo.framebuffer = (*framebuffers)[frame.swapchainImageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = *extent;
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            *pipelineLayout,
+            0,
+            1,
+            &((*descriptorSets)[frame.frameIndex]),
+            0,
+            nullptr
+        );
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(extent->width);
+        viewport.height = static_cast<float>(extent->height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = *extent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        vkCmdEndRenderPass(commandBuffer);
+    }
+
+private:
+    bool initialized = false;
+    VkRenderPass* renderPass = nullptr;
+    std::vector<VkFramebuffer>* framebuffers = nullptr;
+    VkExtent2D* extent = nullptr;
+    VkPipeline* pipeline = nullptr;
+    VkPipelineLayout* pipelineLayout = nullptr;
     std::vector<VkDescriptorSet>* descriptorSets = nullptr;
 };
 
@@ -490,6 +567,7 @@ public:
         createDescriptorSetLayout();
         createPipelineLayout();
         createGraphicsPipeline();
+        createFullscreenPipeline();
         createSwapchainFramebuffers();
         createCommandPool();
         createVertexBuffer();
@@ -504,7 +582,20 @@ public:
                             &pipelineLayout,
                             &vertexBufferHandle,
                             &descriptorSets);
-        renderer.passes.push_back(&trianglePass);
+
+        fullscreenPass.setup(&renderPass,
+                             &swapchainFramebuffers,
+                             &swapchainExtent,
+                             &fullscreenPipeline,
+                             &pipelineLayout,
+                             &descriptorSets);
+
+        const bool fullscreenPassActive = true;
+        if (fullscreenPassActive) {
+            renderer.passes.push_back(&fullscreenPass);
+        } else {
+            renderer.passes.push_back(&trianglePass);
+        }
 
         createCommandBuffers();
         frameSystem.init(device, MAX_FRAMES_IN_FLIGHT);
@@ -548,6 +639,7 @@ private:
     ResourceSystem resourceSystem;
     Renderer renderer;
     TrianglePass trianglePass;
+    FullscreenPass fullscreenPass;
     bool running = true;
     bool framebufferResized = false;
     bool resizePending = false;
@@ -556,6 +648,7 @@ private:
     static constexpr uint32_t RESIZE_STABILITY_THRESHOLD = 2;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+    VkPipeline fullscreenPipeline = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
@@ -1069,7 +1162,7 @@ private:
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         uboLayoutBinding.pImmutableSamplers = nullptr;
 
         VkDescriptorSetLayoutBinding bindings[] = {uboLayoutBinding};
@@ -1220,8 +1313,114 @@ private:
         std::cout << "[Pipeline] Geometry pipeline created" << std::endl;
     }
 
+    void createFullscreenPipeline() {
+        auto vertShaderCode = readFile("shaders/fullscreen.vert.spv");
+        auto fragShaderCode = readFile("shaders/fullscreen.frag.spv");
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+        VkPipelineShaderStageCreateInfo vertStage{};
+        vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertStage.module = vertShaderModule;
+        vertStage.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragStage{};
+        fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragStage.module = fragShaderModule;
+        fragStage.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertStage, fragStage};
+
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputInfo.vertexBindingDescriptionCount = 0;
+        vertexInputInfo.vertexAttributeDescriptionCount = 0;
+
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+        inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        VkPipelineViewportStateCreateInfo viewportState{};
+        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.viewportCount = 1;
+        viewportState.scissorCount = 1;
+
+        VkPipelineRasterizationStateCreateInfo rasterizer{};
+        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterizer.lineWidth = 1.0f;
+        rasterizer.cullMode = VK_CULL_MODE_NONE;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.depthBiasEnable = VK_FALSE;
+
+        VkPipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT |
+            VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT |
+            VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = VK_FALSE;
+
+        VkPipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY;
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
+
+        std::array<VkDynamicState, 2> dynamicStates = {
+            VK_DYNAMIC_STATE_VIEWPORT,
+            VK_DYNAMIC_STATE_SCISSOR
+        };
+
+        VkPipelineDynamicStateCreateInfo dynamicState{};
+        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.pDynamicStates = dynamicStates.data();
+
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &fullscreenPipeline) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create fullscreen pipeline");
+        }
+
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+
+        std::cout << "[Pipeline] Fullscreen pipeline created" << std::endl;
+    }
+
     void createUniformBuffers() {
-        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+        VkDeviceSize bufferSize = sizeof(GlobalUBO);
         uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
         uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
         uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1281,7 +1480,7 @@ private:
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[frameIndex];
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
+        bufferInfo.range = sizeof(GlobalUBO);
 
         VkWriteDescriptorSet descriptorWrite{};
         descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1340,7 +1539,7 @@ private:
     }
 
     void updateUniformBuffer(uint32_t frameIndex) {
-        UniformBufferObject ubo{};
+        GlobalUBO ubo{};
         auto currentTime = std::chrono::steady_clock::now();
         float time = std::chrono::duration<float>(currentTime - startTime).count();
 
@@ -1352,6 +1551,12 @@ private:
                                     0.1f,
                                     10.0f);
         ubo.proj[1][1] *= -1.0f;
+        ubo.resolutionTime = glm::vec4(
+            static_cast<float>(swapchainExtent.width),
+            static_cast<float>(swapchainExtent.height),
+            time,
+            0.0f
+        );
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
@@ -1538,13 +1743,17 @@ private:
             descriptorPool = VK_NULL_HANDLE;
         }
 
-        if (pipelineLayout != VK_NULL_HANDLE) {
-            vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-            pipelineLayout = VK_NULL_HANDLE;
-        }
         if (graphicsPipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(device, graphicsPipeline, nullptr);
             graphicsPipeline = VK_NULL_HANDLE;
+        }
+        if (fullscreenPipeline != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, fullscreenPipeline, nullptr);
+            fullscreenPipeline = VK_NULL_HANDLE;
+        }
+        if (pipelineLayout != VK_NULL_HANDLE) {
+            vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+            pipelineLayout = VK_NULL_HANDLE;
         }
 
         if (renderPass != VK_NULL_HANDLE) {

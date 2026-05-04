@@ -1,9 +1,10 @@
 #version 450
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(binding = 0) uniform GlobalUBO {
     mat4 model;
     mat4 view;
     mat4 proj;
+    vec4 resolutionTime;
 } ubo;
 
 layout(location = 0) in vec2 inPos;
