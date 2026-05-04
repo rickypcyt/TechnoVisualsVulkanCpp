@@ -206,6 +206,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/shared_ptr_atomic.h \
   /usr/include/c++/15.2.1/bits/shared_ptr_base.h \
   /usr/include/c++/15.2.1/bits/specfun.h \
+  /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
   /usr/include/c++/15.2.1/bits/std_function.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
@@ -284,6 +285,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/pstl/pstl_config.h \
   /usr/include/c++/15.2.1/ratio \
   /usr/include/c++/15.2.1/set \
+  /usr/include/c++/15.2.1/sstream \
   /usr/include/c++/15.2.1/stdexcept \
   /usr/include/c++/15.2.1/stdlib.h \
   /usr/include/c++/15.2.1/streambuf \
@@ -796,6 +798,8 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512cdintrin.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bwintrin.h:
+
 /usr/include/c++/15.2.1/bits/shared_ptr_base.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2mediaintrin.h:
@@ -1031,8 +1035,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/bits/pthreadtypes.h:
 
 /usr/include/c++/15.2.1/tr1/beta_function.tcc:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bwintrin.h:
 
 /usr/include/bits/wctype-wchar.h:
 
@@ -1378,6 +1380,10 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2copyintrin.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bitalgvlintrin.h:
+
+/usr/include/bits/long-double.h:
+
 /usr/include/c++/15.2.1/bits/char_traits.h:
 
 /usr/include/c++/15.2.1/bits/erase_if.h:
@@ -1523,6 +1529,8 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/pstl/glue_memory_defs.h:
 
 /usr/include/c++/15.2.1/pstl/pstl_config.h:
+
+/usr/include/c++/15.2.1/sstream:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/libgcc.a:
 
@@ -1748,6 +1756,8 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/streambuf_iterator.h:
 
+/usr/include/c++/15.2.1/bits/sstream.tcc:
+
 /usr/include/glm/ext/matrix_float3x3.hpp:
 
 /usr/include/glm/ext/matrix_transform.inl:
@@ -1955,7 +1965,3 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/bits/types/__mbstate_t.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx2intrin.h:
-
-/usr/include/bits/long-double.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bitalgvlintrin.h:

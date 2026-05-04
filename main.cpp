@@ -21,6 +21,7 @@
 #include <utility>
 #include <cstdlib>
 #include <memory>
+#include <sstream>
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -1594,6 +1595,44 @@ private:
         file.close();
 
         return buffer;
+    }
+
+    static std::string resolveIncludes(const std::string& source, const std::string& basePath) {
+        std::istringstream stream(source);
+        std::string line;
+        std::string result;
+
+        while (std::getline(stream, line)) {
+            size_t includePos = line.find("#include");
+            if (includePos != std::string::npos) {
+                size_t start = line.find('"', includePos);
+                size_t end = line.find('"', start + 1);
+                if (start != std::string::npos && end != std::string::npos && end > start) {
+                    std::string includeFile = line.substr(start + 1, end - start - 1);
+                    std::string includePath = basePath + "/" + includeFile;
+                    auto includedRaw = readFile(includePath);
+                    std::string includedSource(includedRaw.begin(), includedRaw.end());
+                    result += resolveIncludes(includedSource, basePath);
+                    continue;
+                }
+            }
+
+            result += line + "\n";
+        }
+
+        return result;
+    }
+
+    static std::vector<char> loadShaderCode(const std::string& path) {
+        auto raw = readFile(path);
+        std::string source(raw.begin(), raw.end());
+        std::string basePath = ".";
+        size_t slash = path.find_last_of("/\\");
+        if (slash != std::string::npos) {
+            basePath = path.substr(0, slash);
+        }
+        std::string resolved = resolveIncludes(source, basePath);
+        return std::vector<char>(resolved.begin(), resolved.end());
     }
 
     VkShaderModule createShaderModule(const std::vector<char>& code) {
