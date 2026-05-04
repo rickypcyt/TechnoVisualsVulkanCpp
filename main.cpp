@@ -431,6 +431,7 @@ private:
     FrameSystem frameSystem;
     ResourceSystem resourceSystem;
     bool running = true;
+    bool framebufferResized = false;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
@@ -458,7 +459,7 @@ private:
             SDL_WINDOWPOS_CENTERED,
             WIDTH,
             HEIGHT,
-            SDL_WINDOW_VULKAN
+            SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
         );
 
         if (!window) {
@@ -712,19 +713,30 @@ private:
         return details;
     }
 
+    VkExtent2D chooseSwapchainExtent(const SwapChainSupportDetails& support) const {
+        if (support.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+            return support.capabilities.currentExtent;
+        }
+
+        int width = WIDTH;
+        int height = HEIGHT;
+        if (window) {
+            SDL_GetWindowSize(window, &width, &height);
+        }
+
+        VkExtent2D extent{};
+        extent.width = std::clamp(static_cast<uint32_t>(width), support.capabilities.minImageExtent.width, support.capabilities.maxImageExtent.width);
+        extent.height = std::clamp(static_cast<uint32_t>(height), support.capabilities.minImageExtent.height, support.capabilities.maxImageExtent.height);
+        return extent;
+    }
+
     void createSwapchain() {
         auto support = querySwapChainSupport(physicalDevice);
 
         VkSurfaceFormatKHR surfaceFormat = support.formats[0];
         VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
-        VkExtent2D extent;
-        if (support.capabilities.currentExtent.width == std::numeric_limits<uint32_t>::max()) {
-            extent.width = std::clamp(static_cast<uint32_t>(WIDTH), support.capabilities.minImageExtent.width, support.capabilities.maxImageExtent.width);
-            extent.height = std::clamp(static_cast<uint32_t>(HEIGHT), support.capabilities.minImageExtent.height, support.capabilities.maxImageExtent.height);
-        } else {
-            extent = support.capabilities.currentExtent;
-        }
+        VkExtent2D extent = chooseSwapchainExtent(support);
 
         uint32_t imageCount = support.capabilities.minImageCount + 1;
         if (support.capabilities.maxImageCount > 0 && imageCount > support.capabilities.maxImageCount) {
@@ -854,6 +866,40 @@ private:
         std::cout << "[Swapchain] Framebuffers created" << std::endl;
     }
 
+    void cleanupSwapchain() {
+        for (auto framebuffer : swapchainFramebuffers) {
+            if (framebuffer != VK_NULL_HANDLE) {
+                vkDestroyFramebuffer(device, framebuffer, nullptr);
+            }
+        }
+        swapchainFramebuffers.clear();
+
+        if (!swapchainImageViews.empty()) {
+            for (auto imageView : swapchainImageViews) {
+                if (imageView != VK_NULL_HANDLE) {
+                    vkDestroyImageView(device, imageView, nullptr);
+                }
+            }
+            swapchainImageViews.clear();
+        }
+
+        if (swapchain != VK_NULL_HANDLE) {
+            vkDestroySwapchainKHR(device, swapchain, nullptr);
+            swapchain = VK_NULL_HANDLE;
+        }
+
+        swapchainImages.clear();
+    }
+
+    void recreateSwapchain() {
+        vkDeviceWaitIdle(device);
+
+        cleanupSwapchain();
+        createSwapchain();
+        createImageViews();
+        createSwapchainFramebuffers();
+    }
+
     void createDescriptorSetLayout() {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -935,24 +981,10 @@ private:
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(swapchainExtent.width);
-        viewport.height = static_cast<float>(swapchainExtent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = swapchainExtent;
-
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
         viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
 
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -988,6 +1020,16 @@ private:
         colorBlending.blendConstants[2] = 0.0f;
         colorBlending.blendConstants[3] = 0.0f;
 
+        std::array<VkDynamicState, 2> dynamicStates = {
+            VK_DYNAMIC_STATE_VIEWPORT,
+            VK_DYNAMIC_STATE_SCISSOR
+        };
+
+        VkPipelineDynamicStateCreateInfo dynamicState{};
+        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.pDynamicStates = dynamicStates.data();
+
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = 2;
@@ -998,6 +1040,7 @@ private:
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = pipelineLayout;
         pipelineInfo.renderPass = renderPass;
         pipelineInfo.subpass = 0;
@@ -1139,6 +1182,20 @@ private:
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(swapchainExtent.width);
+        viewport.height = static_cast<float>(swapchainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = swapchainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
         VkBuffer vertexBuffers[] = {vertexBufferHandle.buffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
@@ -1236,10 +1293,19 @@ private:
                 if (event.type == SDL_QUIT) {
                     running = false;
                 }
+                if (event.type == SDL_WINDOWEVENT &&
+                    (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
+                    framebufferResized = true;
+                }
             }
 
             if (!running) {
                 break;
+            }
+
+            if (framebufferResized) {
+                recreateSwapchain();
+                framebufferResized = false;
             }
 
             uint32_t imageIndex = 0;
@@ -1248,7 +1314,8 @@ private:
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
                 std::cerr << "swapchain out of date" << std::endl;
-                break;
+                recreateSwapchain();
+                continue;
             } else if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to acquire swapchain image");
             }
@@ -1300,7 +1367,8 @@ private:
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
                 std::cerr << "swapchain out of date during present" << std::endl;
-                break;
+                recreateSwapchain();
+                continue;
             } else if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to present swapchain image");
             }
@@ -1334,12 +1402,7 @@ private:
             vertexBufferHandle = {};
         }
 
-        for (auto framebuffer : swapchainFramebuffers) {
-            if (framebuffer != VK_NULL_HANDLE) {
-                vkDestroyFramebuffer(device, framebuffer, nullptr);
-            }
-        }
-        swapchainFramebuffers.clear();
+        cleanupSwapchain();
 
         if (commandPool != VK_NULL_HANDLE) {
             vkDestroyCommandPool(device, commandPool, nullptr);
