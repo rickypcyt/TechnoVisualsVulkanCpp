@@ -160,6 +160,15 @@ private:
         bool presentFamilyFound;
     };
 
+    struct FrameContext {
+        uint32_t frameIndex;
+        VkCommandBuffer commandBuffer;
+        VkFence inFlightFence;
+        VkSemaphore imageAvailableSemaphore;
+        VkSemaphore renderFinishedSemaphore;
+        uint32_t swapchainImageIndex;
+    };
+
     SDL_Window* window = nullptr;
     VkInstance instance = VK_NULL_HANDLE;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -178,9 +187,7 @@ private:
     std::vector<VkCommandBuffer> commandBuffers;
     VkQueue graphicsQueue = VK_NULL_HANDLE;
     VkQueue presentQueue = VK_NULL_HANDLE;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkFence> inFlightFences;
+    std::vector<FrameContext> frameContexts;
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
     bool running = true;
@@ -1352,9 +1359,7 @@ private:
     }
 
     void createSyncObjects() {
-        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        frameContexts.resize(MAX_FRAMES_IN_FLIGHT);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1364,26 +1369,33 @@ private:
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+            FrameContext ctx{};
+            ctx.frameIndex = i;
+
+            if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &ctx.imageAvailableSemaphore) != VK_SUCCESS ||
+                vkCreateSemaphore(device, &semaphoreInfo, nullptr, &ctx.renderFinishedSemaphore) != VK_SUCCESS ||
+                vkCreateFence(device, &fenceInfo, nullptr, &ctx.inFlightFence) != VK_SUCCESS) {
 
                 throw std::runtime_error("failed to create synchronization objects for a frame!");
             }
+
+            frameContexts[i] = ctx;
         }
 
-        std::cout << "[SyncObjects] Created per-frame semaphores and fences" << std::endl;
+        std::cout << "[SyncObjects] Created per-frame FrameContexts with sync objects" << std::endl;
     }
 
     void drawFrame() {
-        vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+        FrameContext& frame = frameContexts[currentFrame];
+
+        vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(
             device,
             swapchain,
             UINT64_MAX,
-            imageAvailableSemaphores[currentFrame],
+            frame.imageAvailableSemaphore,
             VK_NULL_HANDLE,
             &imageIndex
         );
@@ -1399,7 +1411,8 @@ private:
             vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
         }
 
-        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+        imagesInFlight[imageIndex] = frame.inFlightFence;
+        frame.swapchainImageIndex = imageIndex;
 
         updateUniformBuffer(static_cast<uint32_t>(currentFrame));
         updateDescriptorSet(static_cast<uint32_t>(currentFrame));
@@ -1407,12 +1420,12 @@ private:
         vkResetCommandBuffer(commandBuffers[imageIndex], 0);
         recordCommandBuffer(commandBuffers[imageIndex], imageIndex, static_cast<uint32_t>(currentFrame));
 
-        vkResetFences(device, 1, &inFlightFences[currentFrame]);
+        vkResetFences(device, 1, &frame.inFlightFence);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+        VkSemaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
         VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
         submitInfo.waitSemaphoreCount = 1;
@@ -1422,11 +1435,16 @@ private:
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
 
-        VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+        VkSemaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]);
+        VkResult submitResult = vkQueueSubmit(graphicsQueue, 1, &submitInfo, frame.inFlightFence);
+        if (submitResult != VK_SUCCESS) {
+            std::cerr << "[ERROR] vkQueueSubmit failed: " << submitResult << std::endl;
+        } else {
+            std::cout << "[SUBMIT] Command buffer submitted successfully for imageIndex=" << imageIndex << std::endl;
+        }
 
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1864,14 +1882,12 @@ private:
 
             cleanupSwapchain();
 
-            for (size_t i = 0; i < imageAvailableSemaphores.size(); i++) {
-                vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-                vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-                vkDestroyFence(device, inFlightFences[i], nullptr);
+            for (auto& frame : frameContexts) {
+                vkDestroySemaphore(device, frame.imageAvailableSemaphore, nullptr);
+                vkDestroySemaphore(device, frame.renderFinishedSemaphore, nullptr);
+                vkDestroyFence(device, frame.inFlightFence, nullptr);
             }
-            imageAvailableSemaphores.clear();
-            renderFinishedSemaphores.clear();
-            inFlightFences.clear();
+            frameContexts.clear();
             if (commandPool != VK_NULL_HANDLE) {
                 vkDestroyCommandPool(device, commandPool, nullptr);
                 commandPool = VK_NULL_HANDLE;
