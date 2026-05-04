@@ -20,6 +20,7 @@
 #include <functional>
 #include <utility>
 #include <cstdlib>
+#include <memory>
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -242,6 +243,111 @@ struct ResourceHandle {
     VkImage image = VK_NULL_HANDLE;
 };
 
+struct RenderPass {
+    virtual void execute(VkCommandBuffer commandBuffer, FrameContext& frame) = 0;
+    virtual void onResize() {}
+    virtual ~RenderPass() = default;
+};
+
+class Renderer {
+public:
+    void record(VkCommandBuffer commandBuffer, FrameContext& frame) {
+        for (auto* pass : passes) {
+            pass->execute(commandBuffer, frame);
+        }
+    }
+
+    void onResize() {
+        for (auto* pass : passes) {
+            pass->onResize();
+        }
+    }
+
+    std::vector<RenderPass*> passes;
+};
+
+class TrianglePass : public RenderPass {
+public:
+    TrianglePass() = default;
+
+    void setup(VkRenderPass* renderPass,
+               std::vector<VkFramebuffer>* framebuffers,
+               VkExtent2D* extent,
+               VkPipeline* pipeline,
+               VkPipelineLayout* pipelineLayout,
+               ResourceHandle* vertexBuffer,
+               std::vector<VkDescriptorSet>* descriptorSets) {
+        this->renderPass = renderPass;
+        this->framebuffers = framebuffers;
+        this->extent = extent;
+        this->pipeline = pipeline;
+        this->pipelineLayout = pipelineLayout;
+        this->vertexBuffer = vertexBuffer;
+        this->descriptorSets = descriptorSets;
+        initialized = true;
+    }
+
+    void execute(VkCommandBuffer commandBuffer, FrameContext& frame) override {
+        if (!initialized) {
+            return;
+        }
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = *renderPass;
+        renderPassInfo.framebuffer = (*framebuffers)[frame.swapchainImageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = *extent;
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(extent->width);
+        viewport.height = static_cast<float>(extent->height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = *extent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        VkBuffer vertexBuffers[] = {vertexBuffer->buffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            *pipelineLayout,
+            0,
+            1,
+            &((*descriptorSets)[frame.frameIndex]),
+            0,
+            nullptr
+        );
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        vkCmdEndRenderPass(commandBuffer);
+    }
+
+private:
+    bool initialized = false;
+    VkRenderPass* renderPass = nullptr;
+    std::vector<VkFramebuffer>* framebuffers = nullptr;
+    VkExtent2D* extent = nullptr;
+    VkPipeline* pipeline = nullptr;
+    VkPipelineLayout* pipelineLayout = nullptr;
+    ResourceHandle* vertexBuffer = nullptr;
+    std::vector<VkDescriptorSet>* descriptorSets = nullptr;
+};
+
 class ResourceSystem {
 public:
     void init(VkDevice deviceHandle, VkPhysicalDevice physicalDeviceHandle) {
@@ -390,6 +496,16 @@ public:
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
+
+        trianglePass.setup(&renderPass,
+                            &swapchainFramebuffers,
+                            &swapchainExtent,
+                            &graphicsPipeline,
+                            &pipelineLayout,
+                            &vertexBufferHandle,
+                            &descriptorSets);
+        renderer.passes.push_back(&trianglePass);
+
         createCommandBuffers();
         frameSystem.init(device, MAX_FRAMES_IN_FLIGHT);
         startTime = std::chrono::steady_clock::now();
@@ -430,8 +546,14 @@ private:
     VkQueue presentQueue = VK_NULL_HANDLE;
     FrameSystem frameSystem;
     ResourceSystem resourceSystem;
+    Renderer renderer;
+    TrianglePass trianglePass;
     bool running = true;
     bool framebufferResized = false;
+    bool resizePending = false;
+    VkExtent2D lastDrawableExtent{0, 0};
+    uint32_t resizeStableFrames = 0;
+    static constexpr uint32_t RESIZE_STABILITY_THRESHOLD = 2;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
@@ -718,16 +840,48 @@ private:
             return support.capabilities.currentExtent;
         }
 
-        int width = WIDTH;
-        int height = HEIGHT;
+        uint32_t width = WIDTH;
+        uint32_t height = HEIGHT;
         if (window) {
-            SDL_GetWindowSize(window, &width, &height);
+            int drawableWidth = 0;
+            int drawableHeight = 0;
+            SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+            if (drawableWidth > 0 && drawableHeight > 0) {
+                width = static_cast<uint32_t>(drawableWidth);
+                height = static_cast<uint32_t>(drawableHeight);
+            }
         }
 
         VkExtent2D extent{};
-        extent.width = std::clamp(static_cast<uint32_t>(width), support.capabilities.minImageExtent.width, support.capabilities.maxImageExtent.width);
-        extent.height = std::clamp(static_cast<uint32_t>(height), support.capabilities.minImageExtent.height, support.capabilities.maxImageExtent.height);
+        extent.width = std::clamp(width, support.capabilities.minImageExtent.width, support.capabilities.maxImageExtent.width);
+        extent.height = std::clamp(height, support.capabilities.minImageExtent.height, support.capabilities.maxImageExtent.height);
         return extent;
+    }
+
+    void handleResizeHint() {
+        if (!resizePending) {
+            return;
+        }
+
+        int drawableWidth = 0;
+        int drawableHeight = 0;
+        SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+
+        if (drawableWidth == 0 || drawableHeight == 0) {
+            framebufferResized = false;
+            return;
+        }
+
+        VkExtent2D currentExtent{static_cast<uint32_t>(drawableWidth), static_cast<uint32_t>(drawableHeight)};
+        if (currentExtent.width == lastDrawableExtent.width && currentExtent.height == lastDrawableExtent.height) {
+            if (++resizeStableFrames >= RESIZE_STABILITY_THRESHOLD) {
+                framebufferResized = true;
+                resizePending = false;
+            }
+        } else {
+            resizeStableFrames = 0;
+            lastDrawableExtent = currentExtent;
+        }
     }
 
     void createSwapchain() {
@@ -895,9 +1049,19 @@ private:
         vkDeviceWaitIdle(device);
 
         cleanupSwapchain();
+        int drawableWidth = 0;
+        int drawableHeight = 0;
+        SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+
+        if (drawableWidth == 0 || drawableHeight == 0) {
+            framebufferResized = true;
+            return;
+        }
+
         createSwapchain();
         createImageViews();
         createSwapchainFramebuffers();
+        renderer.onResize();
     }
 
     void createDescriptorSetLayout() {
@@ -1160,7 +1324,7 @@ private:
         }
     }
 
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, uint32_t frameIndex) {
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContext& frame) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -1168,50 +1332,7 @@ private:
             throw std::runtime_error("failed to begin recording command buffer");
         }
 
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapchainFramebuffers[imageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = swapchainExtent;
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(swapchainExtent.width);
-        viewport.height = static_cast<float>(swapchainExtent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = swapchainExtent;
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        VkBuffer vertexBuffers[] = {vertexBufferHandle.buffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            0,
-            1,
-            &descriptorSets[frameIndex],
-            0,
-            nullptr
-        );
-
-        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
-        vkCmdEndRenderPass(commandBuffer);
+        renderer.record(commandBuffer, frame);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer");
@@ -1295,13 +1416,16 @@ private:
                 }
                 if (event.type == SDL_WINDOWEVENT &&
                     (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
-                    framebufferResized = true;
+                    resizePending = true;
+                    resizeStableFrames = 0;
                 }
             }
 
             if (!running) {
                 break;
             }
+
+            handleResizeHint();
 
             if (framebufferResized) {
                 recreateSwapchain();
@@ -1314,7 +1438,7 @@ private:
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
                 std::cerr << "swapchain out of date" << std::endl;
-                recreateSwapchain();
+                framebufferResized = true;
                 continue;
             } else if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to acquire swapchain image");
@@ -1335,7 +1459,7 @@ private:
                 throw std::runtime_error("failed to reset command buffer");
             }
 
-            recordCommandBuffer(commandBuffers[frame.frameIndex], imageIndex, frame.frameIndex);
+            recordCommandBuffer(commandBuffers[frame.frameIndex], frame);
 
             VkSemaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
             VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
@@ -1367,7 +1491,7 @@ private:
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
                 std::cerr << "swapchain out of date during present" << std::endl;
-                recreateSwapchain();
+                framebufferResized = true;
                 continue;
             } else if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to present swapchain image");

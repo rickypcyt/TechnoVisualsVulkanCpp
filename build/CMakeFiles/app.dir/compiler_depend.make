@@ -145,11 +145,16 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/bits/xopen_lim.h \
   /usr/include/c++/15.2.1/algorithm \
   /usr/include/c++/15.2.1/array \
+  /usr/include/c++/15.2.1/backward/auto_ptr.h \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
   /usr/include/c++/15.2.1/bits/algorithmfwd.h \
+  /usr/include/c++/15.2.1/bits/align.h \
   /usr/include/c++/15.2.1/bits/alloc_traits.h \
+  /usr/include/c++/15.2.1/bits/allocated_ptr.h \
   /usr/include/c++/15.2.1/bits/allocator.h \
+  /usr/include/c++/15.2.1/bits/atomic_base.h \
+  /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
   /usr/include/c++/15.2.1/bits/basic_ios.h \
   /usr/include/c++/15.2.1/bits/basic_ios.tcc \
   /usr/include/c++/15.2.1/bits/basic_string.h \
@@ -197,6 +202,9 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/range_access.h \
   /usr/include/c++/15.2.1/bits/refwrap.h \
   /usr/include/c++/15.2.1/bits/requires_hosted.h \
+  /usr/include/c++/15.2.1/bits/shared_ptr.h \
+  /usr/include/c++/15.2.1/bits/shared_ptr_atomic.h \
+  /usr/include/c++/15.2.1/bits/shared_ptr_base.h \
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/std_abs.h \
   /usr/include/c++/15.2.1/bits/std_function.h \
@@ -211,6 +219,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
   /usr/include/c++/15.2.1/bits/stl_multiset.h \
   /usr/include/c++/15.2.1/bits/stl_pair.h \
+  /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
   /usr/include/c++/15.2.1/bits/stl_relops.h \
   /usr/include/c++/15.2.1/bits/stl_set.h \
   /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
@@ -222,6 +231,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/bits/string_view.tcc \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
   /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+  /usr/include/c++/15.2.1/bits/unique_ptr.h \
   /usr/include/c++/15.2.1/bits/unordered_map.h \
   /usr/include/c++/15.2.1/bits/uses_allocator.h \
   /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
@@ -252,6 +262,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/ext/aligned_buffer.h \
   /usr/include/c++/15.2.1/ext/alloc_traits.h \
   /usr/include/c++/15.2.1/ext/atomicity.h \
+  /usr/include/c++/15.2.1/ext/concurrence.h \
   /usr/include/c++/15.2.1/ext/numeric_traits.h \
   /usr/include/c++/15.2.1/ext/string_conversions.h \
   /usr/include/c++/15.2.1/ext/type_traits.h \
@@ -264,10 +275,12 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/15.2.1/istream \
   /usr/include/c++/15.2.1/limits \
   /usr/include/c++/15.2.1/math.h \
+  /usr/include/c++/15.2.1/memory \
   /usr/include/c++/15.2.1/new \
   /usr/include/c++/15.2.1/ostream \
   /usr/include/c++/15.2.1/pstl/execution_defs.h \
   /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
+  /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
   /usr/include/c++/15.2.1/pstl/pstl_config.h \
   /usr/include/c++/15.2.1/ratio \
   /usr/include/c++/15.2.1/set \
@@ -763,27 +776,29 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vlintrin.h:
 
-/usr/include/c++/15.2.1/initializer_list:
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vnnivlintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2bf16intrin.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vldqintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avxneconvertintrin.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vlbwintrin.h:
 
-/usr/include/c++/15.2.1/ext/type_traits.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmi2intrin.h:
 
-/usr/include/c++/15.2.1/ext/alloc_traits.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512ifmavlintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/sm4intrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512ifmaintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fp16vlintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fp16intrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512cdintrin.h:
+
+/usr/include/c++/15.2.1/bits/shared_ptr_base.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2mediaintrin.h:
-
-/usr/include/c++/15.2.1/cwctype:
-
-/usr/include/c++/15.2.1/compare:
-
-/usr/include/glm/detail/type_mat2x3.inl:
-
-/usr/include/glm/detail/type_vec2.hpp:
-
-/usr/include/c++/15.2.1/ext/aligned_buffer.h:
 
 /usr/include/c++/15.2.1/ctime:
 
@@ -815,6 +830,10 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/utility.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmivlintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bitalgintrin.h:
+
 /usr/include/c++/15.2.1/bits/uses_allocator_args.h:
 
 /usr/include/c++/15.2.1/bits/uses_allocator.h:
@@ -825,19 +844,7 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/ext/vector_int2_sized.hpp:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vnnivlintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vldqintrin.h:
-
-/usr/lib/libglm.a:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/vpclmulqdqintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/mm_malloc.h:
-
-/usr/include/asm-generic/bitsperlong.h:
-
-/usr/include/c++/15.2.1/bits/stl_heap.h:
+/usr/include/c++/15.2.1/bits/unique_ptr.h:
 
 /usr/include/c++/15.2.1/bits/stl_uninitialized.h:
 
@@ -846,6 +853,8 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/bits/stl_tree.h:
 
 /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h:
+
+/usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h:
 
 /usr/include/c++/15.2.1/bits/stl_multiset.h:
 
@@ -856,6 +865,12 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/bits/stl_iterator.h:
 
 /usr/include/glm/detail/type_mat2x4.hpp:
+
+/usr/include/c++/15.2.1/bits/shared_ptr.h:
+
+/usr/include/asm-generic/errno.h:
+
+/usr/include/sys/single_threaded.h:
 
 /usr/include/c++/15.2.1/bits/range_access.h:
 
@@ -891,21 +906,11 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/ext/matrix_double3x3_precision.hpp:
 
-/usr/include/c++/15.2.1/cctype:
-
 /usr/include/c++/15.2.1/backward/binders.h:
 
 /usr/include/glm/vec2.hpp:
 
 /usr/include/c++/15.2.1/bits/hash_bytes.h:
-
-/usr/lib/libc.so:
-
-/usr/include/c++/15.2.1/bits/basic_string.h:
-
-/usr/include/asm-generic/types.h:
-
-/usr/include/glm/mat2x4.hpp:
 
 /usr/include/c++/15.2.1/bits/functional_hash.h:
 
@@ -937,7 +942,27 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/bit:
 
+/usr/include/c++/15.2.1/cwctype:
+
+/usr/include/c++/15.2.1/compare:
+
+/usr/include/glm/detail/type_mat2x3.inl:
+
+/usr/include/glm/detail/type_vec2.hpp:
+
+/usr/include/c++/15.2.1/bits/allocated_ptr.h:
+
+/usr/include/c++/15.2.1/bits/align.h:
+
+/usr/include/c++/15.2.1/debug/debug.h:
+
+/usr/include/glm/ext/vector_bool3_precision.hpp:
+
 /usr/include/c++/15.2.1/array:
+
+/usr/include/c++/15.2.1/backward/auto_ptr.h:
+
+/usr/include/SDL2/SDL_messagebox.h:
 
 /usr/include/c++/15.2.1/algorithm:
 
@@ -1019,6 +1044,10 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/cxxabi_forced.h:
 
+/usr/include/c++/15.2.1/cctype:
+
+/usr/include/c++/15.2.1/ext/concurrence.h:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avxvnniint16intrin.h:
 
 /usr/include/SDL2/SDL_rwops.h:
@@ -1051,9 +1080,13 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/SDL2/SDL_video.h:
 
+/usr/include/c++/15.2.1/bits/atomic_base.h:
+
 /usr/include/SDL2/SDL_platform.h:
 
 /usr/include/c++/15.2.1/bits/locale_classes.tcc:
+
+/usr/include/c++/15.2.1/bits/shared_ptr_atomic.h:
 
 /usr/include/asm-generic/posix_types.h:
 
@@ -1131,6 +1164,24 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/stdc-predef.h:
 
+/usr/lib/libglm.a:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/vpclmulqdqintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/mm_malloc.h:
+
+/usr/include/asm-generic/bitsperlong.h:
+
+/usr/include/c++/15.2.1/bits/stl_heap.h:
+
+/usr/lib/libc.so:
+
+/usr/include/c++/15.2.1/bits/basic_string.h:
+
+/usr/include/glm/mat2x4.hpp:
+
+/usr/include/asm-generic/types.h:
+
 /usr/include/c++/15.2.1/stdlib.h:
 
 /usr/include/SDL2/SDL.h:
@@ -1146,8 +1197,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/tr1/ell_integral.tcc:
 
 /home/ricky/coding/proyects/vulkancpp/main.cpp:
-
-/usr/include/SDL2/SDL_messagebox.h:
 
 /usr/include/bits/stdint-least.h:
 
@@ -1177,10 +1226,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/vk_video/vulkan_video_codec_h265std_encode.h:
 
-/usr/include/linux/types.h:
-
-/usr/include/c++/15.2.1/ext/string_conversions.h:
-
 /usr/include/bits/types/struct_itimerspec.h:
 
 /usr/include/c++/15.2.1/bits/locale_facets.h:
@@ -1191,7 +1236,15 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/bits/floatn-common.h:
 
-/usr/include/c++/15.2.1/functional:
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fintrin.h:
+
+/usr/include/c++/15.2.1/streambuf:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/shaintrin.h:
+
+/usr/include/glm/ext/matrix_double3x3.hpp:
+
+/usr/include/SDL2/SDL_locale.h:
 
 /usr/include/c++/15.2.1/bits/predefined_ops.h:
 
@@ -1247,10 +1300,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/math.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/sm4intrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512ifmaintrin.h:
-
 /usr/include/bits/timesize.h:
 
 /usr/include/asm/posix_types.h:
@@ -1258,8 +1307,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/bits/stl_vector.h:
 
 /usr/include/bits/time.h:
-
-/usr/include/c++/15.2.1/fstream:
 
 /usr/include/asm/posix_types_64.h:
 
@@ -1311,6 +1358,10 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/bits/iscanonical.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmi2vlintrin.h:
+
+/usr/include/bits/libc-header-start.h:
+
 /usr/include/glm/ext/vector_uint3.hpp:
 
 /usr/include/c++/15.2.1/cerrno:
@@ -1318,18 +1369,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/glm/ext/matrix_double4x2.hpp:
 
 /usr/include/c++/15.2.1/bits/basic_ios.tcc:
-
-/usr/include/bits/xopen_lim.h:
-
-/usr/include/c++/15.2.1/ext/numeric_traits.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/rtmintrin.h:
-
-/usr/include/c++/15.2.1/bits/ostream.tcc:
-
-/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h:
-
-/usr/include/glm/ext/matrix_double3x4_precision.hpp:
 
 /usr/include/SDL2/SDL_blendmode.h:
 
@@ -1383,10 +1422,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/ext/matrix_double2x2_precision.hpp:
 
-/usr/include/c++/15.2.1/debug/debug.h:
-
-/usr/include/glm/ext/vector_bool3_precision.hpp:
-
 /usr/include/bits/thread-shared-types.h:
 
 /usr/include/c++/15.2.1/ios:
@@ -1439,7 +1474,41 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/bits/struct_rwlock.h:
 
+/usr/include/c++/15.2.1/ext/aligned_buffer.h:
+
+/usr/include/c++/15.2.1/ext/alloc_traits.h:
+
+/usr/include/bits/xopen_lim.h:
+
+/usr/include/c++/15.2.1/ext/numeric_traits.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/rtmintrin.h:
+
+/usr/include/c++/15.2.1/bits/ostream.tcc:
+
+/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h:
+
+/usr/include/glm/ext/matrix_double3x4_precision.hpp:
+
+/usr/include/linux/types.h:
+
+/usr/include/c++/15.2.1/ext/string_conversions.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avxneconvertintrin.h:
+
+/usr/include/c++/15.2.1/ext/type_traits.h:
+
+/usr/include/c++/15.2.1/fstream:
+
+/usr/include/c++/15.2.1/functional:
+
+/usr/include/c++/15.2.1/initializer_list:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2bf16intrin.h:
+
 /usr/include/c++/15.2.1/math.h:
+
+/usr/include/c++/15.2.1/memory:
 
 /usr/include/c++/15.2.1/new:
 
@@ -1451,6 +1520,8 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/pstl/execution_defs.h:
 
+/usr/include/c++/15.2.1/pstl/glue_memory_defs.h:
+
 /usr/include/c++/15.2.1/pstl/pstl_config.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/libgcc.a:
@@ -1458,8 +1529,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/c++/15.2.1/debug/assertions.h:
 
 /usr/include/c++/15.2.1/string:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fp16intrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmiintrin.h:
 
@@ -1521,15 +1590,11 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512cdintrin.h:
-
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_inline.h:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/error_constants.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vlbwintrin.h:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr-default.h:
 
@@ -1611,6 +1676,8 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/detail/type_mat4x2.hpp:
 
+/usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h:
+
 /usr/include/glm/detail/type_mat4x2.inl:
 
 /usr/include/glm/detail/type_mat4x4.hpp:
@@ -1657,13 +1724,11 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/ext/matrix_double2x4_precision.hpp:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512dqintrin.h:
+
+/usr/include/glm/vec4.hpp:
+
 /usr/include/glm/ext/matrix_double3x2_precision.hpp:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/shaintrin.h:
-
-/usr/include/SDL2/SDL_locale.h:
-
-/usr/include/glm/ext/matrix_double3x3.hpp:
 
 /usr/include/glm/ext/matrix_double4x3_precision.hpp:
 
@@ -1728,10 +1793,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/SDL2/SDL_scancode.h:
 
 /usr/include/glm/ext/vector_double3_precision.hpp:
-
-/usr/include/bits/libc-header-start.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmi2vlintrin.h:
 
 /usr/include/glm/ext/vector_double4_precision.hpp:
 
@@ -1829,10 +1890,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/linux/errno.h:
 
-/usr/include/glm/vec4.hpp:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512dqintrin.h:
-
 /usr/lib/crtn.o:
 
 /usr/include/linux/limits.h:
@@ -1853,10 +1910,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/sys/select.h:
 
-/usr/include/asm-generic/errno.h:
-
-/usr/include/sys/single_threaded.h:
-
 /usr/include/sys/types.h:
 
 /usr/include/vk_video/vulkan_video_codec_av1std.h:
@@ -1868,8 +1921,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/asm-generic/int-ll64.h:
 
 /usr/include/vulkan/vulkan.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512ifmavlintrin.h:
 
 /usr/include/vk_video/vulkan_video_codec_h264std.h:
 
@@ -1908,15 +1959,3 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/bits/long-double.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bitalgvlintrin.h:
-
-/usr/include/c++/15.2.1/streambuf:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512fp16vlintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmi2intrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512bitalgintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmivlintrin.h:
