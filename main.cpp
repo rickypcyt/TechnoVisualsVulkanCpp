@@ -113,7 +113,17 @@ struct GlobalUBO {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
-    alignas(16) glm::vec4 resolutionTime;
+    alignas(16) glm::vec2 resolution;
+    alignas(4) float time;
+    alignas(4) float tempo;
+    alignas(4) float energy;
+    alignas(4) float bass;
+    alignas(4) float mid;
+    alignas(4) float high;
+    alignas(16) glm::vec4 primaryColor;
+    alignas(16) glm::vec4 secondaryColor;
+    alignas(4) float colorBlend;
+    alignas(4) int mode;
 };
 
 struct FrameContext {
@@ -660,6 +670,7 @@ private:
     VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
     std::chrono::steady_clock::time_point startTime;
     std::vector<FrameContext*> imagesInFlight;
+    int currentMode = 0;
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -1542,6 +1553,7 @@ private:
         GlobalUBO ubo{};
         auto currentTime = std::chrono::steady_clock::now();
         float time = std::chrono::duration<float>(currentTime - startTime).count();
+        currentMode = static_cast<int>(std::floor(time)) % 3;
 
         float rotation = glm::radians(90.0f) * time;
         ubo.model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -1551,12 +1563,18 @@ private:
                                     0.1f,
                                     10.0f);
         ubo.proj[1][1] *= -1.0f;
-        ubo.resolutionTime = glm::vec4(
-            static_cast<float>(swapchainExtent.width),
-            static_cast<float>(swapchainExtent.height),
-            time,
-            0.0f
-        );
+        ubo.resolution = glm::vec2(static_cast<float>(swapchainExtent.width),
+                                   static_cast<float>(swapchainExtent.height));
+        ubo.time = time;
+        ubo.tempo = 1.0f;
+        ubo.energy = 0.5f;
+        ubo.bass = 0.3f;
+        ubo.mid = 0.3f;
+        ubo.high = 0.3f;
+        ubo.primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
+        ubo.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+        ubo.colorBlend = 0.5f;
+        ubo.mode = currentMode;
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
