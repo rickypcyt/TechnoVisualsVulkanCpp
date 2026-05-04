@@ -261,21 +261,41 @@ struct RenderPass {
     virtual ~RenderPass() = default;
 };
 
+struct RenderNode {
+    std::string name;
+    std::vector<std::string> inputs;
+    std::vector<std::string> outputs;
+    std::function<void(VkCommandBuffer, FrameContext&)> execute;
+};
+
+class RenderGraph {
+public:
+    void addNode(const RenderNode& node) {
+        nodes.push_back(node);
+    }
+
+    void execute(VkCommandBuffer commandBuffer, FrameContext& frame) {
+        for (auto& node : nodes) {
+            node.execute(commandBuffer, frame);
+        }
+    }
+
+private:
+    std::vector<RenderNode> nodes;
+};
+
 class Renderer {
 public:
     void record(VkCommandBuffer commandBuffer, FrameContext& frame) {
-        for (auto* pass : passes) {
-            pass->execute(commandBuffer, frame);
-        }
+        graph.execute(commandBuffer, frame);
     }
 
-    void onResize() {
-        for (auto* pass : passes) {
-            pass->onResize();
-        }
+    void addNode(const RenderNode& node) {
+        graph.addNode(node);
     }
 
-    std::vector<RenderPass*> passes;
+private:
+    RenderGraph graph;
 };
 
 class TrianglePass : public RenderPass {
@@ -578,7 +598,7 @@ public:
         createDescriptorSetLayout();
         createPipelineLayout();
         createGraphicsPipeline();
-        createFullscreenPipeline();
+        createVoxelPipeline();
         createSwapchainFramebuffers();
         createCommandPool();
         createVertexBuffer();
@@ -594,19 +614,21 @@ public:
                             &vertexBufferHandle,
                             &descriptorSets);
 
-        fullscreenPass.setup(&renderPass,
-                             &swapchainFramebuffers,
-                             &swapchainExtent,
-                             &fullscreenPipeline,
-                             &pipelineLayout,
-                             &descriptorSets);
+        voxelPass.setup(&renderPass,
+                        &swapchainFramebuffers,
+                        &swapchainExtent,
+                        &voxelPipeline,
+                        &pipelineLayout,
+                        &descriptorSets);
 
-        const bool fullscreenPassActive = true;
-        if (fullscreenPassActive) {
-            renderer.passes.push_back(&fullscreenPass);
-        } else {
-            renderer.passes.push_back(&trianglePass);
-        }
+        renderer.addNode({
+            "Voxel",
+            {},
+            {},
+            [&](VkCommandBuffer cmd, FrameContext& frame) {
+                voxelPass.execute(cmd, frame);
+            }
+        });
 
         createCommandBuffers();
         frameSystem.init(device, MAX_FRAMES_IN_FLIGHT);
@@ -651,6 +673,7 @@ private:
     Renderer renderer;
     TrianglePass trianglePass;
     FullscreenPass fullscreenPass;
+    FullscreenPass voxelPass;
     bool running = true;
     bool framebufferResized = false;
     bool resizePending = false;
@@ -660,6 +683,7 @@ private:
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     VkPipeline fullscreenPipeline = VK_NULL_HANDLE;
+    VkPipeline voxelPipeline = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
@@ -1166,7 +1190,6 @@ private:
         createSwapchain();
         createImageViews();
         createSwapchainFramebuffers();
-        renderer.onResize();
     }
 
     void createDescriptorSetLayout() {
@@ -1325,9 +1348,9 @@ private:
         std::cout << "[Pipeline] Geometry pipeline created" << std::endl;
     }
 
-    void createFullscreenPipeline() {
+    void createVoxelPipeline() {
         auto vertShaderCode = readFile("shaders/fullscreen.vert.spv");
-        auto fragShaderCode = readFile("shaders/fullscreen.frag.spv");
+        auto fragShaderCode = readFile("shaders/voxel.frag.spv");
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -1421,15 +1444,16 @@ private:
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &fullscreenPipeline) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create fullscreen pipeline");
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &voxelPipeline) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create voxel pipeline");
         }
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
 
-        std::cout << "[Pipeline] Fullscreen pipeline created" << std::endl;
+        std::cout << "[Pipeline] Voxel pipeline created" << std::endl;
     }
+
 
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(GlobalUBO);
@@ -1803,6 +1827,10 @@ private:
         if (graphicsPipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(device, graphicsPipeline, nullptr);
             graphicsPipeline = VK_NULL_HANDLE;
+        }
+        if (voxelPipeline != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, voxelPipeline, nullptr);
+            voxelPipeline = VK_NULL_HANDLE;
         }
         if (fullscreenPipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(device, fullscreenPipeline, nullptr);
