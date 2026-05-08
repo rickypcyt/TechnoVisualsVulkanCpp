@@ -413,10 +413,43 @@ CMakeFiles/app.dir/main.cpp.o: \
  /usr/include/glm/ext/matrix_clip_space.inl \
  /usr/include/glm/ext/matrix_transform.hpp \
  /usr/include/glm/ext/matrix_transform.inl \
- /usr/include/glm/gtc/matrix_transform.inl /usr/include/c++/16.1.1/chrono \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime /usr/include/time.h \
- /usr/include/bits/time.h /usr/include/bits/timex.h \
+ /usr/include/glm/gtc/matrix_transform.inl \
+ /usr/include/glm/gtc/type_ptr.hpp /usr/include/glm/gtc/quaternion.hpp \
+ /usr/include/glm/ext/vector_relational.hpp \
+ /usr/include/glm/ext/vector_relational.inl \
+ /usr/include/glm/detail/type_float.hpp \
+ /usr/include/glm/ext/quaternion_common.hpp \
+ /usr/include/glm/ext/quaternion_geometric.hpp \
+ /usr/include/glm/ext/quaternion_geometric.inl \
+ /usr/include/glm/ext/quaternion_common.inl \
+ /usr/include/glm/ext/quaternion_float.hpp \
+ /usr/include/glm/detail/type_quat.hpp \
+ /usr/include/glm/ext/quaternion_relational.hpp \
+ /usr/include/glm/ext/quaternion_relational.inl \
+ /usr/include/glm/detail/type_quat.inl \
+ /usr/include/glm/ext/quaternion_float_precision.hpp \
+ /usr/include/glm/ext/quaternion_double.hpp \
+ /usr/include/glm/ext/quaternion_double_precision.hpp \
+ /usr/include/glm/ext/quaternion_trigonometric.hpp \
+ /usr/include/glm/ext/quaternion_trigonometric.inl \
+ /usr/include/glm/ext/quaternion_transform.hpp \
+ /usr/include/glm/ext/quaternion_transform.inl \
+ /usr/include/glm/gtc/quaternion.inl /usr/include/glm/gtc/epsilon.hpp \
+ /usr/include/glm/detail/setup.hpp /usr/include/glm/gtc/epsilon.inl \
+ /usr/include/glm/gtc/vec1.hpp /usr/include/glm/ext/vector_bool1.hpp \
+ /usr/include/glm/ext/vector_bool1_precision.hpp \
+ /usr/include/glm/ext/vector_float1.hpp \
+ /usr/include/glm/ext/vector_float1_precision.hpp \
+ /usr/include/glm/ext/vector_double1.hpp \
+ /usr/include/glm/ext/vector_double1_precision.hpp \
+ /usr/include/glm/ext/vector_int1.hpp \
+ /usr/include/glm/ext/vector_int1_sized.hpp \
+ /usr/include/glm/ext/vector_uint1.hpp \
+ /usr/include/glm/ext/vector_uint1_sized.hpp \
+ /usr/include/c++/16.1.1/cstring /usr/include/glm/gtc/type_ptr.inl \
+ /usr/include/c++/16.1.1/chrono /usr/include/c++/16.1.1/bits/chrono.h \
+ /usr/include/c++/16.1.1/ratio /usr/include/c++/16.1.1/ctime \
+ /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/timex.h \
  /usr/include/bits/types/struct_tm.h \
  /usr/include/bits/types/struct_itimerspec.h \
  /usr/include/c++/16.1.1/bits/parse_numbers.h \
@@ -497,8 +530,7 @@ CMakeFiles/app.dir/main.cpp.o: \
  /usr/include/c++/16.1.1/fstream /usr/include/c++/16.1.1/bits/codecvt.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
- /usr/include/c++/16.1.1/bits/fstream.tcc /usr/include/c++/16.1.1/cstring \
- /usr/include/c++/16.1.1/utility \
+ /usr/include/c++/16.1.1/bits/fstream.tcc /usr/include/c++/16.1.1/utility \
  /usr/include/c++/16.1.1/bits/stl_relops.h /usr/include/c++/16.1.1/memory \
  /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h \
  /usr/include/c++/16.1.1/bits/align.h \
@@ -512,4 +544,8 @@ CMakeFiles/app.dir/main.cpp.o: \
  /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
  /usr/include/c++/16.1.1/backward/auto_ptr.h \
  /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
- /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/bits/sstream.tcc
+ /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/bits/sstream.tcc \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.h \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imconfig.h \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.h

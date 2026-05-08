@@ -3,6 +3,13 @@ app: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o \
   CMakeFiles/app.dir/main.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o \
+  CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o \
   /usr/lib/libvulkan.so \
   /usr/lib/libSDL2-2.0.so.0.3200.68 \
   /usr/lib/libglm.a \
@@ -45,6 +52,20 @@ app: \
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o:
 
 CMakeFiles/app.dir/main.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o:
+
+CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/lib/libvulkan.so:
 

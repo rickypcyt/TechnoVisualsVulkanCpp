@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <chrono>
 
 #include <iostream>
@@ -22,6 +23,10 @@
 #include <cstdlib>
 #include <memory>
 #include <sstream>
+
+#include "imgui.h"
+#include "backends/imgui_impl_sdl2.h"
+#include "backends/imgui_impl_sdlrenderer2.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -400,6 +405,10 @@ public:
         initialized = true;
     }
 
+    void setPostDrawCallback(std::function<void(VkCommandBuffer, FrameContext&)> callback) {
+        postDrawCallback = std::move(callback);
+    }
+
     void execute(VkCommandBuffer commandBuffer, FrameContext& frame) override {
         if (!initialized) {
             return;
@@ -443,6 +452,9 @@ public:
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        if (postDrawCallback) {
+            postDrawCallback(commandBuffer, frame);
+        }
         vkCmdEndRenderPass(commandBuffer);
     }
 
@@ -454,6 +466,7 @@ private:
     VkPipeline* pipeline = nullptr;
     VkPipelineLayout* pipelineLayout = nullptr;
     std::vector<VkDescriptorSet>* descriptorSets = nullptr;
+    std::function<void(VkCommandBuffer, FrameContext&)> postDrawCallback;
 };
 
 class ResourceSystem {
@@ -605,6 +618,8 @@ public:
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
+        createUiWindow();
+        initImGui();
 
         fullscreenPass.setup(&renderPass,
                             &swapchainFramebuffers,
@@ -644,6 +659,8 @@ private:
     };
 
     SDL_Window* window = nullptr;
+    SDL_Window* uiWindow = nullptr;
+    SDL_Renderer* uiRenderer = nullptr;
     VkInstance instance = VK_NULL_HANDLE;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -687,6 +704,24 @@ private:
     std::chrono::steady_clock::time_point startTime;
     std::vector<FrameContext*> imagesInFlight;
     int currentMode = 0;
+    struct VisualControls {
+        float animationSpeed = 0.3f;
+        float tempo = 1.0f;
+        float energy = 0.5f;
+        float bass = 0.3f;
+        float mid = 0.3f;
+        float high = 0.3f;
+        float colorBlend = 0.5f;
+        glm::vec4 primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
+        glm::vec4 secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+        int activeMode = 0;
+    } visualControls;
+    ImGuiContext* imguiContext = nullptr;
+    bool imguiInitialized = false;
+    bool showSecondaryWindow = true;
+    bool showDemoWindow = false;
+    uint32_t lastFrameImageIndex = 0;
+    uint32_t lastFrameFrameIndex = 0;
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -706,6 +741,45 @@ private:
 
         if (!window) {
             throw std::runtime_error(std::string("failed to create SDL window: ") + SDL_GetError());
+        }
+    }
+
+    void createUiWindow() {
+        uiWindow = SDL_CreateWindow(
+            "Controls",
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
+            420,
+            420,
+            SDL_WINDOW_RESIZABLE
+        );
+
+        if (!uiWindow) {
+            throw std::runtime_error(std::string("failed to create ImGui SDL window: ") + SDL_GetError());
+        }
+
+        uiRenderer = SDL_CreateRenderer(uiWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        if (!uiRenderer) {
+            uiRenderer = SDL_CreateRenderer(uiWindow, -1, 0);
+        }
+
+        if (!uiRenderer) {
+            SDL_DestroyWindow(uiWindow);
+            uiWindow = nullptr;
+            throw std::runtime_error(std::string("failed to create SDL renderer: ") + SDL_GetError());
+        }
+
+        SDL_SetRenderDrawBlendMode(uiRenderer, SDL_BLENDMODE_BLEND);
+    }
+
+    void destroyUiWindow() {
+        if (uiRenderer != nullptr) {
+            SDL_DestroyRenderer(uiRenderer);
+            uiRenderer = nullptr;
+        }
+        if (uiWindow != nullptr) {
+            SDL_DestroyWindow(uiWindow);
+            uiWindow = nullptr;
         }
     }
 
@@ -1498,6 +1572,135 @@ private:
         }
     }
 
+    void initImGui() {
+        if (imguiInitialized) {
+            return;
+        }
+
+        IMGUI_CHECKVERSION();
+        imguiContext = ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+        ImGui::StyleColorsDark();
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.WindowRounding = 6.0f;
+        style.FrameRounding = 4.0f;
+
+        if (uiWindow == nullptr || uiRenderer == nullptr) {
+            throw std::runtime_error("ImGui UI window is not available");
+        }
+
+        if (!ImGui_ImplSDL2_InitForSDLRenderer(uiWindow, uiRenderer)) {
+            throw std::runtime_error("failed to initialize ImGui SDL2 backend");
+        }
+
+        if (!ImGui_ImplSDLRenderer2_Init(uiRenderer)) {
+            ImGui_ImplSDL2_Shutdown();
+            throw std::runtime_error("failed to initialize ImGui SDL renderer backend");
+        }
+
+        imguiInitialized = true;
+    }
+
+    void updateImGuiFrame() {
+        if (!imguiInitialized) {
+            return;
+        }
+
+        ImGui_ImplSDLRenderer2_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        buildImGuiWindows();
+
+        ImGui::Render();
+        renderImGuiWindow();
+    }
+
+    void buildImGuiWindows() {
+        ImGui::SetNextWindowSize(ImVec2(360.0f, 260.0f), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Procedural Controls")) {
+            ImGui::Text("Animation");
+            ImGui::SliderFloat("Speed", &visualControls.animationSpeed, 0.05f, 1.0f, "%.2f");
+
+            ImGui::Separator();
+            ImGui::Text("Layers");
+            ImGui::Combo("Active Layer", &visualControls.activeMode, "Layer 0\0Layer 1\0");
+
+            ImGui::Separator();
+            ImGui::Text("Color Palette");
+            ImGui::ColorEdit4("Primary", glm::value_ptr(visualControls.primaryColor));
+            ImGui::ColorEdit4("Secondary", glm::value_ptr(visualControls.secondaryColor));
+            ImGui::SliderFloat("Blend", &visualControls.colorBlend, 0.0f, 1.0f);
+
+            ImGui::Separator();
+            ImGui::Text("Audio-inspired inputs");
+            ImGui::SliderFloat("Tempo", &visualControls.tempo, 0.25f, 4.0f);
+            ImGui::SliderFloat("Energy", &visualControls.energy, 0.0f, 1.0f);
+            ImGui::SliderFloat("Bass", &visualControls.bass, 0.0f, 1.0f);
+            ImGui::SliderFloat("Mid", &visualControls.mid, 0.0f, 1.0f);
+            ImGui::SliderFloat("High", &visualControls.high, 0.0f, 1.0f);
+
+            ImGui::Separator();
+            ImGui::Checkbox("Show diagnostics window", &showSecondaryWindow);
+            ImGui::Checkbox("Show ImGui demo", &showDemoWindow);
+        }
+        ImGui::End();
+
+        if (showSecondaryWindow) {
+            ImGui::SetNextWindowSize(ImVec2(320.0f, 220.0f), ImGuiCond_FirstUseEver);
+            if (ImGui::Begin("Diagnostics", &showSecondaryWindow)) {
+                ImGui::Text("Frame %u | Image %u", lastFrameFrameIndex, lastFrameImageIndex);
+                ImGui::Text("Swapchain: %ux%u", swapchainExtent.width, swapchainExtent.height);
+                ImGui::Text("Current mode: %d", currentMode);
+                ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+                if (ImGui::Button("Reset Palette")) {
+                    visualControls.primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
+                    visualControls.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+                }
+            }
+            ImGui::End();
+        }
+
+        if (showDemoWindow) {
+            ImGui::ShowDemoWindow(&showDemoWindow);
+        }
+    }
+
+    void renderImGuiWindow() {
+        if (!imguiInitialized || uiRenderer == nullptr) {
+            return;
+        }
+
+        ImDrawData* drawData = ImGui::GetDrawData();
+        if (drawData == nullptr || drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f) {
+            SDL_SetRenderDrawColor(uiRenderer, 12, 12, 12, 255);
+            SDL_RenderClear(uiRenderer);
+            SDL_RenderPresent(uiRenderer);
+            return;
+        }
+
+        SDL_SetRenderDrawColor(uiRenderer, 12, 12, 12, 255);
+        SDL_RenderClear(uiRenderer);
+        ImGui_ImplSDLRenderer2_RenderDrawData(drawData, uiRenderer);
+        SDL_RenderPresent(uiRenderer);
+    }
+
+    void cleanupImGui() {
+        if (!imguiInitialized) {
+            return;
+        }
+
+        ImGui_ImplSDLRenderer2_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        if (imguiContext != nullptr) {
+            ImGui::DestroyContext(imguiContext);
+            imguiContext = nullptr;
+        }
+        imguiInitialized = false;
+    }
+
     void updateDescriptorSet(uint32_t frameIndex) {
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[frameIndex];
@@ -1564,8 +1767,9 @@ private:
         GlobalUBO ubo{};
         auto currentTime = std::chrono::steady_clock::now();
         float time = std::chrono::duration<float>(currentTime - startTime).count();
-        float proceduralTime = time * 0.3f;
-        currentMode = static_cast<int>(std::floor(proceduralTime / 2.0f)) % 2;
+        float proceduralTime = time * visualControls.animationSpeed;
+        visualControls.activeMode = std::clamp(visualControls.activeMode, 0, 1);
+        currentMode = visualControls.activeMode;
 
         float rotation = glm::radians(90.0f) * time;
         ubo.model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -1578,14 +1782,14 @@ private:
         ubo.resolution = glm::vec2(static_cast<float>(swapchainExtent.width),
                                    static_cast<float>(swapchainExtent.height));
         ubo.time = proceduralTime;
-        ubo.tempo = 1.0f;
-        ubo.energy = 0.5f;
-        ubo.bass = 0.3f;
-        ubo.mid = 0.3f;
-        ubo.high = 0.3f;
-        ubo.primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
-        ubo.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
-        ubo.colorBlend = 0.5f;
+        ubo.tempo = visualControls.tempo;
+        ubo.energy = visualControls.energy;
+        ubo.bass = visualControls.bass;
+        ubo.mid = visualControls.mid;
+        ubo.high = visualControls.high;
+        ubo.primaryColor = visualControls.primaryColor;
+        ubo.secondaryColor = visualControls.secondaryColor;
+        ubo.colorBlend = visualControls.colorBlend;
         ubo.mode = currentMode;
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
@@ -1684,13 +1888,24 @@ private:
         while (running) {
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
+                if (imguiInitialized) {
+                    ImGui_ImplSDL2_ProcessEvent(&event);
+                }
                 if (event.type == SDL_QUIT) {
                     running = false;
                 }
-                if (event.type == SDL_WINDOWEVENT &&
-                    (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
-                    resizePending = true;
-                    resizeStableFrames = 0;
+                if (event.type == SDL_WINDOWEVENT) {
+                    SDL_Window* sourceWindow = SDL_GetWindowFromID(event.window.windowID);
+                    if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                        if (sourceWindow == window || sourceWindow == uiWindow) {
+                            running = false;
+                        }
+                    }
+                    if (sourceWindow == window &&
+                        (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
+                        resizePending = true;
+                        resizeStableFrames = 0;
+                    }
                 }
             }
 
@@ -1708,6 +1923,8 @@ private:
             uint32_t imageIndex = 0;
             VkResult result = VK_SUCCESS;
             FrameContext& frame = frameSystem.beginFrame(swapchain, imageIndex, result);
+            lastFrameFrameIndex = frame.frameIndex;
+            lastFrameImageIndex = imageIndex;
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
                 std::cerr << "swapchain out of date" << std::endl;
@@ -1723,6 +1940,7 @@ private:
             imagesInFlight[imageIndex] = &frame;
 
             updateUniformBuffer(frame.frameIndex);
+            updateImGuiFrame();
 
             if (vkResetFences(device, 1, &frame.inFlightFence) != VK_SUCCESS) {
                 throw std::runtime_error("failed to reset in-flight fence");
@@ -1776,6 +1994,9 @@ private:
 
     void cleanup() {
         vkDeviceWaitIdle(device);
+
+        cleanupImGui();
+        destroyUiWindow();
 
         for (size_t i = 0; i < uniformBuffersMemory.size(); ++i) {
             if (uniformBuffersMapped[i]) {
