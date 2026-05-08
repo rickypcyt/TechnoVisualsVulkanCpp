@@ -598,7 +598,7 @@ public:
         createDescriptorSetLayout();
         createPipelineLayout();
         createGraphicsPipeline();
-        createVoxelPipeline();
+        createFullscreenPipeline();
         createSwapchainFramebuffers();
         createCommandPool();
         createVertexBuffer();
@@ -606,27 +606,19 @@ public:
         createDescriptorPool();
         createDescriptorSets();
 
-        trianglePass.setup(&renderPass,
+        fullscreenPass.setup(&renderPass,
                             &swapchainFramebuffers,
                             &swapchainExtent,
-                            &graphicsPipeline,
+                            &fullscreenPipeline,
                             &pipelineLayout,
-                            &vertexBufferHandle,
                             &descriptorSets);
 
-        voxelPass.setup(&renderPass,
-                        &swapchainFramebuffers,
-                        &swapchainExtent,
-                        &voxelPipeline,
-                        &pipelineLayout,
-                        &descriptorSets);
-
         renderer.addNode({
-            "Voxel",
+            "FullscreenProcedural",
             {},
             {},
             [&](VkCommandBuffer cmd, FrameContext& frame) {
-                voxelPass.execute(cmd, frame);
+                fullscreenPass.execute(cmd, frame);
             }
         });
 
@@ -673,7 +665,6 @@ private:
     Renderer renderer;
     TrianglePass trianglePass;
     FullscreenPass fullscreenPass;
-    FullscreenPass voxelPass;
     bool running = true;
     bool framebufferResized = false;
     bool resizePending = false;
@@ -683,7 +674,7 @@ private:
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     VkPipeline fullscreenPipeline = VK_NULL_HANDLE;
-    VkPipeline voxelPipeline = VK_NULL_HANDLE;
+    VkPipeline tonemapPipeline = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
@@ -1348,9 +1339,9 @@ private:
         std::cout << "[Pipeline] Geometry pipeline created" << std::endl;
     }
 
-    void createVoxelPipeline() {
+    void createFullscreenPipeline() {
         auto vertShaderCode = readFile("shaders/fullscreen.vert.spv");
-        auto fragShaderCode = readFile("shaders/voxel.frag.spv");
+        auto fragShaderCode = readFile("shaders/fullscreen.frag.spv");
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -1413,10 +1404,6 @@ private:
         colorBlending.logicOp = VK_LOGIC_OP_COPY;
         colorBlending.attachmentCount = 1;
         colorBlending.pAttachments = &colorBlendAttachment;
-        colorBlending.blendConstants[0] = 0.0f;
-        colorBlending.blendConstants[1] = 0.0f;
-        colorBlending.blendConstants[2] = 0.0f;
-        colorBlending.blendConstants[3] = 0.0f;
 
         std::array<VkDynamicState, 2> dynamicStates = {
             VK_DYNAMIC_STATE_VIEWPORT,
@@ -1444,16 +1431,15 @@ private:
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &voxelPipeline) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create voxel pipeline");
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &fullscreenPipeline) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create fullscreen pipeline");
         }
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
 
-        std::cout << "[Pipeline] Voxel pipeline created" << std::endl;
+        std::cout << "[Pipeline] Fullscreen pipeline created" << std::endl;
     }
-
 
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(GlobalUBO);
@@ -1578,7 +1564,8 @@ private:
         GlobalUBO ubo{};
         auto currentTime = std::chrono::steady_clock::now();
         float time = std::chrono::duration<float>(currentTime - startTime).count();
-        currentMode = static_cast<int>(std::floor(time)) % 3;
+        float proceduralTime = time * 0.3f;
+        currentMode = static_cast<int>(std::floor(proceduralTime / 2.0f)) % 2;
 
         float rotation = glm::radians(90.0f) * time;
         ubo.model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -1590,7 +1577,7 @@ private:
         ubo.proj[1][1] *= -1.0f;
         ubo.resolution = glm::vec2(static_cast<float>(swapchainExtent.width),
                                    static_cast<float>(swapchainExtent.height));
-        ubo.time = time;
+        ubo.time = proceduralTime;
         ubo.tempo = 1.0f;
         ubo.energy = 0.5f;
         ubo.bass = 0.3f;
@@ -1827,10 +1814,6 @@ private:
         if (graphicsPipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(device, graphicsPipeline, nullptr);
             graphicsPipeline = VK_NULL_HANDLE;
-        }
-        if (voxelPipeline != VK_NULL_HANDLE) {
-            vkDestroyPipeline(device, voxelPipeline, nullptr);
-            voxelPipeline = VK_NULL_HANDLE;
         }
         if (fullscreenPipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(device, fullscreenPipeline, nullptr);

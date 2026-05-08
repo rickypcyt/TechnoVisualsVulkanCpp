@@ -17,7 +17,6 @@ glslangValidator -V "$shaders_dir/present.vert" -o "$shaders_dir/present.vert.sp
 glslangValidator -V "$shaders_dir/present.frag" -o "$shaders_dir/present.frag.spv"
 glslangValidator -V "$shaders_dir/fullscreen.vert" -o "$shaders_dir/fullscreen.vert.spv"
 glslangValidator -V "$shaders_dir/fullscreen.frag" -o "$shaders_dir/fullscreen.frag.spv"
-glslangValidator -V "$shaders_dir/voxel.frag" -o "$shaders_dir/voxel.frag.spv"
 cmake -S "$SCRIPT_DIR" -B "$SCRIPT_DIR/build"
 cmake --build "$SCRIPT_DIR/build"
 SDL_VIDEODRIVER=wayland "$SCRIPT_DIR/build/app"
