@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cctype>
 #include <cstdint>
+#include <unordered_map>
 #include <random>
 
 extern "C" {
@@ -627,6 +628,10 @@ struct GlobalUBO {
     alignas(4) float crtMaskIntensity;
     alignas(4) float crtVignette;
     alignas(4) float crtFishEye;
+    alignas(4) float bloomIntensity;
+    alignas(4) float bloomThreshold;
+    alignas(4) float aberrationAmount;
+    alignas(4) float grainStrength;
     alignas(16) glm::vec3 colorBalance;
 };
 
@@ -1147,6 +1152,7 @@ public:
         createUniformBuffers();
         initializeVideoAssets();
         initVideoSystem();
+        loadControlState();
         createDescriptorPool();
         createDescriptorSets();
         createUiWindow();
@@ -1171,6 +1177,7 @@ public:
         createCommandBuffers();
         frameSystem.init(device, MAX_FRAMES_IN_FLIGHT);
         startTime = std::chrono::steady_clock::now();
+        lastControlSaveTime = startTime;
         lastFrameTimestamp = startTime;
         initializationComplete = true;
         mainLoop();
@@ -1261,6 +1268,10 @@ private:
         float crtMaskIntensity = 0.35f;
         float crtVignette = 0.55f;
         float crtFishEye = 0.0f;
+        float bloomIntensity = 0.45f;
+        float bloomThreshold = 0.7f;
+        float aberrationAmount = 0.02f;
+        float grainStrength = 0.15f;
         glm::vec3 colorBalance = glm::vec3(1.0f);
     } visualControls;
     ImGuiContext* imguiContext = nullptr;
@@ -1286,6 +1297,9 @@ private:
         float elapsedSeconds = 0.0f;
     } videoRandomizer;
     std::mt19937 randomEngine{std::random_device{}()};
+    std::string controlStatePath = "controls_state.cfg";
+    bool controlsDirty = false;
+    std::chrono::steady_clock::time_point lastControlSaveTime;
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -1322,7 +1336,7 @@ private:
             throw std::runtime_error(std::string("failed to create ImGui SDL window: ") + SDL_GetError());
         }
 
-        uiRenderer = SDL_CreateRenderer(uiWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        uiRenderer = SDL_CreateRenderer(uiWindow, -1, SDL_RENDERER_ACCELERATED);
         if (!uiRenderer) {
             uiRenderer = SDL_CreateRenderer(uiWindow, -1, 0);
         }
@@ -1334,6 +1348,9 @@ private:
         }
 
         SDL_SetRenderDrawBlendMode(uiRenderer, SDL_BLENDMODE_BLEND);
+        if (SDL_RenderSetVSync(uiRenderer, 0) != 0) {
+            std::cerr << "[ImGui] warning: failed to disable renderer vsync: " << SDL_GetError() << std::endl;
+        }
     }
 
     void destroyUiWindow() {
@@ -2679,43 +2696,49 @@ private:
     }
 
     void buildImGuiWindows() {
+        bool changed = false;
+
         ImGui::SetNextWindowSize(ImVec2(360.0f, 260.0f), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Procedural Controls")) {
             ImGui::Text("Animation");
-            ImGui::SliderFloat("Speed", &visualControls.animationSpeed, 0.05f, 1.0f, "%.2f");
+            changed |= ImGui::SliderFloat("Speed", &visualControls.animationSpeed, 0.05f, 1.0f, "%.2f");
 
             ImGui::Separator();
             ImGui::Text("Layers");
-            ImGui::Combo("Active Layer", &visualControls.activeMode, "Layer 0\0Layer 1\0");
+            changed |= ImGui::Combo("Active Layer", &visualControls.activeMode, "Layer 0\0Layer 1\0");
 
             ImGui::Separator();
             ImGui::Text("Color Palette");
-            ImGui::ColorEdit4("Primary", glm::value_ptr(visualControls.primaryColor));
-            ImGui::ColorEdit4("Secondary", glm::value_ptr(visualControls.secondaryColor));
-            ImGui::SliderFloat("Blend", &visualControls.colorBlend, 0.0f, 1.0f);
+            changed |= ImGui::ColorEdit4("Primary", glm::value_ptr(visualControls.primaryColor));
+            changed |= ImGui::ColorEdit4("Secondary", glm::value_ptr(visualControls.secondaryColor));
+            changed |= ImGui::SliderFloat("Blend", &visualControls.colorBlend, 0.0f, 1.0f);
 
             ImGui::Separator();
             ImGui::Text("Audio-inspired inputs");
-            ImGui::SliderFloat("Tempo", &visualControls.tempo, 0.25f, 4.0f);
-            ImGui::SliderFloat("Energy", &visualControls.energy, 0.0f, 1.0f);
-            ImGui::SliderFloat("Bass", &visualControls.bass, 0.0f, 1.0f);
-            ImGui::SliderFloat("Mid", &visualControls.mid, 0.0f, 1.0f);
-            ImGui::SliderFloat("High", &visualControls.high, 0.0f, 1.0f);
+            changed |= ImGui::SliderFloat("Tempo", &visualControls.tempo, 0.25f, 4.0f);
+            changed |= ImGui::SliderFloat("Energy", &visualControls.energy, 0.0f, 1.0f);
+            changed |= ImGui::SliderFloat("Bass", &visualControls.bass, 0.0f, 1.0f);
+            changed |= ImGui::SliderFloat("Mid", &visualControls.mid, 0.0f, 1.0f);
+            changed |= ImGui::SliderFloat("High", &visualControls.high, 0.0f, 1.0f);
 
             ImGui::Separator();
             ImGui::Text("Video");
-            ImGui::SliderFloat("Video Mix", &visualControls.videoMix, 0.0f, 1.0f);
-            ImGui::SliderFloat("Video speed", &visualControls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
-            ImGui::SliderFloat("Grayscale", &visualControls.grayscaleAmount, 0.0f, 1.0f);
-            ImGui::SliderFloat("Sharpen", &visualControls.sharpenAmount, 0.0f, 1.0f);
-            ImGui::Checkbox("Bicubic Upscale", &visualControls.upscaleEnabled);
-            ImGui::SliderFloat("CRT Curvature V", &visualControls.crtCurvature, 0.0f, 0.6f, "%.2f");
-            ImGui::SliderFloat("CRT Curvature H", &visualControls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
-            ImGui::SliderFloat("CRT Scanlines", &visualControls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
-            ImGui::SliderFloat("CRT Mask", &visualControls.crtMaskIntensity, 0.0f, 1.0f, "%.2f");
-            ImGui::SliderFloat("CRT Black Bars", &visualControls.crtVignette, 0.0f, 1.0f, "%.2f");
-            ImGui::SliderFloat("CRT Fish-eye", &visualControls.crtFishEye, -1.0f, 1.0f, "%.2f");
-            ImGui::SliderFloat3("RGB Mix", glm::value_ptr(visualControls.colorBalance), 0.0f, 2.0f);
+            changed |= ImGui::SliderFloat("Video Mix", &visualControls.videoMix, 0.0f, 1.0f);
+            changed |= ImGui::SliderFloat("Video speed", &visualControls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+            changed |= ImGui::SliderFloat("Grayscale", &visualControls.grayscaleAmount, 0.0f, 1.0f);
+            changed |= ImGui::SliderFloat("Sharpen", &visualControls.sharpenAmount, 0.0f, 1.0f);
+            changed |= ImGui::Checkbox("Bicubic Upscale", &visualControls.upscaleEnabled);
+            changed |= ImGui::SliderFloat("CRT Curvature V", &visualControls.crtCurvature, 0.0f, 0.6f, "%.2f");
+            changed |= ImGui::SliderFloat("CRT Curvature H", &visualControls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
+            changed |= ImGui::SliderFloat("CRT Scanlines", &visualControls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
+            changed |= ImGui::SliderFloat("CRT Mask", &visualControls.crtMaskIntensity, 0.0f, 1.0f, "%.2f");
+            changed |= ImGui::SliderFloat("CRT Black Bars", &visualControls.crtVignette, 0.0f, 1.0f, "%.2f");
+            changed |= ImGui::SliderFloat("CRT Fish-eye", &visualControls.crtFishEye, -1.0f, 1.0f, "%.2f");
+            changed |= ImGui::SliderFloat("Bloom Intensity", &visualControls.bloomIntensity, 0.0f, 2.0f, "%.2f");
+            changed |= ImGui::SliderFloat("Bloom Threshold", &visualControls.bloomThreshold, 0.0f, 1.0f, "%.2f");
+            changed |= ImGui::SliderFloat("Aberration", &visualControls.aberrationAmount, -0.05f, 0.05f, "%.3f");
+            changed |= ImGui::SliderFloat("Film Grain", &visualControls.grainStrength, 0.0f, 0.5f, "%.2f");
+            changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(visualControls.colorBalance), 0.0f, 2.0f);
             ImGui::TextWrapped("Video %s", (videoSubsystemInitialized && videoTexture.ready) ? "online" : "unavailable");
             drawVideoAssetSelector();
 
@@ -2723,14 +2746,16 @@ private:
             if (ImGui::SliderFloat("Random interval (s)", &videoRandomizer.intervalSeconds, 1.0f, 300.0f, "%.0f s")) {
                 videoRandomizer.intervalSeconds = std::clamp(videoRandomizer.intervalSeconds, 1.0f, 600.0f);
                 videoRandomizer.elapsedSeconds = 0.0f;
+                changed = true;
             }
             ImGui::BeginDisabled(!hasRandomChoices);
             if (ImGui::Button("Randomize video online")) {
                 randomizeVideoAsset();
                 videoRandomizer.elapsedSeconds = 0.0f;
+                changed = true;
             }
             ImGui::SameLine();
-            ImGui::Checkbox("Auto randomize", &videoRandomizer.autoRandomize);
+            changed |= ImGui::Checkbox("Auto randomize", &videoRandomizer.autoRandomize);
             if (!hasRandomChoices) {
                 ImGui::SameLine();
                 ImGui::TextDisabled("Need at least 2 videos");
@@ -3020,6 +3045,10 @@ private:
         ubo.crtMaskIntensity = visualControls.crtMaskIntensity;
         ubo.crtVignette = visualControls.crtVignette;
         ubo.crtFishEye = visualControls.crtFishEye;
+        ubo.bloomIntensity = visualControls.bloomIntensity;
+        ubo.bloomThreshold = visualControls.bloomThreshold;
+        ubo.aberrationAmount = visualControls.aberrationAmount;
+        ubo.grainStrength = visualControls.grainStrength;
         ubo.colorBalance = visualControls.colorBalance;
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
@@ -3183,6 +3212,15 @@ private:
             updateUniformBuffer(frame.frameIndex);
             updateImGuiFrame();
 
+            if (controlsDirty) {
+                auto now = std::chrono::steady_clock::now();
+                if (std::chrono::duration<float>(now - lastControlSaveTime).count() > 1.0f) {
+                    saveControlState();
+                    controlsDirty = false;
+                    lastControlSaveTime = now;
+                }
+            }
+
             if (vkResetFences(device, 1, &frame.inFlightFence) != VK_SUCCESS) {
                 throw std::runtime_error("failed to reset in-flight fence");
             }
@@ -3233,7 +3271,94 @@ private:
         }
     }
 
+    void loadControlState() {
+        std::ifstream file(controlStatePath);
+        if (!file.is_open()) {
+            return;
+        }
+
+        VisualControls loaded = visualControls;
+        int activeMode = loaded.activeMode;
+        int upscaleFlag = loaded.upscaleEnabled ? 1 : 0;
+        int autoRandomFlag = videoRandomizer.autoRandomize ? 1 : 0;
+
+        if (!(file >> loaded.animationSpeed
+                  >> loaded.tempo
+                  >> loaded.energy
+                  >> loaded.bass
+                  >> loaded.mid
+                  >> loaded.high
+                  >> loaded.colorBlend
+                  >> loaded.primaryColor.r >> loaded.primaryColor.g >> loaded.primaryColor.b >> loaded.primaryColor.a
+                  >> loaded.secondaryColor.r >> loaded.secondaryColor.g >> loaded.secondaryColor.b >> loaded.secondaryColor.a
+                  >> activeMode
+                  >> loaded.videoMix
+                  >> loaded.videoPlaybackRate
+                  >> loaded.grayscaleAmount
+                  >> loaded.sharpenAmount
+                  >> upscaleFlag
+                  >> loaded.crtCurvature
+                  >> loaded.crtHorizontalCurvature
+                  >> loaded.crtScanlineIntensity
+                  >> loaded.crtMaskIntensity
+                  >> loaded.crtVignette
+                  >> loaded.crtFishEye
+                  >> loaded.bloomIntensity
+                  >> loaded.bloomThreshold
+                  >> loaded.aberrationAmount
+                  >> loaded.grainStrength
+                  >> loaded.colorBalance.r >> loaded.colorBalance.g >> loaded.colorBalance.b
+                  >> autoRandomFlag
+                  >> videoRandomizer.intervalSeconds)) {
+            std::cerr << "[Controls] failed to parse control state file" << std::endl;
+            return;
+        }
+
+        loaded.activeMode = activeMode;
+        loaded.upscaleEnabled = (upscaleFlag != 0);
+        videoRandomizer.autoRandomize = (autoRandomFlag != 0);
+        visualControls = loaded;
+    }
+
+    void saveControlState() {
+        std::ofstream file(controlStatePath);
+        if (!file.is_open()) {
+            std::cerr << "[Controls] failed to save state: cannot open " << controlStatePath << std::endl;
+            return;
+        }
+
+        file << visualControls.animationSpeed << ' '
+             << visualControls.tempo << ' '
+             << visualControls.energy << ' '
+             << visualControls.bass << ' '
+             << visualControls.mid << ' '
+             << visualControls.high << ' '
+             << visualControls.colorBlend << ' '
+             << visualControls.primaryColor.r << ' ' << visualControls.primaryColor.g << ' ' << visualControls.primaryColor.b << ' ' << visualControls.primaryColor.a << ' '
+             << visualControls.secondaryColor.r << ' ' << visualControls.secondaryColor.g << ' ' << visualControls.secondaryColor.b << ' ' << visualControls.secondaryColor.a << ' '
+             << visualControls.activeMode << ' '
+             << visualControls.videoMix << ' '
+             << visualControls.videoPlaybackRate << ' '
+             << visualControls.grayscaleAmount << ' '
+             << visualControls.sharpenAmount << ' '
+             << (visualControls.upscaleEnabled ? 1 : 0) << ' '
+             << visualControls.crtCurvature << ' '
+             << visualControls.crtHorizontalCurvature << ' '
+             << visualControls.crtScanlineIntensity << ' '
+             << visualControls.crtMaskIntensity << ' '
+             << visualControls.crtVignette << ' '
+             << visualControls.crtFishEye << ' '
+             << visualControls.bloomIntensity << ' '
+             << visualControls.bloomThreshold << ' '
+             << visualControls.aberrationAmount << ' '
+             << visualControls.grainStrength << ' '
+             << visualControls.colorBalance.r << ' ' << visualControls.colorBalance.g << ' ' << visualControls.colorBalance.b << ' '
+             << (videoRandomizer.autoRandomize ? 1 : 0) << ' '
+             << videoRandomizer.intervalSeconds;
+    }
+
     void cleanup() {
+        saveControlState();
         vkDeviceWaitIdle(device);
 
         cleanupImGui();

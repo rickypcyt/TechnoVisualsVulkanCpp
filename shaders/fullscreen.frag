@@ -29,6 +29,10 @@ layout(set = 0, binding = 0) uniform UBO {
     float crtMaskIntensity;
     float crtVignette;
     float crtFishEye;
+    float bloomIntensity;
+    float bloomThreshold;
+    float aberrationAmount;
+    float grainStrength;
     vec3 colorBalance;
 } ubo;
 
@@ -122,6 +126,24 @@ void main() {
                          clamp(ubo.upscaleEnabled, 0.0, 1.0));
     baseVideo = unsharpMask(crtUV, baseVideo);
 
+    float bright = max(max(baseVideo.r, baseVideo.g), baseVideo.b);
+    float threshold = clamp(ubo.bloomThreshold, 0.0, 1.0);
+    float bloomMask = smoothstep(threshold, 1.0, bright);
+    vec3 bloom = vec3(0.0);
+    if (ubo.bloomIntensity > 0.001) {
+        vec2 texel = 1.0 / vec2(textureSize(videoTex, 0));
+        vec2 offsets[4];
+        offsets[0] = vec2(1.0, 0.0);
+        offsets[1] = vec2(-1.0, 0.0);
+        offsets[2] = vec2(0.0, 1.0);
+        offsets[3] = vec2(0.0, -1.0);
+        for (int i = 0; i < 4; ++i) {
+            bloom += sampleBicubic(crtUV + offsets[i] * texel * 2.5).rgb;
+        }
+        bloom = (bloom / 4.0) * bloomMask * clamp(ubo.bloomIntensity, 0.0, 4.0);
+    }
+    baseVideo += bloom;
+
     float scanline = mix(1.0, 0.5 + 0.5 * sin((crtUV.y + ubo.time * 0.5) * 3.14159 * 240.0), clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
     float maskPattern = mix(1.0,
                             (0.8 + 0.2 * sin(crtUV.x * 3.14159 * 640.0)) *
@@ -129,8 +151,23 @@ void main() {
                             clamp(ubo.crtMaskIntensity, 0.0, 1.0));
     vec3 video = baseVideo * scanline * maskPattern;
 
+    float aberration = clamp(ubo.aberrationAmount, -0.05, 0.05);
+    if (abs(aberration) > 0.0001) {
+        vec2 texel = aberration * (centered);
+        float r = mix(texture(videoTex, crtUV + texel).r, video.r, 0.5);
+        float g = video.g;
+        float b = mix(texture(videoTex, crtUV - texel).b, video.b, 0.5);
+        video = vec3(r, g, b);
+    }
+
     float vignette = mix(1.0, 1.0 - pow(clamp(radius, 0.0, 1.0), 2.0), clamp(ubo.crtVignette, 0.0, 1.0));
     video *= vignette;
+
+    float grain = clamp(ubo.grainStrength, 0.0, 0.5);
+    if (grain > 0.0001) {
+        float noise = fract(sin(dot(crtUV + ubo.time, vec2(12.9898, 78.233))) * 43758.5453);
+        video += (noise - 0.5) * grain;
+    }
 
     vec3 balanced = video * ubo.colorBalance;
     float luminance = dot(balanced, vec3(0.299, 0.587, 0.114));
