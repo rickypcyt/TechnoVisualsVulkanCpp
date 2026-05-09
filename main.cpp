@@ -618,6 +618,16 @@ struct GlobalUBO {
     alignas(4) int mode;
     alignas(4) float videoMix;
     alignas(4) float videoAvailable;
+    alignas(4) float grayscaleAmount;
+    alignas(4) float sharpenAmount;
+    alignas(4) float upscaleEnabled;
+    alignas(4) float crtCurvature;
+    alignas(4) float crtHorizontalCurvature;
+    alignas(4) float crtScanlineIntensity;
+    alignas(4) float crtMaskIntensity;
+    alignas(4) float crtVignette;
+    alignas(4) float crtFishEye;
+    alignas(16) glm::vec3 colorBalance;
 };
 
 struct FrameContext {
@@ -1241,6 +1251,17 @@ private:
         glm::vec4 secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
         int activeMode = -1;
         float videoMix = 1.0f;
+        float videoPlaybackRate = 1.0f;
+        float grayscaleAmount = 0.0f;
+        float sharpenAmount = 0.35f;
+        bool upscaleEnabled = true;
+        float crtCurvature = 0.15f;
+        float crtHorizontalCurvature = 0.15f;
+        float crtScanlineIntensity = 0.35f;
+        float crtMaskIntensity = 0.35f;
+        float crtVignette = 0.55f;
+        float crtFishEye = 0.0f;
+        glm::vec3 colorBalance = glm::vec3(1.0f);
     } visualControls;
     ImGuiContext* imguiContext = nullptr;
     bool imguiInitialized = false;
@@ -2398,10 +2419,12 @@ private:
 
         videoFrameTimer += deltaTime;
         const double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
-        if (videoFrameTimer < frameDuration) {
+        const double playbackRate = std::clamp(static_cast<double>(visualControls.videoPlaybackRate), 0.1, 5.0);
+        const double scaledFrameDuration = frameDuration / playbackRate;
+        if (videoFrameTimer < scaledFrameDuration) {
             return;
         }
-        videoFrameTimer = std::fmod(videoFrameTimer, frameDuration);
+        videoFrameTimer = std::fmod(videoFrameTimer, scaledFrameDuration);
 
         const auto& slot = videoStaging.getSlot(writeSlot);
         if (!slot.mapped) {
@@ -2682,6 +2705,17 @@ private:
             ImGui::Separator();
             ImGui::Text("Video");
             ImGui::SliderFloat("Video Mix", &visualControls.videoMix, 0.0f, 1.0f);
+            ImGui::SliderFloat("Video speed", &visualControls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+            ImGui::SliderFloat("Grayscale", &visualControls.grayscaleAmount, 0.0f, 1.0f);
+            ImGui::SliderFloat("Sharpen", &visualControls.sharpenAmount, 0.0f, 1.0f);
+            ImGui::Checkbox("Bicubic Upscale", &visualControls.upscaleEnabled);
+            ImGui::SliderFloat("CRT Curvature V", &visualControls.crtCurvature, 0.0f, 0.6f, "%.2f");
+            ImGui::SliderFloat("CRT Curvature H", &visualControls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
+            ImGui::SliderFloat("CRT Scanlines", &visualControls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
+            ImGui::SliderFloat("CRT Mask", &visualControls.crtMaskIntensity, 0.0f, 1.0f, "%.2f");
+            ImGui::SliderFloat("CRT Black Bars", &visualControls.crtVignette, 0.0f, 1.0f, "%.2f");
+            ImGui::SliderFloat("CRT Fish-eye", &visualControls.crtFishEye, -1.0f, 1.0f, "%.2f");
+            ImGui::SliderFloat3("RGB Mix", glm::value_ptr(visualControls.colorBalance), 0.0f, 2.0f);
             ImGui::TextWrapped("Video %s", (videoSubsystemInitialized && videoTexture.ready) ? "online" : "unavailable");
             drawVideoAssetSelector();
 
@@ -2977,6 +3011,16 @@ private:
         ubo.mode = currentMode;
         ubo.videoMix = visualControls.videoMix;
         ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.ready) ? 1.0f : 0.0f;
+        ubo.grayscaleAmount = visualControls.grayscaleAmount;
+        ubo.sharpenAmount = visualControls.sharpenAmount;
+        ubo.upscaleEnabled = visualControls.upscaleEnabled ? 1.0f : 0.0f;
+        ubo.crtCurvature = visualControls.crtCurvature;
+        ubo.crtHorizontalCurvature = visualControls.crtHorizontalCurvature;
+        ubo.crtScanlineIntensity = visualControls.crtScanlineIntensity;
+        ubo.crtMaskIntensity = visualControls.crtMaskIntensity;
+        ubo.crtVignette = visualControls.crtVignette;
+        ubo.crtFishEye = visualControls.crtFishEye;
+        ubo.colorBalance = visualControls.colorBalance;
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
