@@ -296,6 +296,8 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/16.1.1/bits/predefined_ops.h \
   /usr/include/c++/16.1.1/bits/ptr_traits.h \
   /usr/include/c++/16.1.1/bits/quoted_string.h \
+  /usr/include/c++/16.1.1/bits/random.h \
+  /usr/include/c++/16.1.1/bits/random.tcc \
   /usr/include/c++/16.1.1/bits/range_access.h \
   /usr/include/c++/16.1.1/bits/refwrap.h \
   /usr/include/c++/16.1.1/bits/requires_hosted.h \
@@ -320,6 +322,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/16.1.1/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/16.1.1/bits/stl_iterator_base_types.h \
   /usr/include/c++/16.1.1/bits/stl_multiset.h \
+  /usr/include/c++/16.1.1/bits/stl_numeric.h \
   /usr/include/c++/16.1.1/bits/stl_pair.h \
   /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h \
   /usr/include/c++/16.1.1/bits/stl_relops.h \
@@ -385,12 +388,15 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/16.1.1/memory \
   /usr/include/c++/16.1.1/mutex \
   /usr/include/c++/16.1.1/new \
+  /usr/include/c++/16.1.1/numeric \
   /usr/include/c++/16.1.1/optional \
   /usr/include/c++/16.1.1/ostream \
   /usr/include/c++/16.1.1/pstl/execution_defs.h \
   /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
   /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
+  /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
   /usr/include/c++/16.1.1/pstl/pstl_config.h \
+  /usr/include/c++/16.1.1/random \
   /usr/include/c++/16.1.1/ratio \
   /usr/include/c++/16.1.1/set \
   /usr/include/c++/16.1.1/sstream \
@@ -431,6 +437,7 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/os_defines.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
   /usr/include/ctype.h \
@@ -3044,8 +3051,6 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/lib/ld-linux-x86-64.so.2:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o:
-
 /usr/lib/libstdc++.so:
 
 /usr/lib/libgcc_s.so.1:
@@ -3183,8 +3188,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/mm_malloc.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/keylockerintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/gfniintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/fxsrintrin.h:
 
@@ -3386,6 +3389,40 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/gtc/matrix_transform.hpp:
 
+/usr/include/glm/gtc/epsilon.hpp:
+
+/usr/include/glm/gtc/constants.inl:
+
+/usr/lib32/libmodplug.so.1:
+
+/usr/lib/libwebpmux.so.3:
+
+/usr/include/glm/gtc/constants.hpp:
+
+/usr/include/pthread.h:
+
+/usr/include/glm/matrix.hpp:
+
+/usr/include/glm/glm.hpp:
+
+/usr/include/glm/geometric.hpp:
+
+/usr/lib32/libpangoft2-1.0.so.0:
+
+/usr/include/glm/fwd.hpp:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o:
+
+/usr/include/c++/16.1.1/bits/random.tcc:
+
+/usr/include/c++/16.1.1/bits/new_allocator.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/lwpintrin.h:
+
+/usr/include/SDL2/SDL_gesture.h:
+
+/usr/include/ctype.h:
+
 /usr/include/c++/16.1.1/bits/quoted_string.h:
 
 /usr/include/c++/16.1.1/bits/predefined_ops.h:
@@ -3435,8 +3472,6 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/include/X11/Xfuncproto.h:
 
 /usr/include/SDL2/SDL_timer.h:
-
-/usr/include/glm/gtc/constants.inl:
 
 /usr/include/c++/16.1.1/bits/fs_dir.h:
 
@@ -3514,16 +3549,6 @@ CMakeFiles/app.dir/VideoStaging.cpp.o:
 
 /usr/include/glm/detail/type_vec1.hpp:
 
-/usr/include/c++/16.1.1/bits/refwrap.h:
-
-/usr/include/glm/detail/qualifier.hpp:
-
-/usr/lib/libjxl_cms.so.0.11:
-
-/usr/include/linux/posix_types.h:
-
-/usr/include/glm/detail/type_mat2x3.hpp:
-
 /usr/include/bits/types/struct_sched_param.h:
 
 /usr/include/c++/16.1.1/bits/localefwd.h:
@@ -3548,11 +3573,13 @@ CMakeFiles/app.dir/VideoStaging.cpp.o:
 
 /usr/include/bits/types/struct_FILE.h:
 
+/usr/include/glm/gtc/epsilon.inl:
+
+/usr/include/bits/types/error_t.h:
+
 /usr/include/bits/types/cookie_io_functions_t.h:
 
 /usr/include/glm/detail/compute_vector_decl.hpp:
-
-/usr/include/glm/detail/type_vec1.inl:
 
 /usr/lib32/libtheoradec.so.2:
 
@@ -3607,8 +3634,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o:
 /usr/include/glm/detail/func_exponential.inl:
 
 /usr/include/bits/flt-eval-method.h:
-
-/usr/include/bits/timex.h:
 
 /usr/include/c++/16.1.1/iosfwd:
 
@@ -3778,12 +3803,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/bits/exception_ptr.h:
 
-/usr/include/pthread.h:
-
-/usr/include/glm/matrix.hpp:
-
-/usr/include/glm/glm.hpp:
-
 /usr/include/SDL2/SDL_mutex.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512vnniintrin.h:
@@ -3793,14 +3812,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/glm/ext/matrix_transform.hpp:
 
 /usr/include/bits/timesize.h:
-
-/usr/include/c++/16.1.1/bits/new_allocator.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/lwpintrin.h:
-
-/usr/include/SDL2/SDL_gesture.h:
-
-/usr/include/ctype.h:
 
 /usr/include/bits/types/__sigset_t.h:
 
@@ -3934,10 +3945,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/detail/type_vec3.hpp:
 
-/usr/include/bits/stdint-intn.h:
-
-/usr/include/bits/wctype-wchar.h:
-
 /usr/include/glm/ext/vector_float1.hpp:
 
 /usr/include/c++/16.1.1/bits/ostream_insert.h:
@@ -3961,8 +3968,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/vulkan/vulkan.h:
 
 /usr/include/vk_video/vulkan_video_codec_h265std.h:
-
-/usr/include/glm/geometric.hpp:
 
 /usr/include/bits/types/FILE.h:
 
@@ -4015,8 +4020,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/stdc-predef.h:
 
 /usr/include/c++/16.1.1/bits/uniform_int_dist.h:
-
-/usr/include/glm/gtc/epsilon.hpp:
 
 /usr/include/SDL2/SDL_cpuinfo.h:
 
@@ -4146,6 +4149,18 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/ext/matrix_float2x2.hpp:
 
+/usr/include/glm/detail/type_vec1.inl:
+
+/usr/include/c++/16.1.1/bits/refwrap.h:
+
+/usr/include/glm/detail/qualifier.hpp:
+
+/usr/lib/libjxl_cms.so.0.11:
+
+/usr/include/linux/posix_types.h:
+
+/usr/include/glm/detail/type_mat2x3.hpp:
+
 /usr/lib32/libfreetype.so.6:
 
 /usr/include/c++/16.1.1/bits/postypes.h:
@@ -4217,6 +4232,20 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/c++/16.1.1/bits/stl_iterator_base_types.h:
 
 /usr/include/c++/16.1.1/cstdio:
+
+/usr/include/bits/stdint-intn.h:
+
+/usr/include/bits/wctype-wchar.h:
+
+/usr/include/c++/16.1.1/bits/stl_numeric.h:
+
+/usr/lib/libSPIRV-Tools-opt.so:
+
+/usr/include/c++/16.1.1/debug/debug.h:
+
+/usr/include/glm/ext/vector_float2_precision.hpp:
+
+/usr/include/glm/ext/vector_relational.hpp:
 
 /usr/include/c++/16.1.1/bits/stl_relops.h:
 
@@ -4330,14 +4359,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/ext/matrix_double3x3.hpp:
 
-/usr/lib/libSPIRV-Tools-opt.so:
-
-/usr/include/c++/16.1.1/debug/debug.h:
-
-/usr/include/glm/ext/vector_float2_precision.hpp:
-
-/usr/include/glm/ext/vector_relational.hpp:
-
 /usr/include/c++/16.1.1/bits/hashtable.h:
 
 /usr/include/bits/stdint-least.h:
@@ -4412,6 +4433,14 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/pstl/glue_memory_defs.h:
 
+/usr/include/bits/timex.h:
+
+/usr/include/c++/16.1.1/pstl/glue_numeric_defs.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/gfniintrin.h:
+
+/usr/include/c++/16.1.1/random:
+
 /usr/include/libavutil/common.h:
 
 /usr/include/c++/16.1.1/ratio:
@@ -4439,10 +4468,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/SDL2/SDL_guid.h:
 
 /usr/include/c++/16.1.1/string_view:
-
-/usr/include/bits/types/error_t.h:
-
-/usr/include/glm/gtc/epsilon.inl:
 
 /usr/lib/libharfbuzz.so.0:
 
@@ -4514,10 +4539,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h:
 
-/usr/lib32/libpangoft2-1.0.so.0:
-
-/usr/include/glm/fwd.hpp:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/hresetintrin.h:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/error_constants.h:
@@ -4525,6 +4546,8 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.cpp:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h:
+
+/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h:
 
@@ -4556,7 +4579,11 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/lib/libsystemd.so.0:
 
+/usr/include/c++/16.1.1/numeric:
+
 /usr/include/glm/detail/type_mat2x4.inl:
+
+/usr/include/c++/16.1.1/bits/random.h:
 
 /usr/include/bits/libm-simd-decl-stubs.h:
 
@@ -4806,9 +4833,9 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/ext/vector_uint2.hpp:
 
-/usr/include/c++/16.1.1/bits/shared_ptr_base.h:
-
 /usr/include/glm/ext/vector_float4.hpp:
+
+/usr/include/c++/16.1.1/bits/shared_ptr_base.h:
 
 /usr/include/glm/ext/vector_uint2_sized.hpp:
 
@@ -4819,9 +4846,3 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/c++/16.1.1/initializer_list:
 
 /usr/include/glm/ext/vector_uint4.hpp:
-
-/usr/lib32/libmodplug.so.1:
-
-/usr/lib/libwebpmux.so.3:
-
-/usr/include/glm/gtc/constants.hpp:

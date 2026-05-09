@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cctype>
 #include <cstdint>
+#include <random>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -1258,6 +1259,12 @@ private:
     int selectedVideoAsset = -1;
     VideoStaging videoStaging;
     uint64_t currentEpoch = 1;
+    struct VideoRandomizerState {
+        bool autoRandomize = false;
+        float intervalSeconds = 30.0f;
+        float elapsedSeconds = 0.0f;
+    } videoRandomizer;
+    std::mt19937 randomEngine{std::random_device{}()};
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -2513,6 +2520,49 @@ private:
         }
     }
 
+    void randomizeVideoAsset() {
+        const auto& assets = videoRegistry.getAssets();
+        if (assets.empty()) {
+            return;
+        }
+
+        int newIndex = selectedVideoAsset;
+        if (assets.size() > 1) {
+            std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+            do {
+                newIndex = dist(randomEngine);
+            } while (newIndex == selectedVideoAsset);
+        } else {
+            newIndex = 0;
+        }
+
+        if (selectedVideoAsset != newIndex) {
+            selectedVideoAsset = newIndex;
+            reloadVideoSource(assets[newIndex].metadata.path);
+        } else if (!videoSubsystemInitialized) {
+            reloadVideoSource(assets[newIndex].metadata.path);
+        }
+    }
+
+    void updateVideoRandomizer(float deltaTime) {
+        if (!videoRandomizer.autoRandomize) {
+            videoRandomizer.elapsedSeconds = 0.0f;
+            return;
+        }
+
+        const auto& assets = videoRegistry.getAssets();
+        if (assets.size() <= 1) {
+            return;
+        }
+
+        videoRandomizer.intervalSeconds = std::max(1.0f, videoRandomizer.intervalSeconds);
+        videoRandomizer.elapsedSeconds += deltaTime;
+        if (videoRandomizer.elapsedSeconds >= videoRandomizer.intervalSeconds) {
+            videoRandomizer.elapsedSeconds = 0.0f;
+            randomizeVideoAsset();
+        }
+    }
+
     void reloadVideoSource(const std::string& path) {
         videoSourcePath = path;
         videoPlayer.shutdown();
@@ -2634,6 +2684,27 @@ private:
             ImGui::SliderFloat("Video Mix", &visualControls.videoMix, 0.0f, 1.0f);
             ImGui::TextWrapped("Video %s", (videoSubsystemInitialized && videoTexture.ready) ? "online" : "unavailable");
             drawVideoAssetSelector();
+
+            const bool hasRandomChoices = videoRegistry.getAssets().size() > 1;
+            if (ImGui::SliderFloat("Random interval (s)", &videoRandomizer.intervalSeconds, 1.0f, 300.0f, "%.0f s")) {
+                videoRandomizer.intervalSeconds = std::clamp(videoRandomizer.intervalSeconds, 1.0f, 600.0f);
+                videoRandomizer.elapsedSeconds = 0.0f;
+            }
+            ImGui::BeginDisabled(!hasRandomChoices);
+            if (ImGui::Button("Randomize video online")) {
+                randomizeVideoAsset();
+                videoRandomizer.elapsedSeconds = 0.0f;
+            }
+            ImGui::SameLine();
+            ImGui::Checkbox("Auto randomize", &videoRandomizer.autoRandomize);
+            if (!hasRandomChoices) {
+                ImGui::SameLine();
+                ImGui::TextDisabled("Need at least 2 videos");
+            } else if (videoRandomizer.autoRandomize) {
+                float remaining = std::max(0.0f, videoRandomizer.intervalSeconds - videoRandomizer.elapsedSeconds);
+                ImGui::Text("Next shuffle in %.1f s", remaining);
+            }
+            ImGui::EndDisabled();
 
             ImGui::Separator();
             ImGui::Checkbox("Show diagnostics window", &showSecondaryWindow);
@@ -3063,6 +3134,7 @@ private:
             auto now = std::chrono::steady_clock::now();
             float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
             lastFrameTimestamp = now;
+            updateVideoRandomizer(deltaTime);
             updateVideoTexture(deltaTime, frame);
             updateUniformBuffer(frame.frameIndex);
             updateImGuiFrame();
