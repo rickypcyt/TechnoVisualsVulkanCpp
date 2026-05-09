@@ -18,6 +18,7 @@ CMakeFiles/app.dir/VideoStaging.cpp.o: /home/ricky/coding/proyects/vulkancpp/Vid
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -186,7 +187,9 @@ CMakeFiles/app.dir/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/main.cpp \
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -918,7 +921,9 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o: /home/ricky
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -1222,7 +1227,9 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o: /ho
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -1493,7 +1500,9 @@ CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -1754,7 +1763,9 @@ CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o: /home/ricky/coding/proyec
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -1897,7 +1908,9 @@ CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o: /home/ricky/coding/proyec
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -2145,7 +2158,9 @@ CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o: /home/ricky/coding/proy
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -2394,7 +2409,9 @@ CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o: /home/ricky/coding/pro
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
@@ -2611,6 +2628,8 @@ CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o: /home/ricky/coding/pro
 app: /usr/lib/Scrt1.o \
   /usr/lib/crti.o \
   /usr/lib/crtn.o \
+  /usr/lib/libasan.so \
+  /usr/lib/libasan_preinit.o \
   /usr/lib/libatomic.so \
   /usr/lib/libatomic_asneeded.so \
   /usr/lib/libc.so \
@@ -3418,11 +3437,9 @@ CMakeFiles/app.dir/main.cpp.o:
 
 /usr/include/glm/ext/vector_uint4_sized.hpp:
 
-/usr/include/glm/ext/vector_uint3_sized.hpp:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/smmintrin.h:
 
-/usr/include/glm/ext/scalar_constants.inl:
-
-/usr/include/c++/16.1.1/bits/quoted_string.h:
+/usr/include/glm/ext/vector_uint3.hpp:
 
 /usr/include/c++/16.1.1/bits/predefined_ops.h:
 
@@ -3445,6 +3462,8 @@ CMakeFiles/app.dir/main.cpp.o:
 /usr/lib32/libxcb-render.so.0:
 
 /usr/include/c++/16.1.1/bits/locale_facets.h:
+
+/usr/lib/libasan_preinit.o:
 
 /usr/include/c++/16.1.1/bits/ios_base.h:
 
@@ -3604,6 +3623,14 @@ CMakeFiles/app.dir/VideoStaging.cpp.o:
 
 /usr/include/glm/ext/matrix_double2x2_precision.hpp:
 
+/usr/lib/libSPIRV-Tools-opt.so:
+
+/usr/include/c++/16.1.1/debug/debug.h:
+
+/usr/include/glm/ext/vector_float2_precision.hpp:
+
+/usr/include/glm/ext/vector_relational.hpp:
+
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o:
 
 /usr/include/bits/setjmp.h:
@@ -3700,14 +3727,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o:
 
 /usr/include/c++/16.1.1/bits/version.h:
 
-CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o:
-
-/usr/lib/libnettle.so.8:
-
-/usr/include/glm/detail/type_mat4x3.inl:
-
-/usr/include/string.h:
-
 /usr/include/bits/locale.h:
 
 /usr/include/c++/16.1.1/bits/concept_check.h:
@@ -3727,12 +3746,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/sm4intrin.h:
 
 /usr/include/SDL2/SDL_system.h:
-
-/usr/include/glm/gtc/type_ptr.hpp:
-
-/usr/include/c++/16.1.1/bits/stringfwd.h:
-
-/usr/include/vulkan/vulkan_core.h:
 
 /usr/include/c++/16.1.1/bits/allocated_ptr.h:
 
@@ -3756,6 +3769,20 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/SDL2/SDL_hidapi.h:
 
+/usr/lib32/libicuuc.so.78:
+
+/usr/include/linux/close_range.h:
+
+/usr/include/SDL2/SDL_touch.h:
+
+/usr/include/wchar.h:
+
+/usr/include/c++/16.1.1/bits/locale_conv.h:
+
+/usr/include/glm/ext/matrix_projection.hpp:
+
+/usr/include/bits/types/locale_t.h:
+
 /usr/include/c++/16.1.1/new:
 
 /usr/include/bits/long-double.h:
@@ -3776,14 +3803,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/ostream:
 
-/usr/include/bits/time64.h:
-
-/usr/include/bits/stdlib-float.h:
-
-/usr/include/c++/16.1.1/bits/codecvt.h:
-
-/usr/include/SDL2/SDL_metal.h:
-
 /usr/include/c++/16.1.1/bits/cpp_type_traits.h:
 
 /usr/include/bits/uio_lim.h:
@@ -3791,10 +3810,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_tables.cpp:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/smmintrin.h:
-
-/usr/include/glm/ext/vector_uint3.hpp:
 
 /usr/include/c++/16.1.1/bits/ostream_print.h:
 
@@ -3874,11 +3889,23 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h:
 
-/usr/include/bits/types/sigset_t.h:
-
 /usr/include/c++/16.1.1/bits/functexcept.h:
 
 /usr/include/SDL2/SDL_stdinc.h:
+
+/usr/include/bits/types/sigset_t.h:
+
+/usr/include/SDL2/SDL.h:
+
+/usr/include/math.h:
+
+/usr/include/glm/ext/matrix_float4x4_precision.hpp:
+
+/usr/include/bits/floatn.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/glm/detail/type_mat2x2.hpp:
 
 /usr/include/bits/thread-shared-types.h:
 
@@ -3924,25 +3951,27 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h:
 
-/usr/lib32/libicuuc.so.78:
+/usr/include/bits/stdlib-float.h:
 
-/usr/include/linux/close_range.h:
+/usr/include/c++/16.1.1/bits/codecvt.h:
 
-/usr/include/SDL2/SDL_touch.h:
+/usr/include/SDL2/SDL_metal.h:
 
-/usr/include/wchar.h:
+/usr/include/bits/time64.h:
 
-/usr/include/c++/16.1.1/bits/locale_conv.h:
+/usr/include/glm/gtc/type_ptr.hpp:
 
-/usr/include/glm/ext/matrix_projection.hpp:
+/usr/include/vulkan/vulkan_core.h:
 
-/usr/include/bits/types/locale_t.h:
+/usr/include/c++/16.1.1/bits/stringfwd.h:
 
-/usr/include/bits/floatn.h:
+CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o:
 
-/usr/include/bits/types.h:
+/usr/lib/libnettle.so.8:
 
-/usr/include/glm/detail/type_mat2x2.hpp:
+/usr/include/glm/detail/type_mat4x3.inl:
+
+/usr/include/string.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/uintrintrin.h:
 
@@ -3961,6 +3990,12 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/SDL2/SDL_loadso.h:
 
 /usr/include/glm/detail/type_vec3.hpp:
+
+/usr/include/c++/16.1.1/bits/stl_numeric.h:
+
+/usr/include/bits/stdint-intn.h:
+
+/usr/include/bits/wctype-wchar.h:
 
 /usr/include/glm/ext/vector_float1.hpp:
 
@@ -4068,12 +4103,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/detail/func_common.inl:
 
-/usr/include/SDL2/SDL.h:
-
-/usr/include/math.h:
-
-/usr/include/glm/ext/matrix_float4x4_precision.hpp:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/immintrin.h:
 
 /usr/include/SDL2/SDL_rwops.h:
@@ -4166,9 +4195,21 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/ext/matrix_float2x2.hpp:
 
+/usr/include/c++/16.1.1/bits/quoted_string.h:
+
+/usr/include/glm/ext/vector_uint3_sized.hpp:
+
+/usr/include/glm/ext/scalar_constants.inl:
+
 /usr/include/glm/detail/type_vec1.inl:
 
 /usr/include/c++/16.1.1/bits/refwrap.h:
+
+/usr/include/glm/ext/vector_uint2_sized.hpp:
+
+/usr/include/glm/ext/vector_float4.hpp:
+
+/usr/include/c++/16.1.1/bits/shared_ptr_base.h:
 
 /usr/include/glm/detail/qualifier.hpp:
 
@@ -4243,20 +4284,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/c++/16.1.1/bits/stl_iterator_base_types.h:
 
 /usr/include/c++/16.1.1/cstdio:
-
-/usr/include/bits/stdint-intn.h:
-
-/usr/include/bits/wctype-wchar.h:
-
-/usr/include/c++/16.1.1/bits/stl_numeric.h:
-
-/usr/lib/libSPIRV-Tools-opt.so:
-
-/usr/include/c++/16.1.1/debug/debug.h:
-
-/usr/include/glm/ext/vector_float2_precision.hpp:
-
-/usr/include/glm/ext/vector_relational.hpp:
 
 /usr/include/c++/16.1.1/bits/stl_relops.h:
 
@@ -4340,6 +4367,8 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/c++/16.1.1/climits:
 
+/usr/include/bits/stdlib-bsearch.h:
+
 /usr/include/c++/16.1.1/clocale:
 
 /usr/include/glm/ext/vector_float3_precision.hpp:
@@ -4383,6 +4412,8 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/bits/stdio_lim.h:
 
 /usr/include/c++/16.1.1/type_traits:
+
+/usr/include/bits/stdio.h:
 
 /usr/include/c++/16.1.1/ext/aligned_buffer.h:
 
@@ -4604,9 +4635,9 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/glm/detail/type_mat2x4.inl:
 
-/usr/include/c++/16.1.1/bits/random.h:
-
 /usr/include/bits/libm-simd-decl-stubs.h:
+
+/usr/include/c++/16.1.1/bits/random.h:
 
 /usr/include/glm/detail/type_mat3x2.hpp:
 
@@ -4685,6 +4716,8 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/c++/16.1.1/bits/algorithmfwd.h:
 
 /usr/include/glm/ext/matrix_float2x4.hpp:
+
+/usr/lib/libasan.so:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512fp16intrin.h:
 
@@ -4849,9 +4882,3 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/include/c++/16.1.1/tr1/poly_laguerre.tcc:
 
 /usr/include/glm/ext/vector_uint2.hpp:
-
-/usr/include/glm/ext/vector_float4.hpp:
-
-/usr/include/c++/16.1.1/bits/shared_ptr_base.h:
-
-/usr/include/glm/ext/vector_uint2_sized.hpp:
