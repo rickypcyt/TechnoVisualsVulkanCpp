@@ -2464,6 +2464,9 @@ private:
             return;
         }
 
+        // Reset lastFrameTimestamp to prevent large deltaTime on first frame
+        lastFrameTimestamp = std::chrono::steady_clock::now();
+
         if (visualControls.randomVideoStart && videoPlayer.durationSeconds() > 0.1) {
             std::uniform_real_distribution<double> dist(0.0, std::max(0.0, videoPlayer.durationSeconds() - videoPlayer.frameDuration()));
             double target = dist(randomEngine);
@@ -2700,6 +2703,19 @@ private:
             return false;
         }
 
+        double duration = videoPlayer.durationSeconds();
+        bool didLoop = false;
+        if (duration > 0.1 && videoDecodeCursor >= duration) {
+            // Soft loop: just reset cursors, don't clear buffer to prevent FPS drops
+            videoDecodeCursor = 0.0;
+            videoPlaybackCursor = 0.0;
+            // Keep last few frames for smooth transition
+            while (videoFrameBuffer.size() > 2) {
+                videoFrameBuffer.pop_front();
+            }
+            didLoop = true;
+        }
+
         CachedVideoFrame frame;
         frame.timestamp = videoDecodeCursor;
         frame.width = static_cast<int>(videoTexture.width);
@@ -2709,6 +2725,9 @@ private:
         int decodedWidth = 0;
         int decodedHeight = 0;
         if (!videoPlayer.grabFrameInto(frame.pixels.data(), frame.pixels.size(), decodedWidth, decodedHeight)) {
+            if (didLoop) {
+                return false;
+            }
             return false;
         }
 
@@ -2725,7 +2744,7 @@ private:
         frame.width = decodedWidth;
         frame.height = decodedHeight;
         videoFrameBuffer.push_back(std::move(frame));
-        if (videoFrameBuffer.size() > MAX_VIDEO_FRAME_BUFFER) {
+        if (videoFrameBuffer.size() > 4) {
             videoFrameBuffer.pop_front();
         }
         videoDecodeCursor += frameDuration;
@@ -2752,10 +2771,8 @@ private:
     }
 
     void pruneVideoFrameBuffer(double minTimestamp) {
-        while (videoFrameBuffer.size() > 4 && videoFrameBuffer.front().timestamp < minTimestamp) {
-            videoFrameBuffer.pop_front();
-        }
-        while (videoFrameBuffer.size() > MAX_VIDEO_FRAME_BUFFER) {
+        // Keep buffer small to prevent accumulation and lag
+        while (videoFrameBuffer.size() > 4) {
             videoFrameBuffer.pop_front();
         }
     }
@@ -2794,32 +2811,22 @@ private:
         const CachedVideoFrame* frameA = &videoFrameBuffer.front();
         const CachedVideoFrame* frameB = frameA;
 
+        double minDelta = std::numeric_limits<double>::max();
         for (const auto& cached : videoFrameBuffer) {
-            if (cached.timestamp <= targetTime) {
+            double delta = std::abs(cached.timestamp - targetTime);
+            if (delta < minDelta) {
+                minDelta = delta;
                 frameA = &cached;
             }
-            if (cached.timestamp >= targetTime) {
-                frameB = &cached;
-                break;
-            }
         }
-
-        if (!frameB) {
-            frameB = &videoFrameBuffer.back();
-        }
-        if (!frameA) {
-            frameA = frameB;
-        }
+        frameB = frameA;
 
         loopBlendDuration = std::clamp(static_cast<double>(visualControls.loopBlendSeconds), 0.0, 5.0);
         const double duration = videoPlayer.durationSeconds();
         const bool loopingClip = videoPlayer.isReady() && duration > 0.1 && videoFrameBuffer.size() >= 2;
-        const double deltaA = std::abs(targetTime - frameA->timestamp);
-        const double deltaB = std::abs(targetTime - frameB->timestamp);
-        const CachedVideoFrame* chosen = (deltaA <= deltaB) ? frameA : frameB;
 
-        size_t copySize = static_cast<size_t>(chosen->width) * chosen->height * 4;
-        if (copySize == 0 || copySize > capacity || chosen->pixels.empty()) {
+        size_t copySize = static_cast<size_t>(frameA->width) * frameA->height * 4;
+        if (copySize == 0 || copySize > capacity || frameA->pixels.empty()) {
             return false;
         }
 
@@ -2849,7 +2856,7 @@ private:
         }
 
         if (!didCrossfade) {
-            std::memcpy(dst, chosen->pixels.data(), copySize);
+            std::memcpy(dst, frameA->pixels.data(), copySize);
             outCopySize = copySize;
         }
         return true;
@@ -3177,11 +3184,8 @@ private:
     }
 
     void saveImGuiLayout() {
-        if (imguiContext == nullptr || imguiIniFilename.empty()) {
-            return;
-        }
-        ImGui::SetCurrentContext(imguiContext);
-        ImGui::SaveIniSettingsToDisk(imguiIniFilename.c_str());
+        // ImGui guarda automáticamente cuando io.IniFilename está establecido
+        // Esta función ya no es necesaria pero se mantiene para compatibilidad
     }
 
     void initImGui() {
@@ -3194,9 +3198,6 @@ private:
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.IniFilename = imguiIniFilename.c_str();
-        if (!imguiIniFilename.empty()) {
-            ImGui::LoadIniSettingsFromDisk(imguiIniFilename.c_str());
-        }
 
         ImGui::StyleColorsDark();
         ImGuiStyle& style = ImGui::GetStyle();
