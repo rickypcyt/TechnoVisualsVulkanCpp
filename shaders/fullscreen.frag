@@ -18,7 +18,11 @@ layout(set = 0, binding = 0) uniform UBO {
     vec4 secondaryColor;
     float colorBlend;
     int mode;
+    float videoMix;
+    float videoAvailable;
 } ubo;
+
+layout(set = 0, binding = 1) uniform sampler2D videoTex;
 
 vec4 renderMode0(vec2 st) {
     return vec4(1.0, 0.2, 0.2, 1.0);
@@ -35,5 +39,8 @@ vec4 dispatchMode(int m, vec2 st) {
 }
 
 void main() {
-    outColor = dispatchMode(ubo.mode, uv);
+    vec4 procedural = dispatchMode(ubo.mode, uv);
+    vec3 video = texture(videoTex, uv).rgb;
+    vec3 mixed = mix(procedural.rgb, mix(procedural.rgb, video, clamp(ubo.videoMix, 0.0, 1.0)), clamp(ubo.videoAvailable, 0.0, 1.0));
+    outColor = vec4(mixed, 1.0);
 }

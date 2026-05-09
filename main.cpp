@@ -23,10 +23,27 @@
 #include <cstdlib>
 #include <memory>
 #include <sstream>
+#include <mutex>
+#include <optional>
+#include <filesystem>
+#include <system_error>
+#include <cmath>
+#include <cctype>
+#include <cstdint>
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
+}
+
+namespace fs = std::filesystem;
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_sdlrenderer2.h"
+#include "VideoStaging.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -42,6 +59,381 @@ const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
+namespace {
+void ensureFFmpegInitialized() {
+    static std::once_flag ffmpegInitFlag;
+    std::call_once(ffmpegInitFlag, []() {
+        av_log_set_level(AV_LOG_ERROR);
+        avformat_network_init();
+    });
+}
+}
+
+class VideoPlayer {
+public:
+    bool initialize(const std::string& path) {
+        ::ensureFFmpegInitialized();
+        shutdown();
+
+        currentSourcePath = path;
+
+        if (avformat_open_input(&formatCtx, path.c_str(), nullptr, nullptr) < 0) {
+            std::cerr << "[Video] Failed to open source: " << path << std::endl;
+            return false;
+        }
+
+        if (avformat_find_stream_info(formatCtx, nullptr) < 0) {
+            std::cerr << "[Video] Failed to read stream info" << std::endl;
+            return false;
+        }
+
+        videoStreamIndex = av_find_best_stream(formatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+        if (videoStreamIndex < 0) {
+            std::cerr << "[Video] No video stream found" << std::endl;
+            return false;
+        }
+
+        AVStream* stream = formatCtx->streams[videoStreamIndex];
+        const AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
+        if (!codec) {
+            std::cerr << "[Video] Unsupported codec" << std::endl;
+            return false;
+        }
+
+        codecCtx = avcodec_alloc_context3(codec);
+        if (!codecCtx) {
+            std::cerr << "[Video] Failed to allocate codec context" << std::endl;
+            return false;
+        }
+
+        if (avcodec_parameters_to_context(codecCtx, stream->codecpar) < 0) {
+            std::cerr << "[Video] Failed to copy codec parameters" << std::endl;
+            return false;
+        }
+
+        if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
+            std::cerr << "[Video] Failed to open codec" << std::endl;
+            return false;
+        }
+
+        packet = av_packet_alloc();
+        frame = av_frame_alloc();
+        if (!packet || !frame) {
+            std::cerr << "[Video] Failed to allocate packet/frame" << std::endl;
+            return false;
+        }
+
+        videoWidth = codecCtx->width;
+        videoHeight = codecCtx->height;
+        frameDurationSeconds = computeFrameDuration(stream);
+        ready = true;
+        return true;
+    }
+
+    bool reinitialize() {
+        if (currentSourcePath.empty()) {
+            return false;
+        }
+        return initialize(currentSourcePath);
+    }
+
+    bool grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight) {
+        if (!ready) {
+            return false;
+        }
+
+        while (true) {
+            int ret = av_read_frame(formatCtx, packet);
+            if (ret < 0) {
+                if (ret == AVERROR_EOF) {
+                    if (!loopEnabled) {
+                        return false;
+                    }
+                    if (av_seek_frame(formatCtx, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD) < 0) {
+                        return false;
+                    }
+                    avcodec_flush_buffers(codecCtx);
+                    continue;
+                }
+                return false;
+            }
+
+            if (packet->stream_index != videoStreamIndex) {
+                av_packet_unref(packet);
+                continue;
+            }
+
+            ret = avcodec_send_packet(codecCtx, packet);
+            av_packet_unref(packet);
+            if (ret < 0) {
+                continue;
+            }
+
+            while (ret >= 0) {
+                ret = avcodec_receive_frame(codecCtx, frame);
+                if (ret == AVERROR(EAGAIN)) {
+                    break;
+                }
+                if (ret < 0) {
+                    return false;
+                }
+
+                bool converted = convertFrameToRGBA(frame, outRGBA);
+                av_frame_unref(frame);
+                if (converted) {
+                    outWidth = videoWidth;
+                    outHeight = videoHeight;
+                    return true;
+                }
+            }
+        }
+    }
+
+    void shutdown() {
+        if (packet) {
+            av_packet_free(&packet);
+            packet = nullptr;
+        }
+        if (frame) {
+            av_frame_free(&frame);
+            frame = nullptr;
+        }
+        if (codecCtx) {
+            avcodec_free_context(&codecCtx);
+            codecCtx = nullptr;
+        }
+        if (formatCtx) {
+            avformat_close_input(&formatCtx);
+            formatCtx = nullptr;
+        }
+        if (swsCtx) {
+            sws_freeContext(swsCtx);
+            swsCtx = nullptr;
+        }
+        ready = false;
+        videoStreamIndex = -1;
+        videoWidth = 0;
+        videoHeight = 0;
+        frameDurationSeconds = 0.0;
+    }
+
+    bool isReady() const { return ready; }
+    int width() const { return videoWidth; }
+    int height() const { return videoHeight; }
+    double frameDuration() const { return frameDurationSeconds; }
+
+private:
+    double computeFrameDuration(const AVStream* stream) const {
+        if (!stream) {
+            return 0.0;
+        }
+        if (stream->avg_frame_rate.num > 0 && stream->avg_frame_rate.den > 0) {
+            return static_cast<double>(stream->avg_frame_rate.den) / stream->avg_frame_rate.num;
+        }
+        if (stream->r_frame_rate.num > 0 && stream->r_frame_rate.den > 0) {
+            return static_cast<double>(stream->r_frame_rate.den) / stream->r_frame_rate.num;
+        }
+        return 1.0 / 30.0;
+    }
+
+    bool convertFrameToRGBA(AVFrame* src, std::vector<uint8_t>& out) {
+        if (!src) {
+            return false;
+        }
+        if (!swsCtx || cachedWidth != src->width || cachedHeight != src->height || cachedFormat != src->format) {
+            if (swsCtx) {
+                sws_freeContext(swsCtx);
+            }
+            swsCtx = sws_getContext(
+                src->width,
+                src->height,
+                static_cast<AVPixelFormat>(src->format),
+                src->width,
+                src->height,
+                AV_PIX_FMT_RGBA,
+                SWS_BILINEAR,
+                nullptr,
+                nullptr,
+                nullptr);
+            cachedWidth = src->width;
+            cachedHeight = src->height;
+            cachedFormat = src->format;
+        }
+
+        if (!swsCtx) {
+            return false;
+        }
+
+        out.resize(static_cast<size_t>(src->width) * src->height * 4);
+        uint8_t* destData[4] = {out.data(), nullptr, nullptr, nullptr};
+        int destLinesize[4] = {src->width * 4, 0, 0, 0};
+
+        sws_scale(
+            swsCtx,
+            src->data,
+            src->linesize,
+            0,
+            src->height,
+            destData,
+            destLinesize);
+
+        return true;
+    }
+
+    AVFormatContext* formatCtx = nullptr;
+    AVCodecContext* codecCtx = nullptr;
+    AVPacket* packet = nullptr;
+    AVFrame* frame = nullptr;
+    SwsContext* swsCtx = nullptr;
+    int videoStreamIndex = -1;
+    int videoWidth = 0;
+    int videoHeight = 0;
+    double frameDurationSeconds = 0.0;
+    bool ready = false;
+    bool loopEnabled = true;
+    int cachedWidth = 0;
+    int cachedHeight = 0;
+    int cachedFormat = AV_PIX_FMT_NONE;
+    std::string currentSourcePath;
+};
+
+struct VideoMetadata {
+    std::string path;
+    std::string filename;
+    int width = 0;
+    int height = 0;
+    double fps = 0.0;
+    double duration = 0.0;
+    int64_t bitrate = 0;
+    bool hasAudio = false;
+    AVPixelFormat pixelFormat = AV_PIX_FMT_NONE;
+};
+
+struct VideoAsset {
+    VideoMetadata metadata;
+};
+
+class VideoRegistry {
+public:
+    void scan(const std::string& rootPath) {
+        assets.clear();
+
+        fs::path root(rootPath);
+        if (!fs::exists(root) || !fs::is_directory(root)) {
+            return;
+        }
+
+        for (const auto& entry : fs::recursive_directory_iterator(root)) {
+            if (!entry.is_regular_file()) {
+                continue;
+            }
+
+            std::string ext = entry.path().extension().string();
+            if (!isVideoExtension(ext)) {
+                continue;
+            }
+
+            VideoAsset asset;
+            asset.metadata.path = entry.path().string();
+            asset.metadata.filename = entry.path().filename().string();
+            probeMetadata(asset);
+            assets.push_back(std::move(asset));
+        }
+
+        std::sort(assets.begin(), assets.end(), [](const VideoAsset& a, const VideoAsset& b) {
+            return a.metadata.filename < b.metadata.filename;
+        });
+    }
+
+    const std::vector<VideoAsset>& getAssets() const {
+        return assets;
+    }
+
+private:
+    static bool isVideoExtension(std::string ext) {
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+
+        static const std::array<const char*, 5> allowed = {".mp4", ".mov", ".mkv", ".avi", ".webm"};
+        return std::any_of(allowed.begin(), allowed.end(), [&](const char* allowedExt) {
+            return ext == allowedExt;
+        });
+    }
+
+    static double extractFrameRate(const AVStream* stream) {
+        if (stream == nullptr) {
+            return 0.0;
+        }
+        if (stream->avg_frame_rate.num > 0 && stream->avg_frame_rate.den > 0) {
+            return av_q2d(stream->avg_frame_rate);
+        }
+        if (stream->r_frame_rate.num > 0 && stream->r_frame_rate.den > 0) {
+            return av_q2d(stream->r_frame_rate);
+        }
+        return 0.0;
+    }
+
+    static double extractDuration(const AVStream* stream, const AVFormatContext* ctx) {
+        if (stream && stream->duration > 0) {
+            return stream->duration * av_q2d(stream->time_base);
+        }
+        if (ctx && ctx->duration > 0) {
+            return static_cast<double>(ctx->duration) / AV_TIME_BASE;
+        }
+        return 0.0;
+    }
+
+    static int64_t extractBitrate(const AVStream* stream, const AVFormatContext* ctx) {
+        if (stream && stream->codecpar && stream->codecpar->bit_rate > 0) {
+            return stream->codecpar->bit_rate;
+        }
+        if (ctx && ctx->bit_rate > 0) {
+            return ctx->bit_rate;
+        }
+        return 0;
+    }
+
+    static void probeMetadata(VideoAsset& asset) {
+        ::ensureFFmpegInitialized();
+        AVFormatContext* context = nullptr;
+        if (avformat_open_input(&context, asset.metadata.path.c_str(), nullptr, nullptr) != 0) {
+            if (context) {
+                avformat_close_input(&context);
+            }
+            return;
+        }
+
+        if (avformat_find_stream_info(context, nullptr) < 0) {
+            avformat_close_input(&context);
+            return;
+        }
+
+        for (unsigned int i = 0; i < context->nb_streams; ++i) {
+            AVStream* stream = context->streams[i];
+            if (!stream || !stream->codecpar) {
+                continue;
+            }
+
+            if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && asset.metadata.width == 0) {
+                asset.metadata.width = stream->codecpar->width;
+                asset.metadata.height = stream->codecpar->height;
+                asset.metadata.fps = extractFrameRate(stream);
+                asset.metadata.duration = extractDuration(stream, context);
+                asset.metadata.bitrate = extractBitrate(stream, context);
+                asset.metadata.pixelFormat = static_cast<AVPixelFormat>(stream->codecpar->format);
+            }
+
+            if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+                asset.metadata.hasAudio = true;
+            }
+        }
+
+        avformat_close_input(&context);
+    }
+
+    std::vector<VideoAsset> assets;
+};
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT severity,
     VkDebugUtilsMessageTypeFlagsEXT type,
@@ -130,6 +522,8 @@ struct GlobalUBO {
     alignas(16) glm::vec4 secondaryColor;
     alignas(4) float colorBlend;
     alignas(4) int mode;
+    alignas(4) float videoMix;
+    alignas(4) float videoAvailable;
 };
 
 struct FrameContext {
@@ -215,6 +609,17 @@ public:
 
     void clearImageTracking() {
         imagesInFlight.clear();
+    }
+
+    void resetCurrentFrame() {
+        currentFrame = 0;
+    }
+
+    VkFence getFence(uint32_t frameIndex) {
+        if (frameIndex >= frameContexts.size()) {
+            return VK_NULL_HANDLE;
+        }
+        return frameContexts[frameIndex].inFlightFence;
     }
 
     void cleanup() {
@@ -593,6 +998,25 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 };
 
+struct VideoTextureResources {
+    struct StagingSlot {
+        ResourceHandle buffer;
+        void* mapped = nullptr;
+        size_t capacity = 0;
+    };
+
+    ResourceHandle imageHandle;
+    VkImageView imageView = VK_NULL_HANDLE;
+    VkSampler sampler = VK_NULL_HANDLE;
+    VkDescriptorImageInfo descriptorInfo{};
+    uint32_t width = 1;
+    uint32_t height = 1;
+    size_t frameSize = 4;
+    bool ready = false;
+    VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    std::array<StagingSlot, MAX_FRAMES_IN_FLIGHT> stagingSlots{};
+    std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploads{};
+};
 
 class App {
 public:
@@ -613,9 +1037,12 @@ public:
         createGraphicsPipeline();
         createFullscreenPipeline();
         createSwapchainFramebuffers();
+        createSwapchainSemaphores();
         createCommandPool();
         createVertexBuffer();
         createUniformBuffers();
+        initializeVideoAssets();
+        initVideoSystem();
         createDescriptorPool();
         createDescriptorSets();
         createUiWindow();
@@ -640,6 +1067,8 @@ public:
         createCommandBuffers();
         frameSystem.init(device, MAX_FRAMES_IN_FLIGHT);
         startTime = std::chrono::steady_clock::now();
+        lastFrameTimestamp = startTime;
+        initializationComplete = true;
         mainLoop();
         cleanup();
     }
@@ -673,6 +1102,7 @@ private:
     std::vector<VkImageView> swapchainImageViews;
     VkRenderPass renderPass = VK_NULL_HANDLE;
     std::vector<VkFramebuffer> swapchainFramebuffers;
+    std::vector<VkSemaphore> swapchainRenderSemaphores;
     VkCommandPool commandPool = VK_NULL_HANDLE;
     std::vector<VkCommandBuffer> commandBuffers;
     VkQueue graphicsQueue = VK_NULL_HANDLE;
@@ -685,6 +1115,7 @@ private:
     bool running = true;
     bool framebufferResized = false;
     bool resizePending = false;
+    bool initializationComplete = false;
     VkExtent2D lastDrawableExtent{0, 0};
     uint32_t resizeStableFrames = 0;
     static constexpr uint32_t RESIZE_STABILITY_THRESHOLD = 2;
@@ -714,7 +1145,8 @@ private:
         float colorBlend = 0.5f;
         glm::vec4 primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
         glm::vec4 secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
-        int activeMode = 0;
+        int activeMode = -1;
+        float videoMix = 1.0f;
     } visualControls;
     ImGuiContext* imguiContext = nullptr;
     bool imguiInitialized = false;
@@ -722,6 +1154,19 @@ private:
     bool showDemoWindow = false;
     uint32_t lastFrameImageIndex = 0;
     uint32_t lastFrameFrameIndex = 0;
+    VideoPlayer videoPlayer;
+    VideoTextureResources videoTexture;
+    std::array<std::vector<uint8_t>, 2> videoCpuSnapshots;
+    size_t videoSnapshotWriteIndex = 0;
+    double videoFrameTimer = 0.0;
+    std::chrono::steady_clock::time_point lastFrameTimestamp;
+    bool videoSubsystemInitialized = false;
+    std::string videoSourcePath = "media/sample.mp4";
+    VideoRegistry videoRegistry;
+    std::string videoAssetsRoot = "mp4s";
+    int selectedVideoAsset = -1;
+    VideoStaging videoStaging;
+    uint64_t currentEpoch = 1;
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -1214,7 +1659,33 @@ private:
         std::cout << "[Swapchain] Framebuffers created" << std::endl;
     }
 
+    void createSwapchainSemaphores() {
+        destroySwapchainSemaphores();
+
+        swapchainRenderSemaphores.resize(swapchainImages.size(), VK_NULL_HANDLE);
+
+        VkSemaphoreCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        for (size_t i = 0; i < swapchainRenderSemaphores.size(); ++i) {
+            if (vkCreateSemaphore(device, &info, nullptr, &swapchainRenderSemaphores[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create swapchain render semaphore");
+            }
+        }
+    }
+
+    void destroySwapchainSemaphores() {
+        for (auto& semaphore : swapchainRenderSemaphores) {
+            if (semaphore != VK_NULL_HANDLE) {
+                vkDestroySemaphore(device, semaphore, nullptr);
+                semaphore = VK_NULL_HANDLE;
+            }
+        }
+        swapchainRenderSemaphores.clear();
+    }
+
     void cleanupSwapchain() {
+        destroySwapchainSemaphores();
         for (auto framebuffer : swapchainFramebuffers) {
             if (framebuffer != VK_NULL_HANDLE) {
                 vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -1240,9 +1711,22 @@ private:
     }
 
     void recreateSwapchain() {
+        if (!initializationComplete) {
+            std::cout << "[Swapchain] recreateSwapchain blocked during initialization" << std::endl;
+            framebufferResized = true;
+            return;
+        }
+        std::cout << "[SWAPCHAIN] RECREATE START" << std::endl;
         vkDeviceWaitIdle(device);
 
         cleanupSwapchain();
+        std::cout << "[SWAPCHAIN] DESTROY old resources" << std::endl;
+
+        // Reset command buffers to clear references to old swapchain resources
+        for (auto cmdBuffer : commandBuffers) {
+            vkResetCommandBuffer(cmdBuffer, 0);
+        }
+
         int drawableWidth = 0;
         int drawableHeight = 0;
         SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
@@ -1255,6 +1739,35 @@ private:
         createSwapchain();
         createImageViews();
         createSwapchainFramebuffers();
+        createSwapchainSemaphores();
+        frameSystem.resizeSwapchainImages(swapchainImages.size());
+        std::cout << "[SWAPCHAIN] CREATE new extent=" << drawableWidth << "," << drawableHeight << std::endl;
+
+        std::cout << "[RESET] frameIndex=0 fences reset staging reset" << std::endl;
+        frameSystem.resetCurrentFrame();
+        videoTexture.pendingUploads.fill(false);
+
+        uint32_t targetVideoWidth = std::max<uint32_t>(1u, videoTexture.width);
+        uint32_t targetVideoHeight = std::max<uint32_t>(1u, videoTexture.height);
+        if (videoSubsystemInitialized && videoPlayer.isReady()) {
+            std::cout << "[VIDEO] Reinitializing decoder after swapchain resize" << std::endl;
+            if (!videoPlayer.reinitialize()) {
+                std::cerr << "[VIDEO] Decoder reinit failed after swapchain resize" << std::endl;
+                videoSubsystemInitialized = false;
+            } else {
+                targetVideoWidth = static_cast<uint32_t>(std::max(1, videoPlayer.width()));
+                targetVideoHeight = static_cast<uint32_t>(std::max(1, videoPlayer.height()));
+            }
+        }
+
+        createVideoTextureResources(targetVideoWidth, targetVideoHeight);
+
+        // Update descriptor sets to ensure they point to valid resources
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
+            updateDescriptorSet(i);
+        }
+
+        std::cout << "[SWAPCHAIN] RECREATE END" << std::endl;
     }
 
     void createDescriptorSetLayout() {
@@ -1265,11 +1778,18 @@ private:
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         uboLayoutBinding.pImmutableSamplers = nullptr;
 
-        VkDescriptorSetLayoutBinding bindings[] = {uboLayoutBinding};
+        VkDescriptorSetLayoutBinding samplerBinding{};
+        samplerBinding.binding = 1;
+        samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerBinding.descriptorCount = 1;
+        samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerBinding.pImmutableSamplers = nullptr;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = bindings;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
 
         if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout");
@@ -1537,15 +2057,403 @@ private:
         }
     }
 
+    void initVideoSystem() {
+        if (videoSubsystemInitialized) {
+            return;
+        }
+
+        if (!fs::exists(videoSourcePath)) {
+            std::cerr << "[Video] Source not found: " << videoSourcePath << std::endl;
+            return;
+        }
+
+        if (!videoPlayer.initialize(videoSourcePath)) {
+            std::cerr << "[Video] Failed to initialize player for " << videoSourcePath << std::endl;
+            return;
+        }
+
+        createVideoTextureResources(static_cast<uint32_t>(std::max(1, videoPlayer.width())),
+                                    static_cast<uint32_t>(std::max(1, videoPlayer.height())));
+
+        videoSubsystemInitialized = videoTexture.ready;
+        if (!videoSubsystemInitialized) {
+            return;
+        }
+
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
+            updateDescriptorSet(i);
+        }
+
+        std::cout << "[Video] Initialized " << videoSourcePath << " (" << videoPlayer.width() << "x" << videoPlayer.height() << ")" << std::endl;
+    }
+
+    void createVideoTextureResources(uint32_t width, uint32_t height) {
+        destroyVideoTexture();
+
+        videoTexture.width = width;
+        videoTexture.height = height;
+        videoTexture.frameSize = static_cast<size_t>(width) * height * 4;
+
+        videoTexture.imageHandle = resourceSystem.createImage(
+            width,
+            height,
+            VK_FORMAT_R8G8B8A8_UNORM,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = videoTexture.imageHandle.image;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(device, &viewInfo, nullptr, &videoTexture.imageView) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create video image view");
+        }
+
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &videoTexture.sampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create video sampler");
+        }
+
+        initializeVideoImage(videoTexture.imageHandle.image);
+
+        videoTexture.descriptorInfo.sampler = videoTexture.sampler;
+        videoTexture.descriptorInfo.imageView = videoTexture.imageView;
+        videoTexture.descriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        videoTexture.currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        videoTexture.pendingUploads.fill(false);
+
+        if (!videoStaging.init(MAX_FRAMES_IN_FLIGHT, videoTexture.frameSize)) {
+            throw std::runtime_error("failed to initialize VideoStaging");
+        }
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            if (videoTexture.frameSize == 0) {
+                videoStaging.setSlot(i, VK_NULL_HANDLE, VK_NULL_HANDLE, nullptr, 0);
+                continue;
+            }
+
+            auto buffer = resourceSystem.createBuffer(
+                static_cast<VkDeviceSize>(videoTexture.frameSize),
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+            std::cout << "[STAGING] slot=" << i << " allocated capacity=" << videoTexture.frameSize << std::endl;
+
+            void* mapped = nullptr;
+            if (vkMapMemory(device, buffer.memory, 0, static_cast<VkDeviceSize>(videoTexture.frameSize), 0, &mapped) != VK_SUCCESS) {
+                resourceSystem.destroy(buffer);
+                throw std::runtime_error("failed to map video staging buffer");
+            }
+
+            std::cout << "[STAGING] slot=" << i << " mapped ptr=" << mapped << std::endl;
+
+            videoStaging.setSlot(i, buffer.buffer, buffer.memory, mapped, videoTexture.frameSize);
+        }
+
+        videoSnapshotWriteIndex = 0;
+        for (auto& snapshot : videoCpuSnapshots) {
+            snapshot.clear();
+        }
+        videoTexture.ready = true;
+    }
+
+    void initializeVideoImage(VkImage image) {
+        if (image == VK_NULL_HANDLE) {
+            return;
+        }
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+        if (vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate command buffer for video image init");
+        }
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+            throw std::runtime_error("failed to begin command buffer for video image init");
+        }
+
+        auto transition = [&](VkImageLayout oldLayout, VkImageLayout newLayout,
+                              VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage) {
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = oldLayout;
+            barrier.newLayout = newLayout;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = image;
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+
+            VkAccessFlags srcAccessMask = 0;
+            VkAccessFlags dstAccessMask = 0;
+
+            if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+                dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+                srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            }
+
+            barrier.srcAccessMask = srcAccessMask;
+            barrier.dstAccessMask = dstAccessMask;
+
+            vkCmdPipelineBarrier(
+                commandBuffer,
+                srcStage,
+                dstStage,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier);
+        };
+
+        transition(VK_IMAGE_LAYOUT_UNDEFINED,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                   VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+        VkClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        VkImageSubresourceRange clearRange{};
+        clearRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        clearRange.baseMipLevel = 0;
+        clearRange.levelCount = 1;
+        clearRange.baseArrayLayer = 0;
+        clearRange.layerCount = 1;
+
+        vkCmdClearColorImage(
+            commandBuffer,
+            image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            &clearColor,
+            1,
+            &clearRange);
+
+        transition(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                   VK_PIPELINE_STAGE_TRANSFER_BIT,
+                   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+            vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+            throw std::runtime_error("failed to record command buffer for video image init");
+        }
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+            vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+            throw std::runtime_error("failed to submit command buffer for video image init");
+        }
+
+        vkQueueWaitIdle(graphicsQueue);
+        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+    }
+
+    void updateVideoTexture(float deltaTime, FrameContext& frame) {
+        if (!videoSubsystemInitialized) {
+            return;
+        }
+
+        std::cout << "[VIDEO] decode start frameIndex=" << frame.frameIndex << std::endl;
+        std::cout << "[VIDEO] snapshot write idx=" << videoSnapshotWriteIndex << std::endl;
+        vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+
+        videoFrameTimer += deltaTime;
+        const double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
+        if (videoFrameTimer < frameDuration) {
+            return;
+        }
+        videoFrameTimer = std::fmod(videoFrameTimer, frameDuration);
+
+        std::vector<uint8_t>& decodeTarget = videoCpuSnapshots[videoSnapshotWriteIndex];
+        int decodedWidth = 0;
+        int decodedHeight = 0;
+        if (!videoPlayer.grabFrame(decodeTarget, decodedWidth, decodedHeight)) {
+            return;
+        }
+
+        std::cout << "[VIDEO] frame decoded size=" << decodedWidth << "x" << decodedHeight << " bytes=" << decodeTarget.size() << std::endl;
+
+        const size_t committedSnapshot = videoSnapshotWriteIndex;
+        videoSnapshotWriteIndex = (videoSnapshotWriteIndex + 1) % videoCpuSnapshots.size();
+
+        if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
+            createVideoTextureResources(decodedWidth, decodedHeight);
+            if (!videoTexture.ready) {
+                return;
+            }
+            for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
+                updateDescriptorSet(i);
+            }
+        }
+
+        // Use ring buffer for staging: write to slot opposite to current frame
+        uint32_t writeSlot = (frame.frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+        const auto& slot = videoStaging.getSlot(writeSlot);
+        const size_t copySize = static_cast<size_t>(decodedWidth) * decodedHeight * 4;
+        if (copySize > slot.capacity) {
+            throw std::runtime_error("decoded frame larger than staging buffer");
+        }
+
+        const auto& committedData = videoCpuSnapshots[committedSnapshot];
+        if (committedData.size() < copySize || committedData.empty()) {
+            std::cerr << "[VIDEO] Snapshot underflow detected (slot=" << committedSnapshot
+                      << ") size=" << committedData.size() << " expected=" << copySize << std::endl;
+            return;
+        }
+        const void* committedPtr = committedData.data();
+        if (!committedPtr) {
+            std::cerr << "[VIDEO] Snapshot pointer is null for slot=" << committedSnapshot << std::endl;
+            return;
+        }
+
+        // Wait for fence of the write slot to ensure GPU is done with it
+        VkFence slotFence = frameSystem.getFence(writeSlot);
+        if (slotFence != VK_NULL_HANDLE) {
+            vkWaitForFences(device, 1, &slotFence, VK_TRUE, UINT64_MAX);
+        }
+
+        std::cout << "[STAGING] writing slot=" << writeSlot << " size=" << copySize << " fenceState=SIGNALLED" << std::endl;
+        auto result = videoStaging.writeVideoStagingSlot(writeSlot, committedPtr, copySize, currentEpoch);
+        if (!result.success) {
+            printf("STAGING WRITE REJECTED\n");
+        }
+        videoTexture.pendingUploads[writeSlot] = true;
+    }
+
+    void destroyVideoTexture() {
+        std::cout << "[STAGING] destroyVideoTexture called" << std::endl;
+        if (videoTexture.imageView != VK_NULL_HANDLE) {
+            vkDestroyImageView(device, videoTexture.imageView, nullptr);
+            videoTexture.imageView = VK_NULL_HANDLE;
+        }
+        if (videoTexture.sampler != VK_NULL_HANDLE) {
+            vkDestroySampler(device, videoTexture.sampler, nullptr);
+            videoTexture.sampler = VK_NULL_HANDLE;
+        }
+
+        for (size_t i = 0; i < videoStaging.getSlotCount(); ++i) {
+            const auto& slot = videoStaging.getSlot(i);
+            std::cout << "[STAGING] destroy slot=" << i << " mapped=" << slot.mapped << " capacity=" << slot.capacity << std::endl;
+            if (slot.mapped) {
+                vkUnmapMemory(device, slot.memory);
+            }
+            if (slot.buffer != VK_NULL_HANDLE) {
+                ResourceHandle handle;
+                handle.type = ResourceHandle::Type::Buffer;
+                handle.buffer = slot.buffer;
+                handle.memory = slot.memory;
+                resourceSystem.destroy(handle);
+            }
+            videoStaging.clearSlot(i);
+        }
+        if (videoTexture.imageHandle.type != ResourceHandle::Type::Unknown) {
+            resourceSystem.destroy(videoTexture.imageHandle);
+            videoTexture.imageHandle = {};
+        }
+        videoTexture.ready = false;
+        videoStaging.destroy();
+        std::cout << "[STAGING] destroyVideoTexture completed" << std::endl;
+        videoTexture.descriptorInfo = {};
+        videoTexture.currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        videoTexture.pendingUploads.fill(false);
+    }
+
+    void initializeVideoAssets() {
+        videoRegistry.scan(videoAssetsRoot);
+        const auto& assets = videoRegistry.getAssets();
+        if (!assets.empty()) {
+            selectedVideoAsset = 0;
+            videoSourcePath = assets[0].metadata.path;
+        } else {
+            selectedVideoAsset = -1;
+        }
+    }
+
+    void drawVideoAssetSelector() {
+        const auto& assets = videoRegistry.getAssets();
+        if (assets.empty()) {
+            ImGui::TextDisabled("No videos found in %s", videoAssetsRoot.c_str());
+            return;
+        }
+
+        if (selectedVideoAsset < 0 || selectedVideoAsset >= static_cast<int>(assets.size())) {
+            selectedVideoAsset = 0;
+        }
+
+        if (ImGui::BeginCombo("Video Asset", assets[selectedVideoAsset].metadata.filename.c_str())) {
+            for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+                bool isSelected = (i == selectedVideoAsset);
+                if (ImGui::Selectable(assets[i].metadata.filename.c_str(), isSelected)) {
+                    if (selectedVideoAsset != i) {
+                        selectedVideoAsset = i;
+                        reloadVideoSource(assets[i].metadata.path);
+                    }
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }
+
+    void reloadVideoSource(const std::string& path) {
+        videoSourcePath = path;
+        videoPlayer.shutdown();
+        videoSubsystemInitialized = false;
+        videoFrameTimer = 0.0;
+        lastFrameTimestamp = std::chrono::steady_clock::now();
+        initVideoSystem();
+    }
+
     void createDescriptorPool() {
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT;
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
@@ -1643,6 +2551,12 @@ private:
             ImGui::SliderFloat("High", &visualControls.high, 0.0f, 1.0f);
 
             ImGui::Separator();
+            ImGui::Text("Video");
+            ImGui::SliderFloat("Video Mix", &visualControls.videoMix, 0.0f, 1.0f);
+            ImGui::TextWrapped("Video %s", (videoSubsystemInitialized && videoTexture.ready) ? "online" : "unavailable");
+            drawVideoAssetSelector();
+
+            ImGui::Separator();
             ImGui::Checkbox("Show diagnostics window", &showSecondaryWindow);
             ImGui::Checkbox("Show ImGui demo", &showDemoWindow);
         }
@@ -1655,9 +2569,24 @@ private:
                 ImGui::Text("Swapchain: %ux%u", swapchainExtent.width, swapchainExtent.height);
                 ImGui::Text("Current mode: %d", currentMode);
                 ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+                if (videoSubsystemInitialized && videoTexture.ready) {
+                    ImGui::Text("Video: %ux%u", videoTexture.width, videoTexture.height);
+                } else {
+                    ImGui::Text("Video offline");
+                }
                 if (ImGui::Button("Reset Palette")) {
                     visualControls.primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
                     visualControls.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+                }
+                if (selectedVideoAsset >= 0 && selectedVideoAsset < static_cast<int>(videoRegistry.getAssets().size())) {
+                    const auto& meta = videoRegistry.getAssets()[selectedVideoAsset].metadata;
+                    ImGui::Separator();
+                    ImGui::Text("Video asset: %s", meta.filename.c_str());
+                    ImGui::Text("Resolution: %dx%d", meta.width, meta.height);
+                    ImGui::Text("FPS: %.2f", meta.fps);
+                    ImGui::Text("Duration: %.2f s", meta.duration);
+                    ImGui::Text("Bitrate: %.0f kbps", meta.bitrate / 1000.0);
+                    ImGui::Text("Audio: %s", meta.hasAudio ? "yes" : "no");
                 }
             }
             ImGui::End();
@@ -1707,16 +2636,25 @@ private:
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(GlobalUBO);
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[frameIndex];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
-        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSets[frameIndex];
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSets[frameIndex];
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &videoTexture.descriptorInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void createCommandPool() {
@@ -1756,11 +2694,107 @@ private:
             throw std::runtime_error("failed to begin recording command buffer");
         }
 
+        recordPendingVideoUpload(commandBuffer, frame.frameIndex);
+
         renderer.record(commandBuffer, frame);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer");
         }
+    }
+
+    void recordPendingVideoUpload(VkCommandBuffer commandBuffer, uint32_t frameIndex) {
+        if (!videoTexture.ready) {
+            return;
+        }
+        if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
+            return;
+        }
+        if (!videoTexture.pendingUploads[frameIndex]) {
+            return;
+        }
+
+        std::cout << "[UPLOAD] frameIndex=" << frameIndex << " stagingSlot=" << frameIndex << " submitted layout=OK" << std::endl;
+
+        auto transition = [&](VkImageLayout oldLayout, VkImageLayout newLayout,
+                              VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage) {
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = oldLayout;
+            barrier.newLayout = newLayout;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = videoTexture.imageHandle.image;
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+
+            VkAccessFlags srcAccessMask = 0;
+            VkAccessFlags dstAccessMask = 0;
+
+            if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+                dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            } else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+                srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+                srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            }
+
+            barrier.srcAccessMask = srcAccessMask;
+            barrier.dstAccessMask = dstAccessMask;
+
+            vkCmdPipelineBarrier(
+                commandBuffer,
+                srcStage,
+                dstStage,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier);
+        };
+
+        const auto& slot = videoStaging.getSlot(frameIndex);
+        VkImageLayout startLayout = videoTexture.currentLayout;
+        VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                                            ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+                                            : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+        transition(startLayout,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   srcStage,
+                   VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+        VkBufferImageCopy region{};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {videoTexture.width, videoTexture.height, 1};
+
+        vkCmdCopyBufferToImage(
+            commandBuffer,
+            slot.buffer,
+            videoTexture.imageHandle.image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &region);
+
+        transition(
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+        videoTexture.currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        videoTexture.pendingUploads[frameIndex] = false;
     }
 
     void updateUniformBuffer(uint32_t frameIndex) {
@@ -1791,6 +2825,8 @@ private:
         ubo.secondaryColor = visualControls.secondaryColor;
         ubo.colorBlend = visualControls.colorBlend;
         ubo.mode = currentMode;
+        ubo.videoMix = visualControls.videoMix;
+        ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.ready) ? 1.0f : 0.0f;
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
@@ -1894,6 +2930,11 @@ private:
                 if (event.type == SDL_QUIT) {
                     running = false;
                 }
+                if (event.type == SDL_KEYDOWN) {
+                    if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_q) {
+                        running = false;
+                    }
+                }
                 if (event.type == SDL_WINDOWEVENT) {
                     SDL_Window* sourceWindow = SDL_GetWindowFromID(event.window.windowID);
                     if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
@@ -1915,7 +2956,7 @@ private:
 
             handleResizeHint();
 
-            if (framebufferResized) {
+            if (framebufferResized && initializationComplete) {
                 recreateSwapchain();
                 framebufferResized = false;
             }
@@ -1923,6 +2964,7 @@ private:
             uint32_t imageIndex = 0;
             VkResult result = VK_SUCCESS;
             FrameContext& frame = frameSystem.beginFrame(swapchain, imageIndex, result);
+            std::cout << "[FRAME START] cpuFrameIndex=" << frame.frameIndex << " imageIndex=" << imageIndex << std::endl;
             lastFrameFrameIndex = frame.frameIndex;
             lastFrameImageIndex = imageIndex;
 
@@ -1939,6 +2981,10 @@ private:
             }
             imagesInFlight[imageIndex] = &frame;
 
+            auto now = std::chrono::steady_clock::now();
+            float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
+            lastFrameTimestamp = now;
+            updateVideoTexture(deltaTime, frame);
             updateUniformBuffer(frame.frameIndex);
             updateImGuiFrame();
 
@@ -1954,7 +3000,7 @@ private:
 
             VkSemaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
             VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-            VkSemaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
+            VkSemaphore signalSemaphores[] = {swapchainRenderSemaphores[imageIndex]};
 
             VkSubmitInfo submitInfo{};
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1973,7 +3019,7 @@ private:
             VkPresentInfoKHR presentInfo{};
             presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
             presentInfo.waitSemaphoreCount = 1;
-            presentInfo.pWaitSemaphores = signalSemaphores;
+            presentInfo.pWaitSemaphores = &swapchainRenderSemaphores[imageIndex];
             presentInfo.swapchainCount = 1;
             presentInfo.pSwapchains = &swapchain;
             presentInfo.pImageIndices = &imageIndex;
@@ -1997,6 +3043,10 @@ private:
 
         cleanupImGui();
         destroyUiWindow();
+
+        videoPlayer.shutdown();
+        destroyVideoTexture();
+        destroySwapchainSemaphores();
 
         for (size_t i = 0; i < uniformBuffersMemory.size(); ++i) {
             if (uniformBuffersMapped[i]) {
