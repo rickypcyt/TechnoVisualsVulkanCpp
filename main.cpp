@@ -32,6 +32,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <random>
+#include <deque>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -50,6 +51,19 @@ namespace fs = std::filesystem;
 const int WIDTH = 800;
 const int HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
+const size_t MAX_VIDEO_FRAME_BUFFER = 48;
+const int MAX_VIDEO_OUTPUT_HEIGHT = 720;
+const std::array<int, 5> FORCED_FPS_OPTIONS = {0, 15, 24, 30, 60};
+const std::string imguiIniFilename = "imgui.ini";
+constexpr bool kEnableVideoTrace = false;
+
+template<typename... Args>
+inline void videoTrace(Args&&... args) {
+    if constexpr (kEnableVideoTrace) {
+        (std::cout << ... << std::forward<Args>(args));
+        std::cout << std::endl;
+    }
+}
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -125,9 +139,18 @@ public:
             return false;
         }
 
-        videoWidth = codecCtx->width;
-        videoHeight = codecCtx->height;
+        int outputWidth = codecCtx->width;
+        int outputHeight = codecCtx->height;
+        computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight);
+        videoWidth = outputWidth;
+        videoHeight = outputHeight;
         frameDurationSeconds = computeFrameDuration(stream);
+        videoDurationSeconds = 0.0;
+        if (stream->duration > 0) {
+            videoDurationSeconds = stream->duration * av_q2d(stream->time_base);
+        } else if (formatCtx->duration > 0) {
+            videoDurationSeconds = static_cast<double>(formatCtx->duration) / AV_TIME_BASE;
+        }
         ready = true;
         return true;
     }
@@ -232,41 +255,21 @@ public:
                     return false;
                 }
 
-                const size_t needed = static_cast<size_t>(frame->width) * frame->height * 4;
-                if (needed > destCapacity) {
-                    outWidth = frame->width;
-                    outHeight = frame->height;
+                if (!ensureScalingContext(frame->width, frame->height, static_cast<AVPixelFormat>(frame->format))) {
                     av_frame_unref(frame);
                     return false;
                 }
 
-                if (!swsCtx || cachedWidth != frame->width || cachedHeight != frame->height || cachedFormat != frame->format) {
-                    if (swsCtx) {
-                        sws_freeContext(swsCtx);
-                    }
-                    swsCtx = sws_getContext(
-                        frame->width,
-                        frame->height,
-                        static_cast<AVPixelFormat>(frame->format),
-                        frame->width,
-                        frame->height,
-                        AV_PIX_FMT_RGBA,
-                        SWS_BILINEAR,
-                        nullptr,
-                        nullptr,
-                        nullptr);
-                    cachedWidth = frame->width;
-                    cachedHeight = frame->height;
-                    cachedFormat = frame->format;
-                }
-
-                if (!swsCtx) {
+                const size_t needed = static_cast<size_t>(videoWidth) * videoHeight * 4;
+                if (needed > destCapacity) {
+                    outWidth = videoWidth;
+                    outHeight = videoHeight;
                     av_frame_unref(frame);
                     return false;
                 }
 
                 uint8_t* destPlanes[4] = {dest, nullptr, nullptr, nullptr};
-                int destStrides[4] = {frame->width * 4, 0, 0, 0};
+                int destStrides[4] = {videoWidth * 4, 0, 0, 0};
                 sws_scale(
                     swsCtx,
                     frame->data,
@@ -276,8 +279,8 @@ public:
                     destPlanes,
                     destStrides);
 
-                outWidth = frame->width;
-                outHeight = frame->height;
+                outWidth = videoWidth;
+                outHeight = videoHeight;
                 av_frame_unref(frame);
                 return true;
             }
@@ -305,17 +308,43 @@ public:
             sws_freeContext(swsCtx);
             swsCtx = nullptr;
         }
+        cachedWidth = 0;
+        cachedHeight = 0;
+        cachedDstWidth = 0;
+        cachedDstHeight = 0;
+        cachedFormat = AV_PIX_FMT_NONE;
         ready = false;
         videoStreamIndex = -1;
         videoWidth = 0;
         videoHeight = 0;
         frameDurationSeconds = 0.0;
+        videoDurationSeconds = 0.0;
     }
 
     bool isReady() const { return ready; }
     int width() const { return videoWidth; }
     int height() const { return videoHeight; }
     double frameDuration() const { return frameDurationSeconds; }
+    double durationSeconds() const { return videoDurationSeconds; }
+    bool seekSeconds(double seconds) {
+        if (!ready || !formatCtx || videoStreamIndex < 0 || seconds < 0.0) {
+            return false;
+        }
+        AVStream* stream = formatCtx->streams[videoStreamIndex];
+        if (!stream || stream->time_base.den == 0) {
+            return false;
+        }
+        double clamped = seconds;
+        if (videoDurationSeconds > 0.0) {
+            clamped = std::clamp(seconds, 0.0, videoDurationSeconds - frameDurationSeconds);
+        }
+        int64_t target = static_cast<int64_t>(clamped / av_q2d(stream->time_base));
+        if (av_seek_frame(formatCtx, videoStreamIndex, target, AVSEEK_FLAG_BACKWARD) < 0) {
+            return false;
+        }
+        avcodec_flush_buffers(codecCtx);
+        return true;
+    }
 
 private:
     double computeFrameDuration(const AVStream* stream) const {
@@ -335,33 +364,13 @@ private:
         if (!src) {
             return false;
         }
-        if (!swsCtx || cachedWidth != src->width || cachedHeight != src->height || cachedFormat != src->format) {
-            if (swsCtx) {
-                sws_freeContext(swsCtx);
-            }
-            swsCtx = sws_getContext(
-                src->width,
-                src->height,
-                static_cast<AVPixelFormat>(src->format),
-                src->width,
-                src->height,
-                AV_PIX_FMT_RGBA,
-                SWS_BILINEAR,
-                nullptr,
-                nullptr,
-                nullptr);
-            cachedWidth = src->width;
-            cachedHeight = src->height;
-            cachedFormat = src->format;
-        }
-
-        if (!swsCtx) {
+        if (!ensureScalingContext(src->width, src->height, static_cast<AVPixelFormat>(src->format))) {
             return false;
         }
 
-        out.resize(static_cast<size_t>(src->width) * src->height * 4);
+        out.resize(static_cast<size_t>(videoWidth) * videoHeight * 4);
         uint8_t* destData[4] = {out.data(), nullptr, nullptr, nullptr};
-        int destLinesize[4] = {src->width * 4, 0, 0, 0};
+        int destLinesize[4] = {videoWidth * 4, 0, 0, 0};
 
         sws_scale(
             swsCtx,
@@ -372,6 +381,67 @@ private:
             destData,
             destLinesize);
 
+        return true;
+    }
+
+    void computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight) const {
+        int clampedSrcWidth = std::max(1, srcWidth);
+        int clampedSrcHeight = std::max(1, srcHeight);
+        outWidth = clampedSrcWidth;
+        outHeight = clampedSrcHeight;
+        if (clampedSrcHeight > MAX_VIDEO_OUTPUT_HEIGHT) {
+            double scale = static_cast<double>(MAX_VIDEO_OUTPUT_HEIGHT) /
+                           static_cast<double>(clampedSrcHeight);
+            outHeight = MAX_VIDEO_OUTPUT_HEIGHT;
+            outWidth = std::max(1, static_cast<int>(std::round(clampedSrcWidth * scale)));
+        }
+        if (outWidth % 2 != 0 && outWidth > 1) {
+            --outWidth;
+        }
+    }
+
+    bool ensureScalingContext(int srcWidth, int srcHeight, AVPixelFormat srcFormat) {
+        int clampedSrcWidth = std::max(1, srcWidth);
+        int clampedSrcHeight = std::max(1, srcHeight);
+        int targetWidth = clampedSrcWidth;
+        int targetHeight = clampedSrcHeight;
+        computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight);
+
+        bool needsContext = (!swsCtx ||
+                             cachedWidth != clampedSrcWidth ||
+                             cachedHeight != clampedSrcHeight ||
+                             cachedFormat != srcFormat ||
+                             cachedDstWidth != targetWidth ||
+                             cachedDstHeight != targetHeight);
+
+        if (needsContext) {
+            if (swsCtx) {
+                sws_freeContext(swsCtx);
+            }
+            swsCtx = sws_getContext(
+                clampedSrcWidth,
+                clampedSrcHeight,
+                srcFormat,
+                targetWidth,
+                targetHeight,
+                AV_PIX_FMT_RGBA,
+                SWS_BILINEAR,
+                nullptr,
+                nullptr,
+                nullptr);
+            cachedWidth = clampedSrcWidth;
+            cachedHeight = clampedSrcHeight;
+            cachedFormat = srcFormat;
+            cachedDstWidth = targetWidth;
+            cachedDstHeight = targetHeight;
+        }
+
+        if (!swsCtx) {
+            return false;
+        }
+
+        videoWidth = targetWidth;
+        videoHeight = targetHeight;
         return true;
     }
 
@@ -388,8 +458,11 @@ private:
     bool loopEnabled = true;
     int cachedWidth = 0;
     int cachedHeight = 0;
+    int cachedDstWidth = 0;
+    int cachedDstHeight = 0;
     int cachedFormat = AV_PIX_FMT_NONE;
     std::string currentSourcePath;
+    double videoDurationSeconds = 0.0;
 };
 
 struct VideoMetadata {
@@ -632,7 +705,70 @@ struct GlobalUBO {
     alignas(4) float bloomThreshold;
     alignas(4) float aberrationAmount;
     alignas(4) float grainStrength;
+    alignas(4) float bendAmount;
+    alignas(4) float glitchAmount;
     alignas(16) glm::vec3 colorBalance;
+    alignas(4) float gradeBrightness;
+    alignas(4) float gradeContrast;
+    alignas(4) float gradeSaturation;
+    alignas(4) float gradeHueShift;
+    alignas(4) float gradeGamma;
+    alignas(4) int colorLUTIndex;
+    alignas(4) float splitToneBalance;
+    alignas(16) glm::vec3 splitToneShadows;
+    alignas(16) glm::vec3 splitToneHighlights;
+    alignas(4) float feedbackAmount;
+    alignas(4) float trailStrength;
+    alignas(4) float temporalAccumulation;
+    alignas(4) float feedbackDecay;
+    alignas(4) float recursiveBlend;
+    alignas(4) float uvWarpStrength;
+    alignas(4) float rippleStrength;
+    alignas(4) float rippleFrequency;
+    alignas(4) float swirlStrength;
+    alignas(4) float displacementAmount;
+    alignas(4) float kaleidoSegments;
+    alignas(4) float tunnelDepth;
+    alignas(4) float tunnelCurvature;
+    alignas(4) float gaussianBlur;
+    alignas(4) float directionalBlur;
+    alignas(4) float directionalBlurAngle;
+    alignas(4) float zoomBlur;
+    alignas(4) float motionBlur;
+    alignas(4) float temporalBlur;
+    alignas(4) float unsharpMask;
+    alignas(4) float casAmount;
+    alignas(4) float localContrast;
+    alignas(4) float glitchDatamosh;
+    alignas(4) float glitchRGBSplit;
+    alignas(4) float glitchScanlineBreak;
+    alignas(4) float glitchJitter;
+    alignas(4) float glitchTearing;
+    alignas(4) float glitchPixelSort;
+    alignas(4) float glitchBufferCorruption;
+    alignas(4) int blendModeProcedural;
+    alignas(4) int blendModeVideo;
+    alignas(4) int blendModeFeedback;
+    alignas(4) float blendProceduralMix;
+    alignas(4) float blendVideoMix;
+    alignas(4) float blendFeedbackMix;
+    alignas(4) float analogScanlineFocus;
+    alignas(4) float analogMaskBalance;
+    alignas(4) float analogNoise;
+    alignas(4) float analogBloom;
+    alignas(4) float vhsDistortion;
+    alignas(4) float analogChromaticAberration;
+    alignas(4) float audioWarpResponse;
+    alignas(4) float audioFeedbackResponse;
+    alignas(4) float audioBlurResponse;
+    alignas(4) float audioColorResponse;
+    alignas(4) float audioGlitchResponse;
+    alignas(4) float audioBeatSync;
+    alignas(4) float audioLfoRate;
+    alignas(4) float temporalInterpolation;
+    alignas(4) float temporalBlendStrength;
+    alignas(4) float slowMotionFactor;
+    alignas(4) float frameAccumulation;
 };
 
 struct FrameContext {
@@ -1124,6 +1260,7 @@ struct VideoTextureResources {
     bool ready = false;
     VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     std::array<StagingSlot, MAX_FRAMES_IN_FLIGHT> stagingSlots{};
+    std::array<double, MAX_FRAMES_IN_FLIGHT> stagingTimestamps{};
     std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploads{};
 };
 
@@ -1259,9 +1396,12 @@ private:
         int activeMode = -1;
         float videoMix = 1.0f;
         float videoPlaybackRate = 1.0f;
+        float videoDecodeOversample = 1.0f;
         float grayscaleAmount = 0.0f;
         float sharpenAmount = 0.35f;
         bool upscaleEnabled = true;
+        float loopBlendSeconds = 0.5f;
+        int forcedFpsIndex = 0;
         float crtCurvature = 0.15f;
         float crtHorizontalCurvature = 0.15f;
         float crtScanlineIntensity = 0.35f;
@@ -1272,7 +1412,101 @@ private:
         float bloomThreshold = 0.7f;
         float aberrationAmount = 0.02f;
         float grainStrength = 0.15f;
+        float bendAmount = 0.0f;
+        float glitchAmount = 0.0f;
+        bool randomVideoStart = false;
         glm::vec3 colorBalance = glm::vec3(1.0f);
+        bool enablePostCrtCurvature = true;
+        bool enablePostScanMask = true;
+        bool enablePostVignette = true;
+        bool enablePostFishEye = true;
+        bool enablePostBloom = true;
+        bool enablePostAberration = true;
+        bool enablePostGrain = true;
+        bool enablePostBend = true;
+        bool enablePostGlitch = true;
+        bool enablePostColorBalance = true;
+        // Color grading core
+        float gradeBrightness = 0.0f;
+        float gradeContrast = 1.0f;
+        float gradeSaturation = 1.0f;
+        float gradeHueShift = 0.0f;
+        float gradeGamma = 1.0f;
+        int colorLUTIndex = 0;
+        float splitToneBalance = 0.5f;
+        glm::vec3 splitToneShadows = glm::vec3(0.85f, 0.4f, 0.3f);
+        glm::vec3 splitToneHighlights = glm::vec3(1.1f, 1.0f, 0.85f);
+        // Temporal feedback
+        float feedbackAmount = 0.4f;
+        float trailStrength = 0.35f;
+        float temporalAccumulation = 0.5f;
+        float feedbackDecay = 0.25f;
+        float recursiveBlend = 0.4f;
+        // Spatial distortion
+        float uvWarpStrength = 0.0f;
+        float rippleStrength = 0.0f;
+        float rippleFrequency = 1.0f;
+        float swirlStrength = 0.0f;
+        float displacementAmount = 0.0f;
+        float kaleidoSegments = 6.0f;
+        float tunnelDepth = 0.0f;
+        float tunnelCurvature = 0.0f;
+        // Blur / motion
+        float gaussianBlur = 0.0f;
+        float directionalBlur = 0.0f;
+        float directionalBlurAngle = 0.0f;
+        float zoomBlur = 0.0f;
+        float motionBlur = 0.0f;
+        float temporalBlur = 0.0f;
+        // Sharpening / detail
+        float unsharpMask = 0.0f;
+        float casAmount = 0.0f;
+        float localContrast = 0.0f;
+        // Glitch / corruption
+        float glitchDatamosh = 0.0f;
+        float glitchRGBSplit = 0.0f;
+        float glitchScanlineBreak = 0.0f;
+        float glitchJitter = 0.0f;
+        float glitchTearing = 0.0f;
+        float glitchPixelSort = 0.0f;
+        float glitchBufferCorruption = 0.0f;
+        // Compositing / blending
+        int blendModeProcedural = 0;
+        int blendModeVideo = 1;
+        int blendModeFeedback = 2;
+        float blendProceduralMix = 1.0f;
+        float blendVideoMix = 1.0f;
+        float blendFeedbackMix = 0.5f;
+        // Analog / CRT booster
+        float analogScanlineFocus = 0.5f;
+        float analogMaskBalance = 0.5f;
+        float analogNoise = 0.2f;
+        float analogBloom = 0.3f;
+        float vhsDistortion = 0.0f;
+        float analogChromaticAberration = 0.02f;
+        bool enableColorGrading = true;
+        bool enableFeedback = true;
+        bool enableDistortion = true;
+        bool enableBlurMotion = true;
+        bool enableSharpen = true;
+        bool enableGlitch = true;
+        bool enableBlending = true;
+        bool enableAnalog = true;
+        bool enableAudioReactive = true;
+        bool enableTemporal = true;
+        // Audio reactivity
+        float audioWarpResponse = 0.8f;
+        float audioFeedbackResponse = 0.8f;
+        float audioBlurResponse = 0.4f;
+        float audioColorResponse = 0.6f;
+        float audioGlitchResponse = 0.5f;
+        float audioBeatSync = 1.0f;
+        float audioLfoRate = 0.5f;
+        // Temporal processing
+        float temporalInterpolation = 0.0f;
+        float temporalBlendStrength = 0.0f;
+        float slowMotionFactor = 1.0f;
+        float frameAccumulation = 0.0f;
     } visualControls;
     ImGuiContext* imguiContext = nullptr;
     bool imguiInitialized = false;
@@ -1282,7 +1516,20 @@ private:
     uint32_t lastFrameFrameIndex = 0;
     VideoPlayer videoPlayer;
     VideoTextureResources videoTexture;
-    double videoFrameTimer = 0.0;
+    struct CachedVideoFrame {
+        std::vector<uint8_t> pixels;
+        double timestamp = 0.0;
+        int width = 0;
+        int height = 0;
+        bool keyframe = false;
+    };
+    std::deque<CachedVideoFrame> videoFrameBuffer;
+    std::vector<uint8_t> loopBlendScratch;
+    double loopBlendDuration = 0.5;
+    double videoPlaybackCursor = 0.0;
+    double videoDecodeCursor = 0.0;
+    double videoDisplayTimer = 0.0;
+    double videoDecodeTimer = 0.0;
     std::chrono::steady_clock::time_point lastFrameTimestamp;
     bool videoSubsystemInitialized = false;
     std::string videoSourcePath = "media/sample.mp4";
@@ -1293,11 +1540,20 @@ private:
     uint64_t currentEpoch = 1;
     struct VideoRandomizerState {
         bool autoRandomize = false;
+        bool useVideoDuration = false;
         float intervalSeconds = 30.0f;
         float elapsedSeconds = 0.0f;
+        float currentVideoDuration = 0.0f;
+        int historyWindow = 3;
+        std::deque<int> recentHistory;
     } videoRandomizer;
     std::mt19937 randomEngine{std::random_device{}()};
     std::string controlStatePath = "controls_state.cfg";
+    static constexpr const char* CONTROL_STATE_VERSION = "VJAY_STATE_V6";
+    static constexpr const char* CONTROL_STATE_VERSION_PREV = "VJAY_STATE_V5";
+    static constexpr const char* CONTROL_STATE_VERSION_PREV2 = "VJAY_STATE_V4";
+    static constexpr const char* CONTROL_STATE_VERSION_PREV3 = "VJAY_STATE_V3";
+    static constexpr const char* CONTROL_STATE_VERSION_PREV4 = "VJAY_STATE_V2";
     bool controlsDirty = false;
     std::chrono::steady_clock::time_point lastControlSaveTime;
 
@@ -2208,6 +2464,18 @@ private:
             return;
         }
 
+        if (visualControls.randomVideoStart && videoPlayer.durationSeconds() > 0.1) {
+            std::uniform_real_distribution<double> dist(0.0, std::max(0.0, videoPlayer.durationSeconds() - videoPlayer.frameDuration()));
+            double target = dist(randomEngine);
+            if (videoPlayer.seekSeconds(target)) {
+                resetVideoPlaybackState(target);
+            } else {
+                resetVideoPlaybackState(0.0);
+            }
+        } else {
+            resetVideoPlaybackState(0.0);
+        }
+
         createVideoTextureResources(static_cast<uint32_t>(std::max(1, videoPlayer.width())),
                                     static_cast<uint32_t>(std::max(1, videoPlayer.height())));
 
@@ -2215,6 +2483,8 @@ private:
         if (!videoSubsystemInitialized) {
             return;
         }
+
+        videoRandomizer.currentVideoDuration = static_cast<float>(expectedPlaybackDurationSeconds());
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
             updateDescriptorSet(i);
@@ -2417,14 +2687,194 @@ private:
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
+    void resetVideoPlaybackState(double startTime = 0.0) {
+        videoFrameBuffer.clear();
+        videoPlaybackCursor = startTime;
+        videoDecodeCursor = startTime;
+        videoDisplayTimer = 0.0;
+        videoDecodeTimer = 0.0;
+    }
+
+    bool decodeFrameIntoBuffer(double frameDuration) {
+        if (!videoSubsystemInitialized || !videoPlayer.isReady() || videoTexture.frameSize == 0) {
+            return false;
+        }
+
+        CachedVideoFrame frame;
+        frame.timestamp = videoDecodeCursor;
+        frame.width = static_cast<int>(videoTexture.width);
+        frame.height = static_cast<int>(videoTexture.height);
+        frame.pixels.resize(videoTexture.frameSize);
+
+        int decodedWidth = 0;
+        int decodedHeight = 0;
+        if (!videoPlayer.grabFrameInto(frame.pixels.data(), frame.pixels.size(), decodedWidth, decodedHeight)) {
+            return false;
+        }
+
+        if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
+            createVideoTextureResources(decodedWidth, decodedHeight);
+            frame.width = decodedWidth;
+            frame.height = decodedHeight;
+            videoFrameBuffer.clear();
+            videoFrameBuffer.push_back(frame);
+            videoDecodeCursor = frame.timestamp + frameDuration;
+            return true;
+        }
+
+        frame.width = decodedWidth;
+        frame.height = decodedHeight;
+        videoFrameBuffer.push_back(std::move(frame));
+        if (videoFrameBuffer.size() > MAX_VIDEO_FRAME_BUFFER) {
+            videoFrameBuffer.pop_front();
+        }
+        videoDecodeCursor += frameDuration;
+        return true;
+    }
+
+    bool crossfadeFrames(const CachedVideoFrame& a, const CachedVideoFrame& b, float mix, uint8_t* dst, size_t capacity) {
+        mix = std::clamp(mix, 0.0f, 1.0f);
+        size_t copySize = static_cast<size_t>(a.width) * a.height * 4;
+        if (copySize == 0 || copySize > capacity || a.pixels.empty() || b.pixels.empty() || a.width != b.width || a.height != b.height) {
+            return false;
+        }
+        if (loopBlendScratch.size() < copySize) {
+            loopBlendScratch.resize(copySize);
+        }
+        const uint8_t* pa = a.pixels.data();
+        const uint8_t* pb = b.pixels.data();
+        uint8_t* out = dst;
+        for (size_t i = 0; i < copySize; ++i) {
+            float value = pa[i] * (1.0f - mix) + pb[i] * mix;
+            out[i] = static_cast<uint8_t>(std::round(std::clamp(value, 0.0f, 255.0f)));
+        }
+        return true;
+    }
+
+    void pruneVideoFrameBuffer(double minTimestamp) {
+        while (videoFrameBuffer.size() > 4 && videoFrameBuffer.front().timestamp < minTimestamp) {
+            videoFrameBuffer.pop_front();
+        }
+        while (videoFrameBuffer.size() > MAX_VIDEO_FRAME_BUFFER) {
+            videoFrameBuffer.pop_front();
+        }
+    }
+
+    double clipFramesPerSecond() const {
+        if (!videoPlayer.isReady()) {
+            return 0.0;
+        }
+        double frameDuration = videoPlayer.frameDuration();
+        if (frameDuration <= 1e-6) {
+            return 0.0;
+        }
+        return 1.0 / frameDuration;
+    }
+
+    double effectivePlaybackRate(double clipFps) const {
+        double baseRate = std::clamp(static_cast<double>(visualControls.videoPlaybackRate), 0.05, 8.0);
+        if (clipFps <= 0.0) {
+            return baseRate;
+        }
+        int idx = std::clamp(visualControls.forcedFpsIndex, 0, static_cast<int>(FORCED_FPS_OPTIONS.size()) - 1);
+        int forcedFps = FORCED_FPS_OPTIONS[idx];
+        if (forcedFps <= 0) {
+            return baseRate;
+        }
+        double forcedRate = forcedFps / clipFps;
+        return std::clamp(forcedRate, 0.05, 8.0);
+    }
+
+    bool sampleFrameForTime(double targetTime, uint8_t* dst, size_t capacity, size_t& outCopySize) {
+        outCopySize = 0;
+        if (videoFrameBuffer.empty() || dst == nullptr) {
+            return false;
+        }
+
+        const CachedVideoFrame* frameA = &videoFrameBuffer.front();
+        const CachedVideoFrame* frameB = frameA;
+
+        for (const auto& cached : videoFrameBuffer) {
+            if (cached.timestamp <= targetTime) {
+                frameA = &cached;
+            }
+            if (cached.timestamp >= targetTime) {
+                frameB = &cached;
+                break;
+            }
+        }
+
+        if (!frameB) {
+            frameB = &videoFrameBuffer.back();
+        }
+        if (!frameA) {
+            frameA = frameB;
+        }
+
+        loopBlendDuration = std::clamp(static_cast<double>(visualControls.loopBlendSeconds), 0.0, 5.0);
+        const double duration = videoPlayer.durationSeconds();
+        const bool loopingClip = videoPlayer.isReady() && duration > 0.1 && videoFrameBuffer.size() >= 2;
+        const double deltaA = std::abs(targetTime - frameA->timestamp);
+        const double deltaB = std::abs(targetTime - frameB->timestamp);
+        const CachedVideoFrame* chosen = (deltaA <= deltaB) ? frameA : frameB;
+
+        size_t copySize = static_cast<size_t>(chosen->width) * chosen->height * 4;
+        if (copySize == 0 || copySize > capacity || chosen->pixels.empty()) {
+            return false;
+        }
+
+        bool didCrossfade = false;
+        if (loopingClip && loopBlendDuration > 0.01) {
+            const double epsilon = 1e-3;
+            const double nearEndStart = std::max(0.0, duration - loopBlendDuration);
+            const bool nearStart = targetTime <= loopBlendDuration;
+            const bool nearEnd = targetTime >= nearEndStart - epsilon;
+            if (nearStart || nearEnd) {
+                const CachedVideoFrame* earliest = &videoFrameBuffer.front();
+                const CachedVideoFrame* latest = &videoFrameBuffer.back();
+                if (earliest && latest && earliest != latest && earliest->width == latest->width && earliest->height == latest->height) {
+                    float mix = 0.0f;
+                    if (nearStart) {
+                        mix = static_cast<float>(targetTime / std::max(loopBlendDuration, epsilon));
+                    } else {
+                        double timeIntoBlend = duration - targetTime;
+                        mix = static_cast<float>(std::clamp(timeIntoBlend / std::max(loopBlendDuration, epsilon), 0.0, 1.0));
+                    }
+                    if (crossfadeFrames(*latest, *earliest, mix, dst, capacity)) {
+                        outCopySize = copySize;
+                        didCrossfade = true;
+                    }
+                }
+            }
+        }
+
+        if (!didCrossfade) {
+            std::memcpy(dst, chosen->pixels.data(), copySize);
+            outCopySize = copySize;
+        }
+        return true;
+    }
+
+    double expectedPlaybackDurationSeconds() const {
+        double duration = videoPlayer.durationSeconds();
+        if (duration <= 0.1) {
+            return 0.0;
+        }
+        double clipFps = clipFramesPerSecond();
+        double rate = effectivePlaybackRate(clipFps);
+        double oversample = std::max(1.0, static_cast<double>(visualControls.videoDecodeOversample));
+        double effective = std::max(rate, oversample);
+        return duration * (rate / effective);
+    }
+
     void updateVideoTexture(float deltaTime, FrameContext& frame) {
         if (!videoSubsystemInitialized) {
             return;
         }
 
         const uint32_t writeSlot = frame.frameIndex % MAX_FRAMES_IN_FLIGHT;
-        std::cout << "[VIDEO] decode start frameIndex=" << frame.frameIndex << std::endl;
-        std::cout << "[VIDEO] snapshot/write slot=" << writeSlot << std::endl;
+        videoTrace("[VIDEO] decode start frameIndex=", frame.frameIndex);
+        videoTrace("[VIDEO] snapshot/write slot=", writeSlot);
 
         if (writeSlot >= videoStaging.getSlotCount()) {
             std::cerr << "[STAGING] invalid write slot " << writeSlot
@@ -2434,16 +2884,7 @@ private:
 
         vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
 
-        videoFrameTimer += deltaTime;
-        const double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
-        const double playbackRate = std::clamp(static_cast<double>(visualControls.videoPlaybackRate), 0.1, 5.0);
-        const double scaledFrameDuration = frameDuration / playbackRate;
-        if (videoFrameTimer < scaledFrameDuration) {
-            return;
-        }
-        videoFrameTimer = std::fmod(videoFrameTimer, scaledFrameDuration);
-
-        const auto& slot = videoStaging.getSlot(writeSlot);
+        auto& slot = videoStaging.getSlot(writeSlot);
         if (!slot.mapped) {
             std::cerr << "[STAGING] slot " << writeSlot << " is not mapped" << std::endl;
             return;
@@ -2455,31 +2896,51 @@ private:
             vkWaitForFences(device, 1, &slotFence, VK_TRUE, UINT64_MAX);
         }
 
-        int decodedWidth = 0;
-        int decodedHeight = 0;
-        if (!videoPlayer.grabFrameInto(static_cast<uint8_t*>(slot.mapped), slot.capacity, decodedWidth, decodedHeight)) {
-            return;
+        const double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
+        const double clipFps = (frameDuration > 1e-6) ? (1.0 / frameDuration) : 0.0;
+        const double playbackRate = effectivePlaybackRate(clipFps);
+        const double decodeOversample = std::max(1.0, static_cast<double>(visualControls.videoDecodeOversample));
+        const double decodeSpeed = std::max(playbackRate, decodeOversample);
+        const double decodeInterval = frameDuration / decodeSpeed;
+        const double displayInterval = frameDuration / playbackRate;
+
+        videoDecodeTimer += deltaTime;
+        int decodeIterations = 0;
+        while (videoDecodeTimer >= decodeInterval) {
+            if (!decodeFrameIntoBuffer(frameDuration)) {
+                break;
+            }
+            videoDecodeTimer -= decodeInterval;
+            if (++decodeIterations > 16) {
+                break;
+            }
         }
 
-        std::cout << "[VIDEO] frame decoded size=" << decodedWidth << "x" << decodedHeight << std::endl;
-
-        if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
-            createVideoTextureResources(decodedWidth, decodedHeight);
-            if (!videoTexture.ready) {
+        if (videoFrameBuffer.empty()) {
+            if (!decodeFrameIntoBuffer(frameDuration)) {
                 return;
             }
-            for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
-                updateDescriptorSet(i);
-            }
+        }
+
+        videoDisplayTimer += deltaTime;
+        while (videoDisplayTimer >= displayInterval) {
+            videoDisplayTimer -= displayInterval;
+            videoPlaybackCursor += frameDuration;
+        }
+
+        double fraction = displayInterval > 1e-6 ? (videoDisplayTimer / displayInterval) : 0.0;
+        double targetTime = videoPlaybackCursor + fraction * frameDuration;
+
+        size_t copySize = 0;
+        if (!sampleFrameForTime(targetTime, static_cast<uint8_t*>(slot.mapped), slot.capacity, copySize)) {
             return;
         }
 
-        const size_t copySize = static_cast<size_t>(decodedWidth) * decodedHeight * 4;
-        if (copySize > slot.capacity) {
-            throw std::runtime_error("decoded frame larger than staging buffer");
-        }
+        pruneVideoFrameBuffer(videoPlaybackCursor - frameDuration * 2.0);
 
-        std::cout << "[STAGING] writing slot=" << writeSlot << " size=" << copySize << " fenceState=SIGNALLED" << std::endl;
+        videoTexture.stagingTimestamps[writeSlot] = targetTime;
+
+        videoTrace("[STAGING] writing slot=", writeSlot, " size=", copySize, " fenceState=SIGNALLED t=", targetTime);
         videoTexture.pendingUploads[writeSlot] = true;
     }
 
@@ -2527,8 +2988,14 @@ private:
         if (!assets.empty()) {
             selectedVideoAsset = 0;
             videoSourcePath = assets[0].metadata.path;
+            updateRandomizerForSelection(selectedVideoAsset, true);
+            if (!assets.empty()) {
+                videoRandomizer.currentVideoDuration = static_cast<float>(assets[0].metadata.duration);
+            }
         } else {
             selectedVideoAsset = -1;
+            videoRandomizer.recentHistory.clear();
+            videoRandomizer.currentVideoDuration = 0.0f;
         }
     }
 
@@ -2541,6 +3008,7 @@ private:
 
         if (selectedVideoAsset < 0 || selectedVideoAsset >= static_cast<int>(assets.size())) {
             selectedVideoAsset = 0;
+            updateRandomizerForSelection(selectedVideoAsset, true);
         }
 
         if (ImGui::BeginCombo("Video Asset", assets[selectedVideoAsset].metadata.filename.c_str())) {
@@ -2549,6 +3017,7 @@ private:
                 if (ImGui::Selectable(assets[i].metadata.filename.c_str(), isSelected)) {
                     if (selectedVideoAsset != i) {
                         selectedVideoAsset = i;
+                        updateRandomizerForSelection(i, true);
                         reloadVideoSource(assets[i].metadata.path);
                     }
                 }
@@ -2560,28 +3029,81 @@ private:
         }
     }
 
-    void randomizeVideoAsset() {
+    void updateRandomizerForSelection(int index, bool recordHistory) {
+        const auto& assets = videoRegistry.getAssets();
+        if (index >= 0 && index < static_cast<int>(assets.size())) {
+            float duration = static_cast<float>(assets[index].metadata.duration);
+            if (!std::isfinite(duration) || duration <= 0.1f) {
+                duration = videoRandomizer.intervalSeconds;
+            }
+            videoRandomizer.currentVideoDuration = duration;
+            if (recordHistory) {
+                auto& history = videoRandomizer.recentHistory;
+                history.erase(std::remove(history.begin(), history.end(), index), history.end());
+                history.push_back(index);
+                const int window = std::max(1, videoRandomizer.historyWindow);
+                while (static_cast<int>(history.size()) > window) {
+                    history.pop_front();
+                }
+            }
+        }
+        videoRandomizer.elapsedSeconds = 0.0f;
+    }
+
+    int chooseRandomVideoIndexAvoidingHistory(const std::vector<VideoAsset>& assets) {
+        if (assets.empty()) {
+            return -1;
+        }
+        if (assets.size() == 1) {
+            return 0;
+        }
+
+        std::vector<int> pool;
+        const auto& history = videoRandomizer.recentHistory;
+        for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+            if (selectedVideoAsset >= 0 && i == selectedVideoAsset) {
+                continue;
+            }
+            if (std::find(history.begin(), history.end(), i) == history.end()) {
+                pool.push_back(i);
+            }
+        }
+
+        if (pool.empty()) {
+            for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+                if (selectedVideoAsset >= 0 && i == selectedVideoAsset) {
+                    continue;
+                }
+                pool.push_back(i);
+            }
+        }
+
+        if (pool.empty()) {
+            pool.push_back(selectedVideoAsset >= 0 ? selectedVideoAsset : 0);
+        }
+
+        std::uniform_int_distribution<int> dist(0, static_cast<int>(pool.size()) - 1);
+        return pool[dist(randomEngine)];
+    }
+
+    void randomizeVideoAsset(bool recordHistory = true) {
         const auto& assets = videoRegistry.getAssets();
         if (assets.empty()) {
             return;
         }
 
-        int newIndex = selectedVideoAsset;
-        if (assets.size() > 1) {
-            std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
-            do {
-                newIndex = dist(randomEngine);
-            } while (newIndex == selectedVideoAsset);
-        } else {
-            newIndex = 0;
+        int newIndex = chooseRandomVideoIndexAvoidingHistory(assets);
+        if (newIndex < 0) {
+            return;
         }
 
-        if (selectedVideoAsset != newIndex) {
-            selectedVideoAsset = newIndex;
-            reloadVideoSource(assets[newIndex].metadata.path);
-        } else if (!videoSubsystemInitialized) {
+        bool selectionChanged = (selectedVideoAsset != newIndex);
+        selectedVideoAsset = newIndex;
+        updateRandomizerForSelection(newIndex, recordHistory);
+        if (selectionChanged || !videoSubsystemInitialized) {
             reloadVideoSource(assets[newIndex].metadata.path);
         }
+        videoRandomizer.currentVideoDuration = static_cast<float>(expectedPlaybackDurationSeconds());
     }
 
     void updateVideoRandomizer(float deltaTime) {
@@ -2592,12 +3114,17 @@ private:
 
         const auto& assets = videoRegistry.getAssets();
         if (assets.size() <= 1) {
+            videoRandomizer.elapsedSeconds = 0.0f;
             return;
         }
 
         videoRandomizer.intervalSeconds = std::max(1.0f, videoRandomizer.intervalSeconds);
+        float durationInterval = std::max(1.0f, videoRandomizer.currentVideoDuration);
+        float targetInterval = (videoRandomizer.useVideoDuration && videoRandomizer.currentVideoDuration > 0.0f)
+                                   ? durationInterval
+                                   : videoRandomizer.intervalSeconds;
         videoRandomizer.elapsedSeconds += deltaTime;
-        if (videoRandomizer.elapsedSeconds >= videoRandomizer.intervalSeconds) {
+        if (videoRandomizer.elapsedSeconds >= targetInterval) {
             videoRandomizer.elapsedSeconds = 0.0f;
             randomizeVideoAsset();
         }
@@ -2607,7 +3134,7 @@ private:
         videoSourcePath = path;
         videoPlayer.shutdown();
         videoSubsystemInitialized = false;
-        videoFrameTimer = 0.0;
+        resetVideoPlaybackState(0.0);
         lastFrameTimestamp = std::chrono::steady_clock::now();
         initVideoSystem();
     }
@@ -2649,6 +3176,14 @@ private:
         }
     }
 
+    void saveImGuiLayout() {
+        if (imguiContext == nullptr || imguiIniFilename.empty()) {
+            return;
+        }
+        ImGui::SetCurrentContext(imguiContext);
+        ImGui::SaveIniSettingsToDisk(imguiIniFilename.c_str());
+    }
+
     void initImGui() {
         if (imguiInitialized) {
             return;
@@ -2658,6 +3193,10 @@ private:
         imguiContext = ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.IniFilename = imguiIniFilename.c_str();
+        if (!imguiIniFilename.empty()) {
+            ImGui::LoadIniSettingsFromDisk(imguiIniFilename.c_str());
+        }
 
         ImGui::StyleColorsDark();
         ImGuiStyle& style = ImGui::GetStyle();
@@ -2697,6 +3236,7 @@ private:
 
     void buildImGuiWindows() {
         bool changed = false;
+        bool vjayChanged = false;
 
         ImGui::SetNextWindowSize(ImVec2(360.0f, 260.0f), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Procedural Controls")) {
@@ -2725,33 +3265,197 @@ private:
             ImGui::Text("Video");
             changed |= ImGui::SliderFloat("Video Mix", &visualControls.videoMix, 0.0f, 1.0f);
             changed |= ImGui::SliderFloat("Video speed", &visualControls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+            if (ImGui::SliderFloat("Decode oversample", &visualControls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
+                visualControls.videoDecodeOversample = std::clamp(visualControls.videoDecodeOversample, 1.0f, 8.0f);
+                changed = true;
+            }
+            static const char* forceFpsLabels[] = {"Off", "15 fps", "24 fps", "30 fps", "60 fps"};
+            int forceIdx = std::clamp(visualControls.forcedFpsIndex, 0, static_cast<int>(FORCED_FPS_OPTIONS.size()) - 1);
+            if (forceIdx != visualControls.forcedFpsIndex) {
+                visualControls.forcedFpsIndex = forceIdx;
+                changed = true;
+            }
+            if (ImGui::Combo("Force FPS", &forceIdx, forceFpsLabels, IM_ARRAYSIZE(forceFpsLabels))) {
+                visualControls.forcedFpsIndex = forceIdx;
+                changed = true;
+            }
             changed |= ImGui::SliderFloat("Grayscale", &visualControls.grayscaleAmount, 0.0f, 1.0f);
             changed |= ImGui::SliderFloat("Sharpen", &visualControls.sharpenAmount, 0.0f, 1.0f);
             changed |= ImGui::Checkbox("Bicubic Upscale", &visualControls.upscaleEnabled);
+            changed |= ImGui::Checkbox("Random start", &visualControls.randomVideoStart);
+            changed |= ImGui::SliderFloat("Loop crossfade (s)", &visualControls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
+            ImGui::Separator();
+            ImGui::Text("Post FX");
+            auto setPostFxEnabled = [&](bool enabled) {
+                visualControls.enablePostCrtCurvature = enabled;
+                visualControls.enablePostScanMask = enabled;
+                visualControls.enablePostVignette = enabled;
+                visualControls.enablePostFishEye = enabled;
+                visualControls.enablePostBloom = enabled;
+                visualControls.enablePostAberration = enabled;
+                visualControls.enablePostGrain = enabled;
+                visualControls.enablePostBend = enabled;
+                visualControls.enablePostGlitch = enabled;
+                visualControls.enablePostColorBalance = enabled;
+            };
+            if (ImGui::Button("Randomize Post FX")) {
+                std::uniform_real_distribution<float> zeroOne(0.0f, 1.0f);
+                auto randSym = [&](float minVal, float maxVal) {
+                    std::uniform_real_distribution<float> dist(minVal, maxVal);
+                    return dist(randomEngine);
+                };
+                auto randIfEnabled = [&](bool enabled, auto&& fn) {
+                    if (enabled) {
+                        fn();
+                    }
+                };
+
+                randIfEnabled(visualControls.enablePostCrtCurvature, [&] {
+                    visualControls.crtCurvature = randSym(0.0f, 0.6f);
+                    visualControls.crtHorizontalCurvature = randSym(0.0f, 0.6f);
+                });
+                randIfEnabled(visualControls.enablePostScanMask, [&] {
+                    visualControls.crtScanlineIntensity = zeroOne(randomEngine);
+                    visualControls.crtMaskIntensity = zeroOne(randomEngine);
+                });
+                randIfEnabled(visualControls.enablePostVignette, [&] {
+                    visualControls.crtVignette = zeroOne(randomEngine);
+                });
+                randIfEnabled(visualControls.enablePostFishEye, [&] {
+                    visualControls.crtFishEye = randSym(-3.0f, 3.0f);
+                });
+                randIfEnabled(visualControls.enablePostBloom, [&] {
+                    visualControls.bloomIntensity = randSym(0.0f, 2.0f);
+                    visualControls.bloomThreshold = zeroOne(randomEngine);
+                });
+                randIfEnabled(visualControls.enablePostAberration, [&] {
+                    visualControls.aberrationAmount = randSym(-0.05f, 0.05f);
+                });
+                randIfEnabled(visualControls.enablePostGrain, [&] {
+                    visualControls.grainStrength = randSym(0.0f, 0.5f);
+                });
+                randIfEnabled(visualControls.enablePostBend, [&] {
+                    visualControls.bendAmount = zeroOne(randomEngine);
+                });
+                randIfEnabled(visualControls.enablePostGlitch, [&] {
+                    visualControls.glitchAmount = zeroOne(randomEngine);
+                });
+                randIfEnabled(visualControls.enablePostColorBalance, [&] {
+                    visualControls.colorBalance = glm::vec3(
+                        randSym(0.0f, 2.0f),
+                        randSym(0.0f, 2.0f),
+                        randSym(0.0f, 2.0f));
+                });
+                controlsDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset Post FX")) {
+                setPostFxEnabled(false);
+                visualControls.crtCurvature = 0.15f;
+                visualControls.crtHorizontalCurvature = 0.15f;
+                visualControls.crtScanlineIntensity = 0.35f;
+                visualControls.crtMaskIntensity = 0.35f;
+                visualControls.crtVignette = 0.55f;
+                visualControls.crtFishEye = 0.0f;
+                visualControls.bloomIntensity = 0.45f;
+                visualControls.bloomThreshold = 0.7f;
+                visualControls.aberrationAmount = 0.02f;
+                visualControls.grainStrength = 0.15f;
+                visualControls.bendAmount = 0.0f;
+                visualControls.glitchAmount = 0.0f;
+                visualControls.colorBalance = glm::vec3(1.0f);
+                changed = true;
+                controlsDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Enable All")) {
+                setPostFxEnabled(true);
+                changed = true;
+                controlsDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Disable All")) {
+                setPostFxEnabled(false);
+                changed = true;
+                controlsDirty = true;
+            }
+
+            ImGui::Separator();
+            changed |= ImGui::Checkbox("CRT Curvature", &visualControls.enablePostCrtCurvature);
+            ImGui::BeginDisabled(!visualControls.enablePostCrtCurvature);
             changed |= ImGui::SliderFloat("CRT Curvature V", &visualControls.crtCurvature, 0.0f, 0.6f, "%.2f");
             changed |= ImGui::SliderFloat("CRT Curvature H", &visualControls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Scanlines / Mask", &visualControls.enablePostScanMask);
+            ImGui::BeginDisabled(!visualControls.enablePostScanMask);
             changed |= ImGui::SliderFloat("CRT Scanlines", &visualControls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
             changed |= ImGui::SliderFloat("CRT Mask", &visualControls.crtMaskIntensity, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Vignette", &visualControls.enablePostVignette);
+            ImGui::BeginDisabled(!visualControls.enablePostVignette);
             changed |= ImGui::SliderFloat("CRT Black Bars", &visualControls.crtVignette, 0.0f, 1.0f, "%.2f");
-            changed |= ImGui::SliderFloat("CRT Fish-eye", &visualControls.crtFishEye, -1.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Fish-eye", &visualControls.enablePostFishEye);
+            ImGui::BeginDisabled(!visualControls.enablePostFishEye);
+            changed |= ImGui::SliderFloat("CRT Fish-eye", &visualControls.crtFishEye, -3.0f, 3.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Bloom", &visualControls.enablePostBloom);
+            ImGui::BeginDisabled(!visualControls.enablePostBloom);
             changed |= ImGui::SliderFloat("Bloom Intensity", &visualControls.bloomIntensity, 0.0f, 2.0f, "%.2f");
             changed |= ImGui::SliderFloat("Bloom Threshold", &visualControls.bloomThreshold, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Aberration##Toggle", &visualControls.enablePostAberration);
+            ImGui::BeginDisabled(!visualControls.enablePostAberration);
             changed |= ImGui::SliderFloat("Aberration", &visualControls.aberrationAmount, -0.05f, 0.05f, "%.3f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Film Grain##Toggle", &visualControls.enablePostGrain);
+            ImGui::BeginDisabled(!visualControls.enablePostGrain);
             changed |= ImGui::SliderFloat("Film Grain", &visualControls.grainStrength, 0.0f, 0.5f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Screen Bend", &visualControls.enablePostBend);
+            ImGui::BeginDisabled(!visualControls.enablePostBend);
+            changed |= ImGui::SliderFloat("Bend Amount", &visualControls.bendAmount, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("Glitch wrapper", &visualControls.enablePostGlitch);
+            ImGui::BeginDisabled(!visualControls.enablePostGlitch);
+            changed |= ImGui::SliderFloat("Glitch Intensity", &visualControls.glitchAmount, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            changed |= ImGui::Checkbox("RGB Mix##Toggle", &visualControls.enablePostColorBalance);
+            ImGui::BeginDisabled(!visualControls.enablePostColorBalance);
             changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(visualControls.colorBalance), 0.0f, 2.0f);
+            ImGui::EndDisabled();
             ImGui::TextWrapped("Video %s", (videoSubsystemInitialized && videoTexture.ready) ? "online" : "unavailable");
             drawVideoAssetSelector();
 
             const bool hasRandomChoices = videoRegistry.getAssets().size() > 1;
+            ImGui::BeginDisabled(videoRandomizer.useVideoDuration);
             if (ImGui::SliderFloat("Random interval (s)", &videoRandomizer.intervalSeconds, 1.0f, 300.0f, "%.0f s")) {
                 videoRandomizer.intervalSeconds = std::clamp(videoRandomizer.intervalSeconds, 1.0f, 600.0f);
                 videoRandomizer.elapsedSeconds = 0.0f;
                 changed = true;
             }
+            ImGui::EndDisabled();
+            bool syncToggle = ImGui::Checkbox("Sync shuffle to clip duration", &videoRandomizer.useVideoDuration);
+            if (syncToggle) {
+                videoRandomizer.elapsedSeconds = 0.0f;
+            }
+            changed |= syncToggle;
+            if (videoRandomizer.useVideoDuration) {
+                float clipSeconds = std::max(0.0f, videoRandomizer.currentVideoDuration);
+                ImGui::Text("Current clip: %.1f s", clipSeconds);
+            }
             ImGui::BeginDisabled(!hasRandomChoices);
             if (ImGui::Button("Randomize video online")) {
                 randomizeVideoAsset();
-                videoRandomizer.elapsedSeconds = 0.0f;
                 changed = true;
             }
             ImGui::SameLine();
@@ -2760,7 +3464,10 @@ private:
                 ImGui::SameLine();
                 ImGui::TextDisabled("Need at least 2 videos");
             } else if (videoRandomizer.autoRandomize) {
-                float remaining = std::max(0.0f, videoRandomizer.intervalSeconds - videoRandomizer.elapsedSeconds);
+                float targetInterval = videoRandomizer.useVideoDuration && videoRandomizer.currentVideoDuration > 0.0f
+                                           ? videoRandomizer.currentVideoDuration
+                                           : videoRandomizer.intervalSeconds;
+                float remaining = std::max(0.0f, targetInterval - videoRandomizer.elapsedSeconds);
                 ImGui::Text("Next shuffle in %.1f s", remaining);
             }
             ImGui::EndDisabled();
@@ -2768,6 +3475,374 @@ private:
             ImGui::Separator();
             ImGui::Checkbox("Show diagnostics window", &showSecondaryWindow);
             ImGui::Checkbox("Show ImGui demo", &showDemoWindow);
+        }
+        ImGui::End();
+
+        ImGui::SetNextWindowSize(ImVec2(430.0f, 640.0f), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("VJAY BASICS")) {
+            static const char* LUT_ITEMS = "Off\0Filmic\0Neon\0Noir\0Heatmap\0Analog CRT\0";
+            static const char* BLEND_ITEMS = "Add\0Screen\0Multiply\0Overlay\0Difference\0Soft Light\0";
+
+            if (ImGui::Button("Randomize VJAY basics")) {
+                std::uniform_real_distribution<float> zeroOne(0.0f, 1.0f);
+                auto randRange = [&](float minVal, float maxVal) {
+                    std::uniform_real_distribution<float> dist(minVal, maxVal);
+                    return dist(randomEngine);
+                };
+                auto randInt = [&](int minVal, int maxVal) {
+                    std::uniform_int_distribution<int> dist(minVal, maxVal);
+                    return dist(randomEngine);
+                };
+                auto randIfEnabled = [&](bool enabled, auto&& fn) {
+                    if (enabled) {
+                        fn();
+                    }
+                };
+
+                randIfEnabled(visualControls.enableColorGrading, [&] {
+                    visualControls.gradeBrightness = randRange(-0.5f, 0.5f);
+                    visualControls.gradeContrast = randRange(0.5f, 1.8f);
+                    visualControls.gradeSaturation = randRange(0.4f, 2.0f);
+                    visualControls.gradeHueShift = randRange(-180.0f, 180.0f);
+                    visualControls.gradeGamma = randRange(0.6f, 2.2f);
+                    visualControls.colorLUTIndex = randInt(0, 5);
+                    visualControls.splitToneBalance = zeroOne(randomEngine);
+                    visualControls.splitToneShadows = glm::vec3(randRange(0.0f, 1.2f), randRange(0.0f, 1.2f), randRange(0.0f, 1.2f));
+                    visualControls.splitToneHighlights = glm::vec3(randRange(0.8f, 1.4f), randRange(0.8f, 1.4f), randRange(0.8f, 1.4f));
+                });
+
+                randIfEnabled(visualControls.enableFeedback, [&] {
+                    visualControls.feedbackAmount = randRange(0.0f, 1.0f);
+                    visualControls.trailStrength = randRange(0.0f, 1.0f);
+                    visualControls.temporalAccumulation = randRange(0.0f, 1.0f);
+                    visualControls.feedbackDecay = randRange(0.0f, 1.0f);
+                    visualControls.recursiveBlend = randRange(0.0f, 1.0f);
+                });
+
+                randIfEnabled(visualControls.enableDistortion, [&] {
+                    visualControls.uvWarpStrength = randRange(0.0f, 2.0f);
+                    visualControls.rippleStrength = randRange(0.0f, 2.0f);
+                    visualControls.rippleFrequency = randRange(0.2f, 12.0f);
+                    visualControls.swirlStrength = randRange(-2.0f, 2.0f);
+                    visualControls.displacementAmount = randRange(0.0f, 2.0f);
+                    visualControls.kaleidoSegments = randRange(3.0f, 24.0f);
+                    visualControls.tunnelDepth = randRange(0.0f, 1.0f);
+                    visualControls.tunnelCurvature = randRange(-1.0f, 1.0f);
+                });
+
+                randIfEnabled(visualControls.enableBlurMotion, [&] {
+                    visualControls.gaussianBlur = randRange(0.0f, 1.0f);
+                    visualControls.directionalBlur = randRange(0.0f, 1.0f);
+                    visualControls.directionalBlurAngle = randRange(0.0f, 360.0f);
+                    visualControls.zoomBlur = randRange(0.0f, 1.0f);
+                    visualControls.motionBlur = randRange(0.0f, 1.0f);
+                    visualControls.temporalBlur = randRange(0.0f, 1.0f);
+                });
+
+                randIfEnabled(visualControls.enableSharpen, [&] {
+                    visualControls.unsharpMask = randRange(0.0f, 1.0f);
+                    visualControls.casAmount = randRange(0.0f, 1.0f);
+                    visualControls.localContrast = randRange(0.0f, 1.0f);
+                });
+
+                randIfEnabled(visualControls.enableGlitch, [&] {
+                    visualControls.glitchDatamosh = randRange(0.0f, 1.0f);
+                    visualControls.glitchRGBSplit = randRange(0.0f, 1.0f);
+                    visualControls.glitchScanlineBreak = randRange(0.0f, 1.0f);
+                    visualControls.glitchJitter = randRange(0.0f, 1.0f);
+                    visualControls.glitchTearing = randRange(0.0f, 1.0f);
+                    visualControls.glitchPixelSort = randRange(0.0f, 1.0f);
+                    visualControls.glitchBufferCorruption = randRange(0.0f, 1.0f);
+                });
+
+                randIfEnabled(visualControls.enableBlending, [&] {
+                    visualControls.blendModeProcedural = randInt(0, 5);
+                    visualControls.blendModeVideo = randInt(0, 5);
+                    visualControls.blendModeFeedback = randInt(0, 5);
+                    visualControls.blendProceduralMix = randRange(0.0f, 2.0f);
+                    visualControls.blendVideoMix = randRange(0.0f, 2.0f);
+                    visualControls.blendFeedbackMix = randRange(0.0f, 2.0f);
+                });
+
+                randIfEnabled(visualControls.enableAnalog, [&] {
+                    visualControls.analogScanlineFocus = zeroOne(randomEngine);
+                    visualControls.analogMaskBalance = zeroOne(randomEngine);
+                    visualControls.analogNoise = zeroOne(randomEngine);
+                    visualControls.analogBloom = randRange(0.0f, 2.0f);
+                    visualControls.vhsDistortion = zeroOne(randomEngine);
+                    visualControls.analogChromaticAberration = randRange(0.0f, 0.25f);
+                });
+
+                randIfEnabled(visualControls.enableAudioReactive, [&] {
+                    visualControls.audioWarpResponse = randRange(0.0f, 2.0f);
+                    visualControls.audioFeedbackResponse = randRange(0.0f, 2.0f);
+                    visualControls.audioBlurResponse = randRange(0.0f, 2.0f);
+                    visualControls.audioColorResponse = randRange(0.0f, 2.0f);
+                    visualControls.audioGlitchResponse = randRange(0.0f, 2.0f);
+                    visualControls.audioBeatSync = randRange(0.0f, 4.0f);
+                    visualControls.audioLfoRate = randRange(0.05f, 4.0f);
+                });
+
+                randIfEnabled(visualControls.enableTemporal, [&] {
+                    visualControls.temporalInterpolation = randRange(0.0f, 1.0f);
+                    visualControls.temporalBlendStrength = randRange(0.0f, 1.0f);
+                    visualControls.slowMotionFactor = randRange(0.1f, 4.0f);
+                    visualControls.frameAccumulation = randRange(0.0f, 1.0f);
+                });
+
+                vjayChanged = true;
+                controlsDirty = true;
+            }
+            auto setAllVjayToggles = [&](bool value) {
+                visualControls.enableColorGrading = value;
+                visualControls.enableFeedback = value;
+                visualControls.enableDistortion = value;
+                visualControls.enableBlurMotion = value;
+                visualControls.enableSharpen = value;
+                visualControls.enableGlitch = value;
+                visualControls.enableBlending = value;
+                visualControls.enableAnalog = value;
+                visualControls.enableAudioReactive = value;
+                visualControls.enableTemporal = value;
+            };
+            if (ImGui::Button("Turn all ON")) {
+                setAllVjayToggles(true);
+                vjayChanged = true;
+                controlsDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Turn all OFF")) {
+                setAllVjayToggles(false);
+                vjayChanged = true;
+                controlsDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset VJAY basics")) {
+                visualControls.enableColorGrading = false;
+                visualControls.enableFeedback = false;
+                visualControls.enableDistortion = false;
+                visualControls.enableBlurMotion = false;
+                visualControls.enableSharpen = false;
+                visualControls.enableGlitch = false;
+                visualControls.enableBlending = false;
+                visualControls.enableAnalog = false;
+                visualControls.enableAudioReactive = false;
+                visualControls.enableTemporal = false;
+
+                visualControls.gradeBrightness = 0.0f;
+                visualControls.gradeContrast = 1.0f;
+                visualControls.gradeSaturation = 1.0f;
+                visualControls.gradeHueShift = 0.0f;
+                visualControls.gradeGamma = 1.0f;
+                visualControls.colorLUTIndex = 0;
+                visualControls.splitToneBalance = 0.5f;
+                visualControls.splitToneShadows = glm::vec3(0.0f);
+                visualControls.splitToneHighlights = glm::vec3(1.0f);
+
+                visualControls.feedbackAmount = 0.0f;
+                visualControls.trailStrength = 0.0f;
+                visualControls.temporalAccumulation = 0.0f;
+                visualControls.feedbackDecay = 0.0f;
+                visualControls.recursiveBlend = 0.0f;
+
+                visualControls.uvWarpStrength = 0.0f;
+                visualControls.rippleStrength = 0.0f;
+                visualControls.rippleFrequency = 1.0f;
+                visualControls.swirlStrength = 0.0f;
+                visualControls.displacementAmount = 0.0f;
+                visualControls.kaleidoSegments = 6.0f;
+                visualControls.tunnelDepth = 0.0f;
+                visualControls.tunnelCurvature = 0.0f;
+
+                visualControls.gaussianBlur = 0.0f;
+                visualControls.directionalBlur = 0.0f;
+                visualControls.directionalBlurAngle = 0.0f;
+                visualControls.zoomBlur = 0.0f;
+                visualControls.motionBlur = 0.0f;
+                visualControls.temporalBlur = 0.0f;
+
+                visualControls.unsharpMask = 0.0f;
+                visualControls.casAmount = 0.0f;
+                visualControls.localContrast = 0.0f;
+
+                visualControls.glitchDatamosh = 0.0f;
+                visualControls.glitchRGBSplit = 0.0f;
+                visualControls.glitchScanlineBreak = 0.0f;
+                visualControls.glitchJitter = 0.0f;
+                visualControls.glitchTearing = 0.0f;
+                visualControls.glitchPixelSort = 0.0f;
+                visualControls.glitchBufferCorruption = 0.0f;
+
+                visualControls.blendModeProcedural = 0;
+                visualControls.blendModeVideo = 1;
+                visualControls.blendModeFeedback = 2;
+                visualControls.blendProceduralMix = 1.0f;
+                visualControls.blendVideoMix = 1.0f;
+                visualControls.blendFeedbackMix = 0.5f;
+
+                visualControls.analogScanlineFocus = 0.5f;
+                visualControls.analogMaskBalance = 0.5f;
+                visualControls.analogNoise = 0.2f;
+                visualControls.analogBloom = 0.3f;
+                visualControls.vhsDistortion = 0.0f;
+                visualControls.analogChromaticAberration = 0.02f;
+
+                visualControls.audioWarpResponse = 0.0f;
+                visualControls.audioFeedbackResponse = 0.0f;
+                visualControls.audioBlurResponse = 0.0f;
+                visualControls.audioColorResponse = 0.0f;
+                visualControls.audioGlitchResponse = 0.0f;
+                visualControls.audioBeatSync = 0.0f;
+                visualControls.audioLfoRate = 0.5f;
+
+                visualControls.temporalInterpolation = 0.0f;
+                visualControls.temporalBlendStrength = 0.0f;
+                visualControls.slowMotionFactor = 1.0f;
+                visualControls.frameAccumulation = 0.0f;
+
+                vjayChanged = true;
+                controlsDirty = true;
+            }
+
+            ImGui::Text("1. Color grading dinamico");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##ColorGrade", &visualControls.enableColorGrading);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableColorGrading);
+            vjayChanged |= ImGui::SliderFloat("Brightness", &visualControls.gradeBrightness, -1.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Contrast", &visualControls.gradeContrast, 0.1f, 2.5f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Saturation", &visualControls.gradeSaturation, 0.0f, 2.5f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Hue shift", &visualControls.gradeHueShift, -180.0f, 180.0f, "%.1f°");
+            vjayChanged |= ImGui::SliderFloat("Gamma", &visualControls.gradeGamma, 0.4f, 3.0f, "%.2f");
+            vjayChanged |= ImGui::Combo("LUT", &visualControls.colorLUTIndex, LUT_ITEMS);
+            vjayChanged |= ImGui::SliderFloat("Split tone balance", &visualControls.splitToneBalance, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::ColorEdit3("Split tone shadows", glm::value_ptr(visualControls.splitToneShadows));
+            vjayChanged |= ImGui::ColorEdit3("Split tone highlights", glm::value_ptr(visualControls.splitToneHighlights));
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("2. Feedback temporal");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Feedback", &visualControls.enableFeedback);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableFeedback);
+            vjayChanged |= ImGui::SliderFloat("Feedback", &visualControls.feedbackAmount, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Trails", &visualControls.trailStrength, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Temporal accumulation", &visualControls.temporalAccumulation, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Decay", &visualControls.feedbackDecay, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Recursive blend", &visualControls.recursiveBlend, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("3. Distorsion espacial");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Distortion", &visualControls.enableDistortion);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableDistortion);
+            vjayChanged |= ImGui::SliderFloat("UV warp", &visualControls.uvWarpStrength, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Ripple", &visualControls.rippleStrength, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Ripple freq", &visualControls.rippleFrequency, 0.2f, 12.0f, "%.1f");
+            vjayChanged |= ImGui::SliderFloat("Swirl", &visualControls.swirlStrength, -2.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Displacement", &visualControls.displacementAmount, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Kaleido segments", &visualControls.kaleidoSegments, 3.0f, 24.0f, "%.0f");
+            vjayChanged |= ImGui::SliderFloat("Tunnel depth", &visualControls.tunnelDepth, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Tunnel curvature", &visualControls.tunnelCurvature, -1.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("4. Blur & motion");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Blur", &visualControls.enableBlurMotion);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableBlurMotion);
+            vjayChanged |= ImGui::SliderFloat("Gaussian blur", &visualControls.gaussianBlur, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Directional blur", &visualControls.directionalBlur, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Directional angle", &visualControls.directionalBlurAngle, 0.0f, 360.0f, "%.0f°");
+            vjayChanged |= ImGui::SliderFloat("Zoom blur", &visualControls.zoomBlur, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Motion blur", &visualControls.motionBlur, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Temporal blur", &visualControls.temporalBlur, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("5. Sharpen / detalle");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Sharpen", &visualControls.enableSharpen);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableSharpen);
+            vjayChanged |= ImGui::SliderFloat("Unsharp mask", &visualControls.unsharpMask, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("CAS", &visualControls.casAmount, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Local contrast", &visualControls.localContrast, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("6. Glitch / corruption");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Glitch", &visualControls.enableGlitch);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableGlitch);
+            vjayChanged |= ImGui::SliderFloat("Datamosh", &visualControls.glitchDatamosh, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("RGB split", &visualControls.glitchRGBSplit, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Scanline break", &visualControls.glitchScanlineBreak, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Jitter", &visualControls.glitchJitter, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Tearing", &visualControls.glitchTearing, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Pixel sorting", &visualControls.glitchPixelSort, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Buffer corruption", &visualControls.glitchBufferCorruption, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("7. Compositing & blending");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Blend", &visualControls.enableBlending);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableBlending);
+            vjayChanged |= ImGui::Combo("Procedural blend", &visualControls.blendModeProcedural, BLEND_ITEMS);
+            vjayChanged |= ImGui::Combo("Video blend", &visualControls.blendModeVideo, BLEND_ITEMS);
+            vjayChanged |= ImGui::Combo("Feedback blend", &visualControls.blendModeFeedback, BLEND_ITEMS);
+            vjayChanged |= ImGui::SliderFloat("Procedural mix", &visualControls.blendProceduralMix, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Video mix", &visualControls.blendVideoMix, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Feedback mix", &visualControls.blendFeedbackMix, 0.0f, 2.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("8. CRT / analog simulation");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Analog", &visualControls.enableAnalog);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableAnalog);
+            vjayChanged |= ImGui::SliderFloat("Scanline focus", &visualControls.analogScanlineFocus, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Mask balance", &visualControls.analogMaskBalance, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Analog noise", &visualControls.analogNoise, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Analog bloom", &visualControls.analogBloom, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("VHS distortion", &visualControls.vhsDistortion, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Analog chroma", &visualControls.analogChromaticAberration, 0.0f, 0.25f, "%.3f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("9. Audio reactivity");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Audio", &visualControls.enableAudioReactive);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableAudioReactive);
+            vjayChanged |= ImGui::SliderFloat("Warp response", &visualControls.audioWarpResponse, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Feedback response", &visualControls.audioFeedbackResponse, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Blur response", &visualControls.audioBlurResponse, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Color response", &visualControls.audioColorResponse, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Glitch response", &visualControls.audioGlitchResponse, 0.0f, 2.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Beat sync", &visualControls.audioBeatSync, 0.0f, 4.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("LFO rate", &visualControls.audioLfoRate, 0.05f, 4.0f, "%.2f Hz");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("10. Temporal speed processing");
+            ImGui::SameLine();
+            ImGui::Checkbox("On##Temporal", &visualControls.enableTemporal);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableTemporal);
+            vjayChanged |= ImGui::SliderFloat("Frame interpolation", &visualControls.temporalInterpolation, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Temporal blend", &visualControls.temporalBlendStrength, 0.0f, 1.0f, "%.2f");
+            vjayChanged |= ImGui::SliderFloat("Slow-motion", &visualControls.slowMotionFactor, 0.1f, 4.0f, "%.2fx");
+            vjayChanged |= ImGui::SliderFloat("Frame accumulation", &visualControls.frameAccumulation, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
         }
         ImGui::End();
 
@@ -2780,6 +3855,21 @@ private:
                 ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
                 if (videoSubsystemInitialized && videoTexture.ready) {
                     ImGui::Text("Video: %ux%u", videoTexture.width, videoTexture.height);
+                    if (videoPlayer.isReady()) {
+                        double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
+                        double sourceFps = 1.0 / frameDuration;
+                        double playbackRate = effectivePlaybackRate(sourceFps);
+                        double decodeOversample = std::max(1.0, static_cast<double>(visualControls.videoDecodeOversample));
+                        double decodeRate = std::max(playbackRate, decodeOversample);
+                        double displayFps = sourceFps * playbackRate;
+                        double decodeFps = sourceFps * decodeRate;
+                        ImGui::Text("Clip FPS: %.2f", sourceFps);
+                        ImGui::Text("Display FPS (rate): %.2f", displayFps);
+                        ImGui::Text("Decode FPS (max(rate, oversample)): %.2f", decodeFps);
+                        if (visualControls.forcedFpsIndex > 0) {
+                            ImGui::Text("Forced FPS target: %d", FORCED_FPS_OPTIONS[visualControls.forcedFpsIndex]);
+                        }
+                    }
                 } else {
                     ImGui::Text("Video offline");
                 }
@@ -2803,6 +3893,10 @@ private:
 
         if (showDemoWindow) {
             ImGui::ShowDemoWindow(&showDemoWindow);
+        }
+
+        if (changed || vjayChanged) {
+            controlsDirty = true;
         }
     }
 
@@ -2830,6 +3924,7 @@ private:
             return;
         }
 
+        saveImGuiLayout();
         ImGui_ImplSDLRenderer2_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         if (imguiContext != nullptr) {
@@ -2923,7 +4018,7 @@ private:
             return;
         }
 
-        std::cout << "[UPLOAD] frameIndex=" << frameIndex << " stagingSlot=" << frameIndex << " submitted layout=OK" << std::endl;
+        videoTrace("[UPLOAD] frameIndex=", frameIndex, " stagingSlot=", frameIndex, " submitted layout=OK");
 
         auto transition = [&](VkImageLayout oldLayout, VkImageLayout newLayout,
                               VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage) {
@@ -3039,17 +4134,120 @@ private:
         ubo.grayscaleAmount = visualControls.grayscaleAmount;
         ubo.sharpenAmount = visualControls.sharpenAmount;
         ubo.upscaleEnabled = visualControls.upscaleEnabled ? 1.0f : 0.0f;
-        ubo.crtCurvature = visualControls.crtCurvature;
-        ubo.crtHorizontalCurvature = visualControls.crtHorizontalCurvature;
-        ubo.crtScanlineIntensity = visualControls.crtScanlineIntensity;
-        ubo.crtMaskIntensity = visualControls.crtMaskIntensity;
-        ubo.crtVignette = visualControls.crtVignette;
-        ubo.crtFishEye = visualControls.crtFishEye;
-        ubo.bloomIntensity = visualControls.bloomIntensity;
-        ubo.bloomThreshold = visualControls.bloomThreshold;
-        ubo.aberrationAmount = visualControls.aberrationAmount;
-        ubo.grainStrength = visualControls.grainStrength;
-        ubo.colorBalance = visualControls.colorBalance;
+
+        auto postCrtCurvatureEnabled = visualControls.enablePostCrtCurvature;
+        ubo.crtCurvature = postCrtCurvatureEnabled ? visualControls.crtCurvature : 0.0f;
+        ubo.crtHorizontalCurvature = postCrtCurvatureEnabled ? visualControls.crtHorizontalCurvature : 0.0f;
+
+        auto postScanMaskEnabled = visualControls.enablePostScanMask;
+        ubo.crtScanlineIntensity = postScanMaskEnabled ? visualControls.crtScanlineIntensity : 0.0f;
+        ubo.crtMaskIntensity = postScanMaskEnabled ? visualControls.crtMaskIntensity : 0.0f;
+
+        auto postVignetteEnabled = visualControls.enablePostVignette;
+        ubo.crtVignette = postVignetteEnabled ? visualControls.crtVignette : 0.0f;
+
+        auto postFishEyeEnabled = visualControls.enablePostFishEye;
+        ubo.crtFishEye = postFishEyeEnabled ? visualControls.crtFishEye : 0.0f;
+
+        auto postBloomEnabled = visualControls.enablePostBloom;
+        ubo.bloomIntensity = postBloomEnabled ? visualControls.bloomIntensity : 0.0f;
+        ubo.bloomThreshold = postBloomEnabled ? visualControls.bloomThreshold : 1.0f;
+
+        auto postAberrationEnabled = visualControls.enablePostAberration;
+        ubo.aberrationAmount = postAberrationEnabled ? visualControls.aberrationAmount : 0.0f;
+
+        auto postGrainEnabled = visualControls.enablePostGrain;
+        ubo.grainStrength = postGrainEnabled ? visualControls.grainStrength : 0.0f;
+
+        auto postBendEnabled = visualControls.enablePostBend;
+        ubo.bendAmount = postBendEnabled ? visualControls.bendAmount : 0.0f;
+
+        auto postGlitchEnabled = visualControls.enablePostGlitch;
+        ubo.glitchAmount = postGlitchEnabled ? visualControls.glitchAmount : 0.0f;
+
+        auto postColorBalanceEnabled = visualControls.enablePostColorBalance;
+        ubo.colorBalance = postColorBalanceEnabled ? visualControls.colorBalance : glm::vec3(1.0f);
+
+        auto colorEnabled = visualControls.enableColorGrading;
+        ubo.gradeBrightness = colorEnabled ? visualControls.gradeBrightness : 0.0f;
+        ubo.gradeContrast = colorEnabled ? visualControls.gradeContrast : 1.0f;
+        ubo.gradeSaturation = colorEnabled ? visualControls.gradeSaturation : 1.0f;
+        ubo.gradeHueShift = colorEnabled ? visualControls.gradeHueShift : 0.0f;
+        ubo.gradeGamma = colorEnabled ? visualControls.gradeGamma : 1.0f;
+        ubo.colorLUTIndex = colorEnabled ? visualControls.colorLUTIndex : 0;
+        ubo.splitToneBalance = colorEnabled ? visualControls.splitToneBalance : 0.0f;
+        ubo.splitToneShadows = colorEnabled ? visualControls.splitToneShadows : glm::vec3(1.0f);
+        ubo.splitToneHighlights = colorEnabled ? visualControls.splitToneHighlights : glm::vec3(1.0f);
+
+        auto feedbackEnabled = visualControls.enableFeedback;
+        ubo.feedbackAmount = feedbackEnabled ? visualControls.feedbackAmount : 0.0f;
+        ubo.trailStrength = feedbackEnabled ? visualControls.trailStrength : 0.0f;
+        ubo.temporalAccumulation = feedbackEnabled ? visualControls.temporalAccumulation : 0.0f;
+        ubo.feedbackDecay = feedbackEnabled ? visualControls.feedbackDecay : 0.0f;
+        ubo.recursiveBlend = feedbackEnabled ? visualControls.recursiveBlend : 0.0f;
+
+        auto distEnabled = visualControls.enableDistortion;
+        ubo.uvWarpStrength = distEnabled ? visualControls.uvWarpStrength : 0.0f;
+        ubo.rippleStrength = distEnabled ? visualControls.rippleStrength : 0.0f;
+        ubo.rippleFrequency = distEnabled ? visualControls.rippleFrequency : 1.0f;
+        ubo.swirlStrength = distEnabled ? visualControls.swirlStrength : 0.0f;
+        ubo.displacementAmount = distEnabled ? visualControls.displacementAmount : 0.0f;
+        ubo.kaleidoSegments = distEnabled ? visualControls.kaleidoSegments : 0.0f;
+        ubo.tunnelDepth = distEnabled ? visualControls.tunnelDepth : 0.0f;
+        ubo.tunnelCurvature = distEnabled ? visualControls.tunnelCurvature : 0.0f;
+
+        auto blurEnabled = visualControls.enableBlurMotion;
+        ubo.gaussianBlur = blurEnabled ? visualControls.gaussianBlur : 0.0f;
+        ubo.directionalBlur = blurEnabled ? visualControls.directionalBlur : 0.0f;
+        ubo.directionalBlurAngle = blurEnabled ? visualControls.directionalBlurAngle : 0.0f;
+        ubo.zoomBlur = blurEnabled ? visualControls.zoomBlur : 0.0f;
+        ubo.motionBlur = blurEnabled ? visualControls.motionBlur : 0.0f;
+        ubo.temporalBlur = blurEnabled ? visualControls.temporalBlur : 0.0f;
+
+        auto sharpenEnabled = visualControls.enableSharpen;
+        ubo.unsharpMask = sharpenEnabled ? visualControls.unsharpMask : 0.0f;
+        ubo.casAmount = sharpenEnabled ? visualControls.casAmount : 0.0f;
+        ubo.localContrast = sharpenEnabled ? visualControls.localContrast : 0.0f;
+
+        auto glitchEnabled = visualControls.enableGlitch;
+        ubo.glitchDatamosh = glitchEnabled ? visualControls.glitchDatamosh : 0.0f;
+        ubo.glitchRGBSplit = glitchEnabled ? visualControls.glitchRGBSplit : 0.0f;
+        ubo.glitchScanlineBreak = glitchEnabled ? visualControls.glitchScanlineBreak : 0.0f;
+        ubo.glitchJitter = glitchEnabled ? visualControls.glitchJitter : 0.0f;
+        ubo.glitchTearing = glitchEnabled ? visualControls.glitchTearing : 0.0f;
+        ubo.glitchPixelSort = glitchEnabled ? visualControls.glitchPixelSort : 0.0f;
+        ubo.glitchBufferCorruption = glitchEnabled ? visualControls.glitchBufferCorruption : 0.0f;
+
+        auto blendEnabled = visualControls.enableBlending;
+        ubo.blendModeProcedural = blendEnabled ? visualControls.blendModeProcedural : 0;
+        ubo.blendModeVideo = blendEnabled ? visualControls.blendModeVideo : 0;
+        ubo.blendModeFeedback = blendEnabled ? visualControls.blendModeFeedback : 0;
+        ubo.blendProceduralMix = blendEnabled ? visualControls.blendProceduralMix : 0.0f;
+        ubo.blendVideoMix = blendEnabled ? visualControls.blendVideoMix : 0.0f;
+        ubo.blendFeedbackMix = blendEnabled ? visualControls.blendFeedbackMix : 0.0f;
+
+        auto analogEnabled = visualControls.enableAnalog;
+        ubo.analogScanlineFocus = analogEnabled ? visualControls.analogScanlineFocus : 0.0f;
+        ubo.analogMaskBalance = analogEnabled ? visualControls.analogMaskBalance : 0.0f;
+        ubo.analogNoise = analogEnabled ? visualControls.analogNoise : 0.0f;
+        ubo.analogBloom = analogEnabled ? visualControls.analogBloom : 0.0f;
+        ubo.vhsDistortion = analogEnabled ? visualControls.vhsDistortion : 0.0f;
+        ubo.analogChromaticAberration = analogEnabled ? visualControls.analogChromaticAberration : 0.0f;
+
+        auto audioEnabled = visualControls.enableAudioReactive;
+        ubo.audioWarpResponse = audioEnabled ? visualControls.audioWarpResponse : 0.0f;
+        ubo.audioFeedbackResponse = audioEnabled ? visualControls.audioFeedbackResponse : 0.0f;
+        ubo.audioBlurResponse = audioEnabled ? visualControls.audioBlurResponse : 0.0f;
+        ubo.audioColorResponse = audioEnabled ? visualControls.audioColorResponse : 0.0f;
+        ubo.audioGlitchResponse = audioEnabled ? visualControls.audioGlitchResponse : 0.0f;
+        ubo.audioBeatSync = audioEnabled ? visualControls.audioBeatSync : 0.0f;
+        ubo.audioLfoRate = audioEnabled ? visualControls.audioLfoRate : 0.0f;
+
+        auto temporalEnabled = visualControls.enableTemporal;
+        ubo.temporalInterpolation = temporalEnabled ? visualControls.temporalInterpolation : 0.0f;
+        ubo.temporalBlendStrength = temporalEnabled ? visualControls.temporalBlendStrength : 0.0f;
+        ubo.slowMotionFactor = temporalEnabled ? visualControls.slowMotionFactor : 1.0f;
+        ubo.frameAccumulation = temporalEnabled ? visualControls.frameAccumulation : 0.0f;
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
@@ -3187,7 +4385,7 @@ private:
             uint32_t imageIndex = 0;
             VkResult result = VK_SUCCESS;
             FrameContext& frame = frameSystem.beginFrame(swapchain, imageIndex, result);
-            std::cout << "[FRAME START] cpuFrameIndex=" << frame.frameIndex << " imageIndex=" << imageIndex << std::endl;
+            videoTrace("[FRAME START] cpuFrameIndex=", frame.frameIndex, " imageIndex=", imageIndex);
             lastFrameFrameIndex = frame.frameIndex;
             lastFrameImageIndex = imageIndex;
 
@@ -3277,12 +4475,91 @@ private:
             return;
         }
 
-        VisualControls loaded = visualControls;
-        int activeMode = loaded.activeMode;
-        int upscaleFlag = loaded.upscaleEnabled ? 1 : 0;
-        int autoRandomFlag = videoRandomizer.autoRandomize ? 1 : 0;
+        auto loadLegacy = [&](std::istream& legacy) {
+            VisualControls loaded = visualControls;
+            int activeMode = loaded.activeMode;
+            int upscaleFlag = loaded.upscaleEnabled ? 1 : 0;
+            int autoRandomFlag = videoRandomizer.autoRandomize ? 1 : 0;
 
-        if (!(file >> loaded.animationSpeed
+            if (!(legacy >> loaded.animationSpeed
+                      >> loaded.tempo
+                      >> loaded.energy
+                      >> loaded.bass
+                      >> loaded.mid
+                      >> loaded.high
+                      >> loaded.colorBlend
+                      >> loaded.primaryColor.r >> loaded.primaryColor.g >> loaded.primaryColor.b >> loaded.primaryColor.a
+                      >> loaded.secondaryColor.r >> loaded.secondaryColor.g >> loaded.secondaryColor.b >> loaded.secondaryColor.a
+                      >> activeMode
+                      >> loaded.videoMix
+                      >> loaded.videoPlaybackRate
+                      >> loaded.grayscaleAmount
+                      >> loaded.sharpenAmount
+                      >> upscaleFlag
+                      >> loaded.crtCurvature
+                      >> loaded.crtHorizontalCurvature
+                      >> loaded.crtScanlineIntensity
+                      >> loaded.crtMaskIntensity
+                      >> loaded.crtVignette
+                      >> loaded.crtFishEye
+                      >> loaded.bloomIntensity
+                      >> loaded.bloomThreshold
+                      >> loaded.aberrationAmount
+                      >> loaded.grainStrength
+                      >> loaded.bendAmount
+                      >> loaded.glitchAmount
+                      >> loaded.randomVideoStart
+                      >> loaded.colorBalance.r >> loaded.colorBalance.g >> loaded.colorBalance.b
+                      >> autoRandomFlag
+                      >> videoRandomizer.intervalSeconds)) {
+                return false;
+            }
+
+            loaded.activeMode = activeMode;
+            loaded.upscaleEnabled = (upscaleFlag != 0);
+            videoRandomizer.autoRandomize = (autoRandomFlag != 0);
+            videoRandomizer.useVideoDuration = false;
+            videoRandomizer.currentVideoDuration = 0.0f;
+            videoRandomizer.recentHistory.clear();
+            visualControls = loaded;
+            return true;
+        };
+
+        auto parseModernState = [&](std::istream& modern,
+                                    bool readVjayToggles,
+                                    bool readPostFxLocks,
+                                    bool readRandomizerExtras,
+                                    bool readDecodeOversample,
+                                    bool readForcedFpsAndLoop) {
+            VisualControls loaded = visualControls;
+            VideoRandomizerState randomizer = videoRandomizer;
+            int activeMode = loaded.activeMode;
+            int upscaleFlag = loaded.upscaleEnabled ? 1 : 0;
+            int randomStartFlag = loaded.randomVideoStart ? 1 : 0;
+            int autoRandomFlag = randomizer.autoRandomize ? 1 : 0;
+            int durationToggle = randomizer.useVideoDuration ? 1 : 0;
+            int colorToggle = loaded.enableColorGrading ? 1 : 0;
+            int feedbackToggle = loaded.enableFeedback ? 1 : 0;
+            int distortionToggle = loaded.enableDistortion ? 1 : 0;
+            int blurToggle = loaded.enableBlurMotion ? 1 : 0;
+            int sharpenToggle = loaded.enableSharpen ? 1 : 0;
+            int glitchToggle = loaded.enableGlitch ? 1 : 0;
+            int blendToggle = loaded.enableBlending ? 1 : 0;
+            int analogToggle = loaded.enableAnalog ? 1 : 0;
+            int audioToggle = loaded.enableAudioReactive ? 1 : 0;
+            int temporalToggle = loaded.enableTemporal ? 1 : 0;
+            int postCrtToggle = loaded.enablePostCrtCurvature ? 1 : 0;
+            int postScanMaskToggle = loaded.enablePostScanMask ? 1 : 0;
+            int postVignetteToggle = loaded.enablePostVignette ? 1 : 0;
+            int postFishToggle = loaded.enablePostFishEye ? 1 : 0;
+            int postBloomToggle = loaded.enablePostBloom ? 1 : 0;
+            int postAberToggle = loaded.enablePostAberration ? 1 : 0;
+            int postGrainToggle = loaded.enablePostGrain ? 1 : 0;
+            int postBendToggle = loaded.enablePostBend ? 1 : 0;
+            int postGlitchToggle = loaded.enablePostGlitch ? 1 : 0;
+            int postColorToggle = loaded.enablePostColorBalance ? 1 : 0;
+
+            if (!(modern >> loaded.animationSpeed
                   >> loaded.tempo
                   >> loaded.energy
                   >> loaded.bass
@@ -3307,17 +4584,220 @@ private:
                   >> loaded.bloomThreshold
                   >> loaded.aberrationAmount
                   >> loaded.grainStrength
+                  >> loaded.bendAmount
+                  >> loaded.glitchAmount
+                  >> randomStartFlag
                   >> loaded.colorBalance.r >> loaded.colorBalance.g >> loaded.colorBalance.b
+                  >> loaded.gradeBrightness
+                  >> loaded.gradeContrast
+                  >> loaded.gradeSaturation
+                  >> loaded.gradeHueShift
+                  >> loaded.gradeGamma
+                  >> loaded.colorLUTIndex
+                  >> loaded.splitToneBalance
+                  >> loaded.splitToneShadows.r >> loaded.splitToneShadows.g >> loaded.splitToneShadows.b
+                  >> loaded.splitToneHighlights.r >> loaded.splitToneHighlights.g >> loaded.splitToneHighlights.b
+                  >> loaded.feedbackAmount
+                  >> loaded.trailStrength
+                  >> loaded.temporalAccumulation
+                  >> loaded.feedbackDecay
+                  >> loaded.recursiveBlend
+                  >> loaded.uvWarpStrength
+                  >> loaded.rippleStrength
+                  >> loaded.rippleFrequency
+                  >> loaded.swirlStrength
+                  >> loaded.displacementAmount
+                  >> loaded.kaleidoSegments
+                  >> loaded.tunnelDepth
+                  >> loaded.tunnelCurvature
+                  >> loaded.gaussianBlur
+                  >> loaded.directionalBlur
+                  >> loaded.directionalBlurAngle
+                  >> loaded.zoomBlur
+                  >> loaded.motionBlur
+                  >> loaded.temporalBlur
+                  >> loaded.unsharpMask
+                  >> loaded.casAmount
+                  >> loaded.localContrast
+                  >> loaded.glitchDatamosh
+                  >> loaded.glitchRGBSplit
+                  >> loaded.glitchScanlineBreak
+                  >> loaded.glitchJitter
+                  >> loaded.glitchTearing
+                  >> loaded.glitchPixelSort
+                  >> loaded.glitchBufferCorruption
+                  >> loaded.blendModeProcedural
+                  >> loaded.blendModeVideo
+                  >> loaded.blendModeFeedback
+                  >> loaded.blendProceduralMix
+                  >> loaded.blendVideoMix
+                  >> loaded.blendFeedbackMix
+                  >> loaded.analogScanlineFocus
+                  >> loaded.analogMaskBalance
+                  >> loaded.analogNoise
+                  >> loaded.analogBloom
+                  >> loaded.vhsDistortion
+                  >> loaded.analogChromaticAberration)) {
+                return false;
+            }
+
+            if (readDecodeOversample) {
+                if (!(modern >> loaded.videoDecodeOversample)) {
+                    return false;
+                }
+            } else {
+                loaded.videoDecodeOversample = 1.0f;
+            }
+
+            if (readForcedFpsAndLoop) {
+                if (!(modern >> loaded.forcedFpsIndex >> loaded.loopBlendSeconds)) {
+                    return false;
+                }
+            } else {
+                loaded.forcedFpsIndex = 0;
+                loaded.loopBlendSeconds = 0.5f;
+            }
+
+            if (readVjayToggles) {
+                if (!(modern >> colorToggle
+                              >> feedbackToggle
+                              >> distortionToggle
+                              >> blurToggle
+                              >> sharpenToggle
+                              >> glitchToggle
+                              >> blendToggle
+                              >> analogToggle
+                              >> audioToggle
+                              >> temporalToggle)) {
+                    return false;
+                }
+            } else {
+                colorToggle = feedbackToggle = distortionToggle = blurToggle = sharpenToggle = glitchToggle = blendToggle = analogToggle = audioToggle = temporalToggle = 1;
+            }
+
+            if (readPostFxLocks) {
+                if (!(modern >> postCrtToggle
+                              >> postScanMaskToggle
+                              >> postVignetteToggle
+                              >> postFishToggle
+                              >> postBloomToggle
+                              >> postAberToggle
+                              >> postGrainToggle
+                              >> postBendToggle
+                              >> postGlitchToggle
+                              >> postColorToggle)) {
+                    return false;
+                }
+            } else {
+                postCrtToggle = postScanMaskToggle = postVignetteToggle = postFishToggle = postBloomToggle = postAberToggle = postGrainToggle = postBendToggle = postGlitchToggle = postColorToggle = 1;
+            }
+
+            if (!(modern
+                  >> loaded.audioWarpResponse
+                  >> loaded.audioFeedbackResponse
+                  >> loaded.audioBlurResponse
+                  >> loaded.audioColorResponse
+                  >> loaded.audioGlitchResponse
+                  >> loaded.audioBeatSync
+                  >> loaded.audioLfoRate
+                  >> loaded.temporalInterpolation
+                  >> loaded.temporalBlendStrength
+                  >> loaded.slowMotionFactor
+                  >> loaded.frameAccumulation
                   >> autoRandomFlag
-                  >> videoRandomizer.intervalSeconds)) {
-            std::cerr << "[Controls] failed to parse control state file" << std::endl;
+                  >> randomizer.intervalSeconds)) {
+                return false;
+            }
+
+            if (readRandomizerExtras) {
+                if (!(modern >> durationToggle)) {
+                    return false;
+                }
+            } else {
+                durationToggle = 0;
+            }
+
+            loaded.activeMode = std::clamp(activeMode, 0, 1);
+            loaded.upscaleEnabled = (upscaleFlag != 0);
+            loaded.randomVideoStart = (randomStartFlag != 0);
+            loaded.enableColorGrading = (colorToggle != 0);
+            loaded.enableFeedback = (feedbackToggle != 0);
+            loaded.enableDistortion = (distortionToggle != 0);
+            loaded.enableBlurMotion = (blurToggle != 0);
+            loaded.enableSharpen = (sharpenToggle != 0);
+            loaded.enableGlitch = (glitchToggle != 0);
+            loaded.enableBlending = (blendToggle != 0);
+            loaded.enableAnalog = (analogToggle != 0);
+            loaded.enableAudioReactive = (audioToggle != 0);
+            loaded.enableTemporal = (temporalToggle != 0);
+            loaded.enablePostCrtCurvature = (postCrtToggle != 0);
+            loaded.enablePostScanMask = (postScanMaskToggle != 0);
+            loaded.enablePostVignette = (postVignetteToggle != 0);
+            loaded.enablePostFishEye = (postFishToggle != 0);
+            loaded.enablePostBloom = (postBloomToggle != 0);
+            loaded.enablePostAberration = (postAberToggle != 0);
+            loaded.enablePostGrain = (postGrainToggle != 0);
+            loaded.enablePostBend = (postBendToggle != 0);
+            loaded.enablePostGlitch = (postGlitchToggle != 0);
+            loaded.enablePostColorBalance = (postColorToggle != 0);
+            loaded.forcedFpsIndex = std::clamp(loaded.forcedFpsIndex, 0, static_cast<int>(FORCED_FPS_OPTIONS.size()) - 1);
+            loaded.loopBlendSeconds = std::clamp(loaded.loopBlendSeconds, 0.0f, 5.0f);
+            randomizer.autoRandomize = (autoRandomFlag != 0);
+            randomizer.useVideoDuration = (durationToggle != 0);
+            visualControls = loaded;
+            videoRandomizer = randomizer;
+            videoRandomizer.currentVideoDuration = 0.0f;
+            videoRandomizer.recentHistory.clear();
+            videoRandomizer.elapsedSeconds = 0.0f;
+            return true;
+        };
+
+        std::string versionToken;
+        file >> versionToken;
+        if (!file) {
             return;
         }
 
-        loaded.activeMode = activeMode;
-        loaded.upscaleEnabled = (upscaleFlag != 0);
-        videoRandomizer.autoRandomize = (autoRandomFlag != 0);
-        visualControls = loaded;
+        if (versionToken == CONTROL_STATE_VERSION) {
+            if (!parseModernState(file, true, true, true, true, true)) {
+                std::cerr << "[Controls] failed to parse control state file" << std::endl;
+            }
+            return;
+        }
+
+        if (versionToken == CONTROL_STATE_VERSION_PREV) {
+            if (!parseModernState(file, true, true, true, true, false)) {
+                std::cerr << "[Controls] failed to parse control state file (v5)" << std::endl;
+            }
+            return;
+        }
+
+        if (versionToken == CONTROL_STATE_VERSION_PREV2) {
+            if (!parseModernState(file, true, false, false, false, false)) {
+                std::cerr << "[Controls] failed to parse control state file (v4)" << std::endl;
+            }
+            return;
+        }
+
+        if (versionToken == CONTROL_STATE_VERSION_PREV3) {
+            if (!parseModernState(file, false, false, false, false, false)) {
+                std::cerr << "[Controls] failed to parse control state file (v3)" << std::endl;
+            }
+            return;
+        }
+
+        if (versionToken == CONTROL_STATE_VERSION_PREV4) {
+            if (!parseModernState(file, false, false, false, false, false)) {
+                std::cerr << "[Controls] failed to parse control state file (v2)" << std::endl;
+            }
+            return;
+        }
+
+        file.clear();
+        file.seekg(0);
+        if (!loadLegacy(file)) {
+            std::cerr << "[Controls] failed to parse legacy control state file" << std::endl;
+        }
     }
 
     void saveControlState() {
@@ -3327,7 +4807,8 @@ private:
             return;
         }
 
-        file << visualControls.animationSpeed << ' '
+        file << CONTROL_STATE_VERSION << '\n'
+             << visualControls.animationSpeed << ' '
              << visualControls.tempo << ' '
              << visualControls.energy << ' '
              << visualControls.bass << ' '
@@ -3339,6 +4820,9 @@ private:
              << visualControls.activeMode << ' '
              << visualControls.videoMix << ' '
              << visualControls.videoPlaybackRate << ' '
+             << visualControls.videoDecodeOversample << ' '
+             << visualControls.forcedFpsIndex << ' '
+             << visualControls.loopBlendSeconds << ' '
              << visualControls.grayscaleAmount << ' '
              << visualControls.sharpenAmount << ' '
              << (visualControls.upscaleEnabled ? 1 : 0) << ' '
@@ -3352,9 +4836,96 @@ private:
              << visualControls.bloomThreshold << ' '
              << visualControls.aberrationAmount << ' '
              << visualControls.grainStrength << ' '
+             << visualControls.bendAmount << ' '
+             << visualControls.glitchAmount << ' '
+             << (visualControls.randomVideoStart ? 1 : 0) << ' '
              << visualControls.colorBalance.r << ' ' << visualControls.colorBalance.g << ' ' << visualControls.colorBalance.b << ' '
+             << visualControls.gradeBrightness << ' '
+             << visualControls.gradeContrast << ' '
+             << visualControls.gradeSaturation << ' '
+             << visualControls.gradeHueShift << ' '
+             << visualControls.gradeGamma << ' '
+             << visualControls.colorLUTIndex << ' '
+             << visualControls.splitToneBalance << ' '
+             << visualControls.splitToneShadows.r << ' ' << visualControls.splitToneShadows.g << ' ' << visualControls.splitToneShadows.b << ' '
+             << visualControls.splitToneHighlights.r << ' ' << visualControls.splitToneHighlights.g << ' ' << visualControls.splitToneHighlights.b << ' '
+             << visualControls.feedbackAmount << ' '
+             << visualControls.trailStrength << ' '
+             << visualControls.temporalAccumulation << ' '
+             << visualControls.feedbackDecay << ' '
+             << visualControls.recursiveBlend << ' '
+             << visualControls.uvWarpStrength << ' '
+             << visualControls.rippleStrength << ' '
+             << visualControls.rippleFrequency << ' '
+             << visualControls.swirlStrength << ' '
+             << visualControls.displacementAmount << ' '
+             << visualControls.kaleidoSegments << ' '
+             << visualControls.tunnelDepth << ' '
+             << visualControls.tunnelCurvature << ' '
+             << visualControls.gaussianBlur << ' '
+             << visualControls.directionalBlur << ' '
+             << visualControls.directionalBlurAngle << ' '
+             << visualControls.zoomBlur << ' '
+             << visualControls.motionBlur << ' '
+             << visualControls.temporalBlur << ' '
+             << visualControls.unsharpMask << ' '
+             << visualControls.casAmount << ' '
+             << visualControls.localContrast << ' '
+             << visualControls.glitchDatamosh << ' '
+             << visualControls.glitchRGBSplit << ' '
+             << visualControls.glitchScanlineBreak << ' '
+             << visualControls.glitchJitter << ' '
+             << visualControls.glitchTearing << ' '
+             << visualControls.glitchPixelSort << ' '
+             << visualControls.glitchBufferCorruption << ' '
+             << visualControls.blendModeProcedural << ' '
+             << visualControls.blendModeVideo << ' '
+             << visualControls.blendModeFeedback << ' '
+             << visualControls.blendProceduralMix << ' '
+             << visualControls.blendVideoMix << ' '
+             << visualControls.blendFeedbackMix << ' '
+             << visualControls.analogScanlineFocus << ' '
+             << visualControls.analogMaskBalance << ' '
+             << visualControls.analogNoise << ' '
+             << visualControls.analogBloom << ' '
+             << visualControls.vhsDistortion << ' '
+             << visualControls.analogChromaticAberration << ' '
+             << (visualControls.enableColorGrading ? 1 : 0) << ' '
+             << (visualControls.enableFeedback ? 1 : 0) << ' '
+             << (visualControls.enableDistortion ? 1 : 0) << ' '
+             << (visualControls.enableBlurMotion ? 1 : 0) << ' '
+             << (visualControls.enableSharpen ? 1 : 0) << ' '
+             << (visualControls.enableGlitch ? 1 : 0) << ' '
+             << (visualControls.enableBlending ? 1 : 0) << ' '
+             << (visualControls.enableAnalog ? 1 : 0) << ' '
+             << (visualControls.enableAudioReactive ? 1 : 0) << ' '
+             << (visualControls.enableTemporal ? 1 : 0) << ' '
+             << (visualControls.enablePostCrtCurvature ? 1 : 0) << ' '
+             << (visualControls.enablePostScanMask ? 1 : 0) << ' '
+             << (visualControls.enablePostVignette ? 1 : 0) << ' '
+             << (visualControls.enablePostFishEye ? 1 : 0) << ' '
+             << (visualControls.enablePostBloom ? 1 : 0) << ' '
+             << (visualControls.enablePostAberration ? 1 : 0) << ' '
+             << (visualControls.enablePostGrain ? 1 : 0) << ' '
+             << (visualControls.enablePostBend ? 1 : 0) << ' '
+             << (visualControls.enablePostGlitch ? 1 : 0) << ' '
+             << (visualControls.enablePostColorBalance ? 1 : 0) << ' '
+             << visualControls.audioWarpResponse << ' '
+             << visualControls.audioFeedbackResponse << ' '
+             << visualControls.audioBlurResponse << ' '
+             << visualControls.audioColorResponse << ' '
+             << visualControls.audioGlitchResponse << ' '
+             << visualControls.audioBeatSync << ' '
+             << visualControls.audioLfoRate << ' '
+             << visualControls.temporalInterpolation << ' '
+             << visualControls.temporalBlendStrength << ' '
+             << visualControls.slowMotionFactor << ' '
+             << visualControls.frameAccumulation << ' '
              << (videoRandomizer.autoRandomize ? 1 : 0) << ' '
-             << videoRandomizer.intervalSeconds;
+             << videoRandomizer.intervalSeconds << ' '
+             << (videoRandomizer.useVideoDuration ? 1 : 0);
+
+        saveImGuiLayout();
     }
 
     void cleanup() {

@@ -8,6 +8,7 @@ struct VideoStagingSlot {
     VkDeviceMemory memory = VK_NULL_HANDLE;
     void* mapped = nullptr;
     size_t capacity = 0;
+    double timestamp = 0.0;
 };
 
 struct VideoStagingWriteResult {
