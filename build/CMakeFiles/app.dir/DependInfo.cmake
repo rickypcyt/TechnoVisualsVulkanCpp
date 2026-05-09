@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/ricky/coding/proyects/vulkancpp/VideoStaging.cpp" "CMakeFiles/app.dir/VideoStaging.cpp.o" "gcc" "CMakeFiles/app.dir/VideoStaging.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/main.cpp" "CMakeFiles/app.dir/main.cpp.o" "gcc" "CMakeFiles/app.dir/main.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o" "gcc" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o" "gcc" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o.d"

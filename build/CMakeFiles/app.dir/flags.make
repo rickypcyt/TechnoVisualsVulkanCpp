@@ -6,9 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
 
-<<<<<<< Updated upstream
 CXX_FLAGS = -std=gnu++17
-=======
-CXX_FLAGS = -fsanitize=address -fno-omit-frame-pointer -g -O0 -std=gnu++17
->>>>>>> Stashed changes
 

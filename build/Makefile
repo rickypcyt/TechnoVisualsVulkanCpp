@@ -129,6 +129,30 @@ app/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
 .PHONY : app/fast
 
+VideoStaging.o: VideoStaging.cpp.o
+.PHONY : VideoStaging.o
+
+# target to build an object file
+VideoStaging.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/VideoStaging.cpp.o
+.PHONY : VideoStaging.cpp.o
+
+VideoStaging.i: VideoStaging.cpp.i
+.PHONY : VideoStaging.i
+
+# target to preprocess a source file
+VideoStaging.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/VideoStaging.cpp.i
+.PHONY : VideoStaging.cpp.i
+
+VideoStaging.s: VideoStaging.cpp.s
+.PHONY : VideoStaging.s
+
+# target to generate assembly for a file
+VideoStaging.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/VideoStaging.cpp.s
+.PHONY : VideoStaging.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -330,6 +354,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... app"
+	@echo "... VideoStaging.o"
+	@echo "... VideoStaging.i"
+	@echo "... VideoStaging.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

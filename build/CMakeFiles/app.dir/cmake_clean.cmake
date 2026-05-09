@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/app.dir/link.d"
+  "CMakeFiles/app.dir/VideoStaging.cpp.o"
+  "CMakeFiles/app.dir/VideoStaging.cpp.o.d"
   "CMakeFiles/app.dir/main.cpp.o"
   "CMakeFiles/app.dir/main.cpp.o.d"
   "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o"

@@ -189,6 +189,99 @@ public:
         }
     }
 
+    bool grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidth, int& outHeight) {
+        if (!ready || !dest || destCapacity == 0) {
+            return false;
+        }
+
+        while (true) {
+            int ret = av_read_frame(formatCtx, packet);
+            if (ret < 0) {
+                if (ret == AVERROR_EOF) {
+                    if (!loopEnabled) {
+                        return false;
+                    }
+                    if (av_seek_frame(formatCtx, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD) < 0) {
+                        return false;
+                    }
+                    avcodec_flush_buffers(codecCtx);
+                    continue;
+                }
+                return false;
+            }
+
+            if (packet->stream_index != videoStreamIndex) {
+                av_packet_unref(packet);
+                continue;
+            }
+
+            ret = avcodec_send_packet(codecCtx, packet);
+            av_packet_unref(packet);
+            if (ret < 0) {
+                continue;
+            }
+
+            while (ret >= 0) {
+                ret = avcodec_receive_frame(codecCtx, frame);
+                if (ret == AVERROR(EAGAIN)) {
+                    break;
+                }
+                if (ret < 0) {
+                    return false;
+                }
+
+                const size_t needed = static_cast<size_t>(frame->width) * frame->height * 4;
+                if (needed > destCapacity) {
+                    outWidth = frame->width;
+                    outHeight = frame->height;
+                    av_frame_unref(frame);
+                    return false;
+                }
+
+                if (!swsCtx || cachedWidth != frame->width || cachedHeight != frame->height || cachedFormat != frame->format) {
+                    if (swsCtx) {
+                        sws_freeContext(swsCtx);
+                    }
+                    swsCtx = sws_getContext(
+                        frame->width,
+                        frame->height,
+                        static_cast<AVPixelFormat>(frame->format),
+                        frame->width,
+                        frame->height,
+                        AV_PIX_FMT_RGBA,
+                        SWS_BILINEAR,
+                        nullptr,
+                        nullptr,
+                        nullptr);
+                    cachedWidth = frame->width;
+                    cachedHeight = frame->height;
+                    cachedFormat = frame->format;
+                }
+
+                if (!swsCtx) {
+                    av_frame_unref(frame);
+                    return false;
+                }
+
+                uint8_t* destPlanes[4] = {dest, nullptr, nullptr, nullptr};
+                int destStrides[4] = {frame->width * 4, 0, 0, 0};
+                sws_scale(
+                    swsCtx,
+                    frame->data,
+                    frame->linesize,
+                    0,
+                    frame->height,
+                    destPlanes,
+                    destStrides);
+
+                outWidth = frame->width;
+                outHeight = frame->height;
+                av_frame_unref(frame);
+                return true;
+            }
+        }
+    }
+
     void shutdown() {
         if (packet) {
             av_packet_free(&packet);
@@ -1156,8 +1249,6 @@ private:
     uint32_t lastFrameFrameIndex = 0;
     VideoPlayer videoPlayer;
     VideoTextureResources videoTexture;
-    std::array<std::vector<uint8_t>, 2> videoCpuSnapshots;
-    size_t videoSnapshotWriteIndex = 0;
     double videoFrameTimer = 0.0;
     std::chrono::steady_clock::time_point lastFrameTimestamp;
     bool videoSubsystemInitialized = false;
@@ -2170,10 +2261,6 @@ private:
             videoStaging.setSlot(i, buffer.buffer, buffer.memory, mapped, videoTexture.frameSize);
         }
 
-        videoSnapshotWriteIndex = 0;
-        for (auto& snapshot : videoCpuSnapshots) {
-            snapshot.clear();
-        }
         videoTexture.ready = true;
     }
 
@@ -2290,8 +2377,16 @@ private:
             return;
         }
 
+        const uint32_t writeSlot = frame.frameIndex % MAX_FRAMES_IN_FLIGHT;
         std::cout << "[VIDEO] decode start frameIndex=" << frame.frameIndex << std::endl;
-        std::cout << "[VIDEO] snapshot write idx=" << videoSnapshotWriteIndex << std::endl;
+        std::cout << "[VIDEO] snapshot/write slot=" << writeSlot << std::endl;
+
+        if (writeSlot >= videoStaging.getSlotCount()) {
+            std::cerr << "[STAGING] invalid write slot " << writeSlot
+                      << " (slotCount=" << videoStaging.getSlotCount() << ")" << std::endl;
+            return;
+        }
+
         vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
 
         videoFrameTimer += deltaTime;
@@ -2301,45 +2396,9 @@ private:
         }
         videoFrameTimer = std::fmod(videoFrameTimer, frameDuration);
 
-        std::vector<uint8_t>& decodeTarget = videoCpuSnapshots[videoSnapshotWriteIndex];
-        int decodedWidth = 0;
-        int decodedHeight = 0;
-        if (!videoPlayer.grabFrame(decodeTarget, decodedWidth, decodedHeight)) {
-            return;
-        }
-
-        std::cout << "[VIDEO] frame decoded size=" << decodedWidth << "x" << decodedHeight << " bytes=" << decodeTarget.size() << std::endl;
-
-        const size_t committedSnapshot = videoSnapshotWriteIndex;
-        videoSnapshotWriteIndex = (videoSnapshotWriteIndex + 1) % videoCpuSnapshots.size();
-
-        if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
-            createVideoTextureResources(decodedWidth, decodedHeight);
-            if (!videoTexture.ready) {
-                return;
-            }
-            for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
-                updateDescriptorSet(i);
-            }
-        }
-
-        // Use ring buffer for staging: write to slot opposite to current frame
-        uint32_t writeSlot = (frame.frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
         const auto& slot = videoStaging.getSlot(writeSlot);
-        const size_t copySize = static_cast<size_t>(decodedWidth) * decodedHeight * 4;
-        if (copySize > slot.capacity) {
-            throw std::runtime_error("decoded frame larger than staging buffer");
-        }
-
-        const auto& committedData = videoCpuSnapshots[committedSnapshot];
-        if (committedData.size() < copySize || committedData.empty()) {
-            std::cerr << "[VIDEO] Snapshot underflow detected (slot=" << committedSnapshot
-                      << ") size=" << committedData.size() << " expected=" << copySize << std::endl;
-            return;
-        }
-        const void* committedPtr = committedData.data();
-        if (!committedPtr) {
-            std::cerr << "[VIDEO] Snapshot pointer is null for slot=" << committedSnapshot << std::endl;
+        if (!slot.mapped) {
+            std::cerr << "[STAGING] slot " << writeSlot << " is not mapped" << std::endl;
             return;
         }
 
@@ -2349,11 +2408,31 @@ private:
             vkWaitForFences(device, 1, &slotFence, VK_TRUE, UINT64_MAX);
         }
 
-        std::cout << "[STAGING] writing slot=" << writeSlot << " size=" << copySize << " fenceState=SIGNALLED" << std::endl;
-        auto result = videoStaging.writeVideoStagingSlot(writeSlot, committedPtr, copySize, currentEpoch);
-        if (!result.success) {
-            printf("STAGING WRITE REJECTED\n");
+        int decodedWidth = 0;
+        int decodedHeight = 0;
+        if (!videoPlayer.grabFrameInto(static_cast<uint8_t*>(slot.mapped), slot.capacity, decodedWidth, decodedHeight)) {
+            return;
         }
+
+        std::cout << "[VIDEO] frame decoded size=" << decodedWidth << "x" << decodedHeight << std::endl;
+
+        if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
+            createVideoTextureResources(decodedWidth, decodedHeight);
+            if (!videoTexture.ready) {
+                return;
+            }
+            for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
+                updateDescriptorSet(i);
+            }
+            return;
+        }
+
+        const size_t copySize = static_cast<size_t>(decodedWidth) * decodedHeight * 4;
+        if (copySize > slot.capacity) {
+            throw std::runtime_error("decoded frame larger than staging buffer");
+        }
+
+        std::cout << "[STAGING] writing slot=" << writeSlot << " size=" << copySize << " fenceState=SIGNALLED" << std::endl;
         videoTexture.pendingUploads[writeSlot] = true;
     }
 

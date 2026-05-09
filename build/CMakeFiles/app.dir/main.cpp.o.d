@@ -545,7 +545,54 @@ CMakeFiles/app.dir/main.cpp.o: \
  /usr/include/c++/16.1.1/backward/auto_ptr.h \
  /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
  /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/bits/sstream.tcc \
+ /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
+ /usr/include/c++/16.1.1/optional /usr/include/c++/16.1.1/filesystem \
+ /usr/include/c++/16.1.1/bits/fs_fwd.h \
+ /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/locale \
+ /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+ /usr/include/libintl.h \
+ /usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/16.1.1/bits/locale_conv.h \
+ /usr/include/c++/16.1.1/iomanip \
+ /usr/include/c++/16.1.1/bits/quoted_string.h \
+ /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
+ /usr/include/c++/16.1.1/bits/fs_ops.h /usr/include/libavcodec/avcodec.h \
+ /usr/include/libavutil/samplefmt.h /usr/include/libavutil/attributes.h \
+ /usr/include/libavutil/avutil.h /usr/include/libavutil/common.h \
+ /usr/include/libavutil/attributes.h /usr/include/libavutil/error.h \
+ /usr/include/libavutil/macros.h /usr/include/libavutil/avconfig.h \
+ /usr/include/libavutil/version.h /usr/include/libavutil/mem.h \
+ /usr/include/libavutil/rational.h /usr/include/libavutil/mathematics.h \
+ /usr/include/libavutil/intfloat.h /usr/include/libavutil/log.h \
+ /usr/include/libavutil/pixfmt.h /usr/include/libavutil/buffer.h \
+ /usr/include/libavutil/channel_layout.h /usr/include/libavutil/dict.h \
+ /usr/include/libavutil/frame.h /usr/include/libavutil/avutil.h \
+ /usr/include/libavutil/buffer.h /usr/include/libavutil/channel_layout.h \
+ /usr/include/libavutil/dict.h /usr/include/libavutil/samplefmt.h \
+ /usr/include/libavutil/log.h /usr/include/libavutil/pixfmt.h \
+ /usr/include/libavutil/rational.h /usr/include/libavcodec/codec.h \
+ /usr/include/libavutil/hwcontext.h /usr/include/libavutil/frame.h \
+ /usr/include/libavcodec/codec_id.h \
+ /usr/include/libavcodec/version_major.h \
+ /usr/include/libavcodec/version_major.h \
+ /usr/include/libavcodec/codec_id.h /usr/include/libavcodec/defs.h \
+ /usr/include/libavcodec/packet.h /usr/include/libavutil/version.h \
+ /usr/include/libavcodec/version.h /usr/include/libavcodec/codec_desc.h \
+ /usr/include/libavcodec/codec_par.h /usr/include/libavformat/avformat.h \
+ /usr/include/libavcodec/codec_par.h /usr/include/libavcodec/defs.h \
+ /usr/include/libavcodec/packet.h /usr/include/libavformat/avio.h \
+ /usr/include/libavformat/version_major.h \
+ /usr/include/libavformat/version.h \
+ /usr/include/libavformat/version_major.h /usr/include/libavcodec/codec.h \
+ /usr/include/libswscale/swscale.h \
+ /usr/include/libswscale/version_major.h \
+ /usr/include/libswscale/version.h /usr/include/libavutil/imgutils.h \
+ /usr/include/libavutil/pixdesc.h \
  /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.h \
  /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imconfig.h \
  /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h \
- /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.h
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.h \
+ /home/ricky/coding/proyects/vulkancpp/VideoStaging.h

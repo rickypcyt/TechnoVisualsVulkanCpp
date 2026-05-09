@@ -73,7 +73,7 @@ events:
       - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:212 (message)"
       - "CMakeLists.txt:2 (project)"
     message: |
-      The system is: Linux - 7.0.3-zen1-1-zen - x86_64
+      The system is: Linux - 7.0.3-zen1-2-zen - x86_64
   -
     kind: "find-v1"
     backtrace:
@@ -947,9 +947,9 @@ events:
       CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
       CMAKE_FIND_USE_INSTALL_PREFIX: true
     names:
-      - "gcc-ar-15.2"
-      - "gcc-ar-15"
-      - "gcc-ar15"
+      - "gcc-ar-16.1"
+      - "gcc-ar-16"
+      - "gcc-ar16"
       - "gcc-ar"
     candidate_directories:
       - "/usr/bin/"
@@ -967,48 +967,48 @@ events:
       - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
       - "/home/ricky/.dotnet/tools/"
     searched_directories:
-      - "/usr/bin/gcc-ar-15.2"
-      - "/home/ricky/.bun/bin/gcc-ar-15.2"
-      - "/home/ricky/.cargo/bin/gcc-ar-15.2"
-      - "/home/ricky/.local/bin/gcc-ar-15.2"
-      - "/home/ricky/.bun-global/bin/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-15.2"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-15.2"
-      - "/usr/local/bin/gcc-ar-15.2"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-15.2"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-15.2"
-      - "/home/ricky/.dotnet/tools/gcc-ar-15.2"
-      - "/usr/bin/gcc-ar-15"
-      - "/home/ricky/.bun/bin/gcc-ar-15"
-      - "/home/ricky/.cargo/bin/gcc-ar-15"
-      - "/home/ricky/.local/bin/gcc-ar-15"
-      - "/home/ricky/.bun-global/bin/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-15"
-      - "/usr/local/bin/gcc-ar-15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-15"
-      - "/home/ricky/.dotnet/tools/gcc-ar-15"
-      - "/usr/bin/gcc-ar15"
-      - "/home/ricky/.bun/bin/gcc-ar15"
-      - "/home/ricky/.cargo/bin/gcc-ar15"
-      - "/home/ricky/.local/bin/gcc-ar15"
-      - "/home/ricky/.bun-global/bin/gcc-ar15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ar15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar15"
-      - "/usr/local/bin/gcc-ar15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar15"
-      - "/home/ricky/.dotnet/tools/gcc-ar15"
+      - "/usr/bin/gcc-ar-16.1"
+      - "/home/ricky/.bun/bin/gcc-ar-16.1"
+      - "/home/ricky/.cargo/bin/gcc-ar-16.1"
+      - "/home/ricky/.local/bin/gcc-ar-16.1"
+      - "/home/ricky/.bun-global/bin/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-16.1"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-16.1"
+      - "/usr/local/bin/gcc-ar-16.1"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-16.1"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-16.1"
+      - "/home/ricky/.dotnet/tools/gcc-ar-16.1"
+      - "/usr/bin/gcc-ar-16"
+      - "/home/ricky/.bun/bin/gcc-ar-16"
+      - "/home/ricky/.cargo/bin/gcc-ar-16"
+      - "/home/ricky/.local/bin/gcc-ar-16"
+      - "/home/ricky/.bun-global/bin/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-16"
+      - "/usr/local/bin/gcc-ar-16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-16"
+      - "/home/ricky/.dotnet/tools/gcc-ar-16"
+      - "/usr/bin/gcc-ar16"
+      - "/home/ricky/.bun/bin/gcc-ar16"
+      - "/home/ricky/.cargo/bin/gcc-ar16"
+      - "/home/ricky/.local/bin/gcc-ar16"
+      - "/home/ricky/.bun-global/bin/gcc-ar16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ar16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar16"
+      - "/usr/local/bin/gcc-ar16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar16"
+      - "/home/ricky/.dotnet/tools/gcc-ar16"
     found: "/usr/bin/gcc-ar"
     search_context:
       ENV{PATH}:
@@ -1048,9 +1048,9 @@ events:
       CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
       CMAKE_FIND_USE_INSTALL_PREFIX: true
     names:
-      - "gcc-ranlib-15.2"
-      - "gcc-ranlib-15"
-      - "gcc-ranlib15"
+      - "gcc-ranlib-16.1"
+      - "gcc-ranlib-16"
+      - "gcc-ranlib16"
       - "gcc-ranlib"
     candidate_directories:
       - "/usr/bin/"
@@ -1068,48 +1068,48 @@ events:
       - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
       - "/home/ricky/.dotnet/tools/"
     searched_directories:
-      - "/usr/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.bun/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.cargo/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.local/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.bun-global/bin/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-15.2"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-15.2"
-      - "/usr/local/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-15.2"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-15.2"
-      - "/home/ricky/.dotnet/tools/gcc-ranlib-15.2"
-      - "/usr/bin/gcc-ranlib-15"
-      - "/home/ricky/.bun/bin/gcc-ranlib-15"
-      - "/home/ricky/.cargo/bin/gcc-ranlib-15"
-      - "/home/ricky/.local/bin/gcc-ranlib-15"
-      - "/home/ricky/.bun-global/bin/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-15"
-      - "/usr/local/bin/gcc-ranlib-15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-15"
-      - "/home/ricky/.dotnet/tools/gcc-ranlib-15"
-      - "/usr/bin/gcc-ranlib15"
-      - "/home/ricky/.bun/bin/gcc-ranlib15"
-      - "/home/ricky/.cargo/bin/gcc-ranlib15"
-      - "/home/ricky/.local/bin/gcc-ranlib15"
-      - "/home/ricky/.bun-global/bin/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib15"
-      - "/usr/local/bin/gcc-ranlib15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib15"
-      - "/home/ricky/.dotnet/tools/gcc-ranlib15"
+      - "/usr/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.bun/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.cargo/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.local/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.bun-global/bin/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-16.1"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-16.1"
+      - "/usr/local/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-16.1"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-16.1"
+      - "/home/ricky/.dotnet/tools/gcc-ranlib-16.1"
+      - "/usr/bin/gcc-ranlib-16"
+      - "/home/ricky/.bun/bin/gcc-ranlib-16"
+      - "/home/ricky/.cargo/bin/gcc-ranlib-16"
+      - "/home/ricky/.local/bin/gcc-ranlib-16"
+      - "/home/ricky/.bun-global/bin/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-16"
+      - "/usr/local/bin/gcc-ranlib-16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-16"
+      - "/home/ricky/.dotnet/tools/gcc-ranlib-16"
+      - "/usr/bin/gcc-ranlib16"
+      - "/home/ricky/.bun/bin/gcc-ranlib16"
+      - "/home/ricky/.cargo/bin/gcc-ranlib16"
+      - "/home/ricky/.local/bin/gcc-ranlib16"
+      - "/home/ricky/.bun-global/bin/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib16"
+      - "/usr/local/bin/gcc-ranlib16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib16"
+      - "/home/ricky/.dotnet/tools/gcc-ranlib16"
     found: "/usr/bin/gcc-ranlib"
     search_context:
       ENV{PATH}:
@@ -1237,7 +1237,7 @@ events:
     message: |
       Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
       Compiler: /usr/bin/c++ 
-      Build flags: -fsanitize=address;-fno-omit-frame-pointer;-g;-O0
+      Build flags: 
       Id flags:  
       
       The output was:
@@ -1267,9 +1267,9 @@ events:
       CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
       CMAKE_FIND_USE_INSTALL_PREFIX: true
     names:
-      - "gcc-ar-15.2"
-      - "gcc-ar-15"
-      - "gcc-ar15"
+      - "gcc-ar-16.1"
+      - "gcc-ar-16"
+      - "gcc-ar16"
       - "gcc-ar"
     candidate_directories:
       - "/usr/bin/"
@@ -1287,48 +1287,48 @@ events:
       - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
       - "/home/ricky/.dotnet/tools/"
     searched_directories:
-      - "/usr/bin/gcc-ar-15.2"
-      - "/home/ricky/.bun/bin/gcc-ar-15.2"
-      - "/home/ricky/.cargo/bin/gcc-ar-15.2"
-      - "/home/ricky/.local/bin/gcc-ar-15.2"
-      - "/home/ricky/.bun-global/bin/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ar-15.2"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-15.2"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-15.2"
-      - "/usr/local/bin/gcc-ar-15.2"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-15.2"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-15.2"
-      - "/home/ricky/.dotnet/tools/gcc-ar-15.2"
-      - "/usr/bin/gcc-ar-15"
-      - "/home/ricky/.bun/bin/gcc-ar-15"
-      - "/home/ricky/.cargo/bin/gcc-ar-15"
-      - "/home/ricky/.local/bin/gcc-ar-15"
-      - "/home/ricky/.bun-global/bin/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ar-15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-15"
-      - "/usr/local/bin/gcc-ar-15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-15"
-      - "/home/ricky/.dotnet/tools/gcc-ar-15"
-      - "/usr/bin/gcc-ar15"
-      - "/home/ricky/.bun/bin/gcc-ar15"
-      - "/home/ricky/.cargo/bin/gcc-ar15"
-      - "/home/ricky/.local/bin/gcc-ar15"
-      - "/home/ricky/.bun-global/bin/gcc-ar15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ar15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar15"
-      - "/usr/local/bin/gcc-ar15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar15"
-      - "/home/ricky/.dotnet/tools/gcc-ar15"
+      - "/usr/bin/gcc-ar-16.1"
+      - "/home/ricky/.bun/bin/gcc-ar-16.1"
+      - "/home/ricky/.cargo/bin/gcc-ar-16.1"
+      - "/home/ricky/.local/bin/gcc-ar-16.1"
+      - "/home/ricky/.bun-global/bin/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ar-16.1"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-16.1"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-16.1"
+      - "/usr/local/bin/gcc-ar-16.1"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-16.1"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-16.1"
+      - "/home/ricky/.dotnet/tools/gcc-ar-16.1"
+      - "/usr/bin/gcc-ar-16"
+      - "/home/ricky/.bun/bin/gcc-ar-16"
+      - "/home/ricky/.cargo/bin/gcc-ar-16"
+      - "/home/ricky/.local/bin/gcc-ar-16"
+      - "/home/ricky/.bun-global/bin/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ar-16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar-16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar-16"
+      - "/usr/local/bin/gcc-ar-16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar-16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar-16"
+      - "/home/ricky/.dotnet/tools/gcc-ar-16"
+      - "/usr/bin/gcc-ar16"
+      - "/home/ricky/.bun/bin/gcc-ar16"
+      - "/home/ricky/.cargo/bin/gcc-ar16"
+      - "/home/ricky/.local/bin/gcc-ar16"
+      - "/home/ricky/.bun-global/bin/gcc-ar16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ar16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ar16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ar16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ar16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ar16"
+      - "/usr/local/bin/gcc-ar16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ar16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ar16"
+      - "/home/ricky/.dotnet/tools/gcc-ar16"
     found: "/usr/bin/gcc-ar"
     search_context:
       ENV{PATH}:
@@ -1368,9 +1368,9 @@ events:
       CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
       CMAKE_FIND_USE_INSTALL_PREFIX: true
     names:
-      - "gcc-ranlib-15.2"
-      - "gcc-ranlib-15"
-      - "gcc-ranlib15"
+      - "gcc-ranlib-16.1"
+      - "gcc-ranlib-16"
+      - "gcc-ranlib16"
       - "gcc-ranlib"
     candidate_directories:
       - "/usr/bin/"
@@ -1388,48 +1388,48 @@ events:
       - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
       - "/home/ricky/.dotnet/tools/"
     searched_directories:
-      - "/usr/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.bun/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.cargo/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.local/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.bun-global/bin/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-15.2"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-15.2"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-15.2"
-      - "/usr/local/bin/gcc-ranlib-15.2"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-15.2"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-15.2"
-      - "/home/ricky/.dotnet/tools/gcc-ranlib-15.2"
-      - "/usr/bin/gcc-ranlib-15"
-      - "/home/ricky/.bun/bin/gcc-ranlib-15"
-      - "/home/ricky/.cargo/bin/gcc-ranlib-15"
-      - "/home/ricky/.local/bin/gcc-ranlib-15"
-      - "/home/ricky/.bun-global/bin/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-15"
-      - "/usr/local/bin/gcc-ranlib-15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-15"
-      - "/home/ricky/.dotnet/tools/gcc-ranlib-15"
-      - "/usr/bin/gcc-ranlib15"
-      - "/home/ricky/.bun/bin/gcc-ranlib15"
-      - "/home/ricky/.cargo/bin/gcc-ranlib15"
-      - "/home/ricky/.local/bin/gcc-ranlib15"
-      - "/home/ricky/.bun-global/bin/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib15"
-      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib15"
-      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib15"
-      - "/usr/local/bin/gcc-ranlib15"
-      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib15"
-      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib15"
-      - "/home/ricky/.dotnet/tools/gcc-ranlib15"
+      - "/usr/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.bun/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.cargo/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.local/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.bun-global/bin/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-16.1"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-16.1"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-16.1"
+      - "/usr/local/bin/gcc-ranlib-16.1"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-16.1"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-16.1"
+      - "/home/ricky/.dotnet/tools/gcc-ranlib-16.1"
+      - "/usr/bin/gcc-ranlib-16"
+      - "/home/ricky/.bun/bin/gcc-ranlib-16"
+      - "/home/ricky/.cargo/bin/gcc-ranlib-16"
+      - "/home/ricky/.local/bin/gcc-ranlib-16"
+      - "/home/ricky/.bun-global/bin/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib-16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib-16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib-16"
+      - "/usr/local/bin/gcc-ranlib-16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib-16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib-16"
+      - "/home/ricky/.dotnet/tools/gcc-ranlib-16"
+      - "/usr/bin/gcc-ranlib16"
+      - "/home/ricky/.bun/bin/gcc-ranlib16"
+      - "/home/ricky/.cargo/bin/gcc-ranlib16"
+      - "/home/ricky/.local/bin/gcc-ranlib16"
+      - "/home/ricky/.bun-global/bin/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/tools/bin/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/emulator/gcc-ranlib16"
+      - "/home/ricky/Android/Sdk/platform-tools/gcc-ranlib16"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/gcc-ranlib16"
+      - "/usr/local/bin/gcc-ranlib16"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/gcc-ranlib16"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/gcc-ranlib16"
+      - "/home/ricky/.dotnet/tools/gcc-ranlib16"
     found: "/usr/bin/gcc-ranlib"
     search_context:
       ENV{PATH}:
@@ -1460,13 +1460,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-<<<<<<< Updated upstream
-      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82"
-      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82"
-=======
-      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ"
-      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ"
->>>>>>> Stashed changes
+      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ"
+      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -1476,106 +1471,61 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-<<<<<<< Updated upstream
-        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82'
+        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a2e39/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_a2e39.dir/build.make CMakeFiles/cmTC_a2e39.dir/build
-        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82'
-        Building C object CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o
-        /usr/bin/cc   -v -o CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
-=======
-        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b3580/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_b3580.dir/build.make CMakeFiles/cmTC_b3580.dir/build
-        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ'
-        Building C object CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o
-        /usr/bin/cc   -v -o CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
->>>>>>> Stashed changes
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b7ee1/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_b7ee1.dir/build.make CMakeFiles/cmTC_b7ee1.dir/build
+        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ'
+        Building C object CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o
+        /usr/bin/cc   -v -o CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
         Using built-in specs.
         COLLECT_GCC=/usr/bin/cc
         Target: x86_64-pc-linux-gnu
-        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror
+        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
-<<<<<<< Updated upstream
-        gcc version 15.2.1 20260209 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_a2e39.dir/'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_a2e39.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/cc07ALLH.s
-        GNU C23 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)
-        	compiled by GNU C version 15.2.1 20260209, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
-=======
         gcc version 16.1.1 20260430 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b3580.dir/'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_b3580.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccfA0RPw.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b7ee1.dir/'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_b7ee1.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccOiJXLX.s
         GNU C23 (GCC) version 16.1.1 20260430 (x86_64-pc-linux-gnu)
         	compiled by GNU C version 16.1.1 20260430, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.4.1, isl version isl-0.27-GMP
->>>>>>> Stashed changes
         
-        warning: MPC header version 1.3.1 differs from library version 1.4.1.
         GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/include"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include-fixed"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../x86_64-pc-linux-gnu/include"
         #include "..." search starts here:
         #include <...> search starts here:
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include
          /usr/local/include
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed
          /usr/include
         End of search list.
-<<<<<<< Updated upstream
-        Compiler executable checksum: 4a3176b8a5098bb872007d0a1d5e5fb3
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_a2e39.dir/'
-         as -v --64 -o CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o /tmp/cc07ALLH.s
-        GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46
-        COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
-        LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_a2e39
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a2e39.dir/link.txt --verbose=1
-=======
         Compiler executable checksum: d640c2d0cc84ebd71ee43ed7e2df63fb
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b3580.dir/'
-         as -v --64 -o CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o /tmp/ccfA0RPw.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b7ee1.dir/'
+         as -v --64 -o CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o /tmp/ccOiJXLX.s
         GNU assembler version 2.46.0 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46.0
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_b3580
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b3580.dir/link.txt --verbose=1
->>>>>>> Stashed changes
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_b7ee1
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b7ee1.dir/link.txt --verbose=1
         Using built-in specs.
         COLLECT_GCC=/usr/bin/cc
-        COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper
+        COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper
         Target: x86_64-pc-linux-gnu
-        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror
+        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
-<<<<<<< Updated upstream
-        gcc version 15.2.1 20260209 (GCC) 
-        COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
-        LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_a2e39' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_a2e39.'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccenicL7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_a2e39 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
-        collect2 version 15.2.1 20260209
-        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccenicL7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_a2e39 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
-        GNU ld (GNU Binutils) 2.46
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_a2e39' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_a2e39.'
-        /usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -o cmTC_a2e39
-        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82'
-=======
         gcc version 16.1.1 20260430 (GCC) 
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b3580' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b3580.'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccBUMJFh.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b3580 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b7ee1' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b7ee1.'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPVQyse.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b7ee1 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
         collect2 version 16.1.1 20260430
-        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccBUMJFh.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b3580 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
+        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPVQyse.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b7ee1 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
         GNU ld (GNU Binutils) 2.46.0
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b3580' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b3580.'
-        /usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -o cmTC_b3580
-        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ'
->>>>>>> Stashed changes
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b7ee1' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b7ee1.'
+        /usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -o cmTC_b7ee1
+        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ'
         
       exitCode: 0
   -
@@ -1588,16 +1538,14 @@ events:
       Parsed C implicit include dir info: rv=done
         found start of include info
         found start of implicit include info
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include]
+          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include]
           add: [/usr/local/include]
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed]
           add: [/usr/include]
         end of search list found
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include]
+        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include]
         collapse include dir [/usr/local/include] ==> [/usr/local/include]
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed]
         collapse include dir [/usr/include] ==> [/usr/include]
-        implicit include dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include;/usr/local/include;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed;/usr/include]
+        implicit include dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include;/usr/local/include;/usr/include]
       
       
   -
@@ -1610,109 +1558,66 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-<<<<<<< Updated upstream
-        ignore line: [Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82']
+        ignore line: [Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a2e39/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_a2e39.dir/build.make CMakeFiles/cmTC_a2e39.dir/build]
-        ignore line: [make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-gpKa82']
-        ignore line: [Building C object CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o]
-        ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
-=======
-        ignore line: [Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ']
-        ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b3580/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_b3580.dir/build.make CMakeFiles/cmTC_b3580.dir/build]
-        ignore line: [make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-mlRRdJ']
-        ignore line: [Building C object CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o]
-        ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
->>>>>>> Stashed changes
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b7ee1/fast]
+        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_b7ee1.dir/build.make CMakeFiles/cmTC_b7ee1.dir/build]
+        ignore line: [make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-vG9iJJ']
+        ignore line: [Building C object CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/cc]
         ignore line: [Target: x86_64-pc-linux-gnu]
-        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror]
+        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes]
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
-<<<<<<< Updated upstream
-        ignore line: [gcc version 15.2.1 20260209 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_a2e39.dir/']
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_a2e39.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/cc07ALLH.s]
-        ignore line: [GNU C23 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)]
-        ignore line: [	compiled by GNU C version 15.2.1 20260209  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
-=======
         ignore line: [gcc version 16.1.1 20260430 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b3580.dir/']
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_b3580.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccfA0RPw.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b7ee1.dir/']
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_b7ee1.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccOiJXLX.s]
         ignore line: [GNU C23 (GCC) version 16.1.1 20260430 (x86_64-pc-linux-gnu)]
         ignore line: [	compiled by GNU C version 16.1.1 20260430  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.4.1  isl version isl-0.27-GMP]
->>>>>>> Stashed changes
         ignore line: []
-        ignore line: [warning: MPC header version 1.3.1 differs from library version 1.4.1.]
         ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
-        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/include"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../x86_64-pc-linux-gnu/include"]
         ignore line: [#include "..." search starts here:]
         ignore line: [#include <...> search starts here:]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include]
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include]
         ignore line: [ /usr/local/include]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed]
         ignore line: [ /usr/include]
         ignore line: [End of search list.]
-<<<<<<< Updated upstream
-        ignore line: [Compiler executable checksum: 4a3176b8a5098bb872007d0a1d5e5fb3]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_a2e39.dir/']
-        ignore line: [ as -v --64 -o CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o /tmp/cc07ALLH.s]
-        ignore line: [GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46]
-        ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
-        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.']
-        ignore line: [Linking C executable cmTC_a2e39]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a2e39.dir/link.txt --verbose=1]
-=======
         ignore line: [Compiler executable checksum: d640c2d0cc84ebd71ee43ed7e2df63fb]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b3580.dir/']
-        ignore line: [ as -v --64 -o CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o /tmp/ccfA0RPw.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b7ee1.dir/']
+        ignore line: [ as -v --64 -o CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o /tmp/ccOiJXLX.s]
         ignore line: [GNU assembler version 2.46.0 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46.0]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.']
-        ignore line: [Linking C executable cmTC_b3580]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b3580.dir/link.txt --verbose=1]
->>>>>>> Stashed changes
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.']
+        ignore line: [Linking C executable cmTC_b7ee1]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b7ee1.dir/link.txt --verbose=1]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/cc]
-        ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper]
+        ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper]
         ignore line: [Target: x86_64-pc-linux-gnu]
-        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror]
+        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes]
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
-<<<<<<< Updated upstream
-        ignore line: [gcc version 15.2.1 20260209 (GCC) ]
-        ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
-        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_a2e39' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_a2e39.']
-        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccenicL7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_a2e39 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2] ==> ignore
-          arg [-plugin] ==> ignore
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so] ==> ignore
-          arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccenicL7.res] ==> ignore
-=======
         ignore line: [gcc version 16.1.1 20260430 (GCC) ]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b3580' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b3580.']
-        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccBUMJFh.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b3580 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b7ee1' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b7ee1.']
+        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPVQyse.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b7ee1 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccBUMJFh.res] ==> ignore
->>>>>>> Stashed changes
+          arg [-plugin-opt=-fresolution=/tmp/ccPVQyse.res] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
-          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s_asneeded] ==> ignore
+          arg [-plugin-opt=-pass-through=-latomic_asneeded] ==> ignore
           arg [-plugin-opt=-pass-through=-lc] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
-          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s_asneeded] ==> ignore
           arg [--build-id] ==> ignore
           arg [--eh-frame-hdr] ==> ignore
           arg [--hash-style=gnu] ==> ignore
@@ -1722,69 +1627,43 @@ events:
           arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
           arg [-pie] ==> ignore
           arg [-o] ==> ignore
-<<<<<<< Updated upstream
-          arg [cmTC_a2e39] ==> ignore
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o]
-          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1]
-          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib]
-=======
-          arg [cmTC_b3580] ==> ignore
+          arg [cmTC_b7ee1] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o]
           arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1]
           arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib]
->>>>>>> Stashed changes
           arg [-L/lib/../lib] ==> dir [/lib/../lib]
           arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
-          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../..] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../..]
+          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../..] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../..]
           arg [-L/lib] ==> dir [/lib]
           arg [-L/usr/lib] ==> dir [/usr/lib]
           arg [-v] ==> ignore
-<<<<<<< Updated upstream
-          arg [CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o] ==> ignore
-=======
-          arg [CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o] ==> ignore
->>>>>>> Stashed changes
+          arg [CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o] ==> ignore
           arg [-lgcc] ==> lib [gcc]
-          arg [--push-state] ==> ignore
-          arg [--as-needed] ==> ignore
-          arg [-lgcc_s] ==> lib [gcc_s]
-          arg [--pop-state] ==> ignore
+          arg [-lgcc_s_asneeded] ==> lib [gcc_s_asneeded]
+          arg [-latomic_asneeded] ==> lib [atomic_asneeded]
           arg [-lc] ==> lib [c]
           arg [-lgcc] ==> lib [gcc]
-<<<<<<< Updated upstream
-          arg [--push-state] ==> ignore
-          arg [--as-needed] ==> ignore
-          arg [-lgcc_s] ==> lib [gcc_s]
-          arg [--pop-state] ==> ignore
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
-        ignore line: [collect2 version 15.2.1 20260209]
-        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccenicL7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_a2e39 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_a2e39.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
-=======
           arg [-lgcc_s_asneeded] ==> lib [gcc_s_asneeded]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
         ignore line: [collect2 version 16.1.1 20260430]
-        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccBUMJFh.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b3580 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b3580.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
->>>>>>> Stashed changes
+        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPVQyse.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s_asneeded --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b7ee1 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b7ee1.dir/CMakeCCompilerABI.c.o -lgcc -lgcc_s_asneeded -latomic_asneeded -lc -lgcc -lgcc_s_asneeded /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
         linker tool for 'C': /usr/bin/ld
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> [/usr/lib/Scrt1.o]
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> [/usr/lib/crti.o]
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o] ==> [/usr/lib/crtn.o]
-        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1]
-        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib] ==> [/usr/lib]
+        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o] ==> [/usr/lib/Scrt1.o]
+        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o] ==> [/usr/lib/crti.o]
+        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o] ==> [/usr/lib/crtn.o]
+        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1]
+        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib] ==> [/usr/lib]
         collapse library dir [/lib/../lib] ==> [/lib]
         collapse library dir [/usr/lib/../lib] ==> [/usr/lib]
-        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../..] ==> [/usr/lib]
+        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../..] ==> [/usr/lib]
         collapse library dir [/lib] ==> [/lib]
         collapse library dir [/usr/lib] ==> [/usr/lib]
-        implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
-        implicit objs: [/usr/lib/Scrt1.o;/usr/lib/crti.o;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o;/usr/lib/crtn.o]
-        implicit dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1;/usr/lib;/lib]
+        implicit libs: [gcc;gcc_s_asneeded;atomic_asneeded;c;gcc;gcc_s_asneeded]
+        implicit objs: [/usr/lib/Scrt1.o;/usr/lib/crti.o;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o;/usr/lib/crtn.o]
+        implicit dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1;/usr/lib;/lib]
         implicit fwks: []
       
       
@@ -1797,7 +1676,7 @@ events:
       - "CMakeLists.txt:2 (project)"
     message: |
       Running the C compiler's linker: "/usr/bin/ld" "-v"
-      GNU ld (GNU Binutils) 2.46
+      GNU ld (GNU Binutils) 2.46.0
   -
     kind: "try_compile-v1"
     backtrace:
@@ -1807,15 +1686,10 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-<<<<<<< Updated upstream
-      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ"
-      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ"
-=======
-      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz"
-      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz"
->>>>>>> Stashed changes
+      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf"
+      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf"
     cmakeVariables:
-      CMAKE_CXX_FLAGS: "-fsanitize=address -fno-omit-frame-pointer -g -O0"
+      CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
       CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
@@ -1824,109 +1698,64 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-<<<<<<< Updated upstream
-        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ'
+        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_91c6d/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_91c6d.dir/build.make CMakeFiles/cmTC_91c6d.dir/build
-        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ'
-        Building CXX object CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/c++   -v -o CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
-=======
-        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_18485/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_18485.dir/build.make CMakeFiles/cmTC_18485.dir/build
-        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz'
-        Building CXX object CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/c++   -fsanitize=address -fno-omit-frame-pointer -g -O0    -v -o CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
->>>>>>> Stashed changes
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_f3afc/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_f3afc.dir/build.make CMakeFiles/cmTC_f3afc.dir/build
+        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf'
+        Building CXX object CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/c++   -v -o CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Using built-in specs.
         COLLECT_GCC=/usr/bin/c++
         Target: x86_64-pc-linux-gnu
-        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror
+        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
-<<<<<<< Updated upstream
-        gcc version 15.2.1 20260209 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_91c6d.dir/'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_91c6d.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/ccRv10ed.s
-        GNU C++17 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)
-        	compiled by GNU C version 15.2.1 20260209, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
-=======
         gcc version 16.1.1 20260430 (GCC) 
-        COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_18485.dir/'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_18485.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -g -O0 -version -fsanitize=address -fno-omit-frame-pointer -o /tmp/ccnWOeSF.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f3afc.dir/'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_f3afc.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/cc6je8GJ.s
         GNU C++20 (GCC) version 16.1.1 20260430 (x86_64-pc-linux-gnu)
         	compiled by GNU C version 16.1.1 20260430, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.4.1, isl version isl-0.27-GMP
->>>>>>> Stashed changes
         
-        warning: MPC header version 1.3.1 differs from library version 1.4.1.
         GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/include"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include-fixed"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../x86_64-pc-linux-gnu/include"
         #include "..." search starts here:
         #include <...> search starts here:
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/x86_64-pc-linux-gnu
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/backward
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/x86_64-pc-linux-gnu
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/backward
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include
          /usr/local/include
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed
          /usr/include
         End of search list.
-<<<<<<< Updated upstream
-        Compiler executable checksum: 5e3969de92aa3c12a625237f01b15b2f
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_91c6d.dir/'
-         as -v --64 -o CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccRv10ed.s
-        GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46
-        COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
-        LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.'
-        Linking CXX executable cmTC_91c6d
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_91c6d.dir/link.txt --verbose=1
-=======
         Compiler executable checksum: d47d0c990a24bc0dbaf3bd00656bd5f3
-        COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_18485.dir/'
-         as -v --gdwarf-5 --64 -o CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccnWOeSF.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f3afc.dir/'
+         as -v --64 -o CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o /tmp/cc6je8GJ.s
         GNU assembler version 2.46.0 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46.0
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.'
-        Linking CXX executable cmTC_18485
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_18485.dir/link.txt --verbose=1
->>>>>>> Stashed changes
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_f3afc
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f3afc.dir/link.txt --verbose=1
         Using built-in specs.
         COLLECT_GCC=/usr/bin/c++
-        COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper
+        COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper
         Target: x86_64-pc-linux-gnu
-        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror
+        Configured with: /build/gcc/src/gcc/configure --enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
-<<<<<<< Updated upstream
-        gcc version 15.2.1 20260209 (GCC) 
-        COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
-        LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_91c6d' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_91c6d.'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccj3blur.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_91c6d /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
-        collect2 version 15.2.1 20260209
-        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccj3blur.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_91c6d /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
-        GNU ld (GNU Binutils) 2.46
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_91c6d' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_91c6d.'
-        /usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_91c6d
-        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ'
-=======
         gcc version 16.1.1 20260430 (GCC) 
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'cmTC_18485' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_18485.'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccznedWh.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_18485 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o -lasan -v CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_f3afc' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_f3afc.'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cc62UwNm.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_f3afc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
         collect2 version 16.1.1 20260430
-        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccznedWh.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_18485 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o -lasan -v CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
+        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cc62UwNm.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_f3afc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o
         GNU ld (GNU Binutils) 2.46.0
-        COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'cmTC_18485' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_18485.'
-        /usr/bin/c++ -fsanitize=address -fno-omit-frame-pointer -g -O0   -v -Wl,-v CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_18485
-        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz'
->>>>>>> Stashed changes
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_f3afc' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_f3afc.'
+        /usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_f3afc
+        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf'
         
       exitCode: 0
   -
@@ -1939,22 +1768,20 @@ events:
       Parsed CXX implicit include dir info: rv=done
         found start of include info
         found start of implicit include info
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1]
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/x86_64-pc-linux-gnu]
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/backward]
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include]
+          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1]
+          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/x86_64-pc-linux-gnu]
+          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/backward]
+          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include]
           add: [/usr/local/include]
-          add: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed]
           add: [/usr/include]
         end of search list found
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1] ==> [/usr/include/c++/15.2.1]
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/x86_64-pc-linux-gnu] ==> [/usr/include/c++/15.2.1/x86_64-pc-linux-gnu]
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/backward] ==> [/usr/include/c++/15.2.1/backward]
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include]
+        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1] ==> [/usr/include/c++/16.1.1]
+        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/x86_64-pc-linux-gnu] ==> [/usr/include/c++/16.1.1/x86_64-pc-linux-gnu]
+        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/backward] ==> [/usr/include/c++/16.1.1/backward]
+        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include]
         collapse include dir [/usr/local/include] ==> [/usr/local/include]
-        collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed]
         collapse include dir [/usr/include] ==> [/usr/include]
-        implicit include dirs: [/usr/include/c++/15.2.1;/usr/include/c++/15.2.1/x86_64-pc-linux-gnu;/usr/include/c++/15.2.1/backward;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include;/usr/local/include;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed;/usr/include]
+        implicit include dirs: [/usr/include/c++/16.1.1;/usr/include/c++/16.1.1/x86_64-pc-linux-gnu;/usr/include/c++/16.1.1/backward;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include;/usr/local/include;/usr/include]
       
       
   -
@@ -1967,109 +1794,66 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-<<<<<<< Updated upstream
-        ignore line: [Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ']
+        ignore line: [Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_91c6d/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_91c6d.dir/build.make CMakeFiles/cmTC_91c6d.dir/build]
-        ignore line: [make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-RK7efJ']
-        ignore line: [Building CXX object CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
-=======
-        ignore line: [Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz']
-        ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_18485/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_18485.dir/build.make CMakeFiles/cmTC_18485.dir/build]
-        ignore line: [make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-8cPlKz']
-        ignore line: [Building CXX object CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/c++   -fsanitize=address -fno-omit-frame-pointer -g -O0    -v -o CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
->>>>>>> Stashed changes
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_f3afc/fast]
+        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_f3afc.dir/build.make CMakeFiles/cmTC_f3afc.dir/build]
+        ignore line: [make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-sr7DWf']
+        ignore line: [Building CXX object CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/c++]
         ignore line: [Target: x86_64-pc-linux-gnu]
-        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror]
+        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes]
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
-<<<<<<< Updated upstream
-        ignore line: [gcc version 15.2.1 20260209 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_91c6d.dir/']
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_91c6d.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/ccRv10ed.s]
-        ignore line: [GNU C++17 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)]
-        ignore line: [	compiled by GNU C version 15.2.1 20260209  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
-=======
         ignore line: [gcc version 16.1.1 20260430 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_18485.dir/']
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_18485.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -g -O0 -version -fsanitize=address -fno-omit-frame-pointer -o /tmp/ccnWOeSF.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f3afc.dir/']
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_f3afc.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/cc6je8GJ.s]
         ignore line: [GNU C++20 (GCC) version 16.1.1 20260430 (x86_64-pc-linux-gnu)]
         ignore line: [	compiled by GNU C version 16.1.1 20260430  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.4.1  isl version isl-0.27-GMP]
->>>>>>> Stashed changes
         ignore line: []
-        ignore line: [warning: MPC header version 1.3.1 differs from library version 1.4.1.]
         ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
-        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/include"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../x86_64-pc-linux-gnu/include"]
         ignore line: [#include "..." search starts here:]
         ignore line: [#include <...> search starts here:]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/x86_64-pc-linux-gnu]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/backward]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include]
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1]
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/x86_64-pc-linux-gnu]
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../include/c++/16.1.1/backward]
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include]
         ignore line: [ /usr/local/include]
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include-fixed]
         ignore line: [ /usr/include]
         ignore line: [End of search list.]
-<<<<<<< Updated upstream
-        ignore line: [Compiler executable checksum: 5e3969de92aa3c12a625237f01b15b2f]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_91c6d.dir/']
-        ignore line: [ as -v --64 -o CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccRv10ed.s]
-        ignore line: [GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46]
-        ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
-        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.']
-        ignore line: [Linking CXX executable cmTC_91c6d]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_91c6d.dir/link.txt --verbose=1]
-=======
         ignore line: [Compiler executable checksum: d47d0c990a24bc0dbaf3bd00656bd5f3]
-        ignore line: [COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_18485.dir/']
-        ignore line: [ as -v --gdwarf-5 --64 -o CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccnWOeSF.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f3afc.dir/']
+        ignore line: [ as -v --64 -o CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o /tmp/cc6je8GJ.s]
         ignore line: [GNU assembler version 2.46.0 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46.0]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.']
-        ignore line: [Linking CXX executable cmTC_18485]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_18485.dir/link.txt --verbose=1]
->>>>>>> Stashed changes
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_f3afc]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f3afc.dir/link.txt --verbose=1]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/c++]
-        ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper]
+        ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper]
         ignore line: [Target: x86_64-pc-linux-gnu]
-        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror]
+        ignore line: [Configured with: /build/gcc/src/gcc/configure --enable-languages=ada c c++ d fortran go lto m2 objc obj-c++ rust cobol --enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues --with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib --enable-cet=auto --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-default-ssp --enable-gnu-indirect-function --enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 --enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared --enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror --disable-fixincludes]
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
-<<<<<<< Updated upstream
-        ignore line: [gcc version 15.2.1 20260209 (GCC) ]
-        ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
-        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_91c6d' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_91c6d.']
-        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccj3blur.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_91c6d /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2] ==> ignore
-          arg [-plugin] ==> ignore
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so] ==> ignore
-          arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccj3blur.res] ==> ignore
-=======
         ignore line: [gcc version 16.1.1 20260430 (GCC) ]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-fsanitize=address' '-fno-omit-frame-pointer' '-g' '-O0' '-v' '-o' 'cmTC_18485' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_18485.']
-        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccznedWh.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_18485 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o -lasan -v CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_f3afc' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_f3afc.']
+        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cc62UwNm.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_f3afc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccznedWh.res] ==> ignore
->>>>>>> Stashed changes
+          arg [-plugin-opt=-fresolution=/tmp/cc62UwNm.res] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-latomic_asneeded] ==> ignore
           arg [-plugin-opt=-pass-through=-lc] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
@@ -2082,79 +1866,45 @@ events:
           arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
           arg [-pie] ==> ignore
           arg [-o] ==> ignore
-<<<<<<< Updated upstream
-          arg [cmTC_91c6d] ==> ignore
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o]
-          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1]
-          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib]
-=======
-          arg [cmTC_18485] ==> ignore
+          arg [cmTC_f3afc] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o]
           arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1]
           arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib]
->>>>>>> Stashed changes
           arg [-L/lib/../lib] ==> dir [/lib/../lib]
           arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
-          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../..] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../..]
+          arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../..] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../..]
           arg [-L/lib] ==> dir [/lib]
           arg [-L/usr/lib] ==> dir [/usr/lib]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o]
-          arg [-lasan] ==> lib [asan]
           arg [-v] ==> ignore
-<<<<<<< Updated upstream
-          arg [CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
-=======
-          arg [CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
->>>>>>> Stashed changes
+          arg [CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lstdc++] ==> lib [stdc++]
           arg [-lm] ==> lib [m]
           arg [-lgcc_s] ==> lib [gcc_s]
           arg [-lgcc] ==> lib [gcc]
+          arg [-latomic_asneeded] ==> lib [atomic_asneeded]
           arg [-lc] ==> lib [c]
           arg [-lgcc_s] ==> lib [gcc_s]
           arg [-lgcc] ==> lib [gcc]
-<<<<<<< Updated upstream
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o]
-          arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
-        ignore line: [collect2 version 15.2.1 20260209]
-        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccj3blur.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_91c6d /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_91c6d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
-        linker tool for 'CXX': /usr/bin/ld
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> [/usr/lib/Scrt1.o]
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> [/usr/lib/crti.o]
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o] ==> [/usr/lib/crtn.o]
-        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1]
-        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib] ==> [/usr/lib]
-=======
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
         ignore line: [collect2 version 16.1.1 20260430]
-        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccznedWh.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_18485 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o -lasan -v CMakeFiles/cmTC_18485.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
+        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cc62UwNm.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-latomic_asneeded -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_f3afc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_f3afc.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -latomic_asneeded -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o]
         linker tool for 'CXX': /usr/bin/ld
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o] ==> [/usr/lib/Scrt1.o]
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o] ==> [/usr/lib/crti.o]
-        collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasan_preinit.o] ==> [/usr/lib/libasan_preinit.o]
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o] ==> [/usr/lib/crtn.o]
         collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1]
         collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib] ==> [/usr/lib]
->>>>>>> Stashed changes
         collapse library dir [/lib/../lib] ==> [/lib]
         collapse library dir [/usr/lib/../lib] ==> [/usr/lib]
-        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../..] ==> [/usr/lib]
+        collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../..] ==> [/usr/lib]
         collapse library dir [/lib] ==> [/lib]
         collapse library dir [/usr/lib] ==> [/usr/lib]
-<<<<<<< Updated upstream
-        implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
-        implicit objs: [/usr/lib/Scrt1.o;/usr/lib/crti.o;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o;/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o;/usr/lib/crtn.o]
-        implicit dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1;/usr/lib;/lib]
-=======
-        implicit libs: [asan;stdc++;m;gcc_s;gcc;atomic_asneeded;c;gcc_s;gcc]
-        implicit objs: [/usr/lib/Scrt1.o;/usr/lib/crti.o;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o;/usr/lib/libasan_preinit.o;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o;/usr/lib/crtn.o]
+        implicit libs: [stdc++;m;gcc_s;gcc;atomic_asneeded;c;gcc_s;gcc]
+        implicit objs: [/usr/lib/Scrt1.o;/usr/lib/crti.o;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o;/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o;/usr/lib/crtn.o]
         implicit dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1;/usr/lib;/lib]
->>>>>>> Stashed changes
         implicit fwks: []
       
       
@@ -2167,7 +1917,7 @@ events:
       - "CMakeLists.txt:2 (project)"
     message: |
       Running the CXX compiler's linker: "/usr/bin/ld" "-v"
-      GNU ld (GNU Binutils) 2.46
+      GNU ld (GNU Binutils) 2.46.0
   -
     kind: "find-v1"
     backtrace:
@@ -2543,280 +2293,6 @@ events:
         - "/usr/pkg"
         - "/opt"
   -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:104 (try_compile)"
-      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:103 (cmake_check_source_compiles)"
-      - "/usr/share/cmake/Modules/FindThreads.cmake:160 (check_c_source_compiles)"
-      - "/usr/share/cmake/Modules/FindThreads.cmake:226 (_threads_check_libc)"
-      - "/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake:93 (find_package)"
-      - "/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake:125 (__find_dependency_common)"
-      - "/usr/lib/cmake/glfw3/glfw3Config.cmake:2 (find_dependency)"
-      - "CMakeLists.txt:7 (find_package)"
-    checks:
-      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
-    directories:
-      source: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-FM5qMP"
-      binary: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-FM5qMP"
-    cmakeVariables:
-      CMAKE_CXX_STDLIB_MODULES_JSON: ""
-      CMAKE_C_FLAGS: ""
-      CMAKE_C_FLAGS_DEBUG: "-g"
-      CMAKE_EXE_LINKER_FLAGS: ""
-    buildResult:
-      variable: "CMAKE_HAVE_LIBC_PTHREAD"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-FM5qMP'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_73f7e/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_73f7e.dir/build.make CMakeFiles/cmTC_73f7e.dir/build
-        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-FM5qMP'
-        Building C object CMakeFiles/cmTC_73f7e.dir/src.c.o
-        /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_73f7e.dir/src.c.o -c /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-FM5qMP/src.c
-        Linking C executable cmTC_73f7e
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_73f7e.dir/link.txt --verbose=1
-        /usr/bin/cc CMakeFiles/cmTC_73f7e.dir/src.c.o -o cmTC_73f7e
-        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/CMakeScratch/TryCompile-FM5qMP'
-        
-      exitCode: 0
-  -
-    kind: "find_package-v1"
-    backtrace:
-      - "CMakeLists.txt:7 (find_package)"
-    name: "glfw3"
-    configs:
-      -
-        filename: "glfw3.cps"
-        kind: "cps"
-      -
-        filename: "glfw3Config.cmake"
-        kind: "cmake"
-      -
-        filename: "glfw3-config.cmake"
-        kind: "cmake"
-    version_request:
-      exact: false
-    settings:
-      required: "required_explicit"
-      quiet: false
-      global: false
-      policy_scope: true
-      bypass_provider: false
-      names:
-        - "glfw3"
-      path_suffixes:
-        - ""
-      paths:
-        CMAKE_FIND_USE_CMAKE_PATH: true
-        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-        CMAKE_FIND_USE_INSTALL_PREFIX: true
-        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
-        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
-        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
-        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
-    candidates:
-      -
-        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.cargo/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.cargo/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.cargo/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.cargo/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.local/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.local/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.local/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.local/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun-global/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun-global/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun-global/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.bun-global/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/emulator/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/emulator/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/emulator/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/emulator/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/platform-tools/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/platform-tools/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.sdkman/candidates/java/current/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.sdkman/candidates/java/current/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/usr/local/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/local/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/local/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/usr/local/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/usr/glfw3Config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/glfw3-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/lib/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-      -
-        path: "/usr/share/cps/glfw3.cps"
-        mode: "cps"
-        reason: "no_exist"
-    found:
-      path: "/usr/lib/cmake/glfw3/glfw3Config.cmake"
-      mode: "config"
-      version: "3.4.0"
-    search_context:
-      ENV{PATH}:
-        - "/home/ricky/.bun/bin"
-        - "/home/ricky/.cargo/bin"
-        - "/home/ricky/.local/bin"
-        - "/home/ricky/.bun-global/bin"
-        - "/home/ricky/Android/Sdk/tools/bin"
-        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
-        - "/home/ricky/Android/Sdk/emulator"
-        - "/home/ricky/Android/Sdk/platform-tools"
-        - "/home/ricky/.sdkman/candidates/java/current/bin"
-        - "/home/ricky/.local/bin"
-        - "/home/ricky/.cargo/bin"
-        - "/home/ricky/.bun-global/bin"
-        - "/home/ricky/.cargo/bin"
-        - "/usr/local/bin"
-        - "/usr/bin"
-        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
-        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
-        - "/home/ricky/.dotnet/tools"
-      CMAKE_INSTALL_PREFIX: "/usr/local"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "/usr/local"
-        - "/usr"
-        - "/"
-        - "/usr"
-        - "/usr/local"
-        - "/usr/X11R6"
-        - "/usr/pkg"
-        - "/opt"
-...
-
----
-events:
-  -
     kind: "find_package-v1"
     backtrace:
       - "CMakeLists.txt:7 (find_package)"
@@ -2882,27 +2358,27 @@ events:
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/home/ricky/.sdkman/candidates/java/current/SDL2Config.cmake"
+        path: "/home/ricky/.bun/SDL2Config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/ricky/.sdkman/candidates/java/current/sdl2-config.cmake"
+        path: "/home/ricky/.bun/sdl2-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/SDL2.cps"
+        path: "/home/ricky/.bun/lib/cps/SDL2.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/sdl2.cps"
+        path: "/home/ricky/.bun/lib/cps/sdl2.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/SDL2.cps"
+        path: "/home/ricky/.bun/share/cps/SDL2.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/sdl2.cps"
+        path: "/home/ricky/.bun/share/cps/sdl2.cps"
         mode: "cps"
         reason: "no_exist"
       -
@@ -2927,6 +2403,126 @@ events:
         reason: "no_exist"
       -
         path: "/home/ricky/.cargo/share/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/SDL2Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/sdl2-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/SDL2Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/sdl2-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/SDL2Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/sdl2-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/SDL2Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/sdl2-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/SDL2Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/sdl2-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/sdl2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/SDL2.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/sdl2.cps"
         mode: "cps"
         reason: "no_exist"
       -
@@ -3015,23 +2611,24 @@ events:
       version: "2.32.68"
     search_context:
       ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
         - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
         - "/home/ricky/.cargo/bin"
         - "/usr/local/bin"
         - "/usr/bin"
         - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
         - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
-        - "/usr/local/sbin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
-        - "/usr/bin/site_perl"
-        - "/usr/bin/vendor_perl"
-        - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/usr/bin"
-        - "/usr/bin"
-        - "/home/ricky/.lmstudio/bin"
-        - "/home/ricky/.lmstudio/bin"
+        - "/home/ricky/.dotnet/tools"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -3042,10 +2639,6 @@ events:
         - "/usr/X11R6"
         - "/usr/pkg"
         - "/opt"
-...
-
----
-events:
   -
     kind: "find_package-v1"
     backtrace:
@@ -3278,4 +2871,387 @@ events:
         - "/usr/X11R6"
         - "/usr/pkg"
         - "/opt"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:517 (find_program)"
+      - "CMakeLists.txt:9 (find_package)"
+    mode: "program"
+    variable: "PKG_CONFIG_EXECUTABLE"
+    description: "pkg-config executable"
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "pkg-config"
+      - "pkgconf"
+    candidate_directories:
+      - "/home/ricky/.bun/bin/"
+      - "/home/ricky/.cargo/bin/"
+      - "/home/ricky/.local/bin/"
+      - "/home/ricky/.bun-global/bin/"
+      - "/home/ricky/Android/Sdk/tools/bin/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/"
+      - "/home/ricky/Android/Sdk/emulator/"
+      - "/home/ricky/Android/Sdk/platform-tools/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.dotnet/tools/"
+      - "/usr/local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/"
+      - "/usr/bin/"
+      - "/usr/sbin/"
+      - "/usr/"
+      - "/bin/"
+      - "/sbin/"
+      - "/usr/X11R6/bin/"
+      - "/usr/X11R6/sbin/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/bin/"
+      - "/usr/pkg/sbin/"
+      - "/usr/pkg/"
+      - "/opt/bin/"
+      - "/opt/sbin/"
+      - "/opt/"
+    searched_directories:
+      - "/home/ricky/.bun/bin/pkg-config"
+      - "/home/ricky/.bun/bin/pkgconf"
+      - "/home/ricky/.cargo/bin/pkg-config"
+      - "/home/ricky/.cargo/bin/pkgconf"
+      - "/home/ricky/.local/bin/pkg-config"
+      - "/home/ricky/.local/bin/pkgconf"
+      - "/home/ricky/.bun-global/bin/pkg-config"
+      - "/home/ricky/.bun-global/bin/pkgconf"
+      - "/home/ricky/Android/Sdk/tools/bin/pkg-config"
+      - "/home/ricky/Android/Sdk/tools/bin/pkgconf"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/pkg-config"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/pkgconf"
+      - "/home/ricky/Android/Sdk/emulator/pkg-config"
+      - "/home/ricky/Android/Sdk/emulator/pkgconf"
+      - "/home/ricky/Android/Sdk/platform-tools/pkg-config"
+      - "/home/ricky/Android/Sdk/platform-tools/pkgconf"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/pkg-config"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/pkgconf"
+      - "/usr/local/bin/pkg-config"
+      - "/usr/local/bin/pkgconf"
+    found: "/usr/bin/pkg-config"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:761 (find_library)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1166 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:10 (pkg_check_modules)"
+    mode: "library"
+    variable: "pkgcfg_lib_FFMPEG_avformat"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "avformat"
+    candidate_directories:
+      - "/usr/lib/"
+    found: "/usr/lib/libavformat.so"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:761 (find_library)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1166 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:10 (pkg_check_modules)"
+    mode: "library"
+    variable: "pkgcfg_lib_FFMPEG_avcodec"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "avcodec"
+    candidate_directories:
+      - "/usr/lib/"
+    found: "/usr/lib/libavcodec.so"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:761 (find_library)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1166 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:10 (pkg_check_modules)"
+    mode: "library"
+    variable: "pkgcfg_lib_FFMPEG_swscale"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "swscale"
+    candidate_directories:
+      - "/usr/lib/"
+    found: "/usr/lib/libswscale.so"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:761 (find_library)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1166 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:10 (pkg_check_modules)"
+    mode: "library"
+    variable: "pkgcfg_lib_FFMPEG_swresample"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "swresample"
+    candidate_directories:
+      - "/usr/lib/"
+    found: "/usr/lib/libswresample.so"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:761 (find_library)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/usr/share/cmake/Modules/FindPkgConfig.cmake:1166 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:10 (pkg_check_modules)"
+    mode: "library"
+    variable: "pkgcfg_lib_FFMPEG_avutil"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "avutil"
+    candidate_directories:
+      - "/usr/lib/"
+    found: "/usr/lib/libavutil.so"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
 ...
