@@ -8,6 +8,7 @@ layout(set = 0, binding = 0) uniform UBO {
     mat4 view;
     mat4 proj;
     vec2 resolution;
+    vec2 videoResolution;
     float time;
     float tempo;
     float energy;
@@ -97,6 +98,13 @@ layout(set = 0, binding = 0) uniform UBO {
     float temporalBlendStrength;
     float slowMotionFactor;
     float frameAccumulation;
+    // NLE Effect Chain parameters
+    int nleOutputWidth;
+    int nleOutputHeight;
+    float nleGrayscale;
+    float nleBrightness;
+    float nleContrast;
+    float nleSaturation;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D videoTex;
@@ -562,7 +570,29 @@ void main() {
     float effectTime = ubo.time / timeScale;
 
     vec2 centered = uv * 2.0 - 1.0;
-    vec2 spatialUV = applySpatialEffects(uv, centered, audioWarpMod);
+
+    // Letterboxing: maintain video aspect ratio
+    vec2 letterboxUV = uv;
+    if (ubo.videoResolution.x > 1.0 && ubo.videoResolution.y > 1.0) {
+        float videoAspect = ubo.videoResolution.x / ubo.videoResolution.y;
+        float screenAspect = ubo.resolution.x / ubo.resolution.y;
+
+        if (abs(videoAspect - screenAspect) > 0.01) {
+            if (videoAspect > screenAspect) {
+                // Video is wider than screen - pillarbox
+                float scale = screenAspect / videoAspect;
+                letterboxUV.x = (uv.x - 0.5) / scale + 0.5;
+            } else {
+                // Video is taller than screen - letterbox
+                float scale = videoAspect / screenAspect;
+                letterboxUV.y = (uv.y - 0.5) / scale + 0.5;
+            }
+            // Clamp to valid range
+            letterboxUV = clamp(letterboxUV, 0.0, 1.0);
+        }
+    }
+
+    vec2 spatialUV = applySpatialEffects(letterboxUV, centered, audioWarpMod);
     vec2 spatialCentered = spatialUV * 2.0 - 1.0;
 
     float curvatureY = clamp(ubo.crtCurvature, 0.0, 0.8);
@@ -627,6 +657,18 @@ void main() {
     }
 
     vec3 videoAvailableColor = mix(procedural.rgb, gradedColor, clamp(ubo.videoMix * ubo.videoAvailable, 0.0, 1.0));
+
+    // Apply NLE Effect Chain parameters
+    if (ubo.nleGrayscale > 0.5) {
+        float luma = dot(videoAvailableColor, vec3(0.299, 0.587, 0.114));
+        videoAvailableColor = mix(videoAvailableColor, vec3(luma), 1.0);
+    }
+    if (ubo.nleBrightness != 0.0 || ubo.nleContrast != 1.0 || ubo.nleSaturation != 1.0) {
+        videoAvailableColor += ubo.nleBrightness;
+        videoAvailableColor = (videoAvailableColor - 0.5) * ubo.nleContrast + 0.5;
+        float lum = dot(videoAvailableColor, vec3(0.2126, 0.7152, 0.0722));
+        videoAvailableColor = mix(vec3(lum), videoAvailableColor, ubo.nleSaturation);
+    }
 
     vec3 blendProc = blendMode(videoAvailableColor, procedural.rgb, ubo.blendModeProcedural);
     vec3 blendVideo = blendMode(procedural.rgb, gradedColor, ubo.blendModeVideo);

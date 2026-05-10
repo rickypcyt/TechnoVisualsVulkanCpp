@@ -47,15 +47,37 @@ namespace fs = std::filesystem;
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_sdlrenderer2.h"
 #include "VideoStaging.h"
+#include "EffectChain.h"
+#include "Timeline.h"
+#include "Export.h"
+#include "PlaybackClock.h"
+#include "ProjectState.h"
+#include "RenderJob.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 const size_t MAX_VIDEO_FRAME_BUFFER = 48;
-const int MAX_VIDEO_OUTPUT_HEIGHT = 720;
+const int MAX_VIDEO_OUTPUT_HEIGHT = 2160;  // Support 4K resolution
 const std::array<int, 5> FORCED_FPS_OPTIONS = {0, 15, 24, 30, 60};
 const std::string imguiIniFilename = "imgui.ini";
-constexpr bool kEnableVideoTrace = false;
+constexpr bool kEnableVideoTrace = true;
+
+// Signal handler for crashes
+#include <csignal>
+#include <execinfo.h>
+
+void crash_handler(int sig) {
+    void* array[10];
+    size_t size = backtrace(array, 10);
+
+    std::cerr << "\n[CRASH] Signal " << sig << " caught!" << std::endl;
+    std::cerr << "[CRASH] Backtrace:" << std::endl;
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    std::cerr << std::endl;
+
+    exit(1);
+}
 
 template<typename... Args>
 inline void videoTrace(Args&&... args) {
@@ -141,7 +163,16 @@ public:
 
         int outputWidth = codecCtx->width;
         int outputHeight = codecCtx->height;
-        computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight);
+        int originalWidth = outputWidth;
+        int originalHeight = outputHeight;
+        // No screen size available during VideoPlayer initialization
+        computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight, 0, 0);
+
+        if (outputWidth != originalWidth || outputHeight != originalHeight) {
+            std::cout << "[Video] Downscaling " << originalWidth << "x" << originalHeight
+                      << " to " << outputWidth << "x" << outputHeight << " for playback" << std::endl;
+        }
+
         videoWidth = outputWidth;
         videoHeight = outputHeight;
         frameDurationSeconds = computeFrameDuration(stream);
@@ -152,6 +183,7 @@ public:
             videoDurationSeconds = static_cast<double>(formatCtx->duration) / AV_TIME_BASE;
         }
         ready = true;
+        std::cout << "[Video] Initialized " << currentSourcePath << " (" << videoWidth << "x" << videoHeight << ")" << std::endl;
         return true;
     }
 
@@ -346,6 +378,91 @@ public:
         return true;
     }
 
+    // PTS-based frame retrieval for NLE playback
+    bool getFrameAtPTS(double targetSeconds, std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight) {
+        if (!ready) {
+            return false;
+        }
+
+        // Clamp target time to valid range
+        double clampedTarget = targetSeconds;
+        if (videoDurationSeconds > 0.0) {
+            clampedTarget = std::clamp(targetSeconds, 0.0, videoDurationSeconds - frameDurationSeconds);
+        }
+
+        // Seek to the target position
+        if (!seekSeconds(clampedTarget)) {
+            return false;
+        }
+
+        // Read and decode frames until we reach the target timestamp
+        while (true) {
+            int ret = av_read_frame(formatCtx, packet);
+            if (ret < 0) {
+                if (ret == AVERROR_EOF) {
+                    if (!loopEnabled) {
+                        return false;
+                    }
+                    if (av_seek_frame(formatCtx, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD) < 0) {
+                        return false;
+                    }
+                    avcodec_flush_buffers(codecCtx);
+                    continue;
+                }
+                return false;
+            }
+
+            if (packet->stream_index != videoStreamIndex) {
+                av_packet_unref(packet);
+                continue;
+            }
+
+            ret = avcodec_send_packet(codecCtx, packet);
+            av_packet_unref(packet);
+            if (ret < 0) {
+                continue;
+            }
+
+            while (ret >= 0) {
+                ret = avcodec_receive_frame(codecCtx, frame);
+                if (ret == AVERROR(EAGAIN)) {
+                    break;
+                }
+                if (ret < 0) {
+                    return false;
+                }
+
+                // Check if this frame's PTS matches our target
+                AVStream* stream = formatCtx->streams[videoStreamIndex];
+                double framePTS = frame->pts * av_q2d(stream->time_base);
+                
+                // If we've passed the target time, use this frame
+                if (framePTS >= clampedTarget - frameDurationSeconds) {
+                    bool converted = convertFrameToRGBA(frame, outRGBA);
+                    av_frame_unref(frame);
+                    if (converted) {
+                        outWidth = videoWidth;
+                        outHeight = videoHeight;
+                        return true;
+                    }
+                }
+                
+                av_frame_unref(frame);
+            }
+        }
+    }
+
+    double getCurrentFramePTS() const {
+        if (!ready || !frame || frame->pts == AV_NOPTS_VALUE) {
+            return 0.0;
+        }
+        AVStream* stream = formatCtx->streams[videoStreamIndex];
+        if (!stream || stream->time_base.den == 0) {
+            return 0.0;
+        }
+        return frame->pts * av_q2d(stream->time_base);
+    }
+
 private:
     double computeFrameDuration(const AVStream* stream) const {
         if (!stream) {
@@ -384,17 +501,30 @@ private:
         return true;
     }
 
-    void computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight) const {
+    void computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight, int screenWidth = 0, int screenHeight = 0) const {
         int clampedSrcWidth = std::max(1, srcWidth);
         int clampedSrcHeight = std::max(1, srcHeight);
+
         outWidth = clampedSrcWidth;
         outHeight = clampedSrcHeight;
-        if (clampedSrcHeight > MAX_VIDEO_OUTPUT_HEIGHT) {
-            double scale = static_cast<double>(MAX_VIDEO_OUTPUT_HEIGHT) /
-                           static_cast<double>(clampedSrcHeight);
-            outHeight = MAX_VIDEO_OUTPUT_HEIGHT;
-            outWidth = std::max(1, static_cast<int>(std::round(clampedSrcWidth * scale)));
+
+        // Fit to screen size while maintaining aspect ratio
+        // This prevents performance issues by not decoding at full 1080p when screen is smaller
+        if (screenWidth > 0 && screenHeight > 0) {
+            if (clampedSrcHeight > screenHeight) {
+                // Video is taller than screen - scale down to fit
+                double scale = static_cast<double>(screenHeight) / clampedSrcHeight;
+                outHeight = screenHeight;
+                outWidth = std::max(1, static_cast<int>(std::round(clampedSrcWidth * scale)));
+            }
+            if (clampedSrcWidth > screenWidth) {
+                // Video is wider than screen - scale down to fit
+                double scale = static_cast<double>(screenWidth) / clampedSrcWidth;
+                outWidth = screenWidth;
+                outHeight = std::max(1, static_cast<int>(std::round(clampedSrcHeight * scale)));
+            }
         }
+
         if (outWidth % 2 != 0 && outWidth > 1) {
             --outWidth;
         }
@@ -405,7 +535,8 @@ private:
         int clampedSrcHeight = std::max(1, srcHeight);
         int targetWidth = clampedSrcWidth;
         int targetHeight = clampedSrcHeight;
-        computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight);
+        // No screen size available during scaling context setup
+        computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight, 0, 0);
 
         bool needsContext = (!swsCtx ||
                              cachedWidth != clampedSrcWidth ||
@@ -493,6 +624,13 @@ public:
 
         for (const auto& entry : fs::recursive_directory_iterator(root)) {
             if (!entry.is_regular_file()) {
+                continue;
+            }
+
+            std::string filename = entry.path().filename().string();
+
+            // Skip output files (they are temporary render outputs, not source videos)
+            if (filename.find("output.") == 0) {
                 continue;
             }
 
@@ -680,6 +818,7 @@ struct GlobalUBO {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
     alignas(16) glm::vec2 resolution;
+    alignas(16) glm::vec2 videoResolution;
     alignas(4) float time;
     alignas(4) float tempo;
     alignas(4) float energy;
@@ -769,6 +908,13 @@ struct GlobalUBO {
     alignas(4) float temporalBlendStrength;
     alignas(4) float slowMotionFactor;
     alignas(4) float frameAccumulation;
+    // NLE Effect Chain parameters
+    alignas(4) int nleOutputWidth;
+    alignas(4) int nleOutputHeight;
+    alignas(4) float nleGrayscale;
+    alignas(4) float nleBrightness;
+    alignas(4) float nleContrast;
+    alignas(4) float nleSaturation;
 };
 
 struct FrameContext {
@@ -1294,6 +1440,20 @@ public:
         createDescriptorSets();
         createUiWindow();
         initImGui();
+        
+        // Initialize formal NLE architecture
+        renderWorker = std::make_unique<RenderWorker>();
+        renderWorker->on_render_complete = [this](const std::string& source_file) {
+            std::cout << "[Render] Completed, new version at: " << source_file << std::endl;
+            // Auto-reload disabled to prevent crash with high-resolution videos
+            // User can manually reload if needed
+        };
+
+        g_project_state.active_file = videoSourcePath;
+        // Reset all to auto-detect (0 = auto)
+        g_project_state.width = 0;
+        g_project_state.height = 0;
+        g_project_state.fps = 0;
 
         fullscreenPass.setup(&renderPass,
                             &swapchainFramebuffers,
@@ -1525,7 +1685,11 @@ private:
     };
     std::deque<CachedVideoFrame> videoFrameBuffer;
     std::vector<uint8_t> loopBlendScratch;
+    std::vector<uint8_t> transitionFrame;  // Last frame from previous video for crossfade
     double loopBlendDuration = 0.5;
+    float transitionDuration = 0.5f;  // Crossfade duration during video change
+    double transitionProgress = 0.0;  // 0.0 to 1.0, 1.0 = transition complete
+    bool inTransition = false;
     double videoPlaybackCursor = 0.0;
     double videoDecodeCursor = 0.0;
     double videoDisplayTimer = 0.0;
@@ -1533,6 +1697,8 @@ private:
     std::chrono::steady_clock::time_point lastFrameTimestamp;
     bool videoSubsystemInitialized = false;
     std::string videoSourcePath = "media/sample.mp4";
+    std::string pendingVideoReload;  // Thread-safe video reload request
+    std::mutex videoReloadMutex;
     VideoRegistry videoRegistry;
     std::string videoAssetsRoot = "mp4s";
     int selectedVideoAsset = -1;
@@ -1556,6 +1722,18 @@ private:
     static constexpr const char* CONTROL_STATE_VERSION_PREV4 = "VJAY_STATE_V2";
     bool controlsDirty = false;
     std::chrono::steady_clock::time_point lastControlSaveTime;
+    std::chrono::steady_clock::time_point lastReloadTime;
+    
+    // NLE Architecture Components
+    EffectChain currentEffectChain;
+    Timeline timeline;
+    PlaybackClock playbackClock;
+    bool useNLEPlayback = false;  // Toggle between old sequential and new PTS-based playback
+    bool showNLEWindow = true;
+    
+    // Formal NLE Architecture (ProjectState system)
+    std::unique_ptr<RenderWorker> renderWorker;
+    uint64_t last_loaded_version = 0;
 
     void initSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -2464,6 +2642,8 @@ private:
             return;
         }
 
+        std::cout << "[Video] Player initialized: " << videoSourcePath << " (" << videoPlayer.width() << "x" << videoPlayer.height() << ")" << std::endl;
+
         // Reset lastFrameTimestamp to prevent large deltaTime on first frame
         lastFrameTimestamp = std::chrono::steady_clock::now();
 
@@ -2497,6 +2677,13 @@ private:
     }
 
     void createVideoTextureResources(uint32_t width, uint32_t height) {
+        // Check if recreation is necessary
+        if (videoTexture.ready && videoTexture.width == width && videoTexture.height == height) {
+            std::cout << "[STAGING] Skipping recreation (dimensions unchanged: " << width << "x" << height << ")" << std::endl;
+            return;
+        }
+
+        std::cout << "[STAGING] Creating video texture resources: " << width << "x" << height << std::endl;
         destroyVideoTexture();
 
         videoTexture.width = width;
@@ -2691,15 +2878,25 @@ private:
     }
 
     void resetVideoPlaybackState(double startTime = 0.0) {
-        videoFrameBuffer.clear();
         videoPlaybackCursor = startTime;
         videoDecodeCursor = startTime;
         videoDisplayTimer = 0.0;
         videoDecodeTimer = 0.0;
+        inTransition = false;
+        transitionProgress = 0.0;
+        transitionFrame.clear();
+        videoFrameBuffer.clear();
     }
 
     bool decodeFrameIntoBuffer(double frameDuration) {
         if (!videoSubsystemInitialized || !videoPlayer.isReady() || videoTexture.frameSize == 0) {
+            return false;
+        }
+
+        // Cooldown after reload to prevent FFmpeg crashes
+        auto now = std::chrono::steady_clock::now();
+        auto timeSinceReload = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastReloadTime).count();
+        if (timeSinceReload < 500) {
             return false;
         }
 
@@ -2716,39 +2913,50 @@ private:
             didLoop = true;
         }
 
-        CachedVideoFrame frame;
-        frame.timestamp = videoDecodeCursor;
-        frame.width = static_cast<int>(videoTexture.width);
-        frame.height = static_cast<int>(videoTexture.height);
-        frame.pixels.resize(videoTexture.frameSize);
+        try {
+            CachedVideoFrame frame;
+            frame.timestamp = videoDecodeCursor;
+            frame.width = static_cast<int>(videoTexture.width);
+            frame.height = static_cast<int>(videoTexture.height);
+            frame.pixels.resize(videoTexture.frameSize);
 
-        int decodedWidth = 0;
-        int decodedHeight = 0;
-        if (!videoPlayer.grabFrameInto(frame.pixels.data(), frame.pixels.size(), decodedWidth, decodedHeight)) {
-            if (didLoop) {
+            int decodedWidth = 0;
+            int decodedHeight = 0;
+            if (!videoPlayer.grabFrameInto(frame.pixels.data(), frame.pixels.size(), decodedWidth, decodedHeight)) {
+                if (didLoop) {
+                    return false;
+                }
                 return false;
             }
-            return false;
-        }
 
-        if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
-            createVideoTextureResources(decodedWidth, decodedHeight);
+            if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
+                std::cout << "[VIDEO] Dimension change detected: " << videoTexture.width << "x" << videoTexture.height
+                          << " -> " << decodedWidth << "x" << decodedHeight << std::endl;
+                createVideoTextureResources(decodedWidth, decodedHeight);
+                frame.width = decodedWidth;
+                frame.height = decodedHeight;
+                videoFrameBuffer.clear();
+                videoFrameBuffer.push_back(frame);
+                videoDecodeCursor = frame.timestamp + frameDuration;
+                return true;
+            }
+
             frame.width = decodedWidth;
             frame.height = decodedHeight;
-            videoFrameBuffer.clear();
-            videoFrameBuffer.push_back(frame);
-            videoDecodeCursor = frame.timestamp + frameDuration;
+            videoFrameBuffer.push_back(std::move(frame));
+            // Limit buffer size to prevent memory growth
+            while (videoFrameBuffer.size() > 4) {
+                videoFrameBuffer.pop_front();
+            }
+            videoDecodeCursor += frameDuration;
             return true;
+        } catch (const std::exception& e) {
+            std::cerr << "[VIDEO] Exception in decodeFrameIntoBuffer: " << e.what() << std::endl;
+            return false;
+        } catch (...) {
+            std::cerr << "[VIDEO] Unknown exception in decodeFrameIntoBuffer" << std::endl;
+            return false;
         }
-
-        frame.width = decodedWidth;
-        frame.height = decodedHeight;
-        videoFrameBuffer.push_back(std::move(frame));
-        if (videoFrameBuffer.size() > 4) {
-            videoFrameBuffer.pop_front();
-        }
-        videoDecodeCursor += frameDuration;
-        return true;
     }
 
     bool crossfadeFrames(const CachedVideoFrame& a, const CachedVideoFrame& b, float mix, uint8_t* dst, size_t capacity) {
@@ -2879,9 +3087,43 @@ private:
             return;
         }
 
+        try {
+            // Version-based reload check
+            uint64_t current_version = g_project_state.get_version();
+            if (current_version != last_loaded_version) {
+                // Reload video source if version changed
+                std::cout << "[Video] Version changed from " << last_loaded_version << " to " << current_version << ", reloading" << std::endl;
+                reloadVideoSource(g_project_state.active_file);
+                last_loaded_version = current_version;
+                return;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[Video] Exception in version check: " << e.what() << std::endl;
+            return;
+        }
+
         const uint32_t writeSlot = frame.frameIndex % MAX_FRAMES_IN_FLIGHT;
         videoTrace("[VIDEO] decode start frameIndex=", frame.frameIndex);
         videoTrace("[VIDEO] snapshot/write slot=", writeSlot);
+
+        // Debug: log frame info every 60 frames
+        static int debugFrameCounter = 0;
+        static auto lastDebugTime = std::chrono::steady_clock::now();
+        if (++debugFrameCounter % 60 == 0) {
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDebugTime).count();
+            double actualFps = elapsed > 0 ? (60000.0 / elapsed) : 0.0;
+            double targetFps = videoPlayer.frameDuration() > 0 ? (1.0 / videoPlayer.frameDuration()) : 0.0;
+            lastDebugTime = now;
+
+            std::cout << "[FRAME DEBUG] frameIndex=" << frame.frameIndex
+                      << " writeSlot=" << writeSlot
+                      << " videoSize=" << videoTexture.width << "x" << videoTexture.height
+                      << " screenSize=" << swapchainExtent.width << "x" << swapchainExtent.height
+                      << " targetFps=" << targetFps
+                      << " actualFps=" << actualFps
+                      << " elapsed=" << elapsed << "ms" << std::endl;
+        }
 
         if (writeSlot >= videoStaging.getSlotCount()) {
             std::cerr << "[STAGING] invalid write slot " << writeSlot
@@ -2889,21 +3131,66 @@ private:
             return;
         }
 
-        vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+        try {
+            auto& slot = videoStaging.getSlot(writeSlot);
+            if (slot.mapped == nullptr || slot.capacity == 0) {
+                std::cerr << "[STAGING] slot " << writeSlot << " is not mapped" << std::endl;
+                return;
+            }
 
-        auto& slot = videoStaging.getSlot(writeSlot);
-        if (!slot.mapped) {
-            std::cerr << "[STAGING] slot " << writeSlot << " is not mapped" << std::endl;
-            return;
-        }
-
-        // Wait for fence of the write slot to ensure GPU is done with it
-        VkFence slotFence = frameSystem.getFence(writeSlot);
-        if (slotFence != VK_NULL_HANDLE) {
-            vkWaitForFences(device, 1, &slotFence, VK_TRUE, UINT64_MAX);
-        }
+            // Wait for fence of the write slot to ensure GPU is done with it
+            VkFence slotFence = frameSystem.getFence(writeSlot);
+            if (slotFence != VK_NULL_HANDLE) {
+                vkWaitForFences(device, 1, &slotFence, VK_TRUE, UINT64_MAX);
+            }
 
         const double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
+
+        // NLE Playback Mode: Use PTS-based clock
+        if (useNLEPlayback) {
+            try {
+                std::cout << "[NLE] NLE mode activated" << std::endl;
+                // Apply speed factor from EffectChain to the clock
+                if (currentEffectChain.slow_factor != playbackClock.getSpeedFactor()) {
+                    playbackClock.setSpeed(currentEffectChain.slow_factor);
+                }
+
+                // The clock auto-advances based on wall-clock time
+                // No manual delta update needed - getCurrentTime() handles it
+
+                double targetTime = playbackClock.getCurrentTime();
+
+                // Handle loop
+                double duration = videoPlayer.durationSeconds();
+                if (duration > 0.1 && targetTime >= duration) {
+                    playbackClock.seek(0.0);
+                    targetTime = 0.0;
+                }
+
+                // Get frame at PTS
+                std::vector<uint8_t> frameData;
+                int frameWidth, frameHeight;
+                std::cout << "[NLE] Getting frame at PTS=" << targetTime << std::endl;
+                if (videoPlayer.getFrameAtPTS(targetTime, frameData, frameWidth, frameHeight)) {
+                    size_t copySize = std::min(frameData.size(), slot.capacity);
+                    std::cout << "[NLE] Frame data size=" << frameData.size() << " copySize=" << copySize << std::endl;
+                    std::memcpy(slot.mapped, frameData.data(), copySize);
+
+                    videoTexture.stagingTimestamps[writeSlot] = targetTime;
+                    videoTexture.pendingUploads[writeSlot] = true;
+
+                    videoTrace("[NLE] PTS-based frame at t=", targetTime, " size=", copySize);
+                } else {
+                    std::cerr << "[NLE] Failed to get frame at PTS=" << targetTime << std::endl;
+                }
+                return;
+            } catch (const std::exception& e) {
+                std::cerr << "[NLE] Exception: " << e.what() << std::endl;
+                return;
+            }
+        }
+
+        // Original sequential playback mode
         const double clipFps = (frameDuration > 1e-6) ? (1.0 / frameDuration) : 0.0;
         const double playbackRate = effectivePlaybackRate(clipFps);
         const double decodeOversample = std::max(1.0, static_cast<double>(visualControls.videoDecodeOversample));
@@ -2943,12 +3230,42 @@ private:
             return;
         }
 
+        // Apply crossfade transition if in transition
+        if (inTransition && !transitionFrame.empty()) {
+            transitionProgress += deltaTime / transitionDuration;
+            if (transitionProgress >= 1.0) {
+                transitionProgress = 1.0;
+                inTransition = false;
+                transitionFrame.clear();  // Free memory after transition
+            }
+
+            float mix = static_cast<float>(transitionProgress);
+            size_t transitionSize = static_cast<size_t>(videoTexture.width) * videoTexture.height * 4;
+            if (transitionSize > 0 && transitionSize <= slot.capacity && transitionFrame.size() >= transitionSize) {
+                if (loopBlendScratch.size() < transitionSize) {
+                    loopBlendScratch.resize(transitionSize);
+                }
+                const uint8_t* prevFrame = transitionFrame.data();
+                const uint8_t* currFrame = static_cast<const uint8_t*>(slot.mapped);
+                uint8_t* out = loopBlendScratch.data();
+                for (size_t i = 0; i < transitionSize; ++i) {
+                    float value = prevFrame[i] * (1.0f - mix) + currFrame[i] * mix;
+                    out[i] = static_cast<uint8_t>(std::round(std::clamp(value, 0.0f, 255.0f)));
+                }
+                std::memcpy(slot.mapped, loopBlendScratch.data(), transitionSize);
+            }
+        }
+
         pruneVideoFrameBuffer(videoPlaybackCursor - frameDuration * 2.0);
 
         videoTexture.stagingTimestamps[writeSlot] = targetTime;
 
         videoTrace("[STAGING] writing slot=", writeSlot, " size=", copySize, " fenceState=SIGNALLED t=", targetTime);
         videoTexture.pendingUploads[writeSlot] = true;
+        } catch (const std::exception& e) {
+            std::cerr << "[VIDEO] Exception in video decode: " << e.what() << std::endl;
+            return;
+        }
     }
 
     void destroyVideoTexture() {
@@ -3108,6 +3425,17 @@ private:
         selectedVideoAsset = newIndex;
         updateRandomizerForSelection(newIndex, recordHistory);
         if (selectionChanged || !videoSubsystemInitialized) {
+            // Capture last frame for crossfade transition
+            if (!videoFrameBuffer.empty() && videoTexture.width > 0 && videoTexture.height > 0) {
+                const auto& lastFrame = videoFrameBuffer.back();
+                size_t frameSize = static_cast<size_t>(lastFrame.width) * lastFrame.height * 4;
+                if (transitionFrame.size() < frameSize) {
+                    transitionFrame.resize(frameSize);
+                }
+                std::memcpy(transitionFrame.data(), lastFrame.pixels.data(), std::min(frameSize, lastFrame.pixels.size()));
+                inTransition = true;
+                transitionProgress = 0.0;
+            }
             reloadVideoSource(assets[newIndex].metadata.path);
         }
         videoRandomizer.currentVideoDuration = static_cast<float>(expectedPlaybackDurationSeconds());
@@ -3138,12 +3466,30 @@ private:
     }
 
     void reloadVideoSource(const std::string& path) {
+        if (videoSourcePath == path && videoSubsystemInitialized) {
+            std::cout << "[Reload] Already playing this file, but forcing reload for new version" << std::endl;
+            // Don't return - force reload even if path is same (file content may have changed)
+        }
+
+        std::cout << "[Reload] Starting reload for: " << path << std::endl;
+
         videoSourcePath = path;
+        g_project_state.active_file = path;  // Update ProjectState to keep it in sync
+
+        // Wait for GPU to finish using current video resources before destroying
+        std::cout << "[Reload] Waiting for GPU idle..." << std::endl;
+        vkDeviceWaitIdle(device);
+        std::cout << "[Reload] GPU idle, destroying video player..." << std::endl;
+
         videoPlayer.shutdown();
         videoSubsystemInitialized = false;
         resetVideoPlaybackState(0.0);
         lastFrameTimestamp = std::chrono::steady_clock::now();
+
+        std::cout << "[Reload] Initializing video system..." << std::endl;
         initVideoSystem();
+        lastReloadTime = std::chrono::steady_clock::now();
+        std::cout << "[Reload] Video system initialized" << std::endl;
     }
 
     void createDescriptorPool() {
@@ -3454,6 +3800,7 @@ private:
                 float clipSeconds = std::max(0.0f, videoRandomizer.currentVideoDuration);
                 ImGui::Text("Current clip: %.1f s", clipSeconds);
             }
+            changed |= ImGui::SliderFloat("Transition duration (s)", &transitionDuration, 0.1f, 2.0f, "%.2f s");
             ImGui::BeginDisabled(!hasRandomChoices);
             if (ImGui::Button("Randomize video online")) {
                 randomizeVideoAsset();
@@ -3476,8 +3823,137 @@ private:
             ImGui::Separator();
             ImGui::Checkbox("Show diagnostics window", &showSecondaryWindow);
             ImGui::Checkbox("Show ImGui demo", &showDemoWindow);
+            ImGui::Checkbox("Show NLE Editor", &showNLEWindow);
         }
         ImGui::End();
+
+        // NLE Editor Window
+        if (showNLEWindow) {
+            ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f), ImGuiCond_FirstUseEver);
+            if (ImGui::Begin("NLE Editor", &showNLEWindow)) {
+                ImGui::Text("Playback Mode");
+                ImGui::Checkbox("Use NLE Playback (PTS-based)", &useNLEPlayback);
+                
+                if (useNLEPlayback) {
+                    ImGui::Separator();
+                    ImGui::Text("Playback Clock");
+                    ImGui::Text("Current time: %.3f s", playbackClock.getCurrentTime());
+                    ImGui::Text("Speed: %.2fx", playbackClock.getSpeedFactor());
+                    
+                    if (ImGui::Button("Reset Clock")) {
+                        playbackClock.reset();
+                    }
+                    ImGui::SameLine();
+                    if (playbackClock.isPaused()) {
+                        if (ImGui::Button("Resume")) {
+                            playbackClock.resume();
+                        }
+                    } else {
+                        if (ImGui::Button("Pause")) {
+                            playbackClock.pause();
+                        }
+                    }
+                    
+                    ImGui::Separator();
+                    ImGui::Text("Edit Parameters");
+                    
+                    // Quality presets
+                    ImGui::Text("Quality Presets:");
+                    if (ImGui::Button("Auto (Match Input)")) {
+                        g_project_state.width = 0;
+                        g_project_state.height = 0;
+                        g_project_state.fps = 0;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("240p")) {
+                        g_project_state.width = 426;
+                        g_project_state.height = 240;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("720p")) {
+                        g_project_state.width = 1280;
+                        g_project_state.height = 720;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("1080p")) {
+                        g_project_state.width = 1920;
+                        g_project_state.height = 1080;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("1080p 4:3")) {
+                        g_project_state.width = 1440;
+                        g_project_state.height = 1080;
+                    }
+                    
+                    ImGui::Separator();
+                    
+                    // Speed control
+                    ImGui::SliderFloat("Speed", &g_project_state.speed, 0.25f, 4.0f, "%.2fx");
+
+                    // FPS (0 = auto-detect from input)
+                    ImGui::SliderInt("FPS", &g_project_state.fps, 0, 120);
+
+                    // Scale (0 = auto-detect from input)
+                    ImGui::SliderInt("Width", &g_project_state.width, 0, 3840);
+                    ImGui::SliderInt("Height", &g_project_state.height, 0, 2160);
+                    
+                    // Scale flags
+                    static char scale_flags_buf[64] = "lanczos";
+                    ImGui::InputText("Scale Flags", scale_flags_buf, sizeof(scale_flags_buf));
+                    g_project_state.scale_flags = scale_flags_buf;
+                    
+                    // Unsharp filter
+                    ImGui::Checkbox("Enable Unsharp", &g_project_state.enable_unsharp);
+                    if (g_project_state.enable_unsharp) {
+                        ImGui::SliderFloat("Unsharp Amount", &g_project_state.unsharp_amount, 0.0f, 2.0f);
+                        ImGui::SliderFloat("Unsharp Radius", &g_project_state.unsharp_radius, 1.0f, 10.0f);
+                    }
+                    
+                    ImGui::Separator();
+                    
+                    // Output file
+                    static char output_file_buf[256] = "output.mp4";
+                    ImGui::InputText("Output File", output_file_buf, sizeof(output_file_buf));
+                    g_project_state.output_file = output_file_buf;
+                    
+                    ImGui::Separator();
+
+                    if (ImGui::Button("Apply Changes")) {
+                        g_project_state.increment_version();
+                    }
+
+                    ImGui::Separator();
+
+                    // Render status display
+                    if (renderWorker) {
+                        auto status = renderWorker->get_status();
+                        ImGui::Text("Render Status:");
+                        ImGui::Text("  Active Jobs: %zu", status.active_job_count);
+                        ImGui::Text("  Pending Jobs: %zu", status.pending_job_count);
+                        ImGui::Text("  Current Version: %lu", status.current_version);
+
+                        if (status.active_job_count > 0) {
+                            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "  Status: RENDERING");
+                        } else if (status.pending_job_count > 0) {
+                            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  Status: QUEUED");
+                        } else {
+                            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "  Status: IDLE");
+                        }
+
+                        if (!status.last_error.empty()) {
+                            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "  Last Error: %s", status.last_error.c_str());
+                        }
+                    }
+
+                    ImGui::Separator();
+
+                    ImGui::Text("Current File: %s", g_project_state.active_file.c_str());
+                    ImGui::Text("Version: %lu", g_project_state.get_version());
+                    ImGui::Text("Dirty: %s", g_project_state.is_dirty() ? "Yes" : "No");
+                }
+            }
+            ImGui::End();
+        }
 
         ImGui::SetNextWindowSize(ImVec2(430.0f, 640.0f), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("VJAY BASICS")) {
@@ -3707,7 +4183,7 @@ private:
 
             ImGui::Text("1. Color grading dinamico");
             ImGui::SameLine();
-            ImGui::Checkbox("On##ColorGrade", &visualControls.enableColorGrading);
+            vjayChanged |= ImGui::Checkbox("On##ColorGrade", &visualControls.enableColorGrading);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableColorGrading);
             vjayChanged |= ImGui::SliderFloat("Brightness", &visualControls.gradeBrightness, -1.0f, 1.0f, "%.2f");
@@ -3724,7 +4200,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("2. Feedback temporal");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Feedback", &visualControls.enableFeedback);
+            vjayChanged |= ImGui::Checkbox("On##Feedback", &visualControls.enableFeedback);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableFeedback);
             vjayChanged |= ImGui::SliderFloat("Feedback", &visualControls.feedbackAmount, 0.0f, 1.0f, "%.2f");
@@ -3737,7 +4213,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("3. Distorsion espacial");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Distortion", &visualControls.enableDistortion);
+            vjayChanged |= ImGui::Checkbox("On##Distortion", &visualControls.enableDistortion);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableDistortion);
             vjayChanged |= ImGui::SliderFloat("UV warp", &visualControls.uvWarpStrength, 0.0f, 2.0f, "%.2f");
@@ -3753,7 +4229,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("4. Blur & motion");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Blur", &visualControls.enableBlurMotion);
+            vjayChanged |= ImGui::Checkbox("On##Blur", &visualControls.enableBlurMotion);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableBlurMotion);
             vjayChanged |= ImGui::SliderFloat("Gaussian blur", &visualControls.gaussianBlur, 0.0f, 1.0f, "%.2f");
@@ -3767,7 +4243,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("5. Sharpen / detalle");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Sharpen", &visualControls.enableSharpen);
+            vjayChanged |= ImGui::Checkbox("On##Sharpen", &visualControls.enableSharpen);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableSharpen);
             vjayChanged |= ImGui::SliderFloat("Unsharp mask", &visualControls.unsharpMask, 0.0f, 1.0f, "%.2f");
@@ -3778,7 +4254,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("6. Glitch / corruption");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Glitch", &visualControls.enableGlitch);
+            vjayChanged |= ImGui::Checkbox("On##Glitch", &visualControls.enableGlitch);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableGlitch);
             vjayChanged |= ImGui::SliderFloat("Datamosh", &visualControls.glitchDatamosh, 0.0f, 1.0f, "%.2f");
@@ -3793,7 +4269,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("7. Compositing & blending");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Blend", &visualControls.enableBlending);
+            vjayChanged |= ImGui::Checkbox("On##Blend", &visualControls.enableBlending);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableBlending);
             vjayChanged |= ImGui::Combo("Procedural blend", &visualControls.blendModeProcedural, BLEND_ITEMS);
@@ -3807,7 +4283,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("8. CRT / analog simulation");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Analog", &visualControls.enableAnalog);
+            vjayChanged |= ImGui::Checkbox("On##Analog", &visualControls.enableAnalog);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableAnalog);
             vjayChanged |= ImGui::SliderFloat("Scanline focus", &visualControls.analogScanlineFocus, 0.0f, 1.0f, "%.2f");
@@ -3821,7 +4297,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("9. Audio reactivity");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Audio", &visualControls.enableAudioReactive);
+            vjayChanged |= ImGui::Checkbox("On##Audio", &visualControls.enableAudioReactive);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableAudioReactive);
             vjayChanged |= ImGui::SliderFloat("Warp response", &visualControls.audioWarpResponse, 0.0f, 2.0f, "%.2f");
@@ -3836,7 +4312,7 @@ private:
             ImGui::Spacing();
             ImGui::Text("10. Temporal speed processing");
             ImGui::SameLine();
-            ImGui::Checkbox("On##Temporal", &visualControls.enableTemporal);
+            vjayChanged |= ImGui::Checkbox("On##Temporal", &visualControls.enableTemporal);
             ImGui::Separator();
             ImGui::BeginDisabled(!visualControls.enableTemporal);
             vjayChanged |= ImGui::SliderFloat("Frame interpolation", &visualControls.temporalInterpolation, 0.0f, 1.0f, "%.2f");
@@ -3887,6 +4363,23 @@ private:
                     ImGui::Text("Duration: %.2f s", meta.duration);
                     ImGui::Text("Bitrate: %.0f kbps", meta.bitrate / 1000.0);
                     ImGui::Text("Audio: %s", meta.hasAudio ? "yes" : "no");
+                    ImGui::Separator();
+                    if (ImGui::Button("Delete Selected Video")) {
+                        try {
+                            std::string videoPath = meta.path;
+                            std::cout << "[Delete] Deleting video: " << videoPath << std::endl;
+                            std::filesystem::remove(videoPath);
+                            videoRegistry.scan(videoAssetsRoot);
+                            if (selectedVideoAsset >= static_cast<int>(videoRegistry.getAssets().size())) {
+                                selectedVideoAsset = std::max(0, static_cast<int>(videoRegistry.getAssets().size()) - 1);
+                            }
+                            if (!videoRegistry.getAssets().empty()) {
+                                reloadVideoSource(videoRegistry.getAssets()[selectedVideoAsset].metadata.path);
+                            }
+                        } catch (const std::exception& e) {
+                            std::cerr << "[Delete] Error: " << e.what() << std::endl;
+                        }
+                    }
                 }
             }
             ImGui::End();
@@ -4120,6 +4613,16 @@ private:
         ubo.proj[1][1] *= -1.0f;
         ubo.resolution = glm::vec2(static_cast<float>(swapchainExtent.width),
                                    static_cast<float>(swapchainExtent.height));
+        ubo.videoResolution = glm::vec2(static_cast<float>(videoTexture.width),
+                                       static_cast<float>(videoTexture.height));
+
+        // Debug: log video resolution periodically
+        static int frameCounter = 0;
+        if (++frameCounter % 300 == 0) {
+            std::cout << "[UBO] Video resolution: " << videoTexture.width << "x" << videoTexture.height
+                      << " Screen: " << swapchainExtent.width << "x" << swapchainExtent.height << std::endl;
+        }
+
         ubo.time = proceduralTime;
         ubo.tempo = visualControls.tempo;
         ubo.energy = visualControls.energy;
@@ -4250,6 +4753,23 @@ private:
         ubo.slowMotionFactor = temporalEnabled ? visualControls.slowMotionFactor : 1.0f;
         ubo.frameAccumulation = temporalEnabled ? visualControls.frameAccumulation : 0.0f;
 
+        // NLE Effect Chain parameters - only apply when NLE mode is enabled
+        if (useNLEPlayback) {
+            ubo.nleOutputWidth = 0;  // Always use original resolution
+            ubo.nleOutputHeight = 0; // Always use original resolution
+            ubo.nleGrayscale = currentEffectChain.grayscale ? 1.0f : 0.0f;
+            ubo.nleBrightness = currentEffectChain.brightness;
+            ubo.nleContrast = currentEffectChain.contrast;
+            ubo.nleSaturation = currentEffectChain.saturation;
+        } else {
+            ubo.nleOutputWidth = 0;
+            ubo.nleOutputHeight = 0;
+            ubo.nleGrayscale = 0.0f;
+            ubo.nleBrightness = 0.0f;
+            ubo.nleContrast = 1.0f;
+            ubo.nleSaturation = 1.0f;
+        }
+
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
 
@@ -4344,6 +4864,16 @@ private:
 
     void mainLoop() {
         while (running) {
+            // Check for pending video reload from render completion callback
+            {
+                std::lock_guard<std::mutex> lock(videoReloadMutex);
+                if (!pendingVideoReload.empty()) {
+                    std::cout << "[Main] Reloading video: " << pendingVideoReload << std::endl;
+                    reloadVideoSource(pendingVideoReload);
+                    pendingVideoReload.clear();
+                }
+            }
+
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
                 if (imguiInitialized) {
@@ -5040,6 +5570,12 @@ private:
 };
 
 int main() {
+    // Register signal handlers for crashes
+    signal(SIGSEGV, crash_handler);
+    signal(SIGABRT, crash_handler);
+    signal(SIGFPE, crash_handler);
+    signal(SIGILL, crash_handler);
+
     App app;
 
     try {
