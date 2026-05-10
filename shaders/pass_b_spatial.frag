@@ -95,6 +95,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+    float pixelateAmount;
+    float strobeSpeed;
+    float thresholdLevel;
+    float slowZoomAmount;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;
@@ -222,7 +226,21 @@ void main() {
     
     // CRT curvature
     uvOut = curve(uvOut);
-    
+
+    // Pixelate effect
+    if (ubo.pixelateAmount > 0.0001) {
+        float pixels = max(ubo.pixelateAmount * 100.0, 2.0);
+        vec2 pixelatedUV = floor(uvOut * pixels) / pixels;
+        uvOut = pixelatedUV;
+    }
+
+    // Slow zoom effect
+    if (ubo.slowZoomAmount > 0.0001) {
+        vec2 zoomCenter = vec2(0.5);
+        float zoomFactor = 1.0 - ubo.slowZoomAmount * 0.3;
+        uvOut = zoomCenter + (uvOut - zoomCenter) * zoomFactor;
+    }
+
     // Sample from input texture with transformed UVs
     uvOut = clamp(uvOut, 0.0, 1.0);
     vec3 color = texture(inputTex, uvOut).rgb;

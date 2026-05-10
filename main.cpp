@@ -931,6 +931,10 @@ struct GlobalUBO {
     alignas(4) float frameAccumulation;
     alignas(4) float slowMotionFactor;
     alignas(4) float temporalInterpolation;
+    alignas(4) float pixelateAmount;
+    alignas(4) float strobeSpeed;
+    alignas(4) float thresholdLevel;
+    alignas(4) float slowZoomAmount;
 };
 
 struct FrameContext {
@@ -1992,6 +1996,15 @@ private:
         float temporalBlendStrength = 0.0f;
         float slowMotionFactor = 1.0f;
         float frameAccumulation = 0.0f;
+        // Extra effects (Pixelate, Strobe, Threshold, Slow Zoom)
+        float pixelateAmount = 0.0f;
+        float strobeSpeed = 0.0f;
+        float thresholdLevel = 0.5f;
+        float slowZoomAmount = 0.0f;
+        bool enablePixelate = false;
+        bool enableStrobe = false;
+        bool enableThreshold = false;
+        bool enableSlowZoom = false;
     } visualControls;
     ImGuiContext* imguiContext = nullptr;
     bool imguiInitialized = false;
@@ -4901,6 +4914,76 @@ private:
         }
         ImGui::End();
 
+        ImGui::SetNextWindowSize(ImVec2(350.0f, 400.0f), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("VJAY EXTRA")) {
+            if (ImGui::Button("Randomize VJAY extra")) {
+                std::uniform_real_distribution<float> zeroOne(0.0f, 1.0f);
+                auto randRange = [&](float minVal, float maxVal) {
+                    std::uniform_real_distribution<float> dist(minVal, maxVal);
+                    return dist(randomEngine);
+                };
+
+                visualControls.pixelateAmount = randRange(0.0f, 1.0f);
+                visualControls.strobeSpeed = randRange(0.0f, 10.0f);
+                visualControls.thresholdLevel = randRange(0.0f, 1.0f);
+                visualControls.slowZoomAmount = randRange(0.0f, 1.0f);
+
+                vjayChanged = true;
+                controlsDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset VJAY extra")) {
+                visualControls.pixelateAmount = 0.0f;
+                visualControls.strobeSpeed = 0.0f;
+                visualControls.thresholdLevel = 0.5f;
+                visualControls.slowZoomAmount = 0.0f;
+                visualControls.enablePixelate = false;
+                visualControls.enableStrobe = false;
+                visualControls.enableThreshold = false;
+                visualControls.enableSlowZoom = false;
+
+                vjayChanged = true;
+                controlsDirty = true;
+            }
+
+            ImGui::Spacing();
+            ImGui::Text("1. Pixelate");
+            ImGui::SameLine();
+            vjayChanged |= ImGui::Checkbox("On##Pixelate", &visualControls.enablePixelate);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enablePixelate);
+            vjayChanged |= ImGui::SliderFloat("Pixelate amount", &visualControls.pixelateAmount, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("2. Strobe");
+            ImGui::SameLine();
+            vjayChanged |= ImGui::Checkbox("On##Strobe", &visualControls.enableStrobe);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableStrobe);
+            vjayChanged |= ImGui::SliderFloat("Strobe speed", &visualControls.strobeSpeed, 0.0f, 20.0f, "%.1f Hz");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("3. Threshold");
+            ImGui::SameLine();
+            vjayChanged |= ImGui::Checkbox("On##Threshold", &visualControls.enableThreshold);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableThreshold);
+            vjayChanged |= ImGui::SliderFloat("Threshold level", &visualControls.thresholdLevel, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::Text("4. Slow Zoom");
+            ImGui::SameLine();
+            vjayChanged |= ImGui::Checkbox("On##SlowZoom", &visualControls.enableSlowZoom);
+            ImGui::Separator();
+            ImGui::BeginDisabled(!visualControls.enableSlowZoom);
+            vjayChanged |= ImGui::SliderFloat("Slow zoom amount", &visualControls.slowZoomAmount, 0.0f, 1.0f, "%.2f");
+            ImGui::EndDisabled();
+        }
+        ImGui::End();
+
         if (showSecondaryWindow) {
             ImGui::SetNextWindowSize(ImVec2(320.0f, 220.0f), ImGuiCond_FirstUseEver);
             if (ImGui::Begin("Diagnostics", &showSecondaryWindow)) {
@@ -5440,6 +5523,12 @@ private:
         // ubo.temporalBlendStrength = temporalEnabled ? visualControls.temporalBlendStrength : 0.0f;
         ubo.slowMotionFactor = temporalEnabled ? visualControls.slowMotionFactor : 1.0f;
         ubo.frameAccumulation = temporalEnabled ? visualControls.frameAccumulation : 0.0f;
+
+        // Extra effects (VJAY EXTRA)
+        ubo.pixelateAmount = visualControls.enablePixelate ? visualControls.pixelateAmount : 0.0f;
+        ubo.strobeSpeed = visualControls.enableStrobe ? visualControls.strobeSpeed : 0.0f;
+        ubo.thresholdLevel = visualControls.enableThreshold ? visualControls.thresholdLevel : 0.5f;
+        ubo.slowZoomAmount = visualControls.enableSlowZoom ? visualControls.slowZoomAmount : 0.0f;
 
         // TODO: NLE Effect Chain parameters - add fields to GlobalUBO if needed
         // if (currentEffectChain.enabled) {

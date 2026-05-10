@@ -95,6 +95,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+    float thresholdLevel;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;
@@ -202,10 +203,17 @@ void main() {
     
     // Split tone
     color = applySplitTone(color);
-    
+
+    // Threshold effect (black & white threshold)
+    if (ubo.thresholdLevel > 0.0001) {
+        float lum = dot(color, vec3(0.299, 0.587, 0.114));
+        float threshold = clamp(ubo.thresholdLevel, 0.0, 1.0);
+        color = mix(vec3(lum), vec3(step(threshold, lum)), 0.8);
+    }
+
     // Color balance
     color *= ubo.colorBalance;
-    
+
     color = clamp(color, 0.0, 2.0);
     
     outColor = vec4(color, 1.0);

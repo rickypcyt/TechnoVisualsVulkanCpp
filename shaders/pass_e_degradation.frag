@@ -95,6 +95,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+    float pixelateAmount;
+    float strobeSpeed;
+    float thresholdLevel;
+    float slowZoomAmount;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;
