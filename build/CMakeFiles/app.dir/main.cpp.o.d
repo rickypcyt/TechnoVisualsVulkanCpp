@@ -602,7 +602,6 @@ CMakeFiles/app.dir/main.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imconfig.h \
  /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h \
  /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.h \
- /home/ricky/coding/proyects/vulkancpp/VideoStaging.h \
  /home/ricky/coding/proyects/vulkancpp/EffectChain.h \
  /home/ricky/coding/proyects/vulkancpp/Timeline.h \
  /home/ricky/coding/proyects/vulkancpp/Export.h \

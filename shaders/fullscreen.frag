@@ -113,8 +113,8 @@ layout(set = 0, binding = 2) uniform sampler2D videoTexPrev;
 const float PI = 3.1415926535;
 
 float hash21(vec2 p) {
-    p = fract(p * vec2(123.34, 345.45));
-    p += dot(p, p + 34.345);
+    p = fract(p * vec2(443.897, 441.423));
+    p += dot(p, p.yx + 19.19);
     return fract(p.x * p.y);
 }
 
@@ -230,11 +230,11 @@ vec4 fsrBicubic(vec2 st) {
     vec2 f = fract(coord);
     vec2 i = floor(coord);
     
-    // Catmull-Rom weights
-    vec2 w0 = f * (-0.5 + f * (1.0 - 0.5 * f));
-    vec2 w1 = 1.0 + f * f * (-2.5 + 1.5 * f);
-    vec2 w2 = f * (0.5 + f * (2.0 - 1.5 * f));
-    vec2 w3 = f * f * (-0.5 + 0.5 * f);
+    // Catmull-Rom weights (correct implementation)
+    vec2 w0 = -0.5 * f * f * f + f * f - 0.5 * f;
+    vec2 w1 =  1.5 * f * f * f - 2.5 * f * f + 1.0;
+    vec2 w2 = -1.5 * f * f * f + 2.0 * f * f + 0.5 * f;
+    vec2 w3 =  0.5 * f * f * f - 0.5 * f * f;
     
     vec2 s0 = w0 + w2;
     vec2 s1 = w1 + w3;
@@ -419,7 +419,7 @@ vec3 applyGaussianBlur(vec2 st, vec3 baseColor) {
     if (strength <= 0.0001) {
         return baseColor;
     }
-    vec2 texel = 1.5 / vec2(textureSize(videoTex, 0));
+    vec2 texel = 1.0 / vec2(textureSize(videoTex, 0));
     vec3 acc = baseColor;
     float weight = 1.0;
     const vec2 offsets[4] = vec2[4](
@@ -445,7 +445,7 @@ vec3 applyDirectionalBlur(vec2 st, vec3 color) {
     float weight = 1.0;
     for (int i = 1; i <= 3; ++i) {
         float w = 1.0 / float(i + 1);
-        vec2 offset = dir * texel * float(i) * 2.0;
+        vec2 offset = dir * texel * float(i);
         acc += texture(videoTex, clamp(st + offset, 0.0, 1.0)).rgb * w;
         acc += texture(videoTex, clamp(st - offset, 0.0, 1.0)).rgb * w;
         weight += 2.0 * w;
@@ -536,25 +536,30 @@ vec3 applyFeedback(vec2 st, vec3 color, vec2 centered, float audioFeedbackMod) {
     // Only enter loop if trail or temporal effects are active
     if (ubo.trailStrength > 0.0001 || ubo.temporalAccumulation > 0.0001) {
         for (int i = 1; i <= 6; ++i) {
-        float t = float(i) / 6.0;
-        
-        // Radial trail effect
-        vec2 radialOffset = centered * t * ubo.trailStrength * 0.2;
-        
-        // Vertical temporal accumulation (creates motion blur trails)
-        vec2 temporalOffset = vec2(0.0, t * 0.05 * ubo.temporalAccumulation);
-        
-        // Combine offsets
-        vec2 offset = radialOffset + temporalOffset;
-        
-        // Sample from processed color at offset UV for spatial smearing effect
-        vec2 offsetUV = clamp(st - offset, 0.0, 1.0);
-        vec3 sampleColor = texture(videoTex, offsetUV).rgb;
-        
-        // Mix with decay - stronger influence from closer samples
-        float mixStrength = amount * (1.0 - t * 0.5) * decay;
-        accum = mix(accum, sampleColor, mixStrength);
-    }
+            float t = float(i) / 6.0;
+            
+            // Calculate offsets only if respective coefficients are non-zero
+            vec2 offset = vec2(0.0);
+            if (ubo.trailStrength > 0.0001) {
+                offset += centered * t * ubo.trailStrength * 0.2;
+            }
+            if (ubo.temporalAccumulation > 0.0001) {
+                offset += vec2(0.0, t * 0.05 * ubo.temporalAccumulation);
+            }
+            
+            // Skip iteration if offset is effectively zero
+            if (length(offset) < 0.0001) {
+                continue;
+            }
+            
+            // Sample from processed color at offset UV for spatial smearing effect
+            vec2 offsetUV = clamp(st - offset, 0.0, 1.0);
+            vec3 sampleColor = texture(videoTex, offsetUV).rgb;
+            
+            // Mix with decay - stronger influence from closer samples
+            float mixStrength = amount * (1.0 - t * 0.5) * decay;
+            accum = mix(accum, sampleColor, mixStrength);
+        }
     }
     
     // Apply recursive blend for more intense feedback
@@ -736,12 +741,13 @@ void main() {
     float timeScale = max(ubo.slowMotionFactor, 0.1);
     float effectTime = ubo.time / timeScale;
 
+    // Cache texture size for performance
+    vec2 texSize = vec2(textureSize(videoTex, 0));
+
     vec2 centered = uv * 2.0 - 1.0;
 
-    // Stretch to fit: video always fills full screen without letterboxing
-    vec2 letterboxUV = uv;
-    
-    vec2 spatialUV = applySpatialEffects(letterboxUV, centered, audioWarpMod);
+    // Fullscreen stretch - no letterboxing
+    vec2 spatialUV = applySpatialEffects(uv, centered, audioWarpMod);
     vec2 spatialCentered = spatialUV * 2.0 - 1.0;
 
     float curvatureY = clamp(ubo.crtCurvature, 0.0, 0.8);
@@ -773,7 +779,6 @@ void main() {
     vec4 procedural = dispatchMode(ubo.mode, crtUV);
     
     // Detect if we're upscaling (video smaller than screen)
-    vec2 texSize = vec2(textureSize(videoTex, 0));
     bool isUpscaling = (texSize.x < ubo.resolution.x) || (texSize.y < ubo.resolution.y);
     bool useUpscale = ubo.upscaleEnabled > 0.5 && isUpscaling;
     
@@ -821,8 +826,8 @@ void main() {
     float scanlineFreq = 240.0 * (ubo.resolution.y / 480.0);
     float scanline = mix(1.0, 0.5 + 0.5 * sin((crtUV.y + effectTime * 0.2) * PI * scanlineFreq), clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
     float maskPattern = mix(1.0,
-                            (0.8 + 0.2 * sin(crtUV.x * PI * 640.0)) *
-                            (0.8 + 0.2 * cos(crtUV.y * PI * 480.0)),
+                            (0.8 + 0.2 * sin(crtUV.x * PI * ubo.resolution.x)) *
+                            (0.8 + 0.2 * cos(crtUV.y * PI * ubo.resolution.y)),
                             clamp(ubo.crtMaskIntensity, 0.0, 1.0));
     gradedColor *= scanline * maskPattern;
 
@@ -836,25 +841,27 @@ void main() {
         gradedColor += g * ubo.grainStrength * 0.1;
     }
 
-    vec3 videoAvailableColor = mix(procedural.rgb, gradedColor, clamp(ubo.videoMix * ubo.videoAvailable, 0.0, 1.0));
-
-    // Apply NLE Effect Chain parameters
+    // Apply NLE Effect Chain parameters to graded color
+    vec3 nleColor = gradedColor;
     if (ubo.nleGrayscale > 0.5) {
-        float luma = dot(videoAvailableColor, vec3(0.299, 0.587, 0.114));
-        videoAvailableColor = vec3(luma);
+        float luma = dot(nleColor, vec3(0.299, 0.587, 0.114));
+        nleColor = vec3(luma);
     }
     if (ubo.nleBrightness != 0.0 || ubo.nleContrast != 1.0 || ubo.nleSaturation != 1.0) {
-        videoAvailableColor += ubo.nleBrightness;
-        videoAvailableColor = (videoAvailableColor - 0.5) * ubo.nleContrast + 0.5;
-        float lum = dot(videoAvailableColor, vec3(0.2126, 0.7152, 0.0722));
-        videoAvailableColor = mix(vec3(lum), videoAvailableColor, ubo.nleSaturation);
+        nleColor += ubo.nleBrightness;
+        nleColor = (nleColor - 0.5) * ubo.nleContrast + 0.5;
+        float lum = dot(nleColor, vec3(0.2126, 0.7152, 0.0722));
+        nleColor = mix(vec3(lum), nleColor, ubo.nleSaturation);
     }
 
-    vec3 blendProc = blendMode(videoAvailableColor, procedural.rgb, ubo.blendModeProcedural);
-    vec3 blendVideo = blendMode(procedural.rgb, gradedColor, ubo.blendModeVideo);
-    vec3 blendFeedback = blendMode(videoAvailableColor, feedbackColor, ubo.blendModeFeedback);
+    // Apply video mix once, combined with video availability
+    vec3 videoMixedColor = mix(procedural.rgb, nleColor, clamp(ubo.videoMix * ubo.videoAvailable, 0.0, 1.0));
 
-    vec3 layered = mix(videoAvailableColor, blendProc, clamp(ubo.blendProceduralMix, 0.0, 1.0));
+    vec3 blendProc = blendMode(videoMixedColor, procedural.rgb, ubo.blendModeProcedural);
+    vec3 blendVideo = blendMode(procedural.rgb, nleColor, ubo.blendModeVideo);
+    vec3 blendFeedback = blendMode(videoMixedColor, feedbackColor, ubo.blendModeFeedback);
+
+    vec3 layered = mix(videoMixedColor, blendProc, clamp(ubo.blendProceduralMix, 0.0, 1.0));
     layered = mix(layered, blendVideo, clamp(ubo.blendVideoMix, 0.0, 1.0));
     layered = mix(layered, blendFeedback, clamp(ubo.blendFeedbackMix + ubo.frameAccumulation, 0.0, 1.0));
 

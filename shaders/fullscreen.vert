@@ -115,25 +115,6 @@ void main() {
     vec2 pos = positions[gl_VertexIndex];
     gl_Position = vec4(pos, 0.0, 1.0);
     
-    // Apply NLE aspect ratio scaling
-    vec2 baseUV = pos * 0.5 + 0.5;
-    
-    if (ubo.nleOutputWidth > 0 && ubo.nleOutputHeight > 0) {
-        // Calculate aspect ratio correction
-        float targetAspect = float(ubo.nleOutputWidth) / float(ubo.nleOutputHeight);
-        float currentAspect = ubo.resolution.x / ubo.resolution.y;
-        
-        vec2 scale = vec2(1.0);
-        if (targetAspect > currentAspect) {
-            scale.x = currentAspect / targetAspect;
-        } else {
-            scale.y = targetAspect / currentAspect;
-        }
-        
-        // Center the scaled UV
-        vec2 offset = (1.0 - scale) * 0.5;
-        uv = baseUV * scale + offset;
-    } else {
-        uv = baseUV;
-    }
+    // Fullscreen stretch - no aspect ratio correction
+    uv = pos * 0.5 + 0.5;
 }

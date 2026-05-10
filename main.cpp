@@ -46,7 +46,6 @@ namespace fs = std::filesystem;
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_sdlrenderer2.h"
-#include "VideoStaging.h"
 #include "EffectChain.h"
 #include "Timeline.h"
 #include "Export.h"
@@ -1735,7 +1734,6 @@ private:
     VideoRegistry videoRegistry;
     std::string videoAssetsRoot = "mp4s";
     int selectedVideoAsset = -1;
-    VideoStaging videoStaging;
     uint64_t currentEpoch = 1;
     struct VideoRandomizerState {
         bool autoRandomize = false;
@@ -2743,9 +2741,9 @@ private:
         // ANTES: saltaba si mismas dimensiones, pero los buffers pueden
         // haber sido destruidos por un reload previo
         // AHORA: comprueba que los buffers realmente existen
-        bool buffersValid = videoStaging.getSlotCount() > 0;
-        for (size_t i = 0; i < videoStaging.getSlotCount() && buffersValid; ++i) {
-            if (videoStaging.getSlot(i).mapped == nullptr) {
+        bool buffersValid = !videoTexture.stagingSlots.empty();
+        for (size_t i = 0; i < videoTexture.stagingSlots.size() && buffersValid; ++i) {
+            if (videoTexture.stagingSlots[i].mapped == nullptr) {
                 buffersValid = false;
             }
         }
@@ -2853,13 +2851,9 @@ private:
         videoTexture.prevFrameStagingBuffer = prevStagingBuffer;
         videoTexture.prevFrameStagingMapped = prevMapped;
 
-        if (!videoStaging.init(MAX_FRAMES_IN_FLIGHT, videoTexture.frameSize)) {
-            throw std::runtime_error("failed to initialize VideoStaging");
-        }
-
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
             if (videoTexture.frameSize == 0) {
-                videoStaging.setSlot(i, VK_NULL_HANDLE, VK_NULL_HANDLE, nullptr, 0);
+                videoTexture.stagingSlots[i] = {};
                 continue;
             }
 
@@ -2874,7 +2868,9 @@ private:
                 throw std::runtime_error("failed to map video staging buffer");
             }
 
-            videoStaging.setSlot(i, buffer.buffer, buffer.memory, mapped, videoTexture.frameSize);
+            videoTexture.stagingSlots[i].buffer = buffer;
+            videoTexture.stagingSlots[i].mapped = mapped;
+            videoTexture.stagingSlots[i].capacity = videoTexture.frameSize;
         }
 
         videoTexture.ready = true;
@@ -3204,10 +3200,10 @@ private:
         }
 
         // Guard: si los staging buffers no son válidos, no toques nada
-        if (frame.frameIndex >= videoStaging.getSlotCount()) {
+        if (frame.frameIndex >= videoTexture.stagingSlots.size()) {
             return;
         }
-        const auto& guardSlot = videoStaging.getSlot(frame.frameIndex);
+        const auto& guardSlot = videoTexture.stagingSlots[frame.frameIndex];
         if (guardSlot.mapped == nullptr || guardSlot.capacity == 0) {
             std::cerr << "[VIDEO] Staging slot inválido, saltando frame" << std::endl;
             return;
@@ -3251,14 +3247,14 @@ private:
                       << " elapsed=" << elapsed << "ms" << std::endl;
         }
 
-        if (writeSlot >= videoStaging.getSlotCount()) {
+        if (writeSlot >= videoTexture.stagingSlots.size()) {
             std::cerr << "[STAGING] invalid write slot " << writeSlot
-                      << " (slotCount=" << videoStaging.getSlotCount() << ")" << std::endl;
+                      << " (slotCount=" << videoTexture.stagingSlots.size() << ")" << std::endl;
             return;
         }
 
         try {
-            auto& slot = videoStaging.getSlot(writeSlot);
+            auto& slot = videoTexture.stagingSlots[writeSlot];
             if (slot.mapped == nullptr || slot.capacity == 0) {
                 std::cerr << "[STAGING] slot " << writeSlot << " is not mapped" << std::endl;
                 return;
@@ -3451,27 +3447,25 @@ private:
         }
 
         std::cout << "[STAGING] destroyVideoStagingBuffers: slots="
-                  << videoStaging.getSlotCount() << std::endl;
+                  << videoTexture.stagingSlots.size() << std::endl;
 
-        for (size_t i = 0; i < videoStaging.getSlotCount(); ++i) {
-            const auto& slot = videoStaging.getSlot(i);
+        for (size_t i = 0; i < videoTexture.stagingSlots.size(); ++i) {
+            auto& slot = videoTexture.stagingSlots[i];
 
             std::cout << "[STAGING] slot=" << i
-                      << " buffer=" << (void*)slot.buffer
-                      << " memory=" << (void*)slot.memory
+                      << " buffer=" << (void*)slot.buffer.buffer
+                      << " memory=" << (void*)slot.buffer.memory
                       << " mapped=" << slot.mapped << std::endl;
 
-            if (slot.mapped != nullptr) {
-                vkUnmapMemory(device, slot.memory);
+            if (slot.mapped != nullptr && slot.buffer.memory != VK_NULL_HANDLE) {
+                vkUnmapMemory(device, slot.buffer.memory);
+                slot.mapped = nullptr;
             }
-            if (slot.buffer != VK_NULL_HANDLE) {
-                vkDestroyBuffer(device, slot.buffer, nullptr);
+            if (slot.buffer.type != ResourceHandle::Type::Unknown) {
+                resourceSystem.destroy(slot.buffer);
+                slot.buffer = {};
             }
-            if (slot.memory != VK_NULL_HANDLE) {
-                vkFreeMemory(device, slot.memory, nullptr);
-            }
-
-            videoStaging.setSlot(i, VK_NULL_HANDLE, VK_NULL_HANDLE, nullptr, 0);
+            slot.capacity = 0;
         }
 
         std::cout << "[STAGING] destroyVideoStagingBuffers complete" << std::endl;
@@ -3509,7 +3503,6 @@ private:
             videoTexture.prevFrameStagingBuffer = {};
         }
         videoTexture.ready = false;
-        videoStaging.destroy();
         std::cout << "[STAGING] destroyVideoTexture completed" << std::endl;
         videoTexture.descriptorInfo = {};
         videoTexture.descriptorInfoPrev = {};
@@ -4745,7 +4738,7 @@ private:
             return;
         }
 
-        const auto& slot = videoStaging.getSlot(frameIndex);
+        const auto& slot = videoTexture.stagingSlots[frameIndex];
 
         // Helper function to transition a single image
         auto transition = [&](VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
@@ -4815,7 +4808,7 @@ private:
 
             vkCmdCopyBufferToImage(
                 commandBuffer,
-                slot.buffer,
+                slot.buffer.buffer,
                 videoTexture.imageHandle.image,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 1,
