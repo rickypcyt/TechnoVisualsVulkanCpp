@@ -5140,7 +5140,17 @@ private:
         ubo.bendAmount = postBendEnabled ? visualControls.bendAmount : 0.0f;
 
         auto postGlitchEnabled = visualControls.enablePostGlitch;
-        ubo.glitchAmount = postGlitchEnabled ? visualControls.glitchAmount : 0.0f;
+        auto glitchEnabled = visualControls.enableGlitch;
+        float maxGlitchParam = std::max({
+            visualControls.glitchDatamosh,
+            visualControls.glitchRGBSplit,
+            visualControls.glitchScanlineBreak,
+            visualControls.glitchJitter,
+            visualControls.glitchTearing,
+            visualControls.glitchPixelSort,
+            visualControls.glitchBufferCorruption
+        });
+        ubo.glitchAmount = (postGlitchEnabled ? visualControls.glitchAmount : (glitchEnabled ? maxGlitchParam : 0.0f));
 
         auto postColorBalanceEnabled = visualControls.enablePostColorBalance;
         ubo.colorBalance = postColorBalanceEnabled ? visualControls.colorBalance : glm::vec3(1.0f);
@@ -5186,7 +5196,6 @@ private:
         ubo.casAmount = sharpenEnabled ? visualControls.casAmount : 0.0f;
         ubo.localContrast = sharpenEnabled ? visualControls.localContrast : 0.0f;
 
-        auto glitchEnabled = visualControls.enableGlitch;
         ubo.glitchDatamosh = glitchEnabled ? visualControls.glitchDatamosh : 0.0f;
         ubo.glitchRGBSplit = glitchEnabled ? visualControls.glitchRGBSplit : 0.0f;
         ubo.glitchScanlineBreak = glitchEnabled ? visualControls.glitchScanlineBreak : 0.0f;
