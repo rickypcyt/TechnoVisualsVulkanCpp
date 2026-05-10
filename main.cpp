@@ -1066,6 +1066,208 @@ private:
     std::vector<VkFence> imagesInFlight;
 };
 
+struct MemoryAllocation {
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    VkDeviceSize offset = 0;
+    VkDeviceSize size = 0;
+    uint32_t blockIndex = UINT32_MAX;
+};
+
+struct FreeRange {
+    VkDeviceSize offset = 0;
+    VkDeviceSize size = 0;
+};
+
+struct MemoryBlock {
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    VkDeviceSize size = 0;
+    VkDeviceSize used = 0;
+    std::vector<FreeRange> freeList;
+    uint32_t memoryTypeIndex = 0;
+    void* mappedData = nullptr; // Single mapping state per block
+};
+
+class MemoryAllocator {
+public:
+    void init(VkDevice deviceHandle, VkPhysicalDevice physicalDeviceHandle) {
+        device = deviceHandle;
+        physicalDevice = physicalDeviceHandle;
+    }
+
+    MemoryAllocation allocate(VkDeviceSize size, VkDeviceSize alignment, 
+                               VkMemoryPropertyFlags properties, VkMemoryRequirements memReqs) {
+        uint32_t memoryTypeIndex = findMemoryType(memReqs.memoryTypeBits, properties);
+        
+        // Try existing blocks
+        for (size_t i = 0; i < blocks.size(); ++i) {
+            if (blocks[i].memoryTypeIndex != memoryTypeIndex) continue;
+            
+            auto alloc = allocateFromBlock(blocks[i], size, alignment);
+            if (alloc.memory != VK_NULL_HANDLE) {
+                alloc.blockIndex = static_cast<uint32_t>(i);
+                return alloc;
+            }
+        }
+        
+        // Create new block
+        VkDeviceSize blockSize = std::max(size, VkDeviceSize(64 * 1024 * 1024)); // 64MB minimum
+        createBlock(blockSize, memoryTypeIndex, properties);
+        
+        return allocate(size, alignment, properties, memReqs);
+    }
+
+    void deallocate(const MemoryAllocation& alloc) {
+        if (alloc.blockIndex >= blocks.size()) return;
+        
+        MemoryBlock& block = blocks[alloc.blockIndex];
+        
+        // Add to free list
+        FreeRange range{alloc.offset, alloc.size};
+        block.freeList.push_back(range);
+        
+        // Merge adjacent free ranges
+        mergeFreeRanges(block.freeList);
+        
+        block.used -= alloc.size;
+    }
+
+    void* map(const MemoryAllocation& alloc) {
+        if (alloc.blockIndex >= blocks.size()) return nullptr;
+        
+        MemoryBlock& block = blocks[alloc.blockIndex];
+        
+        // Map the block if not already mapped
+        if (block.mappedData == nullptr) {
+            if (vkMapMemory(device, block.memory, 0, block.size, 0, &block.mappedData) != VK_SUCCESS) {
+                return nullptr;
+            }
+        }
+        
+        return static_cast<char*>(block.mappedData) + alloc.offset;
+    }
+
+    void unmap(const MemoryAllocation& alloc) {
+        if (alloc.blockIndex >= blocks.size()) return;
+        
+        MemoryBlock& block = blocks[alloc.blockIndex];
+        
+        // Note: We DON'T unmap here. Block stays mapped until cleanup.
+        // This allows multiple allocations in the same block to be mapped simultaneously.
+        // Vulkan allows this as long as we don't call vkUnmapMemory while any part is in use.
+    }
+
+    void cleanup() {
+        for (auto& block : blocks) {
+            if (block.mappedData != nullptr) {
+                vkUnmapMemory(device, block.memory);
+                block.mappedData = nullptr;
+            }
+            if (block.memory != VK_NULL_HANDLE) {
+                vkFreeMemory(device, block.memory, nullptr);
+            }
+        }
+        blocks.clear();
+        device = VK_NULL_HANDLE;
+        physicalDevice = VK_NULL_HANDLE;
+    }
+
+private:
+    MemoryAllocation allocateFromBlock(MemoryBlock& block, VkDeviceSize size, VkDeviceSize alignment) {
+        for (auto it = block.freeList.begin(); it != block.freeList.end(); ++it) {
+            VkDeviceSize alignedOffset = alignUp(it->offset, alignment);
+            VkDeviceSize padding = alignedOffset - it->offset;
+            
+            if (it->size >= size + padding) {
+                MemoryAllocation alloc{
+                    block.memory,
+                    alignedOffset,
+                    size
+                };
+                
+                // Adjust free range
+                VkDeviceSize remaining = it->size - (size + padding);
+                it->offset += size + padding;
+                it->size = remaining;
+                
+                if (it->size == 0) {
+                    block.freeList.erase(it);
+                }
+                
+                block.used += size;
+                return alloc;
+            }
+        }
+        
+        return MemoryAllocation{};
+    }
+
+    void createBlock(VkDeviceSize size, uint32_t memoryTypeIndex, VkMemoryPropertyFlags properties) {
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = size;
+        allocInfo.memoryTypeIndex = memoryTypeIndex;
+        
+        VkDeviceMemory memory;
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &memory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate memory block");
+        }
+        
+        MemoryBlock block;
+        block.memory = memory;
+        block.size = size;
+        block.used = 0;
+        block.memoryTypeIndex = memoryTypeIndex;
+        block.freeList.push_back(FreeRange{0, size});
+        
+        blocks.push_back(block);
+    }
+
+    void mergeFreeRanges(std::vector<FreeRange>& freeList) {
+        if (freeList.size() < 2) return;
+        
+        std::sort(freeList.begin(), freeList.end(), 
+            [](const FreeRange& a, const FreeRange& b) { return a.offset < b.offset; });
+        
+        std::vector<FreeRange> merged;
+        merged.push_back(freeList[0]);
+        
+        for (size_t i = 1; i < freeList.size(); ++i) {
+            FreeRange& last = merged.back();
+            const FreeRange& current = freeList[i];
+            
+            if (last.offset + last.size == current.offset) {
+                last.size += current.size;
+            } else {
+                merged.push_back(current);
+            }
+        }
+        
+        freeList = std::move(merged);
+    }
+
+    static VkDeviceSize alignUp(VkDeviceSize value, VkDeviceSize alignment) {
+        return (value + alignment - 1) & ~(alignment - 1);
+    }
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+        
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+            if ((typeFilter & (1 << i)) &&
+                (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                return i;
+            }
+        }
+        
+        throw std::runtime_error("failed to find suitable memory type");
+    }
+
+    VkDevice device = VK_NULL_HANDLE;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    std::vector<MemoryBlock> blocks;
+};
+
 struct ResourceHandle {
     enum class Type {
         Unknown,
@@ -1074,8 +1276,9 @@ struct ResourceHandle {
     } type = Type::Unknown;
 
     VkBuffer buffer = VK_NULL_HANDLE;
-    VkDeviceMemory memory = VK_NULL_HANDLE;
+    VkDeviceMemory memory = VK_NULL_HANDLE; // Legacy, kept for compatibility
     VkImage image = VK_NULL_HANDLE;
+    MemoryAllocation allocation;
 };
 
 struct RenderPass {
@@ -1292,6 +1495,7 @@ public:
     void init(VkDevice deviceHandle, VkPhysicalDevice physicalDeviceHandle) {
         device = deviceHandle;
         physicalDevice = physicalDeviceHandle;
+        allocator.init(deviceHandle, physicalDeviceHandle);
     }
 
     ResourceHandle createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
@@ -1311,16 +1515,10 @@ public:
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(device, handle.buffer, &memRequirements);
 
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+        handle.allocation = allocator.allocate(memRequirements.size, memRequirements.alignment, properties, memRequirements);
+        handle.memory = handle.allocation.memory; // Legacy compatibility
 
-        if (vkAllocateMemory(device, &allocInfo, nullptr, &handle.memory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate buffer memory");
-        }
-
-        vkBindBufferMemory(device, handle.buffer, handle.memory, 0);
+        vkBindBufferMemory(device, handle.buffer, handle.allocation.memory, handle.allocation.offset);
         return handle;
     }
 
@@ -1351,17 +1549,21 @@ public:
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(device, handle.image, &memRequirements);
 
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+        handle.allocation = allocator.allocate(memRequirements.size, memRequirements.alignment, properties, memRequirements);
+        handle.memory = handle.allocation.memory; // Legacy compatibility
 
-        if (vkAllocateMemory(device, &allocInfo, nullptr, &handle.memory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate image memory");
-        }
-
-        vkBindImageMemory(device, handle.image, handle.memory, 0);
+        vkBindImageMemory(device, handle.image, handle.allocation.memory, handle.allocation.offset);
         return handle;
+    }
+
+    void* map(const ResourceHandle& handle) {
+        if (handle.type == ResourceHandle::Type::Unknown) return nullptr;
+        return allocator.map(handle.allocation);
+    }
+
+    void unmap(const ResourceHandle& handle) {
+        if (handle.type == ResourceHandle::Type::Unknown) return;
+        allocator.unmap(handle.allocation);
     }
 
     void destroy(ResourceHandle& handle) {
@@ -1370,45 +1572,30 @@ public:
                 vkDestroyBuffer(device, handle.buffer, nullptr);
                 handle.buffer = VK_NULL_HANDLE;
             }
-            if (handle.memory != VK_NULL_HANDLE) {
-                vkFreeMemory(device, handle.memory, nullptr);
-                handle.memory = VK_NULL_HANDLE;
-            }
+            allocator.deallocate(handle.allocation);
+            handle.memory = VK_NULL_HANDLE;
         } else if (handle.type == ResourceHandle::Type::Image) {
             if (handle.image != VK_NULL_HANDLE) {
                 vkDestroyImage(device, handle.image, nullptr);
                 handle.image = VK_NULL_HANDLE;
             }
-            if (handle.memory != VK_NULL_HANDLE) {
-                vkFreeMemory(device, handle.memory, nullptr);
-                handle.memory = VK_NULL_HANDLE;
-            }
+            allocator.deallocate(handle.allocation);
+            handle.memory = VK_NULL_HANDLE;
         }
         handle.type = ResourceHandle::Type::Unknown;
+        handle.allocation = MemoryAllocation{};
     }
 
     void cleanup() {
+        allocator.cleanup();
         device = VK_NULL_HANDLE;
         physicalDevice = VK_NULL_HANDLE;
     }
 
 private:
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const {
-        VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-            if ((typeFilter & (1 << i)) &&
-                (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-                return i;
-            }
-        }
-
-        throw std::runtime_error("failed to find suitable memory type");
-    }
-
     VkDevice device = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    MemoryAllocator allocator;
 };
 
 struct VideoTextureResources {
@@ -2667,7 +2854,10 @@ private:
             uniformBuffers[i] = handle.buffer;
             uniformBuffersMemory[i] = handle.memory;
 
-            vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
+            uniformBuffersMapped[i] = resourceSystem.map(handle);
+            if (uniformBuffersMapped[i] == nullptr) {
+                throw std::runtime_error("failed to map uniform buffer");
+            }
         }
     }
 
@@ -2842,8 +3032,8 @@ private:
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        void* prevMapped = nullptr;
-        if (vkMapMemory(device, prevStagingBuffer.memory, 0, static_cast<VkDeviceSize>(videoTexture.frameSize), 0, &prevMapped) != VK_SUCCESS) {
+        void* prevMapped = resourceSystem.map(prevStagingBuffer);
+        if (prevMapped == nullptr) {
             resourceSystem.destroy(prevStagingBuffer);
             throw std::runtime_error("failed to map previous frame staging buffer");
         }
@@ -2862,8 +3052,8 @@ private:
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-            void* mapped = nullptr;
-            if (vkMapMemory(device, buffer.memory, 0, static_cast<VkDeviceSize>(videoTexture.frameSize), 0, &mapped) != VK_SUCCESS) {
+            void* mapped = resourceSystem.map(buffer);
+            if (mapped == nullptr) {
                 resourceSystem.destroy(buffer);
                 throw std::runtime_error("failed to map video staging buffer");
             }
@@ -3457,8 +3647,10 @@ private:
                       << " memory=" << (void*)slot.buffer.memory
                       << " mapped=" << slot.mapped << std::endl;
 
-            if (slot.mapped != nullptr && slot.buffer.memory != VK_NULL_HANDLE) {
-                vkUnmapMemory(device, slot.buffer.memory);
+            // Use resourceSystem.unmap instead of manual vkUnmapMemory
+            // The allocator manages mapping/unmapping at the block level
+            if (slot.mapped != nullptr && slot.buffer.type != ResourceHandle::Type::Unknown) {
+                resourceSystem.unmap(slot.buffer);
                 slot.mapped = nullptr;
             }
             if (slot.buffer.type != ResourceHandle::Type::Unknown) {
@@ -3473,6 +3665,10 @@ private:
 
     void destroyVideoTexture() {
         std::cout << "[STAGING] destroyVideoTexture called" << std::endl;
+        
+        // Destroy staging buffers first to prevent buffer leaks
+        destroyVideoStagingBuffers();
+
         if (videoTexture.imageView != VK_NULL_HANDLE) {
             vkDestroyImageView(device, videoTexture.imageView, nullptr);
             videoTexture.imageView = VK_NULL_HANDLE;
@@ -3496,7 +3692,7 @@ private:
         }
         if (videoTexture.prevFrameStagingBuffer.type != ResourceHandle::Type::Unknown) {
             if (videoTexture.prevFrameStagingMapped != nullptr) {
-                vkUnmapMemory(device, videoTexture.prevFrameStagingBuffer.memory);
+                resourceSystem.unmap(videoTexture.prevFrameStagingBuffer);
                 videoTexture.prevFrameStagingMapped = nullptr;
             }
             resourceSystem.destroy(videoTexture.prevFrameStagingBuffer);
@@ -3717,7 +3913,7 @@ private:
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT;
+        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * 2; // Increased for current + previous frame
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -5133,10 +5329,9 @@ private:
 
         vertexBufferHandle = handle;
 
-        void* data;
-        vkMapMemory(device, handle.memory, 0, bufferSize, 0, &data);
+        void* data = resourceSystem.map(handle);
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(device, handle.memory);
+        resourceSystem.unmap(handle);
     }
 
     void mainLoop() {
@@ -5634,13 +5829,12 @@ private:
         destroyUiWindow();
 
         videoPlayer.shutdown();
-        destroyVideoStagingBuffers();
-        destroyVideoTexture();
+        destroyVideoTexture();  // This now calls destroyVideoStagingBuffers internally
         destroySwapchainSemaphores();
 
-        for (size_t i = 0; i < uniformBuffersMemory.size(); ++i) {
-            if (uniformBuffersMapped[i]) {
-                vkUnmapMemory(device, uniformBuffersMemory[i]);
+        for (size_t i = 0; i < uniformBufferHandles.size(); ++i) {
+            if (uniformBuffersMapped[i] != nullptr && uniformBufferHandles[i].type != ResourceHandle::Type::Unknown) {
+                resourceSystem.unmap(uniformBufferHandles[i]);
                 uniformBuffersMapped[i] = nullptr;
             }
         }
