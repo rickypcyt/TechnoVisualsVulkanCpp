@@ -8,9 +8,16 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/ricky/coding/proyects/vulkancpp/MultiPassPipeline.cpp" "CMakeFiles/app.dir/MultiPassPipeline.cpp.o" "gcc" "CMakeFiles/app.dir/MultiPassPipeline.cpp.o.d"
-  "/home/ricky/coding/proyects/vulkancpp/VideoStaging.cpp" "CMakeFiles/app.dir/VideoStaging.cpp.o" "gcc" "CMakeFiles/app.dir/VideoStaging.cpp.o.d"
-  "/home/ricky/coding/proyects/vulkancpp/main.cpp" "CMakeFiles/app.dir/main.cpp.o" "gcc" "CMakeFiles/app.dir/main.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/app/ControlState.cpp" "CMakeFiles/app.dir/src/app/ControlState.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/ControlState.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/app/UISystem.cpp" "CMakeFiles/app.dir/src/app/UISystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/UISystem.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.cpp" "CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.cpp" "CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o" "gcc" "CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.cpp" "CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/main.cpp" "CMakeFiles/app.dir/src/main.cpp.o" "gcc" "CMakeFiles/app.dir/src/main.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/render/MultiPassPipeline.cpp" "CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o" "gcc" "CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.cpp" "CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o" "gcc" "CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.cpp" "CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o" "gcc" "CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/video/VideoStaging.cpp" "CMakeFiles/app.dir/src/video/VideoStaging.cpp.o" "gcc" "CMakeFiles/app.dir/src/video/VideoStaging.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o" "gcc" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o" "gcc" "CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.cpp" "CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o" "gcc" "CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o.d"

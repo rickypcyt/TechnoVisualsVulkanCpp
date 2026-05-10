@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <vulkan/vulkan.h>
+#include "../gfx/ResourceSystem.h"
 
 struct VideoStagingSlot {
     VkBuffer buffer = VK_NULL_HANDLE;

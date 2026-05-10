@@ -1,4 +1,5 @@
 #include "MultiPassPipeline.h"
+#include "../gfx/ResourceSystem.h"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>

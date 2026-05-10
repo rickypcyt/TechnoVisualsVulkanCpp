@@ -13,9 +13,16 @@ set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 
 add_executable(app
-    main.cpp
-    VideoStaging.cpp
-    MultiPassPipeline.cpp
+    src/main.cpp
+    src/app/UISystem.cpp
+    src/app/ControlState.cpp
+    src/video/VideoStaging.cpp
+    src/render/MultiPassPipeline.cpp
+    src/gfx/FrameSystem.cpp
+    src/gfx/MemoryAllocator.cpp
+    src/gfx/ResourceSystem.cpp
+    src/video/VideoPlayer.cpp
+    src/video/VideoRegistry.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
@@ -25,7 +32,7 @@ add_executable(app
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
 )
 
-target_include_directories(app PRIVATE ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR})
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR})
 
 target_link_libraries(app
     Vulkan::Vulkan

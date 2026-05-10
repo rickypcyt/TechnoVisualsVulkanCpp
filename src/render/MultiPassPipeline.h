@@ -3,6 +3,10 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <memory>
+#include "EffectChain.h"
+#include "../app/Timeline.h"
+#include "../app/ProjectState.h"
+#include "RenderJob.h"
 
 // Multi-pass rendering pipeline for GPU-friendly post-processing
 // Implements 7-pass architecture as specified in performance analysis

@@ -129,77 +129,245 @@ app/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
 .PHONY : app/fast
 
-MultiPassPipeline.o: MultiPassPipeline.cpp.o
-.PHONY : MultiPassPipeline.o
+src/app/ControlState.o: src/app/ControlState.cpp.o
+.PHONY : src/app/ControlState.o
 
 # target to build an object file
-MultiPassPipeline.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/MultiPassPipeline.cpp.o
-.PHONY : MultiPassPipeline.cpp.o
+src/app/ControlState.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/ControlState.cpp.o
+.PHONY : src/app/ControlState.cpp.o
 
-MultiPassPipeline.i: MultiPassPipeline.cpp.i
-.PHONY : MultiPassPipeline.i
+src/app/ControlState.i: src/app/ControlState.cpp.i
+.PHONY : src/app/ControlState.i
 
 # target to preprocess a source file
-MultiPassPipeline.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/MultiPassPipeline.cpp.i
-.PHONY : MultiPassPipeline.cpp.i
+src/app/ControlState.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/ControlState.cpp.i
+.PHONY : src/app/ControlState.cpp.i
 
-MultiPassPipeline.s: MultiPassPipeline.cpp.s
-.PHONY : MultiPassPipeline.s
+src/app/ControlState.s: src/app/ControlState.cpp.s
+.PHONY : src/app/ControlState.s
 
 # target to generate assembly for a file
-MultiPassPipeline.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/MultiPassPipeline.cpp.s
-.PHONY : MultiPassPipeline.cpp.s
+src/app/ControlState.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/ControlState.cpp.s
+.PHONY : src/app/ControlState.cpp.s
 
-VideoStaging.o: VideoStaging.cpp.o
-.PHONY : VideoStaging.o
+src/app/UISystem.o: src/app/UISystem.cpp.o
+.PHONY : src/app/UISystem.o
 
 # target to build an object file
-VideoStaging.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/VideoStaging.cpp.o
-.PHONY : VideoStaging.cpp.o
+src/app/UISystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/UISystem.cpp.o
+.PHONY : src/app/UISystem.cpp.o
 
-VideoStaging.i: VideoStaging.cpp.i
-.PHONY : VideoStaging.i
+src/app/UISystem.i: src/app/UISystem.cpp.i
+.PHONY : src/app/UISystem.i
 
 # target to preprocess a source file
-VideoStaging.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/VideoStaging.cpp.i
-.PHONY : VideoStaging.cpp.i
+src/app/UISystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/UISystem.cpp.i
+.PHONY : src/app/UISystem.cpp.i
 
-VideoStaging.s: VideoStaging.cpp.s
-.PHONY : VideoStaging.s
+src/app/UISystem.s: src/app/UISystem.cpp.s
+.PHONY : src/app/UISystem.s
 
 # target to generate assembly for a file
-VideoStaging.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/VideoStaging.cpp.s
-.PHONY : VideoStaging.cpp.s
+src/app/UISystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/UISystem.cpp.s
+.PHONY : src/app/UISystem.cpp.s
 
-main.o: main.cpp.o
-.PHONY : main.o
+src/gfx/FrameSystem.o: src/gfx/FrameSystem.cpp.o
+.PHONY : src/gfx/FrameSystem.o
 
 # target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/main.cpp.o
-.PHONY : main.cpp.o
+src/gfx/FrameSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o
+.PHONY : src/gfx/FrameSystem.cpp.o
 
-main.i: main.cpp.i
-.PHONY : main.i
+src/gfx/FrameSystem.i: src/gfx/FrameSystem.cpp.i
+.PHONY : src/gfx/FrameSystem.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/main.cpp.i
-.PHONY : main.cpp.i
+src/gfx/FrameSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.i
+.PHONY : src/gfx/FrameSystem.cpp.i
 
-main.s: main.cpp.s
-.PHONY : main.s
+src/gfx/FrameSystem.s: src/gfx/FrameSystem.cpp.s
+.PHONY : src/gfx/FrameSystem.s
 
 # target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/main.cpp.s
-.PHONY : main.cpp.s
+src/gfx/FrameSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.s
+.PHONY : src/gfx/FrameSystem.cpp.s
+
+src/gfx/MemoryAllocator.o: src/gfx/MemoryAllocator.cpp.o
+.PHONY : src/gfx/MemoryAllocator.o
+
+# target to build an object file
+src/gfx/MemoryAllocator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o
+.PHONY : src/gfx/MemoryAllocator.cpp.o
+
+src/gfx/MemoryAllocator.i: src/gfx/MemoryAllocator.cpp.i
+.PHONY : src/gfx/MemoryAllocator.i
+
+# target to preprocess a source file
+src/gfx/MemoryAllocator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.i
+.PHONY : src/gfx/MemoryAllocator.cpp.i
+
+src/gfx/MemoryAllocator.s: src/gfx/MemoryAllocator.cpp.s
+.PHONY : src/gfx/MemoryAllocator.s
+
+# target to generate assembly for a file
+src/gfx/MemoryAllocator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.s
+.PHONY : src/gfx/MemoryAllocator.cpp.s
+
+src/gfx/ResourceSystem.o: src/gfx/ResourceSystem.cpp.o
+.PHONY : src/gfx/ResourceSystem.o
+
+# target to build an object file
+src/gfx/ResourceSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o
+.PHONY : src/gfx/ResourceSystem.cpp.o
+
+src/gfx/ResourceSystem.i: src/gfx/ResourceSystem.cpp.i
+.PHONY : src/gfx/ResourceSystem.i
+
+# target to preprocess a source file
+src/gfx/ResourceSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.i
+.PHONY : src/gfx/ResourceSystem.cpp.i
+
+src/gfx/ResourceSystem.s: src/gfx/ResourceSystem.cpp.s
+.PHONY : src/gfx/ResourceSystem.s
+
+# target to generate assembly for a file
+src/gfx/ResourceSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.s
+.PHONY : src/gfx/ResourceSystem.cpp.s
+
+src/main.o: src/main.cpp.o
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
+
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
+
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
+
+src/render/MultiPassPipeline.o: src/render/MultiPassPipeline.cpp.o
+.PHONY : src/render/MultiPassPipeline.o
+
+# target to build an object file
+src/render/MultiPassPipeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o
+.PHONY : src/render/MultiPassPipeline.cpp.o
+
+src/render/MultiPassPipeline.i: src/render/MultiPassPipeline.cpp.i
+.PHONY : src/render/MultiPassPipeline.i
+
+# target to preprocess a source file
+src/render/MultiPassPipeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.i
+.PHONY : src/render/MultiPassPipeline.cpp.i
+
+src/render/MultiPassPipeline.s: src/render/MultiPassPipeline.cpp.s
+.PHONY : src/render/MultiPassPipeline.s
+
+# target to generate assembly for a file
+src/render/MultiPassPipeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.s
+.PHONY : src/render/MultiPassPipeline.cpp.s
+
+src/video/VideoPlayer.o: src/video/VideoPlayer.cpp.o
+.PHONY : src/video/VideoPlayer.o
+
+# target to build an object file
+src/video/VideoPlayer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o
+.PHONY : src/video/VideoPlayer.cpp.o
+
+src/video/VideoPlayer.i: src/video/VideoPlayer.cpp.i
+.PHONY : src/video/VideoPlayer.i
+
+# target to preprocess a source file
+src/video/VideoPlayer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoPlayer.cpp.i
+.PHONY : src/video/VideoPlayer.cpp.i
+
+src/video/VideoPlayer.s: src/video/VideoPlayer.cpp.s
+.PHONY : src/video/VideoPlayer.s
+
+# target to generate assembly for a file
+src/video/VideoPlayer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoPlayer.cpp.s
+.PHONY : src/video/VideoPlayer.cpp.s
+
+src/video/VideoRegistry.o: src/video/VideoRegistry.cpp.o
+.PHONY : src/video/VideoRegistry.o
+
+# target to build an object file
+src/video/VideoRegistry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o
+.PHONY : src/video/VideoRegistry.cpp.o
+
+src/video/VideoRegistry.i: src/video/VideoRegistry.cpp.i
+.PHONY : src/video/VideoRegistry.i
+
+# target to preprocess a source file
+src/video/VideoRegistry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRegistry.cpp.i
+.PHONY : src/video/VideoRegistry.cpp.i
+
+src/video/VideoRegistry.s: src/video/VideoRegistry.cpp.s
+.PHONY : src/video/VideoRegistry.s
+
+# target to generate assembly for a file
+src/video/VideoRegistry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRegistry.cpp.s
+.PHONY : src/video/VideoRegistry.cpp.s
+
+src/video/VideoStaging.o: src/video/VideoStaging.cpp.o
+.PHONY : src/video/VideoStaging.o
+
+# target to build an object file
+src/video/VideoStaging.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoStaging.cpp.o
+.PHONY : src/video/VideoStaging.cpp.o
+
+src/video/VideoStaging.i: src/video/VideoStaging.cpp.i
+.PHONY : src/video/VideoStaging.i
+
+# target to preprocess a source file
+src/video/VideoStaging.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoStaging.cpp.i
+.PHONY : src/video/VideoStaging.cpp.i
+
+src/video/VideoStaging.s: src/video/VideoStaging.cpp.s
+.PHONY : src/video/VideoStaging.s
+
+# target to generate assembly for a file
+src/video/VideoStaging.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoStaging.cpp.s
+.PHONY : src/video/VideoStaging.cpp.s
 
 third_party/imgui/backends/imgui_impl_sdl2.o: third_party/imgui/backends/imgui_impl_sdl2.cpp.o
 .PHONY : third_party/imgui/backends/imgui_impl_sdl2.o
@@ -378,15 +546,36 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... app"
-	@echo "... MultiPassPipeline.o"
-	@echo "... MultiPassPipeline.i"
-	@echo "... MultiPassPipeline.s"
-	@echo "... VideoStaging.o"
-	@echo "... VideoStaging.i"
-	@echo "... VideoStaging.s"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
+	@echo "... src/app/ControlState.o"
+	@echo "... src/app/ControlState.i"
+	@echo "... src/app/ControlState.s"
+	@echo "... src/app/UISystem.o"
+	@echo "... src/app/UISystem.i"
+	@echo "... src/app/UISystem.s"
+	@echo "... src/gfx/FrameSystem.o"
+	@echo "... src/gfx/FrameSystem.i"
+	@echo "... src/gfx/FrameSystem.s"
+	@echo "... src/gfx/MemoryAllocator.o"
+	@echo "... src/gfx/MemoryAllocator.i"
+	@echo "... src/gfx/MemoryAllocator.s"
+	@echo "... src/gfx/ResourceSystem.o"
+	@echo "... src/gfx/ResourceSystem.i"
+	@echo "... src/gfx/ResourceSystem.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/render/MultiPassPipeline.o"
+	@echo "... src/render/MultiPassPipeline.i"
+	@echo "... src/render/MultiPassPipeline.s"
+	@echo "... src/video/VideoPlayer.o"
+	@echo "... src/video/VideoPlayer.i"
+	@echo "... src/video/VideoPlayer.s"
+	@echo "... src/video/VideoRegistry.o"
+	@echo "... src/video/VideoRegistry.i"
+	@echo "... src/video/VideoRegistry.s"
+	@echo "... src/video/VideoStaging.o"
+	@echo "... src/video/VideoStaging.i"
+	@echo "... src/video/VideoStaging.s"
 	@echo "... third_party/imgui/backends/imgui_impl_sdl2.o"
 	@echo "... third_party/imgui/backends/imgui_impl_sdl2.i"
 	@echo "... third_party/imgui/backends/imgui_impl_sdl2.s"

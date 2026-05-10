@@ -1,7 +1,8 @@
 #pragma once
-#include "EffectChain.h"
+#include "../render/EffectChain.h"
 #include <vector>
 #include <string>
+#include <algorithm>
 
 // Timeline clip structure
 struct Clip {

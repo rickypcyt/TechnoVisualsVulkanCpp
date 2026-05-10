@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+CXX_INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
 
 CXX_FLAGS = -std=gnu++17
 
