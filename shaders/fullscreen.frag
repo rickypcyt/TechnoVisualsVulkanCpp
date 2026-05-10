@@ -3,7 +3,7 @@
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
-layout(set = 0, binding = 0) uniform UBO {
+layout(set = 0, binding = 0, std140) uniform UBO {
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -168,7 +168,7 @@ float noise(vec2 p) {
 float fbm(vec2 p) {
     float value = 0.0;
     float amp = 0.5;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 2; ++i) {
         value += noise(p) * amp;
         p *= 2.0;
         amp *= 0.5;
@@ -424,8 +424,8 @@ vec3 applyBlurPipeline(vec2 st, vec3 color, vec2 centered, float audioBlurMod, f
         return color;
     }
     
-    // Mix with audio modulation if audio is enabled, otherwise use full blur
-    float blurMix = hasBlur ? 1.0 : clamp(audioBlurMod, 0.0, 1.0);
+    // Mix with audio modulation
+    float blurMix = clamp(audioBlurMod, 0.0, 1.0);
     return mix(color, blurred, blurMix);
 }
 
@@ -440,7 +440,9 @@ vec3 applyFeedback(vec2 st, vec3 color, vec2 centered, float audioFeedbackMod) {
     vec2 texel = 1.0 / vec2(textureSize(videoTex, 0));
     
     // Spatial feedback with increased offsets for better visibility
-    for (int i = 1; i <= 6; ++i) {
+    // Only enter loop if trail or temporal effects are active
+    if (ubo.trailStrength > 0.0001 || ubo.temporalAccumulation > 0.0001) {
+        for (int i = 1; i <= 6; ++i) {
         float t = float(i) / 6.0;
         
         // Radial trail effect
@@ -452,19 +454,21 @@ vec3 applyFeedback(vec2 st, vec3 color, vec2 centered, float audioFeedbackMod) {
         // Combine offsets
         vec2 offset = radialOffset + temporalOffset;
         
-        // Sample from video texture with offset
-        vec3 sampleColor = texture(videoTex, clamp(st - offset, 0.0, 1.0)).rgb;
+        // Sample from processed color at offset UV for spatial smearing effect
+        vec2 offsetUV = clamp(st - offset, 0.0, 1.0);
+        vec3 sampleColor = texture(videoTex, offsetUV).rgb;
         
         // Mix with decay - stronger influence from closer samples
         float mixStrength = amount * (1.0 - t * 0.5) * decay;
         accum = mix(accum, sampleColor, mixStrength);
+    }
     }
     
     // Apply recursive blend for more intense feedback
     if (ubo.recursiveBlend > 0.0001) {
         // Create additional spatial samples for recursive effect
         vec2 recursiveOffset = centered * ubo.recursiveBlend * 0.3;
-        vec3 recursiveSample = texture(videoTex, clamp(st - recursiveOffset, 0.0, 1.0)).rgb;
+        vec3 recursiveSample = color;
         accum = mix(accum, recursiveSample, ubo.recursiveBlend * 0.5);
     }
     
@@ -495,7 +499,7 @@ vec3 applyGlitch(vec2 st, vec3 color, vec2 centered, float audioGlitchMod) {
     }
     vec3 glitched = texture(videoTex, clamp(uv, 0.0, 1.0)).rgb;
     if (ubo.glitchRGBSplit > 0.0) {
-        vec2 texel = ubo.glitchRGBSplit * 0.01 * vec2(1.0 / textureSize(videoTex, 0));
+        vec2 texel = ubo.glitchRGBSplit * 0.01 / vec2(textureSize(videoTex, 0));
         glitched.r = texture(videoTex, clamp(uv + texel, 0.0, 1.0)).r;
         glitched.b = texture(videoTex, clamp(uv - texel, 0.0, 1.0)).b;
     }
@@ -515,8 +519,8 @@ vec3 applyGlitch(vec2 st, vec3 color, vec2 centered, float audioGlitchMod) {
         glitched = mix(glitched, vec3(rnd), ubo.glitchBufferCorruption * 0.5);
     }
     
-    // Use audio modulation if available, otherwise full intensity
-    float intensity = hasGlitch ? 1.0 : clamp(ubo.glitchAmount + ubo.audioGlitchResponse * audioGlitchMod, 0.0, 1.0);
+    // Use audio modulation
+    float intensity = clamp(ubo.glitchAmount + ubo.audioGlitchResponse * audioGlitchMod, 0.0, 1.0);
     return mix(color, glitched, intensity);
 }
 
@@ -570,7 +574,7 @@ vec3 applyColorGrade(vec3 color, float audioColorMod) {
     
     color += ubo.gradeBrightness;
     color = (color - 0.5) * ubo.gradeContrast + 0.5;
-    float lum = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    float lum = dot(color, vec3(0.299, 0.587, 0.114));
     color = mix(vec3(lum), color, ubo.gradeSaturation);
     color = hueShift(color, ubo.gradeHueShift + ubo.audioColorResponse * audioColorMod * 45.0);
     color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));
@@ -595,7 +599,7 @@ vec3 applySharpen(vec2 st, vec3 color) {
 
 vec3 blendMode(vec3 base, vec3 layer, int mode) {
     if (mode == 0) {
-        return base + layer;
+        return clamp(base + layer, 0.0, 1.5);
     } else if (mode == 1) {
         return 1.0 - (1.0 - base) * (1.0 - layer);
     } else if (mode == 2) {
@@ -664,10 +668,31 @@ void main() {
     }
     vec2 crtUV = clamp(distorted * 0.5 + 0.5, 0.0, 1.0);
 
+    // Apply chromatic aberration by offsetting UV coordinates at the start
+    vec2 crtUV_R = crtUV;
+    vec2 crtUV_B = crtUV;
+    if (abs(ubo.aberrationAmount) > 0.0001) {
+        vec2 texel = ubo.aberrationAmount * spatialCentered;
+        crtUV_R = clamp(crtUV + texel, 0.0, 1.0);
+        crtUV_B = clamp(crtUV - texel, 0.0, 1.0);
+    }
+
     vec4 procedural = dispatchMode(ubo.mode, crtUV);
-    vec3 videoColor = mix(texture(videoTex, crtUV).rgb,
-                          sampleBicubic(crtUV).rgb,
-                          clamp(ubo.upscaleEnabled, 0.0, 1.0));
+    vec3 videoColor = ubo.upscaleEnabled > 0.5
+        ? sampleBicubic(crtUV).rgb
+        : texture(videoTex, crtUV).rgb;
+    
+    // Sample R and B channels from aberrated UVs
+    if (abs(ubo.aberrationAmount) > 0.0001) {
+        vec3 videoColor_R = ubo.upscaleEnabled > 0.5
+            ? sampleBicubic(crtUV_R).rgb
+            : texture(videoTex, crtUV_R).rgb;
+        vec3 videoColor_B = ubo.upscaleEnabled > 0.5
+            ? sampleBicubic(crtUV_B).rgb
+            : texture(videoTex, crtUV_B).rgb;
+        videoColor.r = videoColor_R.r;
+        videoColor.b = videoColor_B.b;
+    }
 
     videoColor = applySharpen(crtUV, videoColor);
     vec3 blurred = applyBlurPipeline(crtUV, videoColor, spatialCentered, audioBlurMod, lfo);
@@ -686,18 +711,14 @@ void main() {
         gradedColor += bloom * mask * ubo.bloomIntensity * 0.5;
     }
 
-    float scanline = mix(1.0, 0.5 + 0.5 * sin((crtUV.y + effectTime * 0.2) * PI * 240.0), clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
+    float scanlineFreq = 240.0 * (ubo.resolution.y / 480.0);
+    float scanline = mix(1.0, 0.5 + 0.5 * sin((crtUV.y + effectTime * 0.2) * PI * scanlineFreq), clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
     float maskPattern = mix(1.0,
                             (0.8 + 0.2 * sin(crtUV.x * PI * 640.0)) *
                             (0.8 + 0.2 * cos(crtUV.y * PI * 480.0)),
                             clamp(ubo.crtMaskIntensity, 0.0, 1.0));
     gradedColor *= scanline * maskPattern;
 
-    if (abs(ubo.aberrationAmount) > 0.0001) {
-        vec2 texel = ubo.aberrationAmount * spatialCentered;
-        gradedColor.r = texture(videoTex, clamp(crtUV + texel, 0.0, 1.0)).r;
-        gradedColor.b = texture(videoTex, clamp(crtUV - texel, 0.0, 1.0)).b;
-    }
 
     gradedColor = mix(gradedColor,
                       gradedColor * (1.0 - pow(clamp(radius, 0.0, 1.0), 2.0)),
@@ -713,7 +734,7 @@ void main() {
     // Apply NLE Effect Chain parameters
     if (ubo.nleGrayscale > 0.5) {
         float luma = dot(videoAvailableColor, vec3(0.299, 0.587, 0.114));
-        videoAvailableColor = mix(videoAvailableColor, vec3(luma), 1.0);
+        videoAvailableColor = vec3(luma);
     }
     if (ubo.nleBrightness != 0.0 || ubo.nleContrast != 1.0 || ubo.nleSaturation != 1.0) {
         videoAvailableColor += ubo.nleBrightness;

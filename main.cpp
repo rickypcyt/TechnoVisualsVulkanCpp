@@ -65,9 +65,12 @@ constexpr bool kEnableVideoTrace = false;
 
 // Signal handler for crashes
 #include <csignal>
+#ifdef __linux__
 #include <execinfo.h>
+#endif
 
 void crash_handler(int sig) {
+#ifdef __linux__
     void* array[10];
     size_t size = backtrace(array, 10);
 
@@ -75,6 +78,9 @@ void crash_handler(int sig) {
     std::cerr << "[CRASH] Backtrace:" << std::endl;
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     std::cerr << std::endl;
+#else
+    std::cerr << "\n[CRASH] Signal " << sig << " caught!" << std::endl;
+#endif
 
     exit(1);
 }
@@ -82,7 +88,7 @@ void crash_handler(int sig) {
 template<typename... Args>
 inline void videoTrace(Args&&... args) {
     if constexpr (kEnableVideoTrace) {
-        (std::cout << ... << std::forward<Args>(args));
+        (std::cout << ... << args);
         std::cout << std::endl;
     }
 }
@@ -528,6 +534,9 @@ private:
         if (outWidth % 2 != 0 && outWidth > 1) {
             --outWidth;
         }
+        if (outHeight % 2 != 0 && outHeight > 1) {
+            --outHeight;
+        }
     }
 
     bool ensureScalingContext(int srcWidth, int srcHeight, AVPixelFormat srcFormat) {
@@ -630,7 +639,8 @@ public:
             std::string filename = entry.path().filename().string();
 
             // Skip output files (they are temporary render outputs, not source videos)
-            if (filename.find("output.") == 0) {
+            fs::path outputPath = root / g_project_state.output_file;
+            if (entry.path() == outputPath) {
                 continue;
             }
 
@@ -1560,7 +1570,7 @@ private:
         float grayscaleAmount = 0.0f;
         float sharpenAmount = 0.35f;
         bool upscaleEnabled = true;
-        float loopBlendSeconds = 0.5f;
+        float loopBlendSeconds = 0.0f;
         int forcedFpsIndex = 0;
         float crtCurvature = 0.15f;
         float crtHorizontalCurvature = 0.15f;
@@ -1724,6 +1734,7 @@ private:
     bool controlsDirty = false;
     std::chrono::steady_clock::time_point lastControlSaveTime;
     std::chrono::steady_clock::time_point lastReloadTime;
+    bool videoReloadInProgress = false;
     
     // NLE Architecture Components
     EffectChain currentEffectChain;
@@ -2945,7 +2956,7 @@ private:
             frame.height = decodedHeight;
             videoFrameBuffer.push_back(std::move(frame));
             // Limit buffer size to prevent memory growth
-            while (videoFrameBuffer.size() > 4) {
+            while (videoFrameBuffer.size() > MAX_VIDEO_FRAME_BUFFER) {
                 videoFrameBuffer.pop_front();
             }
             videoDecodeCursor += frameDuration;
@@ -2979,8 +2990,10 @@ private:
     }
 
     void pruneVideoFrameBuffer(double minTimestamp) {
-        // Keep buffer small to prevent accumulation and lag
-        while (videoFrameBuffer.size() > 4) {
+        // Keep buffer size appropriate for loopBlendSeconds (up to 2.0s at various framerates)
+        // At 60fps, 2.0s = 120 frames; at 30fps, 2.0s = 60 frames
+        // Use MAX_VIDEO_FRAME_BUFFER as a reasonable limit
+        while (videoFrameBuffer.size() > MAX_VIDEO_FRAME_BUFFER) {
             videoFrameBuffer.pop_front();
         }
     }
@@ -3139,6 +3152,7 @@ private:
             }
 
             // Wait for fence of the write slot to ensure GPU is done with it
+            // This is safe because fence is reset BEFORE submit in mainLoop
             VkFence slotFence = frameSystem.getFence(writeSlot);
             if (slotFence != VK_NULL_HANDLE) {
                 vkWaitForFences(device, 1, &slotFence, VK_TRUE, UINT64_MAX);
@@ -3167,21 +3181,64 @@ private:
                     targetTime = 0.0;
                 }
 
-                // Get frame at PTS
+                // Get frame at PTS - use frame buffer cache to avoid expensive seeks
                 std::vector<uint8_t> frameData;
                 int frameWidth, frameHeight;
-                std::cout << "[NLE] Getting frame at PTS=" << targetTime << std::endl;
-                if (videoPlayer.getFrameAtPTS(targetTime, frameData, frameWidth, frameHeight)) {
-                    size_t copySize = std::min(frameData.size(), slot.capacity);
-                    std::cout << "[NLE] Frame data size=" << frameData.size() << " copySize=" << copySize << std::endl;
-                    std::memcpy(slot.mapped, frameData.data(), copySize);
-
+                
+                // First try to get frame from existing buffer to avoid seek+decode
+                size_t copySize = 0;
+                if (sampleFrameForTime(targetTime, static_cast<uint8_t*>(slot.mapped), slot.capacity, copySize)) {
                     videoTexture.stagingTimestamps[writeSlot] = targetTime;
                     videoTexture.pendingUploads[writeSlot] = true;
-
-                    videoTrace("[NLE] PTS-based frame at t=", targetTime, " size=", copySize);
-                } else {
-                    std::cerr << "[NLE] Failed to get frame at PTS=" << targetTime << std::endl;
+                    videoTrace("[NLE] Cached frame at t=", targetTime, " size=", copySize);
+                    return;
+                }
+                
+                // Frame not in buffer - need to decode it
+                // Only seek if target time is far from current decode position
+                static double nleLastSeekTime = -1.0;
+                const double seekThreshold = 0.5; // Only seek if jumping more than 0.5s
+                bool needsSeek = (nleLastSeekTime < 0.0) || 
+                                 (std::abs(targetTime - nleLastSeekTime) > seekThreshold);
+                
+                if (needsSeek) {
+                    nleLastSeekTime = targetTime;
+                    videoPlayer.seekSeconds(targetTime);
+                    // Clear buffer after seek since frames are no longer valid
+                    videoFrameBuffer.clear();
+                }
+                
+                // Decode frames until we reach target time
+                double decodeCursor = targetTime;
+                bool frameFound = false;
+                const int maxDecodeAttempts = 32; // Prevent infinite loops
+                int decodeAttempts = 0;
+                
+                while (!frameFound && decodeAttempts < maxDecodeAttempts) {
+                    decodeAttempts++;
+                    if (decodeFrameIntoBuffer(frameDuration)) {
+                        // Check if we have a frame close to target time
+                        for (const auto& cached : videoFrameBuffer) {
+                            if (std::abs(cached.timestamp - targetTime) < frameDuration) {
+                                // Found matching frame
+                                size_t frameCopySize = static_cast<size_t>(cached.width) * cached.height * 4;
+                                if (frameCopySize > 0 && frameCopySize <= slot.capacity && !cached.pixels.empty()) {
+                                    std::memcpy(slot.mapped, cached.pixels.data(), frameCopySize);
+                                    videoTexture.stagingTimestamps[writeSlot] = targetTime;
+                                    videoTexture.pendingUploads[writeSlot] = true;
+                                    videoTrace("[NLE] Decoded frame at t=", targetTime, " size=", frameCopySize);
+                                    frameFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (!frameFound) {
+                    std::cerr << "[NLE] Failed to get frame at PTS=" << targetTime << " after " << decodeAttempts << " attempts" << std::endl;
                 }
                 return;
             } catch (const std::exception& e) {
@@ -3282,16 +3339,6 @@ private:
         for (size_t i = 0; i < videoStaging.getSlotCount(); ++i) {
             const auto& slot = videoStaging.getSlot(i);
             std::cout << "[STAGING] destroy slot=" << i << " mapped=" << slot.mapped << " capacity=" << slot.capacity << std::endl;
-            if (slot.mapped) {
-                vkUnmapMemory(device, slot.memory);
-            }
-            if (slot.buffer != VK_NULL_HANDLE) {
-                ResourceHandle handle;
-                handle.type = ResourceHandle::Type::Buffer;
-                handle.buffer = slot.buffer;
-                handle.memory = slot.memory;
-                resourceSystem.destroy(handle);
-            }
             videoStaging.clearSlot(i);
         }
         if (videoTexture.imageHandle.type != ResourceHandle::Type::Unknown) {
@@ -3460,12 +3507,20 @@ private:
                                    : videoRandomizer.intervalSeconds;
         videoRandomizer.elapsedSeconds += deltaTime;
         if (videoRandomizer.elapsedSeconds >= targetInterval) {
+            if (videoReloadInProgress) {
+                return;
+            }
             videoRandomizer.elapsedSeconds = 0.0f;
             randomizeVideoAsset();
         }
     }
 
     void reloadVideoSource(const std::string& path) {
+        if (videoReloadInProgress) {
+            std::cout << "[Reload] Reload already in progress, ignoring request" << std::endl;
+            return;
+        }
+
         if (videoSourcePath == path && videoSubsystemInitialized) {
             std::cout << "[Reload] Already playing this file, but forcing reload for new version" << std::endl;
             // Don't return - force reload even if path is same (file content may have changed)
@@ -3473,6 +3528,7 @@ private:
 
         std::cout << "[Reload] Starting reload for: " << path << std::endl;
 
+        videoReloadInProgress = true;
         videoSourcePath = path;
         g_project_state.active_file = path;  // Update ProjectState to keep it in sync
 
@@ -3489,6 +3545,7 @@ private:
         std::cout << "[Reload] Initializing video system..." << std::endl;
         initVideoSystem();
         lastReloadTime = std::chrono::steady_clock::now();
+        videoReloadInProgress = false;
         std::cout << "[Reload] Video system initialized" << std::endl;
     }
 
@@ -4949,6 +5006,7 @@ private:
                 }
             }
 
+            // Reset fence BEFORE submitting work to ensure atomic wait/reset cycle
             if (vkResetFences(device, 1, &frame.inFlightFence) != VK_SUCCESS) {
                 throw std::runtime_error("failed to reset in-flight fence");
             }
@@ -5005,340 +5063,199 @@ private:
             return;
         }
 
-        auto loadLegacy = [&](std::istream& legacy) {
-            VisualControls loaded = visualControls;
-            int activeMode = loaded.activeMode;
-            int upscaleFlag = loaded.upscaleEnabled ? 1 : 0;
-            int autoRandomFlag = videoRandomizer.autoRandomize ? 1 : 0;
+        std::string line;
+        std::unordered_map<std::string, std::string> values;
 
-            if (!(legacy >> loaded.animationSpeed
-                      >> loaded.tempo
-                      >> loaded.energy
-                      >> loaded.bass
-                      >> loaded.mid
-                      >> loaded.high
-                      >> loaded.colorBlend
-                      >> loaded.primaryColor.r >> loaded.primaryColor.g >> loaded.primaryColor.b >> loaded.primaryColor.a
-                      >> loaded.secondaryColor.r >> loaded.secondaryColor.g >> loaded.secondaryColor.b >> loaded.secondaryColor.a
-                      >> activeMode
-                      >> loaded.videoMix
-                      >> loaded.videoPlaybackRate
-                      >> loaded.grayscaleAmount
-                      >> loaded.sharpenAmount
-                      >> upscaleFlag
-                      >> loaded.crtCurvature
-                      >> loaded.crtHorizontalCurvature
-                      >> loaded.crtScanlineIntensity
-                      >> loaded.crtMaskIntensity
-                      >> loaded.crtVignette
-                      >> loaded.crtFishEye
-                      >> loaded.bloomIntensity
-                      >> loaded.bloomThreshold
-                      >> loaded.aberrationAmount
-                      >> loaded.grainStrength
-                      >> loaded.bendAmount
-                      >> loaded.glitchAmount
-                      >> loaded.randomVideoStart
-                      >> loaded.colorBalance.r >> loaded.colorBalance.g >> loaded.colorBalance.b
-                      >> autoRandomFlag
-                      >> videoRandomizer.intervalSeconds)) {
-                return false;
+        while (std::getline(file, line)) {
+            if (line.empty() || line[0] == '#') {
+                continue;
             }
+            size_t pos = line.find('=');
+            if (pos != std::string::npos) {
+                std::string key = line.substr(0, pos);
+                std::string value = line.substr(pos + 1);
+                values[key] = value;
+            }
+        }
 
-            loaded.activeMode = activeMode;
-            loaded.upscaleEnabled = (upscaleFlag != 0);
-            videoRandomizer.autoRandomize = (autoRandomFlag != 0);
-            videoRandomizer.useVideoDuration = false;
-            videoRandomizer.currentVideoDuration = 0.0f;
-            videoRandomizer.recentHistory.clear();
-            visualControls = loaded;
-            return true;
+        auto readFloat = [&](const char* key, float defaultValue) -> float {
+            auto it = values.find(key);
+            if (it != values.end()) {
+                try {
+                    return std::stof(it->second);
+                } catch (...) {}
+            }
+            return defaultValue;
+        };
+        auto readInt = [&](const char* key, int defaultValue) -> int {
+            auto it = values.find(key);
+            if (it != values.end()) {
+                try {
+                    return std::stoi(it->second);
+                } catch (...) {}
+            }
+            return defaultValue;
+        };
+        auto readBool = [&](const char* key, bool defaultValue) -> bool {
+            auto it = values.find(key);
+            if (it != values.end()) {
+                try {
+                    return std::stoi(it->second) != 0;
+                } catch (...) {}
+            }
+            return defaultValue;
+        };
+        auto readVec3 = [&](const char* key, const glm::vec3& defaultValue) -> glm::vec3 {
+            auto it = values.find(key);
+            if (it != values.end()) {
+                std::istringstream iss(it->second);
+                glm::vec3 v = defaultValue;
+                try {
+                    iss >> v.r >> v.g >> v.b;
+                    return v;
+                } catch (...) {}
+            }
+            return defaultValue;
+        };
+        auto readVec4 = [&](const char* key, const glm::vec4& defaultValue) -> glm::vec4 {
+            auto it = values.find(key);
+            if (it != values.end()) {
+                std::istringstream iss(it->second);
+                glm::vec4 v = defaultValue;
+                try {
+                    iss >> v.r >> v.g >> v.b >> v.a;
+                    return v;
+                } catch (...) {}
+            }
+            return defaultValue;
         };
 
-        auto parseModernState = [&](std::istream& modern,
-                                    bool readVjayToggles,
-                                    bool readPostFxLocks,
-                                    bool readRandomizerExtras,
-                                    bool readDecodeOversample,
-                                    bool readForcedFpsAndLoop,
-                                    bool readDimensionRecreation) {
-            VisualControls loaded = visualControls;
-            VideoRandomizerState randomizer = videoRandomizer;
-            int activeMode = loaded.activeMode;
-            int upscaleFlag = loaded.upscaleEnabled ? 1 : 0;
-            int randomStartFlag = loaded.randomVideoStart ? 1 : 0;
-            int autoRandomFlag = randomizer.autoRandomize ? 1 : 0;
-            int durationToggle = randomizer.useVideoDuration ? 1 : 0;
-            int dimensionRecreationFlag = allowDimensionChangeRecreation ? 1 : 0;
-            int colorToggle = loaded.enableColorGrading ? 1 : 0;
-            int feedbackToggle = loaded.enableFeedback ? 1 : 0;
-            int distortionToggle = loaded.enableDistortion ? 1 : 0;
-            int blurToggle = loaded.enableBlurMotion ? 1 : 0;
-            int sharpenToggle = loaded.enableSharpen ? 1 : 0;
-            int glitchToggle = loaded.enableGlitch ? 1 : 0;
-            int blendToggle = loaded.enableBlending ? 1 : 0;
-            int analogToggle = loaded.enableAnalog ? 1 : 0;
-            int audioToggle = loaded.enableAudioReactive ? 1 : 0;
-            int temporalToggle = loaded.enableTemporal ? 1 : 0;
-            int postCrtToggle = loaded.enablePostCrtCurvature ? 1 : 0;
-            int postScanMaskToggle = loaded.enablePostScanMask ? 1 : 0;
-            int postVignetteToggle = loaded.enablePostVignette ? 1 : 0;
-            int postFishToggle = loaded.enablePostFishEye ? 1 : 0;
-            int postBloomToggle = loaded.enablePostBloom ? 1 : 0;
-            int postAberToggle = loaded.enablePostAberration ? 1 : 0;
-            int postGrainToggle = loaded.enablePostGrain ? 1 : 0;
-            int postBendToggle = loaded.enablePostBend ? 1 : 0;
-            int postGlitchToggle = loaded.enablePostGlitch ? 1 : 0;
-            int postColorToggle = loaded.enablePostColorBalance ? 1 : 0;
+        VisualControls loaded = visualControls;
+        loaded.animationSpeed = readFloat("animationSpeed", loaded.animationSpeed);
+        loaded.tempo = readFloat("tempo", loaded.tempo);
+        loaded.energy = readFloat("energy", loaded.energy);
+        loaded.bass = readFloat("bass", loaded.bass);
+        loaded.mid = readFloat("mid", loaded.mid);
+        loaded.high = readFloat("high", loaded.high);
+        loaded.colorBlend = readFloat("colorBlend", loaded.colorBlend);
+        loaded.primaryColor = readVec4("primaryColor", loaded.primaryColor);
+        loaded.secondaryColor = readVec4("secondaryColor", loaded.secondaryColor);
+        loaded.activeMode = std::clamp(readInt("activeMode", loaded.activeMode), 0, 1);
+        loaded.videoMix = readFloat("videoMix", loaded.videoMix);
+        loaded.videoPlaybackRate = readFloat("videoPlaybackRate", loaded.videoPlaybackRate);
+        loaded.videoDecodeOversample = readFloat("videoDecodeOversample", loaded.videoDecodeOversample);
+        loaded.forcedFpsIndex = std::clamp(readInt("forcedFpsIndex", loaded.forcedFpsIndex), 0, static_cast<int>(FORCED_FPS_OPTIONS.size()) - 1);
+        loaded.loopBlendSeconds = std::clamp(readFloat("loopBlendSeconds", loaded.loopBlendSeconds), 0.0f, 5.0f);
+        loaded.grayscaleAmount = readFloat("grayscaleAmount", loaded.grayscaleAmount);
+        loaded.sharpenAmount = readFloat("sharpenAmount", loaded.sharpenAmount);
+        loaded.upscaleEnabled = readBool("upscaleEnabled", loaded.upscaleEnabled);
+        loaded.crtCurvature = readFloat("crtCurvature", loaded.crtCurvature);
+        loaded.crtHorizontalCurvature = readFloat("crtHorizontalCurvature", loaded.crtHorizontalCurvature);
+        loaded.crtScanlineIntensity = readFloat("crtScanlineIntensity", loaded.crtScanlineIntensity);
+        loaded.crtMaskIntensity = readFloat("crtMaskIntensity", loaded.crtMaskIntensity);
+        loaded.crtVignette = readFloat("crtVignette", loaded.crtVignette);
+        loaded.crtFishEye = readFloat("crtFishEye", loaded.crtFishEye);
+        loaded.bloomIntensity = readFloat("bloomIntensity", loaded.bloomIntensity);
+        loaded.bloomThreshold = readFloat("bloomThreshold", loaded.bloomThreshold);
+        loaded.aberrationAmount = readFloat("aberrationAmount", loaded.aberrationAmount);
+        loaded.grainStrength = readFloat("grainStrength", loaded.grainStrength);
+        loaded.bendAmount = readFloat("bendAmount", loaded.bendAmount);
+        loaded.glitchAmount = readFloat("glitchAmount", loaded.glitchAmount);
+        loaded.randomVideoStart = readBool("randomVideoStart", loaded.randomVideoStart);
+        loaded.colorBalance = readVec3("colorBalance", loaded.colorBalance);
+        loaded.gradeBrightness = readFloat("gradeBrightness", loaded.gradeBrightness);
+        loaded.gradeContrast = readFloat("gradeContrast", loaded.gradeContrast);
+        loaded.gradeSaturation = readFloat("gradeSaturation", loaded.gradeSaturation);
+        loaded.gradeHueShift = readFloat("gradeHueShift", loaded.gradeHueShift);
+        loaded.gradeGamma = readFloat("gradeGamma", loaded.gradeGamma);
+        loaded.colorLUTIndex = readInt("colorLUTIndex", loaded.colorLUTIndex);
+        loaded.splitToneBalance = readFloat("splitToneBalance", loaded.splitToneBalance);
+        loaded.splitToneShadows = readVec3("splitToneShadows", loaded.splitToneShadows);
+        loaded.splitToneHighlights = readVec3("splitToneHighlights", loaded.splitToneHighlights);
+        loaded.feedbackAmount = readFloat("feedbackAmount", loaded.feedbackAmount);
+        loaded.trailStrength = readFloat("trailStrength", loaded.trailStrength);
+        loaded.temporalAccumulation = readFloat("temporalAccumulation", loaded.temporalAccumulation);
+        loaded.feedbackDecay = readFloat("feedbackDecay", loaded.feedbackDecay);
+        loaded.recursiveBlend = readFloat("recursiveBlend", loaded.recursiveBlend);
+        loaded.uvWarpStrength = readFloat("uvWarpStrength", loaded.uvWarpStrength);
+        loaded.rippleStrength = readFloat("rippleStrength", loaded.rippleStrength);
+        loaded.rippleFrequency = readFloat("rippleFrequency", loaded.rippleFrequency);
+        loaded.swirlStrength = readFloat("swirlStrength", loaded.swirlStrength);
+        loaded.displacementAmount = readFloat("displacementAmount", loaded.displacementAmount);
+        loaded.kaleidoSegments = readFloat("kaleidoSegments", loaded.kaleidoSegments);
+        loaded.tunnelDepth = readFloat("tunnelDepth", loaded.tunnelDepth);
+        loaded.tunnelCurvature = readFloat("tunnelCurvature", loaded.tunnelCurvature);
+        loaded.gaussianBlur = readFloat("gaussianBlur", loaded.gaussianBlur);
+        loaded.directionalBlur = readFloat("directionalBlur", loaded.directionalBlur);
+        loaded.directionalBlurAngle = readFloat("directionalBlurAngle", loaded.directionalBlurAngle);
+        loaded.zoomBlur = readFloat("zoomBlur", loaded.zoomBlur);
+        loaded.motionBlur = readFloat("motionBlur", loaded.motionBlur);
+        loaded.temporalBlur = readFloat("temporalBlur", loaded.temporalBlur);
+        loaded.unsharpMask = readFloat("unsharpMask", loaded.unsharpMask);
+        loaded.casAmount = readFloat("casAmount", loaded.casAmount);
+        loaded.localContrast = readFloat("localContrast", loaded.localContrast);
+        loaded.glitchDatamosh = readFloat("glitchDatamosh", loaded.glitchDatamosh);
+        loaded.glitchRGBSplit = readFloat("glitchRGBSplit", loaded.glitchRGBSplit);
+        loaded.glitchScanlineBreak = readFloat("glitchScanlineBreak", loaded.glitchScanlineBreak);
+        loaded.glitchJitter = readFloat("glitchJitter", loaded.glitchJitter);
+        loaded.glitchTearing = readFloat("glitchTearing", loaded.glitchTearing);
+        loaded.glitchPixelSort = readFloat("glitchPixelSort", loaded.glitchPixelSort);
+        loaded.glitchBufferCorruption = readFloat("glitchBufferCorruption", loaded.glitchBufferCorruption);
+        loaded.blendModeProcedural = readInt("blendModeProcedural", loaded.blendModeProcedural);
+        loaded.blendModeVideo = readInt("blendModeVideo", loaded.blendModeVideo);
+        loaded.blendModeFeedback = readInt("blendModeFeedback", loaded.blendModeFeedback);
+        loaded.blendProceduralMix = readFloat("blendProceduralMix", loaded.blendProceduralMix);
+        loaded.blendVideoMix = readFloat("blendVideoMix", loaded.blendVideoMix);
+        loaded.blendFeedbackMix = readFloat("blendFeedbackMix", loaded.blendFeedbackMix);
+        loaded.analogScanlineFocus = readFloat("analogScanlineFocus", loaded.analogScanlineFocus);
+        loaded.analogMaskBalance = readFloat("analogMaskBalance", loaded.analogMaskBalance);
+        loaded.analogNoise = readFloat("analogNoise", loaded.analogNoise);
+        loaded.analogBloom = readFloat("analogBloom", loaded.analogBloom);
+        loaded.vhsDistortion = readFloat("vhsDistortion", loaded.vhsDistortion);
+        loaded.analogChromaticAberration = readFloat("analogChromaticAberration", loaded.analogChromaticAberration);
+        loaded.enableColorGrading = readBool("enableColorGrading", loaded.enableColorGrading);
+        loaded.enableFeedback = readBool("enableFeedback", loaded.enableFeedback);
+        loaded.enableDistortion = readBool("enableDistortion", loaded.enableDistortion);
+        loaded.enableBlurMotion = readBool("enableBlurMotion", loaded.enableBlurMotion);
+        loaded.enableSharpen = readBool("enableSharpen", loaded.enableSharpen);
+        loaded.enableGlitch = readBool("enableGlitch", loaded.enableGlitch);
+        loaded.enableBlending = readBool("enableBlending", loaded.enableBlending);
+        loaded.enableAnalog = readBool("enableAnalog", loaded.enableAnalog);
+        loaded.enableAudioReactive = readBool("enableAudioReactive", loaded.enableAudioReactive);
+        loaded.enableTemporal = readBool("enableTemporal", loaded.enableTemporal);
+        loaded.enablePostCrtCurvature = readBool("enablePostCrtCurvature", loaded.enablePostCrtCurvature);
+        loaded.enablePostScanMask = readBool("enablePostScanMask", loaded.enablePostScanMask);
+        loaded.enablePostVignette = readBool("enablePostVignette", loaded.enablePostVignette);
+        loaded.enablePostFishEye = readBool("enablePostFishEye", loaded.enablePostFishEye);
+        loaded.enablePostBloom = readBool("enablePostBloom", loaded.enablePostBloom);
+        loaded.enablePostAberration = readBool("enablePostAberration", loaded.enablePostAberration);
+        loaded.enablePostGrain = readBool("enablePostGrain", loaded.enablePostGrain);
+        loaded.enablePostBend = readBool("enablePostBend", loaded.enablePostBend);
+        loaded.enablePostGlitch = readBool("enablePostGlitch", loaded.enablePostGlitch);
+        loaded.enablePostColorBalance = readBool("enablePostColorBalance", loaded.enablePostColorBalance);
+        loaded.audioWarpResponse = readFloat("audioWarpResponse", loaded.audioWarpResponse);
+        loaded.audioFeedbackResponse = readFloat("audioFeedbackResponse", loaded.audioFeedbackResponse);
+        loaded.audioBlurResponse = readFloat("audioBlurResponse", loaded.audioBlurResponse);
+        loaded.audioColorResponse = readFloat("audioColorResponse", loaded.audioColorResponse);
+        loaded.audioGlitchResponse = readFloat("audioGlitchResponse", loaded.audioGlitchResponse);
+        loaded.audioBeatSync = readFloat("audioBeatSync", loaded.audioBeatSync);
+        loaded.audioLfoRate = readFloat("audioLfoRate", loaded.audioLfoRate);
+        loaded.temporalInterpolation = readFloat("temporalInterpolation", loaded.temporalInterpolation);
+        loaded.temporalBlendStrength = readFloat("temporalBlendStrength", loaded.temporalBlendStrength);
+        loaded.slowMotionFactor = readFloat("slowMotionFactor", loaded.slowMotionFactor);
+        loaded.frameAccumulation = readFloat("frameAccumulation", loaded.frameAccumulation);
 
-            if (!(modern >> loaded.animationSpeed
-                  >> loaded.tempo
-                  >> loaded.energy
-                  >> loaded.bass
-                  >> loaded.mid
-                  >> loaded.high
-                  >> loaded.colorBlend
-                  >> loaded.primaryColor.r >> loaded.primaryColor.g >> loaded.primaryColor.b >> loaded.primaryColor.a
-                  >> loaded.secondaryColor.r >> loaded.secondaryColor.g >> loaded.secondaryColor.b >> loaded.secondaryColor.a
-                  >> activeMode
-                  >> loaded.videoMix
-                  >> loaded.videoPlaybackRate
-                  >> loaded.grayscaleAmount
-                  >> loaded.sharpenAmount
-                  >> upscaleFlag
-                  >> loaded.crtCurvature
-                  >> loaded.crtHorizontalCurvature
-                  >> loaded.crtScanlineIntensity
-                  >> loaded.crtMaskIntensity
-                  >> loaded.crtVignette
-                  >> loaded.crtFishEye
-                  >> loaded.bloomIntensity
-                  >> loaded.bloomThreshold
-                  >> loaded.aberrationAmount
-                  >> loaded.grainStrength
-                  >> loaded.bendAmount
-                  >> loaded.glitchAmount
-                  >> randomStartFlag
-                  >> loaded.colorBalance.r >> loaded.colorBalance.g >> loaded.colorBalance.b
-                  >> loaded.gradeBrightness
-                  >> loaded.gradeContrast
-                  >> loaded.gradeSaturation
-                  >> loaded.gradeHueShift
-                  >> loaded.gradeGamma
-                  >> loaded.colorLUTIndex
-                  >> loaded.splitToneBalance
-                  >> loaded.splitToneShadows.r >> loaded.splitToneShadows.g >> loaded.splitToneShadows.b
-                  >> loaded.splitToneHighlights.r >> loaded.splitToneHighlights.g >> loaded.splitToneHighlights.b
-                  >> loaded.feedbackAmount
-                  >> loaded.trailStrength
-                  >> loaded.temporalAccumulation
-                  >> loaded.feedbackDecay
-                  >> loaded.recursiveBlend
-                  >> loaded.uvWarpStrength
-                  >> loaded.rippleStrength
-                  >> loaded.rippleFrequency
-                  >> loaded.swirlStrength
-                  >> loaded.displacementAmount
-                  >> loaded.kaleidoSegments
-                  >> loaded.tunnelDepth
-                  >> loaded.tunnelCurvature
-                  >> loaded.gaussianBlur
-                  >> loaded.directionalBlur
-                  >> loaded.directionalBlurAngle
-                  >> loaded.zoomBlur
-                  >> loaded.motionBlur
-                  >> loaded.temporalBlur
-                  >> loaded.unsharpMask
-                  >> loaded.casAmount
-                  >> loaded.localContrast
-                  >> loaded.glitchDatamosh
-                  >> loaded.glitchRGBSplit
-                  >> loaded.glitchScanlineBreak
-                  >> loaded.glitchJitter
-                  >> loaded.glitchTearing
-                  >> loaded.glitchPixelSort
-                  >> loaded.glitchBufferCorruption
-                  >> loaded.blendModeProcedural
-                  >> loaded.blendModeVideo
-                  >> loaded.blendModeFeedback
-                  >> loaded.blendProceduralMix
-                  >> loaded.blendVideoMix
-                  >> loaded.blendFeedbackMix
-                  >> loaded.analogScanlineFocus
-                  >> loaded.analogMaskBalance
-                  >> loaded.analogNoise
-                  >> loaded.analogBloom
-                  >> loaded.vhsDistortion
-                  >> loaded.analogChromaticAberration)) {
-                return false;
-            }
+        VideoRandomizerState randomizer = videoRandomizer;
+        randomizer.autoRandomize = readBool("autoRandomize", randomizer.autoRandomize);
+        randomizer.intervalSeconds = readFloat("intervalSeconds", randomizer.intervalSeconds);
+        randomizer.useVideoDuration = readBool("useVideoDuration", randomizer.useVideoDuration);
+        allowDimensionChangeRecreation = readBool("allowDimensionChangeRecreation", allowDimensionChangeRecreation);
 
-            if (readDecodeOversample) {
-                if (!(modern >> loaded.videoDecodeOversample)) {
-                    return false;
-                }
-            } else {
-                loaded.videoDecodeOversample = 1.0f;
-            }
-
-            if (readForcedFpsAndLoop) {
-                if (!(modern >> loaded.forcedFpsIndex >> loaded.loopBlendSeconds)) {
-                    return false;
-                }
-            } else {
-                loaded.forcedFpsIndex = 0;
-                loaded.loopBlendSeconds = 0.5f;
-            }
-
-            if (readVjayToggles) {
-                if (!(modern >> colorToggle
-                              >> feedbackToggle
-                              >> distortionToggle
-                              >> blurToggle
-                              >> sharpenToggle
-                              >> glitchToggle
-                              >> blendToggle
-                              >> analogToggle
-                              >> audioToggle
-                              >> temporalToggle)) {
-                    return false;
-                }
-            } else {
-                colorToggle = feedbackToggle = distortionToggle = blurToggle = sharpenToggle = glitchToggle = blendToggle = analogToggle = audioToggle = temporalToggle = 1;
-            }
-
-            if (readPostFxLocks) {
-                if (!(modern >> postCrtToggle
-                              >> postScanMaskToggle
-                              >> postVignetteToggle
-                              >> postFishToggle
-                              >> postBloomToggle
-                              >> postAberToggle
-                              >> postGrainToggle
-                              >> postBendToggle
-                              >> postGlitchToggle
-                              >> postColorToggle)) {
-                    return false;
-                }
-            } else {
-                postCrtToggle = postScanMaskToggle = postVignetteToggle = postFishToggle = postBloomToggle = postAberToggle = postGrainToggle = postBendToggle = postGlitchToggle = postColorToggle = 1;
-            }
-
-            if (!(modern
-                  >> loaded.audioWarpResponse
-                  >> loaded.audioFeedbackResponse
-                  >> loaded.audioBlurResponse
-                  >> loaded.audioColorResponse
-                  >> loaded.audioGlitchResponse
-                  >> loaded.audioBeatSync
-                  >> loaded.audioLfoRate
-                  >> loaded.temporalInterpolation
-                  >> loaded.temporalBlendStrength
-                  >> loaded.slowMotionFactor
-                  >> loaded.frameAccumulation
-                  >> autoRandomFlag
-                  >> randomizer.intervalSeconds)) {
-                return false;
-            }
-
-            if (readRandomizerExtras) {
-                if (!(modern >> durationToggle)) {
-                    return false;
-                }
-            } else {
-                durationToggle = 0;
-            }
-
-            if (readDimensionRecreation) {
-                if (!(modern >> dimensionRecreationFlag)) {
-                    return false;
-                }
-            } else {
-                dimensionRecreationFlag = 0;
-            }
-
-            loaded.activeMode = std::clamp(activeMode, 0, 1);
-            loaded.upscaleEnabled = (upscaleFlag != 0);
-            loaded.randomVideoStart = (randomStartFlag != 0);
-            loaded.enableColorGrading = (colorToggle != 0);
-            loaded.enableFeedback = (feedbackToggle != 0);
-            loaded.enableDistortion = (distortionToggle != 0);
-            loaded.enableBlurMotion = (blurToggle != 0);
-            loaded.enableSharpen = (sharpenToggle != 0);
-            loaded.enableGlitch = (glitchToggle != 0);
-            loaded.enableBlending = (blendToggle != 0);
-            loaded.enableAnalog = (analogToggle != 0);
-            loaded.enableAudioReactive = (audioToggle != 0);
-            loaded.enableTemporal = (temporalToggle != 0);
-            loaded.enablePostCrtCurvature = (postCrtToggle != 0);
-            loaded.enablePostScanMask = (postScanMaskToggle != 0);
-            loaded.enablePostVignette = (postVignetteToggle != 0);
-            loaded.enablePostFishEye = (postFishToggle != 0);
-            loaded.enablePostBloom = (postBloomToggle != 0);
-            loaded.enablePostAberration = (postAberToggle != 0);
-            loaded.enablePostGrain = (postGrainToggle != 0);
-            loaded.enablePostBend = (postBendToggle != 0);
-            loaded.enablePostGlitch = (postGlitchToggle != 0);
-            loaded.enablePostColorBalance = (postColorToggle != 0);
-            loaded.forcedFpsIndex = std::clamp(loaded.forcedFpsIndex, 0, static_cast<int>(FORCED_FPS_OPTIONS.size()) - 1);
-            loaded.loopBlendSeconds = std::clamp(loaded.loopBlendSeconds, 0.0f, 5.0f);
-            randomizer.autoRandomize = (autoRandomFlag != 0);
-            randomizer.useVideoDuration = (durationToggle != 0);
-            allowDimensionChangeRecreation = (dimensionRecreationFlag != 0);
-            visualControls = loaded;
-            videoRandomizer = randomizer;
-            videoRandomizer.currentVideoDuration = 0.0f;
-            videoRandomizer.recentHistory.clear();
-            videoRandomizer.elapsedSeconds = 0.0f;
-            return true;
-        };
-
-        std::string versionToken;
-        file >> versionToken;
-        if (!file) {
-            return;
-        }
-
-        if (versionToken == CONTROL_STATE_VERSION) {
-            if (!parseModernState(file, true, true, true, true, true, true)) {
-                std::cerr << "[Controls] failed to parse control state file" << std::endl;
-            }
-            return;
-        }
-
-        if (versionToken == CONTROL_STATE_VERSION_PREV) {
-            if (!parseModernState(file, true, true, true, true, false, false)) {
-                std::cerr << "[Controls] failed to parse control state file (v5)" << std::endl;
-            }
-            return;
-        }
-
-        if (versionToken == CONTROL_STATE_VERSION_PREV2) {
-            if (!parseModernState(file, true, false, false, false, false, false)) {
-                std::cerr << "[Controls] failed to parse control state file (v4)" << std::endl;
-            }
-            return;
-        }
-
-        if (versionToken == CONTROL_STATE_VERSION_PREV3) {
-            if (!parseModernState(file, false, false, false, false, false, false)) {
-                std::cerr << "[Controls] failed to parse control state file (v3)" << std::endl;
-            }
-            return;
-        }
-
-        if (versionToken == CONTROL_STATE_VERSION_PREV4) {
-            if (!parseModernState(file, false, false, false, false, false, false)) {
-                std::cerr << "[Controls] failed to parse control state file (v2)" << std::endl;
-            }
-            return;
-        }
-
-        file.clear();
-        file.seekg(0);
-        if (!loadLegacy(file)) {
-            std::cerr << "[Controls] failed to parse legacy control state file" << std::endl;
-        }
+        visualControls = loaded;
+        videoRandomizer = randomizer;
+        videoRandomizer.currentVideoDuration = 0.0f;
+        videoRandomizer.recentHistory.clear();
+        videoRandomizer.elapsedSeconds = 0.0f;
     }
 
     void saveControlState() {
@@ -5348,124 +5265,142 @@ private:
             return;
         }
 
-        file << CONTROL_STATE_VERSION << '\n'
-             << visualControls.animationSpeed << ' '
-             << visualControls.tempo << ' '
-             << visualControls.energy << ' '
-             << visualControls.bass << ' '
-             << visualControls.mid << ' '
-             << visualControls.high << ' '
-             << visualControls.colorBlend << ' '
-             << visualControls.primaryColor.r << ' ' << visualControls.primaryColor.g << ' ' << visualControls.primaryColor.b << ' ' << visualControls.primaryColor.a << ' '
-             << visualControls.secondaryColor.r << ' ' << visualControls.secondaryColor.g << ' ' << visualControls.secondaryColor.b << ' ' << visualControls.secondaryColor.a << ' '
-             << visualControls.activeMode << ' '
-             << visualControls.videoMix << ' '
-             << visualControls.videoPlaybackRate << ' '
-             << visualControls.videoDecodeOversample << ' '
-             << visualControls.forcedFpsIndex << ' '
-             << visualControls.loopBlendSeconds << ' '
-             << visualControls.grayscaleAmount << ' '
-             << visualControls.sharpenAmount << ' '
-             << (visualControls.upscaleEnabled ? 1 : 0) << ' '
-             << visualControls.crtCurvature << ' '
-             << visualControls.crtHorizontalCurvature << ' '
-             << visualControls.crtScanlineIntensity << ' '
-             << visualControls.crtMaskIntensity << ' '
-             << visualControls.crtVignette << ' '
-             << visualControls.crtFishEye << ' '
-             << visualControls.bloomIntensity << ' '
-             << visualControls.bloomThreshold << ' '
-             << visualControls.aberrationAmount << ' '
-             << visualControls.grainStrength << ' '
-             << visualControls.bendAmount << ' '
-             << visualControls.glitchAmount << ' '
-             << (visualControls.randomVideoStart ? 1 : 0) << ' '
-             << visualControls.colorBalance.r << ' ' << visualControls.colorBalance.g << ' ' << visualControls.colorBalance.b << ' '
-             << visualControls.gradeBrightness << ' '
-             << visualControls.gradeContrast << ' '
-             << visualControls.gradeSaturation << ' '
-             << visualControls.gradeHueShift << ' '
-             << visualControls.gradeGamma << ' '
-             << visualControls.colorLUTIndex << ' '
-             << visualControls.splitToneBalance << ' '
-             << visualControls.splitToneShadows.r << ' ' << visualControls.splitToneShadows.g << ' ' << visualControls.splitToneShadows.b << ' '
-             << visualControls.splitToneHighlights.r << ' ' << visualControls.splitToneHighlights.g << ' ' << visualControls.splitToneHighlights.b << ' '
-             << visualControls.feedbackAmount << ' '
-             << visualControls.trailStrength << ' '
-             << visualControls.temporalAccumulation << ' '
-             << visualControls.feedbackDecay << ' '
-             << visualControls.recursiveBlend << ' '
-             << visualControls.uvWarpStrength << ' '
-             << visualControls.rippleStrength << ' '
-             << visualControls.rippleFrequency << ' '
-             << visualControls.swirlStrength << ' '
-             << visualControls.displacementAmount << ' '
-             << visualControls.kaleidoSegments << ' '
-             << visualControls.tunnelDepth << ' '
-             << visualControls.tunnelCurvature << ' '
-             << visualControls.gaussianBlur << ' '
-             << visualControls.directionalBlur << ' '
-             << visualControls.directionalBlurAngle << ' '
-             << visualControls.zoomBlur << ' '
-             << visualControls.motionBlur << ' '
-             << visualControls.temporalBlur << ' '
-             << visualControls.unsharpMask << ' '
-             << visualControls.casAmount << ' '
-             << visualControls.localContrast << ' '
-             << visualControls.glitchDatamosh << ' '
-             << visualControls.glitchRGBSplit << ' '
-             << visualControls.glitchScanlineBreak << ' '
-             << visualControls.glitchJitter << ' '
-             << visualControls.glitchTearing << ' '
-             << visualControls.glitchPixelSort << ' '
-             << visualControls.glitchBufferCorruption << ' '
-             << visualControls.blendModeProcedural << ' '
-             << visualControls.blendModeVideo << ' '
-             << visualControls.blendModeFeedback << ' '
-             << visualControls.blendProceduralMix << ' '
-             << visualControls.blendVideoMix << ' '
-             << visualControls.blendFeedbackMix << ' '
-             << visualControls.analogScanlineFocus << ' '
-             << visualControls.analogMaskBalance << ' '
-             << visualControls.analogNoise << ' '
-             << visualControls.analogBloom << ' '
-             << visualControls.vhsDistortion << ' '
-             << visualControls.analogChromaticAberration << ' '
-             << (visualControls.enableColorGrading ? 1 : 0) << ' '
-             << (visualControls.enableFeedback ? 1 : 0) << ' '
-             << (visualControls.enableDistortion ? 1 : 0) << ' '
-             << (visualControls.enableBlurMotion ? 1 : 0) << ' '
-             << (visualControls.enableSharpen ? 1 : 0) << ' '
-             << (visualControls.enableGlitch ? 1 : 0) << ' '
-             << (visualControls.enableBlending ? 1 : 0) << ' '
-             << (visualControls.enableAnalog ? 1 : 0) << ' '
-             << (visualControls.enableAudioReactive ? 1 : 0) << ' '
-             << (visualControls.enableTemporal ? 1 : 0) << ' '
-             << (visualControls.enablePostCrtCurvature ? 1 : 0) << ' '
-             << (visualControls.enablePostScanMask ? 1 : 0) << ' '
-             << (visualControls.enablePostVignette ? 1 : 0) << ' '
-             << (visualControls.enablePostFishEye ? 1 : 0) << ' '
-             << (visualControls.enablePostBloom ? 1 : 0) << ' '
-             << (visualControls.enablePostAberration ? 1 : 0) << ' '
-             << (visualControls.enablePostGrain ? 1 : 0) << ' '
-             << (visualControls.enablePostBend ? 1 : 0) << ' '
-             << (visualControls.enablePostGlitch ? 1 : 0) << ' '
-             << (visualControls.enablePostColorBalance ? 1 : 0) << ' '
-             << visualControls.audioWarpResponse << ' '
-             << visualControls.audioFeedbackResponse << ' '
-             << visualControls.audioBlurResponse << ' '
-             << visualControls.audioColorResponse << ' '
-             << visualControls.audioGlitchResponse << ' '
-             << visualControls.audioBeatSync << ' '
-             << visualControls.audioLfoRate << ' '
-             << visualControls.temporalInterpolation << ' '
-             << visualControls.temporalBlendStrength << ' '
-             << visualControls.slowMotionFactor << ' '
-             << visualControls.frameAccumulation << ' '
-             << (videoRandomizer.autoRandomize ? 1 : 0) << ' '
-             << videoRandomizer.intervalSeconds << ' '
-             << (videoRandomizer.useVideoDuration ? 1 : 0) << ' '
-             << (allowDimensionChangeRecreation ? 1 : 0);
+        file << "# VJAY Control State - Key=Value Format\n";
+        file << "# Adding new fields requires no version bump - just add a new line\n\n";
+
+        auto writeFloat = [&](const char* key, float value) {
+            file << key << "=" << value << "\n";
+        };
+        auto writeInt = [&](const char* key, int value) {
+            file << key << "=" << value << "\n";
+        };
+        auto writeBool = [&](const char* key, bool value) {
+            file << key << "=" << (value ? 1 : 0) << "\n";
+        };
+        auto writeVec3 = [&](const char* key, const glm::vec3& v) {
+            file << key << "=" << v.r << " " << v.g << " " << v.b << "\n";
+        };
+        auto writeVec4 = [&](const char* key, const glm::vec4& v) {
+            file << key << "=" << v.r << " " << v.g << " " << v.b << " " << v.a << "\n";
+        };
+
+        writeFloat("animationSpeed", visualControls.animationSpeed);
+        writeFloat("tempo", visualControls.tempo);
+        writeFloat("energy", visualControls.energy);
+        writeFloat("bass", visualControls.bass);
+        writeFloat("mid", visualControls.mid);
+        writeFloat("high", visualControls.high);
+        writeFloat("colorBlend", visualControls.colorBlend);
+        writeVec4("primaryColor", visualControls.primaryColor);
+        writeVec4("secondaryColor", visualControls.secondaryColor);
+        writeInt("activeMode", visualControls.activeMode);
+        writeFloat("videoMix", visualControls.videoMix);
+        writeFloat("videoPlaybackRate", visualControls.videoPlaybackRate);
+        writeFloat("videoDecodeOversample", visualControls.videoDecodeOversample);
+        writeInt("forcedFpsIndex", visualControls.forcedFpsIndex);
+        writeFloat("loopBlendSeconds", visualControls.loopBlendSeconds);
+        writeFloat("grayscaleAmount", visualControls.grayscaleAmount);
+        writeFloat("sharpenAmount", visualControls.sharpenAmount);
+        writeBool("upscaleEnabled", visualControls.upscaleEnabled);
+        writeFloat("crtCurvature", visualControls.crtCurvature);
+        writeFloat("crtHorizontalCurvature", visualControls.crtHorizontalCurvature);
+        writeFloat("crtScanlineIntensity", visualControls.crtScanlineIntensity);
+        writeFloat("crtMaskIntensity", visualControls.crtMaskIntensity);
+        writeFloat("crtVignette", visualControls.crtVignette);
+        writeFloat("crtFishEye", visualControls.crtFishEye);
+        writeFloat("bloomIntensity", visualControls.bloomIntensity);
+        writeFloat("bloomThreshold", visualControls.bloomThreshold);
+        writeFloat("aberrationAmount", visualControls.aberrationAmount);
+        writeFloat("grainStrength", visualControls.grainStrength);
+        writeFloat("bendAmount", visualControls.bendAmount);
+        writeFloat("glitchAmount", visualControls.glitchAmount);
+        writeBool("randomVideoStart", visualControls.randomVideoStart);
+        writeVec3("colorBalance", visualControls.colorBalance);
+        writeFloat("gradeBrightness", visualControls.gradeBrightness);
+        writeFloat("gradeContrast", visualControls.gradeContrast);
+        writeFloat("gradeSaturation", visualControls.gradeSaturation);
+        writeFloat("gradeHueShift", visualControls.gradeHueShift);
+        writeFloat("gradeGamma", visualControls.gradeGamma);
+        writeInt("colorLUTIndex", visualControls.colorLUTIndex);
+        writeFloat("splitToneBalance", visualControls.splitToneBalance);
+        writeVec3("splitToneShadows", visualControls.splitToneShadows);
+        writeVec3("splitToneHighlights", visualControls.splitToneHighlights);
+        writeFloat("feedbackAmount", visualControls.feedbackAmount);
+        writeFloat("trailStrength", visualControls.trailStrength);
+        writeFloat("temporalAccumulation", visualControls.temporalAccumulation);
+        writeFloat("feedbackDecay", visualControls.feedbackDecay);
+        writeFloat("recursiveBlend", visualControls.recursiveBlend);
+        writeFloat("uvWarpStrength", visualControls.uvWarpStrength);
+        writeFloat("rippleStrength", visualControls.rippleStrength);
+        writeFloat("rippleFrequency", visualControls.rippleFrequency);
+        writeFloat("swirlStrength", visualControls.swirlStrength);
+        writeFloat("displacementAmount", visualControls.displacementAmount);
+        writeFloat("kaleidoSegments", visualControls.kaleidoSegments);
+        writeFloat("tunnelDepth", visualControls.tunnelDepth);
+        writeFloat("tunnelCurvature", visualControls.tunnelCurvature);
+        writeFloat("gaussianBlur", visualControls.gaussianBlur);
+        writeFloat("directionalBlur", visualControls.directionalBlur);
+        writeFloat("directionalBlurAngle", visualControls.directionalBlurAngle);
+        writeFloat("zoomBlur", visualControls.zoomBlur);
+        writeFloat("motionBlur", visualControls.motionBlur);
+        writeFloat("temporalBlur", visualControls.temporalBlur);
+        writeFloat("unsharpMask", visualControls.unsharpMask);
+        writeFloat("casAmount", visualControls.casAmount);
+        writeFloat("localContrast", visualControls.localContrast);
+        writeFloat("glitchDatamosh", visualControls.glitchDatamosh);
+        writeFloat("glitchRGBSplit", visualControls.glitchRGBSplit);
+        writeFloat("glitchScanlineBreak", visualControls.glitchScanlineBreak);
+        writeFloat("glitchJitter", visualControls.glitchJitter);
+        writeFloat("glitchTearing", visualControls.glitchTearing);
+        writeFloat("glitchPixelSort", visualControls.glitchPixelSort);
+        writeFloat("glitchBufferCorruption", visualControls.glitchBufferCorruption);
+        writeInt("blendModeProcedural", visualControls.blendModeProcedural);
+        writeInt("blendModeVideo", visualControls.blendModeVideo);
+        writeInt("blendModeFeedback", visualControls.blendModeFeedback);
+        writeFloat("blendProceduralMix", visualControls.blendProceduralMix);
+        writeFloat("blendVideoMix", visualControls.blendVideoMix);
+        writeFloat("blendFeedbackMix", visualControls.blendFeedbackMix);
+        writeFloat("analogScanlineFocus", visualControls.analogScanlineFocus);
+        writeFloat("analogMaskBalance", visualControls.analogMaskBalance);
+        writeFloat("analogNoise", visualControls.analogNoise);
+        writeFloat("analogBloom", visualControls.analogBloom);
+        writeFloat("vhsDistortion", visualControls.vhsDistortion);
+        writeFloat("analogChromaticAberration", visualControls.analogChromaticAberration);
+        writeBool("enableColorGrading", visualControls.enableColorGrading);
+        writeBool("enableFeedback", visualControls.enableFeedback);
+        writeBool("enableDistortion", visualControls.enableDistortion);
+        writeBool("enableBlurMotion", visualControls.enableBlurMotion);
+        writeBool("enableSharpen", visualControls.enableSharpen);
+        writeBool("enableGlitch", visualControls.enableGlitch);
+        writeBool("enableBlending", visualControls.enableBlending);
+        writeBool("enableAnalog", visualControls.enableAnalog);
+        writeBool("enableAudioReactive", visualControls.enableAudioReactive);
+        writeBool("enableTemporal", visualControls.enableTemporal);
+        writeBool("enablePostCrtCurvature", visualControls.enablePostCrtCurvature);
+        writeBool("enablePostScanMask", visualControls.enablePostScanMask);
+        writeBool("enablePostVignette", visualControls.enablePostVignette);
+        writeBool("enablePostFishEye", visualControls.enablePostFishEye);
+        writeBool("enablePostBloom", visualControls.enablePostBloom);
+        writeBool("enablePostAberration", visualControls.enablePostAberration);
+        writeBool("enablePostGrain", visualControls.enablePostGrain);
+        writeBool("enablePostBend", visualControls.enablePostBend);
+        writeBool("enablePostGlitch", visualControls.enablePostGlitch);
+        writeBool("enablePostColorBalance", visualControls.enablePostColorBalance);
+        writeFloat("audioWarpResponse", visualControls.audioWarpResponse);
+        writeFloat("audioFeedbackResponse", visualControls.audioFeedbackResponse);
+        writeFloat("audioBlurResponse", visualControls.audioBlurResponse);
+        writeFloat("audioColorResponse", visualControls.audioColorResponse);
+        writeFloat("audioGlitchResponse", visualControls.audioGlitchResponse);
+        writeFloat("audioBeatSync", visualControls.audioBeatSync);
+        writeFloat("audioLfoRate", visualControls.audioLfoRate);
+        writeFloat("temporalInterpolation", visualControls.temporalInterpolation);
+        writeFloat("temporalBlendStrength", visualControls.temporalBlendStrength);
+        writeFloat("slowMotionFactor", visualControls.slowMotionFactor);
+        writeFloat("frameAccumulation", visualControls.frameAccumulation);
+        writeBool("autoRandomize", videoRandomizer.autoRandomize);
+        writeFloat("intervalSeconds", videoRandomizer.intervalSeconds);
+        writeBool("useVideoDuration", videoRandomizer.useVideoDuration);
+        writeBool("allowDimensionChangeRecreation", allowDimensionChangeRecreation);
 
         saveImGuiLayout();
     }
