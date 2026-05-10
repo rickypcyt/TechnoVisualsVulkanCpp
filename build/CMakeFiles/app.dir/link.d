@@ -4,6 +4,7 @@ app: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o \
   CMakeFiles/app.dir/main.cpp.o \
   CMakeFiles/app.dir/VideoStaging.cpp.o \
+  CMakeFiles/app.dir/MultiPassPipeline.cpp.o \
   CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o \
   CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o \
   CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o \
@@ -246,6 +247,8 @@ app: \
 CMakeFiles/app.dir/main.cpp.o:
 
 CMakeFiles/app.dir/VideoStaging.cpp.o:
+
+CMakeFiles/app.dir/MultiPassPipeline.cpp.o:
 
 CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o:
 

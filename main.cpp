@@ -52,6 +52,7 @@ namespace fs = std::filesystem;
 #include "PlaybackClock.h"
 #include "ProjectState.h"
 #include "RenderJob.h"
+#include "MultiPassPipeline.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -915,28 +916,9 @@ struct GlobalUBO {
     alignas(4) float blendFeedbackMix;
     alignas(4) float analogScanlineFocus;
     alignas(4) float analogMaskBalance;
-    alignas(4) float analogNoise;
-    alignas(4) float analogBloom;
-    alignas(4) float vhsDistortion;
-    alignas(4) float analogChromaticAberration;
-    alignas(4) float audioWarpResponse;
-    alignas(4) float audioFeedbackResponse;
-    alignas(4) float audioBlurResponse;
-    alignas(4) float audioColorResponse;
-    alignas(4) float audioGlitchResponse;
-    alignas(4) float audioBeatSync;
-    alignas(4) float audioLfoRate;
-    alignas(4) float temporalInterpolation;
-    alignas(4) float temporalBlendStrength;
-    alignas(4) float slowMotionFactor;
     alignas(4) float frameAccumulation;
-    // NLE Effect Chain parameters
-    alignas(4) int nleOutputWidth;
-    alignas(4) int nleOutputHeight;
-    alignas(4) float nleGrayscale;
-    alignas(4) float nleBrightness;
-    alignas(4) float nleContrast;
-    alignas(4) float nleSaturation;
+    alignas(4) float slowMotionFactor;
+    alignas(4) float temporalInterpolation;
 };
 
 struct FrameContext {
@@ -1056,6 +1038,14 @@ public:
         device = VK_NULL_HANDLE;
         maxFrames = 0;
         currentFrame = 0;
+    }
+
+    void waitForAllFences() {
+        for (auto& frame : frameContexts) {
+            if (frame.inFlightFence != VK_NULL_HANDLE) {
+                vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+            }
+        }
     }
 
 private:
@@ -1660,6 +1650,25 @@ public:
         createUiWindow();
         initImGui();
         
+        // Initialize multi-pass pipeline
+        std::cout << "[MULTIPASS INIT] videoTexture.sampler=" << videoTexture.sampler << " imageView=" << videoTexture.imageView << std::endl;
+        if (!multiPassPipeline.initialize(
+            physicalDevice,
+            device,
+            graphicsQueue,
+            queueFamilyIndices.graphicsFamily,
+            swapchainExtent,
+            swapchainImageFormat,
+            videoTexture.sampler,
+            videoTexture.sampler,  // Use same sampler for prev
+            videoTexture.imageView,
+            videoTexture.imageViewPrev,  // Use prev view
+            uniformBuffers,
+            sizeof(GlobalUBO)
+        )) {
+            std::cerr << "[App] Failed to initialize multi-pass pipeline" << std::endl;
+        }
+        
         // Initialize formal NLE architecture
         renderWorker = std::make_unique<RenderWorker>();
         renderWorker->on_render_complete = [this](const std::string& source_file) {
@@ -1681,12 +1690,16 @@ public:
                             &pipelineLayout,
                             &descriptorSets);
 
+        // Execute multipass pipeline (includes final swapchain pass)
         renderer.addNode({
-            "FullscreenProcedural",
+            "MultiPassPipeline",
             {},
             {},
             [&](VkCommandBuffer cmd, FrameContext& frame) {
-                fullscreenPass.execute(cmd, frame);
+                multiPassPipeline.execute(cmd, frame.frameIndex, descriptorSets[frame.frameIndex],
+                                         renderPass, swapchainFramebuffers, frame.swapchainImageIndex,
+                                         fullscreenPipeline, pipelineLayout, descriptorSets[frame.frameIndex],
+                                         swapchainExtent, videoTexture.sampler);
             }
         });
 
@@ -1739,6 +1752,7 @@ private:
     Renderer renderer;
     TrianglePass trianglePass;
     FullscreenPass fullscreenPass;
+    MultiPassPipeline multiPassPipeline;
     bool running = true;
     bool framebufferResized = false;
     bool resizePending = false;
@@ -2512,6 +2526,9 @@ private:
         cleanupSwapchain();
         std::cout << "[SWAPCHAIN] DESTROY old resources" << std::endl;
 
+        // Wait for all fences to ensure GPU is done with command buffers
+        frameSystem.waitForAllFences();
+
         // Reset command buffers to clear references to old swapchain resources
         for (auto cmdBuffer : commandBuffers) {
             vkResetCommandBuffer(cmdBuffer, 0);
@@ -2531,6 +2548,7 @@ private:
         createSwapchainFramebuffers();
         createSwapchainSemaphores();
         frameSystem.resizeSwapchainImages(swapchainImages.size());
+        multiPassPipeline.recreate(swapchainExtent);
         std::cout << "[SWAPCHAIN] CREATE new extent=" << drawableWidth << "," << drawableHeight << std::endl;
 
         std::cout << "[RESET] frameIndex=0 fences reset staging reset" << std::endl;
@@ -2560,6 +2578,15 @@ private:
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT && i < descriptorSets.size(); ++i) {
             updateDescriptorSet(i);
         }
+
+        // Update multipass descriptor sets with new resources
+        multiPassPipeline.updateDescriptorSets(
+            uniformBuffers,
+            videoTexture.imageView,
+            videoTexture.imageViewPrev,
+            videoTexture.sampler,
+            videoTexture.sampler
+        );
 
         std::cout << "[SWAPCHAIN] RECREATE END" << std::endl;
     }
@@ -2755,6 +2782,7 @@ private:
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {vertStage, fragStage};
 
+        // No vertex input for fullscreen quad (generated in vertex shader)
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 0;
@@ -2762,7 +2790,7 @@ private:
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo viewportState{};
@@ -2799,6 +2827,10 @@ private:
         colorBlending.logicOp = VK_LOGIC_OP_COPY;
         colorBlending.attachmentCount = 1;
         colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
 
         std::array<VkDynamicState, 2> dynamicStates = {
             VK_DYNAMIC_STATE_VIEWPORT,
@@ -3906,6 +3938,15 @@ private:
         lastReloadTime = std::chrono::steady_clock::now();
         videoReloadInProgress = false;
         std::cout << "[Reload] Video system initialized" << std::endl;
+
+        // Update multipass descriptors with new video texture resources
+        multiPassPipeline.updateDescriptorSets(
+            uniformBuffers,
+            videoTexture.imageView,
+            videoTexture.imageViewPrev,
+            videoTexture.sampler,
+            videoTexture.sampler
+        );
     }
 
     void createDescriptorPool() {
@@ -5161,6 +5202,8 @@ private:
         ubo.gradeSaturation = colorEnabled ? visualControls.gradeSaturation : 1.0f;
         ubo.gradeHueShift = colorEnabled ? visualControls.gradeHueShift : 0.0f;
         ubo.gradeGamma = colorEnabled ? visualControls.gradeGamma : 1.0f;
+        ubo.slowMotionFactor = visualControls.animationSpeed;
+        ubo.temporalInterpolation = 0.0f; // TODO: Add control for this
         ubo.colorLUTIndex = colorEnabled ? visualControls.colorLUTIndex : 0;
         ubo.splitToneBalance = colorEnabled ? visualControls.splitToneBalance : 0.0f;
         ubo.splitToneShadows = colorEnabled ? visualControls.splitToneShadows : glm::vec3(1.0f);
@@ -5215,42 +5258,38 @@ private:
         auto analogEnabled = visualControls.enableAnalog;
         ubo.analogScanlineFocus = analogEnabled ? visualControls.analogScanlineFocus : 0.0f;
         ubo.analogMaskBalance = analogEnabled ? visualControls.analogMaskBalance : 0.0f;
-        ubo.analogNoise = analogEnabled ? visualControls.analogNoise : 0.0f;
-        ubo.analogBloom = analogEnabled ? visualControls.analogBloom : 0.0f;
-        ubo.vhsDistortion = analogEnabled ? visualControls.vhsDistortion : 0.0f;
-        ubo.analogChromaticAberration = analogEnabled ? visualControls.analogChromaticAberration : 0.0f;
+        // TODO: Add these fields to GlobalUBO if needed
+        // ubo.analogNoise = analogEnabled ? visualControls.analogNoise : 0.0f;
+        // ubo.analogBloom = analogEnabled ? visualControls.analogBloom : 0.0f;
+        // ubo.vhsDistortion = analogEnabled ? visualControls.vhsDistortion : 0.0f;
+        // ubo.analogChromaticAberration = analogEnabled ? visualControls.analogChromaticAberration : 0.0f;
 
-        auto audioEnabled = visualControls.enableAudioReactive;
-        ubo.audioWarpResponse = audioEnabled ? visualControls.audioWarpResponse : 0.0f;
-        ubo.audioFeedbackResponse = audioEnabled ? visualControls.audioFeedbackResponse : 0.0f;
-        ubo.audioBlurResponse = audioEnabled ? visualControls.audioBlurResponse : 0.0f;
-        ubo.audioColorResponse = audioEnabled ? visualControls.audioColorResponse : 0.0f;
-        ubo.audioGlitchResponse = audioEnabled ? visualControls.audioGlitchResponse : 0.0f;
-        ubo.audioBeatSync = audioEnabled ? visualControls.audioBeatSync : 0.0f;
-        ubo.audioLfoRate = audioEnabled ? visualControls.audioLfoRate : 0.0f;
+        // TODO: Add audio response fields to GlobalUBO if needed
+        // auto audioEnabled = visualControls.enableAudioReactive;
+        // ubo.audioWarpResponse = audioEnabled ? visualControls.audioWarpResponse : 0.0f;
+        // ubo.audioFeedbackResponse = audioEnabled ? visualControls.audioFeedbackResponse : 0.0f;
+        // ubo.audioBlurResponse = audioEnabled ? visualControls.audioBlurResponse : 0.0f;
+        // ubo.audioColorResponse = audioEnabled ? visualControls.audioColorResponse : 0.0f;
+        // ubo.audioGlitchResponse = audioEnabled ? visualControls.audioGlitchResponse : 0.0f;
+        // ubo.audioBeatSync = audioEnabled ? visualControls.audioBeatSync : 0.0f;
+        // ubo.audioLfoRate = audioEnabled ? visualControls.audioLfoRate : 0.0f;
 
         auto temporalEnabled = visualControls.enableTemporal;
         ubo.temporalInterpolation = temporalEnabled ? visualControls.temporalInterpolation : 0.0f;
-        ubo.temporalBlendStrength = temporalEnabled ? visualControls.temporalBlendStrength : 0.0f;
+        // TODO: Add to GlobalUBO if needed
+        // ubo.temporalBlendStrength = temporalEnabled ? visualControls.temporalBlendStrength : 0.0f;
         ubo.slowMotionFactor = temporalEnabled ? visualControls.slowMotionFactor : 1.0f;
         ubo.frameAccumulation = temporalEnabled ? visualControls.frameAccumulation : 0.0f;
 
-        // NLE Effect Chain parameters - only apply when NLE mode is enabled
-        if (useNLEPlayback) {
-            ubo.nleOutputWidth = 0;  // Always use original resolution
-            ubo.nleOutputHeight = 0; // Always use original resolution
-            ubo.nleGrayscale = currentEffectChain.grayscale ? 1.0f : 0.0f;
-            ubo.nleBrightness = currentEffectChain.brightness;
-            ubo.nleContrast = currentEffectChain.contrast;
-            ubo.nleSaturation = currentEffectChain.saturation;
-        } else {
-            ubo.nleOutputWidth = 0;
-            ubo.nleOutputHeight = 0;
-            ubo.nleGrayscale = 0.0f;
-            ubo.nleBrightness = 0.0f;
-            ubo.nleContrast = 1.0f;
-            ubo.nleSaturation = 1.0f;
-        }
+        // TODO: NLE Effect Chain parameters - add fields to GlobalUBO if needed
+        // if (currentEffectChain.enabled) {
+        //     ubo.nleOutputWidth = 0;
+        //     ubo.nleOutputHeight = 0;
+        //     ubo.nleGrayscale = currentEffectChain.grayscale ? 1.0f : 0.0f;
+        //     ubo.nleBrightness = currentEffectChain.brightness;
+        //     ubo.nleContrast = currentEffectChain.contrast;
+        //     ubo.nleSaturation = currentEffectChain.saturation;
+        // }
 
         memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
     }
@@ -5837,6 +5876,7 @@ private:
         cleanupImGui();
         destroyUiWindow();
 
+        multiPassPipeline.cleanup();
         videoPlayer.shutdown();
         destroyVideoTexture();  // This now calls destroyVideoStagingBuffers internally
         destroySwapchainSemaphores();

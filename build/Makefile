@@ -129,6 +129,30 @@ app/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
 .PHONY : app/fast
 
+MultiPassPipeline.o: MultiPassPipeline.cpp.o
+.PHONY : MultiPassPipeline.o
+
+# target to build an object file
+MultiPassPipeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/MultiPassPipeline.cpp.o
+.PHONY : MultiPassPipeline.cpp.o
+
+MultiPassPipeline.i: MultiPassPipeline.cpp.i
+.PHONY : MultiPassPipeline.i
+
+# target to preprocess a source file
+MultiPassPipeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/MultiPassPipeline.cpp.i
+.PHONY : MultiPassPipeline.cpp.i
+
+MultiPassPipeline.s: MultiPassPipeline.cpp.s
+.PHONY : MultiPassPipeline.s
+
+# target to generate assembly for a file
+MultiPassPipeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/MultiPassPipeline.cpp.s
+.PHONY : MultiPassPipeline.cpp.s
+
 VideoStaging.o: VideoStaging.cpp.o
 .PHONY : VideoStaging.o
 
@@ -354,6 +378,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... app"
+	@echo "... MultiPassPipeline.o"
+	@echo "... MultiPassPipeline.i"
+	@echo "... MultiPassPipeline.s"
 	@echo "... VideoStaging.o"
 	@echo "... VideoStaging.i"
 	@echo "... VideoStaging.s"

@@ -15,6 +15,7 @@ set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 add_executable(app
     main.cpp
     VideoStaging.cpp
+    MultiPassPipeline.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/imgui_draw.cpp

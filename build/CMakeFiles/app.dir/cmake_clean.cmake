@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/app.dir/link.d"
+  "CMakeFiles/app.dir/MultiPassPipeline.cpp.o"
+  "CMakeFiles/app.dir/MultiPassPipeline.cpp.o.d"
   "CMakeFiles/app.dir/VideoStaging.cpp.o"
   "CMakeFiles/app.dir/VideoStaging.cpp.o.d"
   "CMakeFiles/app.dir/main.cpp.o"
