@@ -107,24 +107,18 @@ float hash21(vec2 p) {
     return fract(p.x * p.y);
 }
 
-// Unified 3x3 blur kernel (replaces multiple blur variants)
+// Optimized 5-sample cross blur (better performance than 9-sample box blur)
 vec3 blur3x3(sampler2D tex, vec2 uv) {
     vec3 c = vec3(0.0);
     vec2 t = 1.0 / ubo.resolution;
 
-    c += texture(tex, uv + t*vec2(-1,-1)).rgb;
-    c += texture(tex, uv + t*vec2( 0,-1)).rgb;
-    c += texture(tex, uv + t*vec2( 1,-1)).rgb;
+    c += texture(tex, uv + t*vec2( 0,-1)).rgb * 0.25;
+    c += texture(tex, uv + t*vec2(-1, 0)).rgb * 0.25;
+    c += texture(tex, uv).rgb * 0.5;
+    c += texture(tex, uv + t*vec2( 1, 0)).rgb * 0.25;
+    c += texture(tex, uv + t*vec2( 0, 1)).rgb * 0.25;
 
-    c += texture(tex, uv + t*vec2(-1, 0)).rgb;
-    c += texture(tex, uv).rgb;
-    c += texture(tex, uv + t*vec2( 1, 0)).rgb;
-
-    c += texture(tex, uv + t*vec2(-1, 1)).rgb;
-    c += texture(tex, uv + t*vec2( 0, 1)).rgb;
-    c += texture(tex, uv + t*vec2( 1, 1)).rgb;
-
-    return c / 9.0;
+    return c;
 }
 
 // Directional blur (uses same kernel but with directional sampling)

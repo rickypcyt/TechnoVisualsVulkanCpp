@@ -835,6 +835,10 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
     cleanupPipelines();
     createPipelines();
 
+    // CRITICAL: Recreate descriptor sets since their layouts were destroyed
+    cleanupDescriptorSets();
+    createDescriptorSets();
+
     // CRITICAL: Update descriptor sets to point to new intermediate image views
     // Otherwise passes B-G will sample from destroyed image views
     updateDescriptorSets(

@@ -333,6 +333,9 @@ public:
     }
 
     void shutdown() {
+        std::cout << "[FFmpeg] Shutting down player..." << std::endl;
+        std::cout << "[FFmpeg] Before FREE: packet=" << packet << " frame=" << frame << " swsCtx=" << swsCtx << " codecCtx=" << codecCtx << " formatCtx=" << formatCtx << std::endl;
+
         if (packet) {
             av_packet_free(&packet);
             packet = nullptr;
@@ -340,6 +343,10 @@ public:
         if (frame) {
             av_frame_free(&frame);
             frame = nullptr;
+        }
+        if (swsCtx) {
+            sws_freeContext(swsCtx);
+            swsCtx = nullptr;
         }
         if (codecCtx) {
             avcodec_free_context(&codecCtx);
@@ -349,10 +356,7 @@ public:
             avformat_close_input(&formatCtx);
             formatCtx = nullptr;
         }
-        if (swsCtx) {
-            sws_freeContext(swsCtx);
-            swsCtx = nullptr;
-        }
+        
         cachedWidth = 0;
         cachedHeight = 0;
         cachedDstWidth = 0;
@@ -364,6 +368,8 @@ public:
         videoHeight = 0;
         frameDurationSeconds = 0.0;
         videoDurationSeconds = 0.0;
+        
+        std::cout << "[FFmpeg] Player shutdown complete" << std::endl;
     }
 
     bool seekSeconds(double seconds) {
@@ -568,7 +574,7 @@ private:
                 targetWidth,
                 targetHeight,
                 AV_PIX_FMT_RGBA,
-                SWS_BILINEAR,
+                SWS_FAST_BILINEAR,
                 nullptr,
                 nullptr,
                 nullptr);
@@ -1269,6 +1275,44 @@ struct ResourceHandle {
     VkDeviceMemory memory = VK_NULL_HANDLE; // Legacy, kept for compatibility
     VkImage image = VK_NULL_HANDLE;
     MemoryAllocation allocation;
+
+    // Delete copy constructor and copy assignment to prevent double-ownership
+    ResourceHandle(const ResourceHandle&) = delete;
+    ResourceHandle& operator=(const ResourceHandle&) = delete;
+
+    // Default move constructor and move assignment
+    ResourceHandle(ResourceHandle&& other) noexcept
+        : type(other.type)
+        , buffer(other.buffer)
+        , memory(other.memory)
+        , image(other.image)
+        , allocation(other.allocation)
+    {
+        other.type = Type::Unknown;
+        other.buffer = VK_NULL_HANDLE;
+        other.memory = VK_NULL_HANDLE;
+        other.image = VK_NULL_HANDLE;
+        other.allocation = {};
+    }
+
+    ResourceHandle& operator=(ResourceHandle&& other) noexcept {
+        if (this != &other) {
+            type = other.type;
+            buffer = other.buffer;
+            memory = other.memory;
+            image = other.image;
+            allocation = other.allocation;
+
+            other.type = Type::Unknown;
+            other.buffer = VK_NULL_HANDLE;
+            other.memory = VK_NULL_HANDLE;
+            other.image = VK_NULL_HANDLE;
+            other.allocation = {};
+        }
+        return *this;
+    }
+
+    ResourceHandle() = default;
 };
 
 struct RenderPass {
@@ -1593,6 +1637,34 @@ struct VideoTextureResources {
         ResourceHandle buffer;
         void* mapped = nullptr;
         size_t capacity = 0;
+
+        // Delete copy constructor and copy assignment to prevent double-ownership
+        StagingSlot(const StagingSlot&) = delete;
+        StagingSlot& operator=(const StagingSlot&) = delete;
+
+        // Default move constructor and move assignment
+        StagingSlot(StagingSlot&& other) noexcept
+            : buffer(std::move(other.buffer))
+            , mapped(other.mapped)
+            , capacity(other.capacity)
+        {
+            other.mapped = nullptr;
+            other.capacity = 0;
+        }
+
+        StagingSlot& operator=(StagingSlot&& other) noexcept {
+            if (this != &other) {
+                buffer = std::move(other.buffer);
+                mapped = other.mapped;
+                capacity = other.capacity;
+
+                other.mapped = nullptr;
+                other.capacity = 0;
+            }
+            return *this;
+        }
+
+        StagingSlot() = default;
     };
 
     ResourceHandle imageHandle;
@@ -1618,6 +1690,15 @@ struct VideoTextureResources {
     ResourceHandle prevFrameStagingBuffer;  // Staging buffer for previous frame upload
     void* prevFrameStagingMapped = nullptr;
 };
+
+// Global staging buffer lifecycle tracking
+static int g_aliveStagingBuffers = 0;
+static int g_destroyStagingCalls = 0;
+
+// Reentrancy guards for debugging
+static std::atomic<bool> g_swapchainRecreating(false);
+static std::atomic<bool> g_videoReloading(false);
+static std::string g_pendingVideoReloadAfterSwapchain;
 
 class App {
 public:
@@ -2520,7 +2601,14 @@ private:
             framebufferResized = true;
             return;
         }
-        std::cout << "[SWAPCHAIN] RECREATE START" << std::endl;
+
+        // Check for reentrancy
+        if (g_swapchainRecreating.exchange(true)) {
+            std::cout << "[SWAPCHAIN] RECREATE SKIPPED (already recreating)" << std::endl;
+            return;
+        }
+
+        std::cout << "[SWAPCHAIN] RECREATE START (video reloading: " << g_videoReloading << ")" << std::endl;
         vkDeviceWaitIdle(device);
 
         cleanupSwapchain();
@@ -2589,6 +2677,15 @@ private:
         );
 
         std::cout << "[SWAPCHAIN] RECREATE END" << std::endl;
+        g_swapchainRecreating = false;
+
+        // Process pending video reload after swapchain recreation
+        if (!g_pendingVideoReloadAfterSwapchain.empty()) {
+            std::cout << "[SWAPCHAIN] Processing pending video reload: " << g_pendingVideoReloadAfterSwapchain << std::endl;
+            std::string pendingPath = g_pendingVideoReloadAfterSwapchain;
+            g_pendingVideoReloadAfterSwapchain.clear();
+            reloadVideoSource(pendingPath);
+        }
     }
 
     void createDescriptorSetLayout() {
@@ -2882,14 +2979,18 @@ private:
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
             );
 
-            uniformBufferHandles[i] = handle;
+            // Save legacy fields before moving
             uniformBuffers[i] = handle.buffer;
             uniformBuffersMemory[i] = handle.memory;
 
+            // Map before moving
             uniformBuffersMapped[i] = resourceSystem.map(handle);
             if (uniformBuffersMapped[i] == nullptr) {
                 throw std::runtime_error("failed to map uniform buffer");
             }
+
+            // Now move the handle
+            uniformBufferHandles[i] = std::move(handle);
         }
     }
 
@@ -2916,12 +3017,16 @@ private:
         // Decode a probe frame to ensure ensureScalingContext calculates
         // the final dimensions before creating buffers
         {
+            std::cout << "[Video] Grabbing probe frame..." << std::endl;
             std::vector<uint8_t> probeFrame;
             int probeW = 0, probeH = 0;
             videoPlayer.grabFrame(probeFrame, probeW, probeH);
+            std::cout << "[Video] Probe frame grabbed: " << probeW << "x" << probeH << " size=" << probeFrame.size() << std::endl;
             // Don't use the frame, just force the scaler to initialize
             // with the correct dimensions
+            std::cout << "[Video] Rewinding to 0s..." << std::endl;
             videoPlayer.seekSeconds(0.0);  // rewind
+            std::cout << "[Video] Rewind complete" << std::endl;
         }
 
         std::cout << "[Video] Final decode dimensions: " << videoPlayer.width() << "x" << videoPlayer.height() << std::endl;
@@ -2932,12 +3037,15 @@ private:
         if (visualControls.randomVideoStart && videoPlayer.durationSeconds() > 0.1) {
             std::uniform_real_distribution<double> dist(0.0, std::max(0.0, videoPlayer.durationSeconds() - videoPlayer.frameDuration()));
             double target = dist(randomEngine);
+            std::cout << "[Video] Random start: seeking to " << target << "s (duration: " << videoPlayer.durationSeconds() << "s)" << std::endl;
             if (videoPlayer.seekSeconds(target)) {
                 resetVideoPlaybackState(target);
             } else {
+                std::cout << "[Video] Random start: seek failed, starting from 0" << std::endl;
                 resetVideoPlaybackState(0.0);
             }
         } else {
+            std::cout << "[Video] Starting from 0s (random start: " << visualControls.randomVideoStart << ", duration: " << videoPlayer.durationSeconds() << "s)" << std::endl;
             resetVideoPlaybackState(0.0);
         }
 
@@ -2970,7 +3078,17 @@ private:
             }
         }
 
-        if (videoTexture.ready && videoTexture.width == width && videoTexture.height == height && buffersValid) {
+        size_t requiredSize = static_cast<size_t>(width) * height * 4;
+        size_t allocatedSize = videoTexture.frameSize;
+
+        std::cout << "[STAGING] Dimension check: allocated=" << allocatedSize 
+                  << " required=" << requiredSize 
+                  << " width=" << width << " height=" << height 
+                  << " old=" << videoTexture.width << "x" << videoTexture.height
+                  << " ready=" << videoTexture.ready
+                  << " buffersValid=" << buffersValid << std::endl;
+
+        if (videoTexture.ready && videoTexture.width == width && videoTexture.height == height && buffersValid && allocatedSize >= requiredSize) {
             std::cout << "[STAGING] Skipping recreation (valid)" << std::endl;
             return;
         }
@@ -3070,8 +3188,10 @@ private:
             throw std::runtime_error("failed to map previous frame staging buffer");
         }
 
-        videoTexture.prevFrameStagingBuffer = prevStagingBuffer;
+        videoTexture.prevFrameStagingBuffer = std::move(prevStagingBuffer);
         videoTexture.prevFrameStagingMapped = prevMapped;
+        g_aliveStagingBuffers++;
+        std::cout << "[STAGING] Created prev frame staging buffer, alive=" << g_aliveStagingBuffers << std::endl;
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
             if (videoTexture.frameSize == 0) {
@@ -3090,9 +3210,11 @@ private:
                 throw std::runtime_error("failed to map video staging buffer");
             }
 
-            videoTexture.stagingSlots[i].buffer = buffer;
+            videoTexture.stagingSlots[i].buffer = std::move(buffer);
             videoTexture.stagingSlots[i].mapped = mapped;
             videoTexture.stagingSlots[i].capacity = videoTexture.frameSize;
+            g_aliveStagingBuffers++;
+            std::cout << "[STAGING] Created staging slot " << i << ", alive=" << g_aliveStagingBuffers << std::endl;
         }
 
         videoTexture.ready = true;
@@ -3491,94 +3613,7 @@ private:
 
         const double frameDuration = std::max(1e-6, videoPlayer.frameDuration());
 
-        // NLE Playback Mode: Use PTS-based clock
-        if (useNLEPlayback) {
-            try {
-                std::cout << "[NLE] NLE mode activated" << std::endl;
-                // Apply speed factor from EffectChain to the clock
-                if (currentEffectChain.slow_factor != playbackClock.getSpeedFactor()) {
-                    playbackClock.setSpeed(currentEffectChain.slow_factor);
-                }
-
-                // The clock auto-advances based on wall-clock time
-                // No manual delta update needed - getCurrentTime() handles it
-
-                double targetTime = playbackClock.getCurrentTime();
-
-                // Handle loop
-                double duration = videoPlayer.durationSeconds();
-                if (duration > 0.1 && targetTime >= duration) {
-                    playbackClock.seek(0.0);
-                    targetTime = 0.0;
-                }
-
-                // Get frame at PTS - use frame buffer cache to avoid expensive seeks
-                std::vector<uint8_t> frameData;
-                int frameWidth, frameHeight;
-                
-                // First try to get frame from existing buffer to avoid seek+decode
-                size_t copySize = 0;
-                if (sampleFrameForTime(targetTime, static_cast<uint8_t*>(slot.mapped), slot.capacity, copySize)) {
-                    videoTexture.stagingTimestamps[writeSlot] = targetTime;
-                    videoTexture.pendingUploads[writeSlot] = true;
-                    videoTrace("[NLE] Cached frame at t=", targetTime, " size=", copySize);
-                    return;
-                }
-                
-                // Frame not in buffer - need to decode it
-                // Only seek if target time is far from current decode position
-                static double nleLastSeekTime = -1.0;
-                const double seekThreshold = 0.5; // Only seek if jumping more than 0.5s
-                bool needsSeek = (nleLastSeekTime < 0.0) || 
-                                 (std::abs(targetTime - nleLastSeekTime) > seekThreshold);
-                
-                if (needsSeek) {
-                    nleLastSeekTime = targetTime;
-                    videoPlayer.seekSeconds(targetTime);
-                    // Clear buffer after seek since frames are no longer valid
-                    videoFrameBuffer.clear();
-                }
-                
-                // Decode frames until we reach target time
-                double decodeCursor = targetTime;
-                bool frameFound = false;
-                const int maxDecodeAttempts = 32; // Prevent infinite loops
-                int decodeAttempts = 0;
-                
-                while (!frameFound && decodeAttempts < maxDecodeAttempts) {
-                    decodeAttempts++;
-                    if (decodeFrameIntoBuffer(frameDuration)) {
-                        // Check if we have a frame close to target time
-                        for (const auto& cached : videoFrameBuffer) {
-                            if (std::abs(cached.timestamp - targetTime) < frameDuration) {
-                                // Found matching frame
-                                size_t frameCopySize = static_cast<size_t>(cached.width) * cached.height * 4;
-                                if (frameCopySize > 0 && frameCopySize <= slot.capacity && !cached.pixels.empty()) {
-                                    std::memcpy(slot.mapped, cached.pixels.data(), frameCopySize);
-                                    videoTexture.stagingTimestamps[writeSlot] = targetTime;
-                                    videoTexture.pendingUploads[writeSlot] = true;
-                                    videoTrace("[NLE] Decoded frame at t=", targetTime, " size=", frameCopySize);
-                                    frameFound = true;
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                
-                if (!frameFound) {
-                    std::cerr << "[NLE] Failed to get frame at PTS=" << targetTime << " after " << decodeAttempts << " attempts" << std::endl;
-                }
-                return;
-            } catch (const std::exception& e) {
-                std::cerr << "[NLE] Exception: " << e.what() << std::endl;
-                return;
-            }
-        }
-
-        // Original sequential playback mode
+        // Sequential playback mode (always used for live display)
         const double clipFps = (frameDuration > 1e-6) ? (1.0 / frameDuration) : 0.0;
         const double playbackRate = effectivePlaybackRate(clipFps);
         const double decodeOversample = std::max(1.0, static_cast<double>(visualControls.videoDecodeOversample));
@@ -3668,8 +3703,10 @@ private:
             return;
         }
 
-        std::cout << "[STAGING] destroyVideoStagingBuffers: slots="
-                  << videoTexture.stagingSlots.size() << std::endl;
+        g_destroyStagingCalls++;
+        std::cout << "[STAGING] destroyVideoStagingBuffers call #" << g_destroyStagingCalls 
+                  << " slots=" << videoTexture.stagingSlots.size() 
+                  << " alive=" << g_aliveStagingBuffers << std::endl;
 
         for (size_t i = 0; i < videoTexture.stagingSlots.size(); ++i) {
             auto& slot = videoTexture.stagingSlots[i];
@@ -3684,6 +3721,13 @@ private:
             if (slot.mapped != nullptr && slot.buffer.type != ResourceHandle::Type::Unknown) {
                 resourceSystem.unmap(slot.buffer);
                 slot.mapped = nullptr;
+                g_aliveStagingBuffers--;
+                if (g_aliveStagingBuffers < 0) {
+                    std::cerr << "[STAGING] ERROR: Double-free detected! g_aliveStagingBuffers went negative: " 
+                              << g_aliveStagingBuffers << std::endl;
+                    std::cerr << "[STAGING] This indicates a memory corruption bug!" << std::endl;
+                }
+                std::cout << "[STAGING] Unmapped slot " << i << ", alive=" << g_aliveStagingBuffers << std::endl;
             }
             if (slot.buffer.type != ResourceHandle::Type::Unknown) {
                 resourceSystem.destroy(slot.buffer);
@@ -3692,7 +3736,7 @@ private:
             slot.capacity = 0;
         }
 
-        std::cout << "[STAGING] destroyVideoStagingBuffers complete" << std::endl;
+        std::cout << "[STAGING] destroyVideoStagingBuffers complete, alive=" << g_aliveStagingBuffers << std::endl;
     }
 
     void destroyVideoTexture() {
@@ -3726,6 +3770,13 @@ private:
             if (videoTexture.prevFrameStagingMapped != nullptr) {
                 resourceSystem.unmap(videoTexture.prevFrameStagingBuffer);
                 videoTexture.prevFrameStagingMapped = nullptr;
+                g_aliveStagingBuffers--;
+                if (g_aliveStagingBuffers < 0) {
+                    std::cerr << "[STAGING] ERROR: Double-free detected in prev frame buffer! g_aliveStagingBuffers went negative: " 
+                              << g_aliveStagingBuffers << std::endl;
+                    std::cerr << "[STAGING] This indicates a memory corruption bug!" << std::endl;
+                }
+                std::cout << "[STAGING] Unmapped prev frame staging buffer, alive=" << g_aliveStagingBuffers << std::endl;
             }
             resourceSystem.destroy(videoTexture.prevFrameStagingBuffer);
             videoTexture.prevFrameStagingBuffer = {};
@@ -3770,20 +3821,104 @@ private:
             updateRandomizerForSelection(selectedVideoAsset, true);
         }
 
-        if (ImGui::BeginCombo("Video Asset", assets[selectedVideoAsset].metadata.filename.c_str())) {
-            for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
-                bool isSelected = (i == selectedVideoAsset);
-                if (ImGui::Selectable(assets[i].metadata.filename.c_str(), isSelected)) {
-                    if (selectedVideoAsset != i) {
-                        selectedVideoAsset = i;
-                        updateRandomizerForSelection(i, true);
-                        reloadVideoSource(assets[i].metadata.path);
+        // Build directory tree structure
+        std::map<std::string, std::vector<int>> dirTree;
+        std::set<std::string> allDirs;
+        
+        for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+            fs::path assetPath(assets[i].metadata.path);
+            fs::path relativePath = fs::relative(assetPath.parent_path(), videoAssetsRoot);
+            std::string dirStr = relativePath.string();
+            
+            // Handle root directory
+            if (dirStr == ".") {
+                dirStr = "";
+            }
+            
+            dirTree[dirStr].push_back(i);
+            allDirs.insert(dirStr);
+            
+            // Add all parent directories
+            fs::path currentPath = relativePath;
+            while (currentPath.has_parent_path() && currentPath.parent_path().string() != ".") {
+                currentPath = currentPath.parent_path();
+                allDirs.insert(currentPath.string());
+            }
+        }
+
+        // Display current selection
+        std::string currentLabel = assets[selectedVideoAsset].metadata.filename.c_str();
+        if (ImGui::BeginCombo("Video Asset", currentLabel.c_str())) {
+            // Helper to draw directory tree recursively
+            std::function<void(const std::string&, int)> drawDirTree = [&](const std::string& dir, int depth) {
+                ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+                
+                // Find items in this directory
+                auto it = dirTree.find(dir);
+                if (it != dirTree.end() && it->second.size() == 1 && depth > 0) {
+                    // If directory has only one item and not root, auto-expand
+                    nodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
+                }
+                
+                // Check if this directory has subdirectories
+                bool hasSubdirs = false;
+                for (const auto& checkDir : allDirs) {
+                    if (!checkDir.empty()) {
+                        fs::path checkPath(checkDir);
+                        if (checkPath.has_parent_path() && checkPath.parent_path().string() == dir) {
+                            hasSubdirs = true;
+                            break;
+                        }
                     }
                 }
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
+                
+                // Node label
+                std::string nodeLabel = dir.empty() ? videoAssetsRoot : fs::path(dir).filename().string();
+                
+                // Draw node
+                bool nodeOpen = false;
+                if (hasSubdirs || (it != dirTree.end() && it->second.size() > 0)) {
+                    nodeOpen = ImGui::TreeNodeEx(nodeLabel.c_str(), nodeFlags);
+                } else {
+                    ImGui::TreeNodeEx(nodeLabel.c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
                 }
-            }
+                
+                // Draw videos in this directory
+                if (it != dirTree.end()) {
+                    for (int assetIdx : it->second) {
+                        bool isSelected = (assetIdx == selectedVideoAsset);
+                        ImGui::Indent();
+                        if (ImGui::Selectable(assets[assetIdx].metadata.filename.c_str(), isSelected)) {
+                            if (selectedVideoAsset != assetIdx) {
+                                selectedVideoAsset = assetIdx;
+                                updateRandomizerForSelection(assetIdx, true);
+                                reloadVideoSource(assets[assetIdx].metadata.path);
+                            }
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::Unindent();
+                    }
+                }
+                
+                // Recursively draw subdirectories
+                if (nodeOpen) {
+                    for (const auto& subDir : allDirs) {
+                        if (!subDir.empty()) {
+                            fs::path subPath(subDir);
+                            if (subPath.has_parent_path() && subPath.parent_path().string() == dir) {
+                                drawDirTree(subDir, depth + 1);
+                            }
+                        }
+                    }
+                    ImGui::TreePop();
+                }
+            };
+            
+            // Start from root
+            drawDirTree("", 0);
+            
             ImGui::EndCombo();
         }
     }
@@ -3909,12 +4044,24 @@ private:
             return;
         }
 
+        // Check for reentrancy with swapchain recreation
+        if (g_swapchainRecreating) {
+            std::cout << "[Reload] QUEUED (swapchain recreation in progress)" << std::endl;
+            g_pendingVideoReloadAfterSwapchain = path;
+            return;
+        }
+
+        if (g_videoReloading.exchange(true)) {
+            std::cout << "[Reload] SKIPPED (already reloading)" << std::endl;
+            return;
+        }
+
         if (videoSourcePath == path && videoSubsystemInitialized) {
             std::cout << "[Reload] Already playing this file, but forcing reload for new version" << std::endl;
             // Don't return - force reload even if path is same (file content may have changed)
         }
 
-        std::cout << "[Reload] Starting reload for: " << path << std::endl;
+        std::cout << "[Reload] Starting reload for: " << path << " (swapchain recreating: " << g_swapchainRecreating << ")" << std::endl;
 
         videoReloadInProgress = true;
         videoSourcePath = path;
@@ -3927,16 +4074,21 @@ private:
 
         // Invalida uploads pendientes ANTES de destruir los buffers
         videoTexture.pendingUploads.fill(false);
+        videoTexture.pendingUploadsPrev.fill(false);
 
         videoPlayer.shutdown();
         videoSubsystemInitialized = false;
         resetVideoPlaybackState(0.0);
         lastFrameTimestamp = std::chrono::steady_clock::now();
 
+        // Small delay to let allocator stabilize after FFmpeg cleanup
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
         std::cout << "[Reload] Initializing video system..." << std::endl;
         initVideoSystem();
         lastReloadTime = std::chrono::steady_clock::now();
         videoReloadInProgress = false;
+        g_videoReloading = false;
         std::cout << "[Reload] Video system initialized" << std::endl;
 
         // Update multipass descriptors with new video texture resources
@@ -4086,7 +4238,21 @@ private:
             changed |= ImGui::SliderFloat("Grayscale", &visualControls.grayscaleAmount, 0.0f, 1.0f);
             changed |= ImGui::SliderFloat("Sharpen", &visualControls.sharpenAmount, 0.0f, 1.0f);
             changed |= ImGui::Checkbox("Bicubic Upscale", &visualControls.upscaleEnabled);
+            ImGui::SameLine();
             changed |= ImGui::Checkbox("Random start", &visualControls.randomVideoStart);
+            if (visualControls.randomVideoStart) {
+                ImGui::SameLine();
+                if (ImGui::Button("Jump Random")) {
+                    if (videoPlayer.durationSeconds() > 0.1) {
+                        std::uniform_real_distribution<double> dist(0.0, std::max(0.0, videoPlayer.durationSeconds() - videoPlayer.frameDuration()));
+                        double target = dist(randomEngine);
+                        if (videoPlayer.seekSeconds(target)) {
+                            resetVideoPlaybackState(target);
+                            videoFrameBuffer.clear();
+                        }
+                    }
+                }
+            }
             changed |= ImGui::SliderFloat("Loop crossfade (s)", &visualControls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
             ImGui::Separator();
             ImGui::Text("Post FX");
@@ -4289,126 +4455,104 @@ private:
         if (showNLEWindow) {
             ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f), ImGuiCond_FirstUseEver);
             if (ImGui::Begin("NLE Editor", &showNLEWindow)) {
-                ImGui::Text("Playback Mode");
-                ImGui::Checkbox("Use NLE Playback (PTS-based)", &useNLEPlayback);
+                ImGui::Text("NLE Effects (for rendering/exporting only)");
+                ImGui::TextDisabled("These effects are applied when rendering to a new file");
+                ImGui::Separator();
+                ImGui::Text("Edit Parameters");
                 
-                if (useNLEPlayback) {
-                    ImGui::Separator();
-                    ImGui::Text("Playback Clock");
-                    ImGui::Text("Current time: %.3f s", playbackClock.getCurrentTime());
-                    ImGui::Text("Speed: %.2fx", playbackClock.getSpeedFactor());
-                    
-                    if (ImGui::Button("Reset Clock")) {
-                        playbackClock.reset();
-                    }
-                    ImGui::SameLine();
-                    if (playbackClock.isPaused()) {
-                        if (ImGui::Button("Resume")) {
-                            playbackClock.resume();
-                        }
-                    } else {
-                        if (ImGui::Button("Pause")) {
-                            playbackClock.pause();
-                        }
-                    }
-                    
-                    ImGui::Separator();
-                    ImGui::Text("Edit Parameters");
-                    
-                    // Quality presets
-                    ImGui::Text("Quality Presets:");
-                    if (ImGui::Button("Auto (Match Input)")) {
-                        g_project_state.width = 0;
-                        g_project_state.height = 0;
-                        g_project_state.fps = 0;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("240p")) {
-                        g_project_state.width = 426;
-                        g_project_state.height = 240;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("720p")) {
-                        g_project_state.width = 1280;
-                        g_project_state.height = 720;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("1080p")) {
-                        g_project_state.width = 1920;
-                        g_project_state.height = 1080;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("1080p 4:3")) {
-                        g_project_state.width = 1440;
-                        g_project_state.height = 1080;
-                    }
-                    
-                    ImGui::Separator();
-                    
-                    // Speed control
-                    ImGui::SliderFloat("Speed", &g_project_state.speed, 0.25f, 4.0f, "%.2fx");
-
-                    // FPS (0 = auto-detect from input)
-                    ImGui::SliderInt("FPS", &g_project_state.fps, 0, 120);
-
-                    // Scale (0 = auto-detect from input)
-                    ImGui::SliderInt("Width", &g_project_state.width, 0, 3840);
-                    ImGui::SliderInt("Height", &g_project_state.height, 0, 2160);
-                    
-                    // Scale flags
-                    static char scale_flags_buf[64] = "lanczos";
-                    ImGui::InputText("Scale Flags", scale_flags_buf, sizeof(scale_flags_buf));
-                    g_project_state.scale_flags = scale_flags_buf;
-                    
-                    // Unsharp filter
-                    ImGui::Checkbox("Enable Unsharp", &g_project_state.enable_unsharp);
-                    if (g_project_state.enable_unsharp) {
-                        ImGui::SliderFloat("Unsharp Amount", &g_project_state.unsharp_amount, 0.0f, 2.0f);
-                        ImGui::SliderFloat("Unsharp Radius", &g_project_state.unsharp_radius, 1.0f, 10.0f);
-                    }
-                    
-                    ImGui::Separator();
-                    
-                    // Output file
-                    static char output_file_buf[256] = "output.mp4";
-                    ImGui::InputText("Output File", output_file_buf, sizeof(output_file_buf));
-                    g_project_state.output_file = output_file_buf;
-                    
-                    ImGui::Separator();
-
-                    if (ImGui::Button("Apply Changes")) {
-                        g_project_state.increment_version();
-                    }
-
-                    ImGui::Separator();
-
-                    // Render status display
-                    if (renderWorker) {
-                        auto status = renderWorker->get_status();
-                        ImGui::Text("Render Status:");
-                        ImGui::Text("  Active Jobs: %zu", status.active_job_count);
-                        ImGui::Text("  Pending Jobs: %zu", status.pending_job_count);
-                        ImGui::Text("  Current Version: %lu", status.current_version);
-
-                        if (status.active_job_count > 0) {
-                            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "  Status: RENDERING");
-                        } else if (status.pending_job_count > 0) {
-                            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  Status: QUEUED");
-                        } else {
-                            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "  Status: IDLE");
-                        }
-
-                        if (!status.last_error.empty()) {
-                            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "  Last Error: %s", status.last_error.c_str());
-                        }
-                    }
-
-                    ImGui::Separator();
-
-                    ImGui::Text("Current File: %s", g_project_state.active_file.c_str());
-                    ImGui::Text("Version: %lu", g_project_state.get_version());
-                    ImGui::Text("Dirty: %s", g_project_state.is_dirty() ? "Yes" : "No");
+                // Quality presets
+                ImGui::Text("Quality Presets:");
+                if (ImGui::Button("Auto (Match Input)")) {
+                    g_project_state.width = 0;
+                    g_project_state.height = 0;
+                    g_project_state.fps = 0;
                 }
+                ImGui::SameLine();
+                if (ImGui::Button("240p")) {
+                    g_project_state.width = 426;
+                    g_project_state.height = 240;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("720p")) {
+                    g_project_state.width = 1280;
+                    g_project_state.height = 720;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("1080p")) {
+                    g_project_state.width = 1920;
+                    g_project_state.height = 1080;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("1080p 4:3")) {
+                    g_project_state.width = 1440;
+                    g_project_state.height = 1080;
+                }
+                
+                ImGui::Separator();
+                
+                // Speed control
+                ImGui::SliderFloat("Speed", &g_project_state.speed, 0.25f, 4.0f, "%.2fx");
+
+                // FPS (0 = auto-detect from input)
+                ImGui::SliderInt("FPS", &g_project_state.fps, 0, 120);
+
+                // Scale (0 = auto-detect from input)
+                ImGui::SliderInt("Width", &g_project_state.width, 0, 3840);
+                ImGui::SliderInt("Height", &g_project_state.height, 0, 2160);
+                
+                // Scale flags
+                static char scale_flags_buf[64] = "lanczos";
+                ImGui::InputText("Scale Flags", scale_flags_buf, sizeof(scale_flags_buf));
+                g_project_state.scale_flags = scale_flags_buf;
+                
+                // Unsharp filter
+                ImGui::Checkbox("Enable Unsharp", &g_project_state.enable_unsharp);
+                if (g_project_state.enable_unsharp) {
+                    ImGui::SliderFloat("Unsharp Amount", &g_project_state.unsharp_amount, 0.0f, 2.0f);
+                    ImGui::SliderFloat("Unsharp Radius", &g_project_state.unsharp_radius, 1.0f, 10.0f);
+                }
+                
+                ImGui::Separator();
+                
+                // Output file
+                static char output_file_buf[256] = "output.mp4";
+                ImGui::InputText("Output File", output_file_buf, sizeof(output_file_buf));
+                g_project_state.output_file = output_file_buf;
+                
+                ImGui::Separator();
+
+                if (ImGui::Button("Apply Changes")) {
+                    g_project_state.increment_version();
+                }
+
+                ImGui::Separator();
+
+                // Render status display
+                if (renderWorker) {
+                    auto status = renderWorker->get_status();
+                    ImGui::Text("Render Status:");
+                    ImGui::Text("  Active Jobs: %zu", status.active_job_count);
+                    ImGui::Text("  Pending Jobs: %zu", status.pending_job_count);
+                    ImGui::Text("  Current Version: %lu", status.current_version);
+
+                    if (status.active_job_count > 0) {
+                        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "  Status: RENDERING");
+                    } else if (status.pending_job_count > 0) {
+                        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  Status: QUEUED");
+                    } else {
+                        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "  Status: IDLE");
+                    }
+
+                    if (!status.last_error.empty()) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "  Last Error: %s", status.last_error.c_str());
+                    }
+                }
+
+                ImGui::Separator();
+
+                ImGui::Text("Current File: %s", g_project_state.active_file.c_str());
+                ImGui::Text("Version: %lu", g_project_state.get_version());
+                ImGui::Text("Dirty: %s", g_project_state.is_dirty() ? "Yes" : "No");
             }
             ImGui::End();
         }
@@ -5375,11 +5519,11 @@ private:
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
         );
 
-        vertexBufferHandle = handle;
-
         void* data = resourceSystem.map(handle);
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         resourceSystem.unmap(handle);
+
+        vertexBufferHandle = std::move(handle);
     }
 
     void mainLoop() {

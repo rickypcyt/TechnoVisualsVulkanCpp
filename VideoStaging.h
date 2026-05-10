@@ -9,6 +9,44 @@ struct VideoStagingSlot {
     void* mapped = nullptr;
     size_t capacity = 0;
     double timestamp = 0.0;
+
+    // Delete copy constructor and copy assignment to prevent double-ownership
+    VideoStagingSlot(const VideoStagingSlot&) = delete;
+    VideoStagingSlot& operator=(const VideoStagingSlot&) = delete;
+
+    // Default move constructor and move assignment
+    VideoStagingSlot(VideoStagingSlot&& other) noexcept
+        : buffer(other.buffer)
+        , memory(other.memory)
+        , mapped(other.mapped)
+        , capacity(other.capacity)
+        , timestamp(other.timestamp)
+    {
+        other.buffer = VK_NULL_HANDLE;
+        other.memory = VK_NULL_HANDLE;
+        other.mapped = nullptr;
+        other.capacity = 0;
+        other.timestamp = 0.0;
+    }
+
+    VideoStagingSlot& operator=(VideoStagingSlot&& other) noexcept {
+        if (this != &other) {
+            buffer = other.buffer;
+            memory = other.memory;
+            mapped = other.mapped;
+            capacity = other.capacity;
+            timestamp = other.timestamp;
+
+            other.buffer = VK_NULL_HANDLE;
+            other.memory = VK_NULL_HANDLE;
+            other.mapped = nullptr;
+            other.capacity = 0;
+            other.timestamp = 0.0;
+        }
+        return *this;
+    }
+
+    VideoStagingSlot() = default;
 };
 
 struct VideoStagingWriteResult {
