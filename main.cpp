@@ -61,7 +61,7 @@ const size_t MAX_VIDEO_FRAME_BUFFER = 48;
 const int MAX_VIDEO_OUTPUT_HEIGHT = 2160;  // Support 4K resolution
 const std::array<int, 5> FORCED_FPS_OPTIONS = {0, 15, 24, 30, 60};
 const std::string imguiIniFilename = "imgui.ini";
-constexpr bool kEnableVideoTrace = true;
+constexpr bool kEnableVideoTrace = false;
 
 // Signal handler for crashes
 #include <csignal>
@@ -1713,6 +1713,7 @@ private:
         int historyWindow = 3;
         std::deque<int> recentHistory;
     } videoRandomizer;
+    bool allowDimensionChangeRecreation = false;
     std::mt19937 randomEngine{std::random_device{}()};
     std::string controlStatePath = "controls_state.cfg";
     static constexpr const char* CONTROL_STATE_VERSION = "VJAY_STATE_V6";
@@ -2753,15 +2754,11 @@ private:
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-            std::cout << "[STAGING] slot=" << i << " allocated capacity=" << videoTexture.frameSize << std::endl;
-
             void* mapped = nullptr;
             if (vkMapMemory(device, buffer.memory, 0, static_cast<VkDeviceSize>(videoTexture.frameSize), 0, &mapped) != VK_SUCCESS) {
                 resourceSystem.destroy(buffer);
                 throw std::runtime_error("failed to map video staging buffer");
             }
-
-            std::cout << "[STAGING] slot=" << i << " mapped ptr=" << mapped << std::endl;
 
             videoStaging.setSlot(i, buffer.buffer, buffer.memory, mapped, videoTexture.frameSize);
         }
@@ -2893,13 +2890,6 @@ private:
             return false;
         }
 
-        // Cooldown after reload to prevent FFmpeg crashes
-        auto now = std::chrono::steady_clock::now();
-        auto timeSinceReload = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastReloadTime).count();
-        if (timeSinceReload < 500) {
-            return false;
-        }
-
         double duration = videoPlayer.durationSeconds();
         bool didLoop = false;
         if (duration > 0.1 && videoDecodeCursor >= duration) {
@@ -2932,13 +2922,23 @@ private:
             if (decodedWidth != static_cast<int>(videoTexture.width) || decodedHeight != static_cast<int>(videoTexture.height)) {
                 std::cout << "[VIDEO] Dimension change detected: " << videoTexture.width << "x" << videoTexture.height
                           << " -> " << decodedWidth << "x" << decodedHeight << std::endl;
-                createVideoTextureResources(decodedWidth, decodedHeight);
-                frame.width = decodedWidth;
-                frame.height = decodedHeight;
-                videoFrameBuffer.clear();
-                videoFrameBuffer.push_back(frame);
-                videoDecodeCursor = frame.timestamp + frameDuration;
-                return true;
+                if (allowDimensionChangeRecreation) {
+                    createVideoTextureResources(decodedWidth, decodedHeight);
+                    frame.width = decodedWidth;
+                    frame.height = decodedHeight;
+                    videoFrameBuffer.clear();
+                    videoFrameBuffer.push_back(frame);
+                    videoDecodeCursor = frame.timestamp + frameDuration;
+                    return true;
+                } else {
+                    std::cout << "[VIDEO] Dimension change recreation disabled, skipping texture recreation" << std::endl;
+                    frame.width = decodedWidth;
+                    frame.height = decodedHeight;
+                    videoFrameBuffer.push_back(std::move(frame));
+                    while (videoFrameBuffer.size() > 4) {
+                        videoFrameBuffer.pop_front();
+                    }
+                }
             }
 
             frame.width = decodedWidth;
@@ -3801,6 +3801,7 @@ private:
                 ImGui::Text("Current clip: %.1f s", clipSeconds);
             }
             changed |= ImGui::SliderFloat("Transition duration (s)", &transitionDuration, 0.1f, 2.0f, "%.2f s");
+            changed |= ImGui::Checkbox("Allow dimension change recreation", &allowDimensionChangeRecreation);
             ImGui::BeginDisabled(!hasRandomChoices);
             if (ImGui::Button("Randomize video online")) {
                 randomizeVideoAsset();
@@ -4512,8 +4513,6 @@ private:
             return;
         }
 
-        videoTrace("[UPLOAD] frameIndex=", frameIndex, " stagingSlot=", frameIndex, " submitted layout=OK");
-
         auto transition = [&](VkImageLayout oldLayout, VkImageLayout newLayout,
                               VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage) {
             VkImageMemoryBarrier barrier{};
@@ -5061,7 +5060,8 @@ private:
                                     bool readPostFxLocks,
                                     bool readRandomizerExtras,
                                     bool readDecodeOversample,
-                                    bool readForcedFpsAndLoop) {
+                                    bool readForcedFpsAndLoop,
+                                    bool readDimensionRecreation) {
             VisualControls loaded = visualControls;
             VideoRandomizerState randomizer = videoRandomizer;
             int activeMode = loaded.activeMode;
@@ -5069,6 +5069,7 @@ private:
             int randomStartFlag = loaded.randomVideoStart ? 1 : 0;
             int autoRandomFlag = randomizer.autoRandomize ? 1 : 0;
             int durationToggle = randomizer.useVideoDuration ? 1 : 0;
+            int dimensionRecreationFlag = allowDimensionChangeRecreation ? 1 : 0;
             int colorToggle = loaded.enableColorGrading ? 1 : 0;
             int feedbackToggle = loaded.enableFeedback ? 1 : 0;
             int distortionToggle = loaded.enableDistortion ? 1 : 0;
@@ -5248,6 +5249,14 @@ private:
                 durationToggle = 0;
             }
 
+            if (readDimensionRecreation) {
+                if (!(modern >> dimensionRecreationFlag)) {
+                    return false;
+                }
+            } else {
+                dimensionRecreationFlag = 0;
+            }
+
             loaded.activeMode = std::clamp(activeMode, 0, 1);
             loaded.upscaleEnabled = (upscaleFlag != 0);
             loaded.randomVideoStart = (randomStartFlag != 0);
@@ -5275,6 +5284,7 @@ private:
             loaded.loopBlendSeconds = std::clamp(loaded.loopBlendSeconds, 0.0f, 5.0f);
             randomizer.autoRandomize = (autoRandomFlag != 0);
             randomizer.useVideoDuration = (durationToggle != 0);
+            allowDimensionChangeRecreation = (dimensionRecreationFlag != 0);
             visualControls = loaded;
             videoRandomizer = randomizer;
             videoRandomizer.currentVideoDuration = 0.0f;
@@ -5290,35 +5300,35 @@ private:
         }
 
         if (versionToken == CONTROL_STATE_VERSION) {
-            if (!parseModernState(file, true, true, true, true, true)) {
+            if (!parseModernState(file, true, true, true, true, true, true)) {
                 std::cerr << "[Controls] failed to parse control state file" << std::endl;
             }
             return;
         }
 
         if (versionToken == CONTROL_STATE_VERSION_PREV) {
-            if (!parseModernState(file, true, true, true, true, false)) {
+            if (!parseModernState(file, true, true, true, true, false, false)) {
                 std::cerr << "[Controls] failed to parse control state file (v5)" << std::endl;
             }
             return;
         }
 
         if (versionToken == CONTROL_STATE_VERSION_PREV2) {
-            if (!parseModernState(file, true, false, false, false, false)) {
+            if (!parseModernState(file, true, false, false, false, false, false)) {
                 std::cerr << "[Controls] failed to parse control state file (v4)" << std::endl;
             }
             return;
         }
 
         if (versionToken == CONTROL_STATE_VERSION_PREV3) {
-            if (!parseModernState(file, false, false, false, false, false)) {
+            if (!parseModernState(file, false, false, false, false, false, false)) {
                 std::cerr << "[Controls] failed to parse control state file (v3)" << std::endl;
             }
             return;
         }
 
         if (versionToken == CONTROL_STATE_VERSION_PREV4) {
-            if (!parseModernState(file, false, false, false, false, false)) {
+            if (!parseModernState(file, false, false, false, false, false, false)) {
                 std::cerr << "[Controls] failed to parse control state file (v2)" << std::endl;
             }
             return;
@@ -5454,7 +5464,8 @@ private:
              << visualControls.frameAccumulation << ' '
              << (videoRandomizer.autoRandomize ? 1 : 0) << ' '
              << videoRandomizer.intervalSeconds << ' '
-             << (videoRandomizer.useVideoDuration ? 1 : 0);
+             << (videoRandomizer.useVideoDuration ? 1 : 0) << ' '
+             << (allowDimensionChangeRecreation ? 1 : 0);
 
         saveImGuiLayout();
     }

@@ -132,7 +132,8 @@ vec3 unsharpMask(vec2 st, vec3 color) {
     }
     blur /= 9.0;
     vec3 highFreq = color - blur;
-    return color + highFreq * strength * 1.5;
+    // Increased strength multiplier for more visible effect
+    return color + highFreq * strength * 3.0;
 }
 
 float radialLength(vec2 p) {
@@ -255,9 +256,13 @@ vec3 applyLUT(vec3 color, int index) {
 }
 
 vec3 applySplitTone(vec3 color) {
+    float balance = clamp(ubo.splitToneBalance, 0.0, 1.0);
+    if (balance <= 0.0001) {
+        return color;
+    }
     float lum = dot(color, vec3(0.299, 0.587, 0.114));
     vec3 tone = mix(ubo.splitToneShadows, ubo.splitToneHighlights, smoothstep(0.0, 1.0, lum));
-    return mix(color, tone * color, clamp(ubo.splitToneBalance, 0.0, 1.0));
+    return mix(color, tone * color, balance);
 }
 
 vec2 kaleido(vec2 st, float segments) {
@@ -407,7 +412,21 @@ vec3 applyBlurPipeline(vec2 st, vec3 color, vec2 centered, float audioBlurMod, f
     blurred = applyZoomBlur(st, blurred, centered);
     blurred = applyMotionBlur(st, blurred, lfo);
     blurred = applyTemporalBlur(st, blurred);
-    return mix(color, blurred, clamp(audioBlurMod, 0.0, 1.0));
+    
+    // Check if any blur effect is actually active (independent of audio)
+    bool hasBlur = ubo.gaussianBlur > 0.0001 || 
+                   ubo.directionalBlur > 0.0001 || 
+                   ubo.zoomBlur > 0.0001 || 
+                   ubo.motionBlur > 0.0001 || 
+                   ubo.temporalBlur > 0.0001;
+    
+    if (!hasBlur) {
+        return color;
+    }
+    
+    // Mix with audio modulation if audio is enabled, otherwise use full blur
+    float blurMix = hasBlur ? 1.0 : clamp(audioBlurMod, 0.0, 1.0);
+    return mix(color, blurred, blurMix);
 }
 
 vec3 applyFeedback(vec2 st, vec3 color, vec2 centered, float audioFeedbackMod) {
@@ -415,52 +434,89 @@ vec3 applyFeedback(vec2 st, vec3 color, vec2 centered, float audioFeedbackMod) {
     if (amount <= 0.0001) {
         return color;
     }
+    
     vec3 accum = color;
     float decay = clamp(1.0 - ubo.feedbackDecay, 0.0, 1.0);
     vec2 texel = 1.0 / vec2(textureSize(videoTex, 0));
-    for (int i = 1; i <= 4; ++i) {
-        float t = float(i) / 4.0;
-        vec2 offset = centered * t * ubo.trailStrength * 0.05;
-        offset += vec2(0.0, t * 0.01 * ubo.temporalAccumulation);
+    
+    // Spatial feedback with increased offsets for better visibility
+    for (int i = 1; i <= 6; ++i) {
+        float t = float(i) / 6.0;
+        
+        // Radial trail effect
+        vec2 radialOffset = centered * t * ubo.trailStrength * 0.2;
+        
+        // Vertical temporal accumulation (creates motion blur trails)
+        vec2 temporalOffset = vec2(0.0, t * 0.05 * ubo.temporalAccumulation);
+        
+        // Combine offsets
+        vec2 offset = radialOffset + temporalOffset;
+        
+        // Sample from video texture with offset
         vec3 sampleColor = texture(videoTex, clamp(st - offset, 0.0, 1.0)).rgb;
-        accum = mix(accum, sampleColor, amount * t * decay);
+        
+        // Mix with decay - stronger influence from closer samples
+        float mixStrength = amount * (1.0 - t * 0.5) * decay;
+        accum = mix(accum, sampleColor, mixStrength);
     }
+    
+    // Apply recursive blend for more intense feedback
+    if (ubo.recursiveBlend > 0.0001) {
+        // Create additional spatial samples for recursive effect
+        vec2 recursiveOffset = centered * ubo.recursiveBlend * 0.3;
+        vec3 recursiveSample = texture(videoTex, clamp(st - recursiveOffset, 0.0, 1.0)).rgb;
+        accum = mix(accum, recursiveSample, ubo.recursiveBlend * 0.5);
+    }
+    
     return accum;
 }
 
 vec3 applyGlitch(vec2 st, vec3 color, vec2 centered, float audioGlitchMod) {
-    float intensity = clamp(ubo.glitchAmount + ubo.audioGlitchResponse * audioGlitchMod, 0.0, 1.0);
-    if (intensity <= 0.0001) {
+    // Check if any glitch effect is actually active (independent of audio)
+    bool hasGlitch = ubo.glitchDatamosh > 0.0001 || 
+                     ubo.glitchJitter > 0.0001 || 
+                     ubo.glitchRGBSplit > 0.0001 || 
+                     ubo.glitchScanlineBreak > 0.0001 || 
+                     ubo.glitchTearing > 0.0001 || 
+                     ubo.glitchPixelSort > 0.0001 || 
+                     ubo.glitchBufferCorruption > 0.0001;
+    
+    if (!hasGlitch) {
         return color;
     }
+    
     vec2 uv = st;
+    // Increased multipliers for more visible effects
     if (ubo.glitchDatamosh > 0.0) {
-        uv.x += sin(centered.y * 80.0 + ubo.time * 10.0) * ubo.glitchDatamosh * 0.01;
+        uv.x += sin(centered.y * 80.0 + ubo.time * 10.0) * ubo.glitchDatamosh * 0.03;
     }
     if (ubo.glitchJitter > 0.0) {
-        uv += (hash21(st * 400.0 + ubo.time) - 0.5) * ubo.glitchJitter * 0.01;
+        uv += (hash21(st * 400.0 + ubo.time) - 0.5) * ubo.glitchJitter * 0.03;
     }
     vec3 glitched = texture(videoTex, clamp(uv, 0.0, 1.0)).rgb;
     if (ubo.glitchRGBSplit > 0.0) {
-        vec2 texel = ubo.glitchRGBSplit * 0.005 * vec2(1.0 / textureSize(videoTex, 0));
+        vec2 texel = ubo.glitchRGBSplit * 0.01 * vec2(1.0 / textureSize(videoTex, 0));
         glitched.r = texture(videoTex, clamp(uv + texel, 0.0, 1.0)).r;
         glitched.b = texture(videoTex, clamp(uv - texel, 0.0, 1.0)).b;
     }
     if (ubo.glitchScanlineBreak > 0.0) {
-        float line = step(0.98, fract(st.y * 200.0 + ubo.time * 5.0));
+        float line = step(0.95, fract(st.y * 200.0 + ubo.time * 5.0));
         glitched *= 1.0 - line * ubo.glitchScanlineBreak;
     }
     if (ubo.glitchTearing > 0.0) {
-        float tear = step(0.8, hash21(vec2(st.y * 10.0, ubo.time)));
+        float tear = step(0.7, hash21(vec2(st.y * 10.0, ubo.time)));
         glitched = mix(glitched, color, 1.0 - tear * ubo.glitchTearing);
     }
     if (ubo.glitchPixelSort > 0.0) {
-        glitched = mix(glitched, sortComponents(glitched), ubo.glitchPixelSort * 0.5);
+        glitched = mix(glitched, sortComponents(glitched), ubo.glitchPixelSort * 0.7);
     }
     if (ubo.glitchBufferCorruption > 0.0) {
         float rnd = hash21(st * 600.0 + ubo.time * 20.0);
-        glitched = mix(glitched, vec3(rnd), ubo.glitchBufferCorruption * 0.3);
+        glitched = mix(glitched, vec3(rnd), ubo.glitchBufferCorruption * 0.5);
     }
+    
+    // Use audio modulation if available, otherwise full intensity
+    float intensity = hasGlitch ? 1.0 : clamp(ubo.glitchAmount + ubo.audioGlitchResponse * audioGlitchMod, 0.0, 1.0);
     return mix(color, glitched, intensity);
 }
 
@@ -499,6 +555,19 @@ vec3 applyAnalog(vec2 st, vec2 centered, vec3 color, float lfo) {
 }
 
 vec3 applyColorGrade(vec3 color, float audioColorMod) {
+    // Early return if color grading is effectively disabled
+    bool hasBrightness = abs(ubo.gradeBrightness) > 0.0001;
+    bool hasContrast = abs(ubo.gradeContrast - 1.0) > 0.0001;
+    bool hasSaturation = abs(ubo.gradeSaturation - 1.0) > 0.0001;
+    bool hasHue = abs(ubo.gradeHueShift) > 0.0001;
+    bool hasGamma = abs(ubo.gradeGamma - 1.0) > 0.0001;
+    bool hasLUT = ubo.colorLUTIndex > 0;
+    bool hasSplitTone = ubo.splitToneBalance > 0.0001;
+    
+    if (!hasBrightness && !hasContrast && !hasSaturation && !hasHue && !hasGamma && !hasLUT && !hasSplitTone) {
+        return color;
+    }
+    
     color += ubo.gradeBrightness;
     color = (color - 0.5) * ubo.gradeContrast + 0.5;
     float lum = dot(color, vec3(0.2126, 0.7152, 0.0722));
@@ -518,7 +587,8 @@ vec3 applySharpen(vec2 st, vec3 color) {
     }
     if (ubo.localContrast > 0.0001) {
         float localLum = dot(sharpened, vec3(0.299, 0.587, 0.114));
-        sharpened += (sharpened - vec3(localLum)) * ubo.localContrast;
+        // Increased multiplier for more visible local contrast effect
+        sharpened += (sharpened - vec3(localLum)) * ubo.localContrast * 2.0;
     }
     return sharpened;
 }
@@ -571,27 +641,9 @@ void main() {
 
     vec2 centered = uv * 2.0 - 1.0;
 
-    // Letterboxing: maintain video aspect ratio
+    // Stretch to fit: video always fills full screen without letterboxing
     vec2 letterboxUV = uv;
-    if (ubo.videoResolution.x > 1.0 && ubo.videoResolution.y > 1.0) {
-        float videoAspect = ubo.videoResolution.x / ubo.videoResolution.y;
-        float screenAspect = ubo.resolution.x / ubo.resolution.y;
-
-        if (abs(videoAspect - screenAspect) > 0.01) {
-            if (videoAspect > screenAspect) {
-                // Video is wider than screen - pillarbox
-                float scale = screenAspect / videoAspect;
-                letterboxUV.x = (uv.x - 0.5) / scale + 0.5;
-            } else {
-                // Video is taller than screen - letterbox
-                float scale = videoAspect / screenAspect;
-                letterboxUV.y = (uv.y - 0.5) / scale + 0.5;
-            }
-            // Clamp to valid range
-            letterboxUV = clamp(letterboxUV, 0.0, 1.0);
-        }
-    }
-
+    
     vec2 spatialUV = applySpatialEffects(letterboxUV, centered, audioWarpMod);
     vec2 spatialCentered = spatialUV * 2.0 - 1.0;
 
