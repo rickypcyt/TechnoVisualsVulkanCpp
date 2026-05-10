@@ -115,11 +115,13 @@ void ensureFFmpegInitialized() {
 
 class VideoPlayer {
 public:
-    bool initialize(const std::string& path) {
+    bool initialize(const std::string& path, int screenW = 0, int screenH = 0) {
         ::ensureFFmpegInitialized();
         shutdown();
 
         currentSourcePath = path;
+        targetScreenWidth = screenW;
+        targetScreenHeight = screenH;
 
         if (avformat_open_input(&formatCtx, path.c_str(), nullptr, nullptr) < 0) {
             std::cerr << "[Video] Failed to open source: " << path << std::endl;
@@ -171,8 +173,7 @@ public:
         int outputHeight = codecCtx->height;
         int originalWidth = outputWidth;
         int originalHeight = outputHeight;
-        // No screen size available during VideoPlayer initialization
-        computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight, 0, 0);
+        computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight, targetScreenWidth, targetScreenHeight);
 
         if (outputWidth != originalWidth || outputHeight != originalHeight) {
             std::cout << "[Video] Downscaling " << originalWidth << "x" << originalHeight
@@ -197,8 +198,14 @@ public:
         if (currentSourcePath.empty()) {
             return false;
         }
-        return initialize(currentSourcePath);
+        return initialize(currentSourcePath, targetScreenWidth, targetScreenHeight);
     }
+
+    bool isReady() const { return ready; }
+    int width() const { return videoWidth; }
+    int height() const { return videoHeight; }
+    double durationSeconds() const { return videoDurationSeconds; }
+    double frameDuration() const { return frameDurationSeconds; }
 
     bool grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight) {
         if (!ready) {
@@ -359,13 +366,8 @@ public:
         videoDurationSeconds = 0.0;
     }
 
-    bool isReady() const { return ready; }
-    int width() const { return videoWidth; }
-    int height() const { return videoHeight; }
-    double frameDuration() const { return frameDurationSeconds; }
-    double durationSeconds() const { return videoDurationSeconds; }
     bool seekSeconds(double seconds) {
-        if (!ready || !formatCtx || videoStreamIndex < 0 || seconds < 0.0) {
+        if (!formatCtx || videoStreamIndex < 0) {
             return false;
         }
         AVStream* stream = formatCtx->streams[videoStreamIndex];
@@ -469,6 +471,8 @@ public:
         return frame->pts * av_q2d(stream->time_base);
     }
 
+    const std::string& sourcePath() const { return currentSourcePath; }
+
 private:
     double computeFrameDuration(const AVStream* stream) const {
         if (!stream) {
@@ -544,8 +548,7 @@ private:
         int clampedSrcHeight = std::max(1, srcHeight);
         int targetWidth = clampedSrcWidth;
         int targetHeight = clampedSrcHeight;
-        // No screen size available during scaling context setup
-        computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight, 0, 0);
+        computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight, targetScreenWidth, targetScreenHeight);
 
         bool needsContext = (!swsCtx ||
                              cachedWidth != clampedSrcWidth ||
@@ -574,6 +577,14 @@ private:
             cachedFormat = srcFormat;
             cachedDstWidth = targetWidth;
             cachedDstHeight = targetHeight;
+
+            if (targetWidth != clampedSrcWidth || targetHeight != clampedSrcHeight) {
+                std::cout << "[Video] Scaling decode "
+                          << clampedSrcWidth << "x" << clampedSrcHeight
+                          << " → " << targetWidth << "x" << targetHeight
+                          << " (screen " << targetScreenWidth << "x" << targetScreenHeight << ")"
+                          << std::endl;
+            }
         }
 
         if (!swsCtx) {
@@ -603,6 +614,8 @@ private:
     int cachedFormat = AV_PIX_FMT_NONE;
     std::string currentSourcePath;
     double videoDurationSeconds = 0.0;
+    int targetScreenWidth = 0;
+    int targetScreenHeight = 0;
 };
 
 struct VideoMetadata {
@@ -2343,8 +2356,12 @@ private:
         uint32_t targetVideoHeight = std::max<uint32_t>(1u, videoTexture.height);
         if (videoSubsystemInitialized && videoPlayer.isReady()) {
             std::cout << "[VIDEO] Reinitializing decoder after swapchain resize" << std::endl;
-            if (!videoPlayer.reinitialize()) {
-                std::cerr << "[VIDEO] Decoder reinit failed after swapchain resize" << std::endl;
+            
+            int newW = static_cast<int>(swapchainExtent.width);
+            int newH = static_cast<int>(swapchainExtent.height);
+            
+            if (!videoPlayer.initialize(videoPlayer.sourcePath(), newW, newH)) {
+                std::cerr << "[VIDEO] Decoder reinit failed" << std::endl;
                 videoSubsystemInitialized = false;
             } else {
                 targetVideoWidth = static_cast<uint32_t>(std::max(1, videoPlayer.width()));
@@ -2666,12 +2683,28 @@ private:
             return;
         }
 
-        if (!videoPlayer.initialize(videoSourcePath)) {
+        int screenW = static_cast<int>(swapchainExtent.width);
+        int screenH = static_cast<int>(swapchainExtent.height);
+
+        if (!videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
             std::cerr << "[Video] Failed to initialize player for " << videoSourcePath << std::endl;
             return;
         }
 
         std::cout << "[Video] Player initialized: " << videoSourcePath << " (" << videoPlayer.width() << "x" << videoPlayer.height() << ")" << std::endl;
+
+        // Decode a probe frame to ensure ensureScalingContext calculates
+        // the final dimensions before creating buffers
+        {
+            std::vector<uint8_t> probeFrame;
+            int probeW = 0, probeH = 0;
+            videoPlayer.grabFrame(probeFrame, probeW, probeH);
+            // Don't use the frame, just force the scaler to initialize
+            // with the correct dimensions
+            videoPlayer.seekSeconds(0.0);  // rewind
+        }
+
+        std::cout << "[Video] Final decode dimensions: " << videoPlayer.width() << "x" << videoPlayer.height() << std::endl;
 
         // Reset lastFrameTimestamp to prevent large deltaTime on first frame
         lastFrameTimestamp = std::chrono::steady_clock::now();
@@ -2707,8 +2740,18 @@ private:
 
     void createVideoTextureResources(uint32_t width, uint32_t height) {
         // Check if recreation is necessary
-        if (videoTexture.ready && videoTexture.width == width && videoTexture.height == height) {
-            std::cout << "[STAGING] Skipping recreation (dimensions unchanged: " << width << "x" << height << ")" << std::endl;
+        // ANTES: saltaba si mismas dimensiones, pero los buffers pueden
+        // haber sido destruidos por un reload previo
+        // AHORA: comprueba que los buffers realmente existen
+        bool buffersValid = videoStaging.getSlotCount() > 0;
+        for (size_t i = 0; i < videoStaging.getSlotCount() && buffersValid; ++i) {
+            if (videoStaging.getSlot(i).mapped == nullptr) {
+                buffersValid = false;
+            }
+        }
+
+        if (videoTexture.ready && videoTexture.width == width && videoTexture.height == height && buffersValid) {
+            std::cout << "[STAGING] Skipping recreation (valid)" << std::endl;
             return;
         }
 
@@ -3160,6 +3203,16 @@ private:
             return;
         }
 
+        // Guard: si los staging buffers no son válidos, no toques nada
+        if (frame.frameIndex >= videoStaging.getSlotCount()) {
+            return;
+        }
+        const auto& guardSlot = videoStaging.getSlot(frame.frameIndex);
+        if (guardSlot.mapped == nullptr || guardSlot.capacity == 0) {
+            std::cerr << "[VIDEO] Staging slot inválido, saltando frame" << std::endl;
+            return;
+        }
+
         try {
             // Version-based reload check
             uint64_t current_version = g_project_state.get_version();
@@ -3392,6 +3445,38 @@ private:
         }
     }
 
+    void destroyVideoStagingBuffers() {
+        if (device == VK_NULL_HANDLE) {
+            return;
+        }
+
+        std::cout << "[STAGING] destroyVideoStagingBuffers: slots="
+                  << videoStaging.getSlotCount() << std::endl;
+
+        for (size_t i = 0; i < videoStaging.getSlotCount(); ++i) {
+            const auto& slot = videoStaging.getSlot(i);
+
+            std::cout << "[STAGING] slot=" << i
+                      << " buffer=" << (void*)slot.buffer
+                      << " memory=" << (void*)slot.memory
+                      << " mapped=" << slot.mapped << std::endl;
+
+            if (slot.mapped != nullptr) {
+                vkUnmapMemory(device, slot.memory);
+            }
+            if (slot.buffer != VK_NULL_HANDLE) {
+                vkDestroyBuffer(device, slot.buffer, nullptr);
+            }
+            if (slot.memory != VK_NULL_HANDLE) {
+                vkFreeMemory(device, slot.memory, nullptr);
+            }
+
+            videoStaging.setSlot(i, VK_NULL_HANDLE, VK_NULL_HANDLE, nullptr, 0);
+        }
+
+        std::cout << "[STAGING] destroyVideoStagingBuffers complete" << std::endl;
+    }
+
     void destroyVideoTexture() {
         std::cout << "[STAGING] destroyVideoTexture called" << std::endl;
         if (videoTexture.imageView != VK_NULL_HANDLE) {
@@ -3407,11 +3492,6 @@ private:
             videoTexture.sampler = VK_NULL_HANDLE;
         }
 
-        for (size_t i = 0; i < videoStaging.getSlotCount(); ++i) {
-            const auto& slot = videoStaging.getSlot(i);
-            std::cout << "[STAGING] destroy slot=" << i << " mapped=" << slot.mapped << " capacity=" << slot.capacity << std::endl;
-            videoStaging.clearSlot(i);
-        }
         if (videoTexture.imageHandle.type != ResourceHandle::Type::Unknown) {
             resourceSystem.destroy(videoTexture.imageHandle);
             videoTexture.imageHandle = {};
@@ -3619,10 +3699,13 @@ private:
         videoSourcePath = path;
         g_project_state.active_file = path;  // Update ProjectState to keep it in sync
 
-        // Wait for GPU to finish using current video resources before destroying
+        // GPU idle ANTES de cualquier destrucción
         std::cout << "[Reload] Waiting for GPU idle..." << std::endl;
         vkDeviceWaitIdle(device);
         std::cout << "[Reload] GPU idle, destroying video player..." << std::endl;
+
+        // Invalida uploads pendientes ANTES de destruir los buffers
+        videoTexture.pendingUploads.fill(false);
 
         videoPlayer.shutdown();
         videoSubsystemInitialized = false;
@@ -5558,6 +5641,7 @@ private:
         destroyUiWindow();
 
         videoPlayer.shutdown();
+        destroyVideoStagingBuffers();
         destroyVideoTexture();
         destroySwapchainSemaphores();
 
