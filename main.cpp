@@ -1418,6 +1418,16 @@ struct VideoTextureResources {
     std::array<StagingSlot, MAX_FRAMES_IN_FLIGHT> stagingSlots{};
     std::array<double, MAX_FRAMES_IN_FLIGHT> stagingTimestamps{};
     std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploads{};
+
+    // Second texture for frame interpolation (previous frame)
+    ResourceHandle imageHandlePrev;
+    VkImageView imageViewPrev = VK_NULL_HANDLE;
+    VkDescriptorImageInfo descriptorInfoPrev{};
+    VkImageLayout currentLayoutPrev = VK_IMAGE_LAYOUT_UNDEFINED;
+    std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploadsPrev{};
+    std::vector<uint8_t> previousFrameData;  // CPU buffer for previous frame
+    ResourceHandle prevFrameStagingBuffer;  // Staging buffer for previous frame upload
+    void* prevFrameStagingMapped = nullptr;
 };
 
 class App {
@@ -2367,7 +2377,14 @@ private:
         samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         samplerBinding.pImmutableSamplers = nullptr;
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerBinding};
+        VkDescriptorSetLayoutBinding samplerBindingPrev{};
+        samplerBindingPrev.binding = 2;
+        samplerBindingPrev.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerBindingPrev.descriptorCount = 1;
+        samplerBindingPrev.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerBindingPrev.pImmutableSamplers = nullptr;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerBinding, samplerBindingPrev};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -2702,7 +2719,17 @@ private:
         videoTexture.height = height;
         videoTexture.frameSize = static_cast<size_t>(width) * height * 4;
 
+        // Create current frame texture
         videoTexture.imageHandle = resourceSystem.createImage(
+            width,
+            height,
+            VK_FORMAT_R8G8B8A8_UNORM,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        // Create previous frame texture for interpolation
+        videoTexture.imageHandlePrev = resourceSystem.createImage(
             width,
             height,
             VK_FORMAT_R8G8B8A8_UNORM,
@@ -2725,6 +2752,12 @@ private:
             throw std::runtime_error("failed to create video image view");
         }
 
+        // Create image view for previous frame texture
+        viewInfo.image = videoTexture.imageHandlePrev.image;
+        if (vkCreateImageView(device, &viewInfo, nullptr, &videoTexture.imageViewPrev) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create video image view for previous frame");
+        }
+
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -2733,9 +2766,11 @@ private:
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
         if (vkCreateSampler(device, &samplerInfo, nullptr, &videoTexture.sampler) != VK_SUCCESS) {
@@ -2743,12 +2778,37 @@ private:
         }
 
         initializeVideoImage(videoTexture.imageHandle.image);
+        initializeVideoImage(videoTexture.imageHandlePrev.image);
 
         videoTexture.descriptorInfo.sampler = videoTexture.sampler;
         videoTexture.descriptorInfo.imageView = videoTexture.imageView;
         videoTexture.descriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         videoTexture.currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         videoTexture.pendingUploads.fill(false);
+
+        videoTexture.descriptorInfoPrev.sampler = videoTexture.sampler;
+        videoTexture.descriptorInfoPrev.imageView = videoTexture.imageViewPrev;
+        videoTexture.descriptorInfoPrev.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        videoTexture.currentLayoutPrev = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        videoTexture.pendingUploadsPrev.fill(false);
+
+        // Allocate CPU buffer for previous frame
+        videoTexture.previousFrameData.resize(videoTexture.frameSize);
+
+        // Create staging buffer for previous frame upload
+        auto prevStagingBuffer = resourceSystem.createBuffer(
+            static_cast<VkDeviceSize>(videoTexture.frameSize),
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        void* prevMapped = nullptr;
+        if (vkMapMemory(device, prevStagingBuffer.memory, 0, static_cast<VkDeviceSize>(videoTexture.frameSize), 0, &prevMapped) != VK_SUCCESS) {
+            resourceSystem.destroy(prevStagingBuffer);
+            throw std::runtime_error("failed to map previous frame staging buffer");
+        }
+
+        videoTexture.prevFrameStagingBuffer = prevStagingBuffer;
+        videoTexture.prevFrameStagingMapped = prevMapped;
 
         if (!videoStaging.init(MAX_FRAMES_IN_FLIGHT, videoTexture.frameSize)) {
             throw std::runtime_error("failed to initialize VideoStaging");
@@ -3315,6 +3375,13 @@ private:
 
         pruneVideoFrameBuffer(videoPlaybackCursor - frameDuration * 2.0);
 
+        // Store current frame as previous frame for interpolation
+        if (copySize > 0 && copySize <= videoTexture.previousFrameData.size()) {
+            std::memcpy(videoTexture.previousFrameData.data(), slot.mapped, copySize);
+            // Trigger upload of previous frame texture
+            videoTexture.pendingUploadsPrev[writeSlot] = true;
+        }
+
         videoTexture.stagingTimestamps[writeSlot] = targetTime;
 
         videoTrace("[STAGING] writing slot=", writeSlot, " size=", copySize, " fenceState=SIGNALLED t=", targetTime);
@@ -3331,6 +3398,10 @@ private:
             vkDestroyImageView(device, videoTexture.imageView, nullptr);
             videoTexture.imageView = VK_NULL_HANDLE;
         }
+        if (videoTexture.imageViewPrev != VK_NULL_HANDLE) {
+            vkDestroyImageView(device, videoTexture.imageViewPrev, nullptr);
+            videoTexture.imageViewPrev = VK_NULL_HANDLE;
+        }
         if (videoTexture.sampler != VK_NULL_HANDLE) {
             vkDestroySampler(device, videoTexture.sampler, nullptr);
             videoTexture.sampler = VK_NULL_HANDLE;
@@ -3345,12 +3416,28 @@ private:
             resourceSystem.destroy(videoTexture.imageHandle);
             videoTexture.imageHandle = {};
         }
+        if (videoTexture.imageHandlePrev.type != ResourceHandle::Type::Unknown) {
+            resourceSystem.destroy(videoTexture.imageHandlePrev);
+            videoTexture.imageHandlePrev = {};
+        }
+        if (videoTexture.prevFrameStagingBuffer.type != ResourceHandle::Type::Unknown) {
+            if (videoTexture.prevFrameStagingMapped != nullptr) {
+                vkUnmapMemory(device, videoTexture.prevFrameStagingBuffer.memory);
+                videoTexture.prevFrameStagingMapped = nullptr;
+            }
+            resourceSystem.destroy(videoTexture.prevFrameStagingBuffer);
+            videoTexture.prevFrameStagingBuffer = {};
+        }
         videoTexture.ready = false;
         videoStaging.destroy();
         std::cout << "[STAGING] destroyVideoTexture completed" << std::endl;
         videoTexture.descriptorInfo = {};
+        videoTexture.descriptorInfoPrev = {};
         videoTexture.currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        videoTexture.currentLayoutPrev = VK_IMAGE_LAYOUT_UNDEFINED;
         videoTexture.pendingUploads.fill(false);
+        videoTexture.pendingUploadsPrev.fill(false);
+        videoTexture.previousFrameData.clear();
     }
 
     void initializeVideoAssets() {
@@ -4492,7 +4579,7 @@ private:
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(GlobalUBO);
 
-        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSets[frameIndex];
@@ -4509,6 +4596,14 @@ private:
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].descriptorCount = 1;
         descriptorWrites[1].pImageInfo = &videoTexture.descriptorInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSets[frameIndex];
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &videoTexture.descriptorInfoPrev;
 
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -4566,11 +4661,11 @@ private:
         if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
             return;
         }
-        if (!videoTexture.pendingUploads[frameIndex]) {
-            return;
-        }
 
-        auto transition = [&](VkImageLayout oldLayout, VkImageLayout newLayout,
+        const auto& slot = videoStaging.getSlot(frameIndex);
+
+        // Helper function to transition a single image
+        auto transition = [&](VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
                               VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage) {
             VkImageMemoryBarrier barrier{};
             barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -4578,7 +4673,7 @@ private:
             barrier.newLayout = newLayout;
             barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            barrier.image = videoTexture.imageHandle.image;
+            barrier.image = image;
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             barrier.subresourceRange.baseMipLevel = 0;
             barrier.subresourceRange.levelCount = 1;
@@ -4611,44 +4706,94 @@ private:
                 1, &barrier);
         };
 
-        const auto& slot = videoStaging.getSlot(frameIndex);
-        VkImageLayout startLayout = videoTexture.currentLayout;
-        VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-                                            ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
-                                            : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        // Upload to current frame texture
+        if (videoTexture.pendingUploads[frameIndex]) {
+            VkImageLayout startLayout = videoTexture.currentLayout;
+            VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                                                ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+                                                : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
-        transition(startLayout,
-                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                   srcStage,
-                   VK_PIPELINE_STAGE_TRANSFER_BIT);
+            transition(videoTexture.imageHandle.image,
+                       startLayout,
+                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       srcStage,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-        VkBufferImageCopy region{};
-        region.bufferOffset = 0;
-        region.bufferRowLength = 0;
-        region.bufferImageHeight = 0;
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = 0;
-        region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = 1;
-        region.imageOffset = {0, 0, 0};
-        region.imageExtent = {videoTexture.width, videoTexture.height, 1};
+            VkBufferImageCopy region{};
+            region.bufferOffset = 0;
+            region.bufferRowLength = 0;
+            region.bufferImageHeight = 0;
+            region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.imageSubresource.mipLevel = 0;
+            region.imageSubresource.baseArrayLayer = 0;
+            region.imageSubresource.layerCount = 1;
+            region.imageOffset = {0, 0, 0};
+            region.imageExtent = {videoTexture.width, videoTexture.height, 1};
 
-        vkCmdCopyBufferToImage(
-            commandBuffer,
-            slot.buffer,
-            videoTexture.imageHandle.image,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &region);
+            vkCmdCopyBufferToImage(
+                commandBuffer,
+                slot.buffer,
+                videoTexture.imageHandle.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &region);
 
-        transition(
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            transition(
+                videoTexture.imageHandle.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-        videoTexture.currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        videoTexture.pendingUploads[frameIndex] = false;
+            videoTexture.currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            videoTexture.pendingUploads[frameIndex] = false;
+        }
+
+        // Upload to previous frame texture
+        if (videoTexture.pendingUploadsPrev[frameIndex] && !videoTexture.previousFrameData.empty() && videoTexture.prevFrameStagingMapped != nullptr) {
+            VkImageLayout startLayout = videoTexture.currentLayoutPrev;
+            VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                                                ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+                                                : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+            transition(videoTexture.imageHandlePrev.image,
+                       startLayout,
+                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       srcStage,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+            // Copy previous frame data to staging buffer
+            std::memcpy(videoTexture.prevFrameStagingMapped, videoTexture.previousFrameData.data(), videoTexture.frameSize);
+
+            VkBufferImageCopy region{};
+            region.bufferOffset = 0;
+            region.bufferRowLength = 0;
+            region.bufferImageHeight = 0;
+            region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.imageSubresource.mipLevel = 0;
+            region.imageSubresource.baseArrayLayer = 0;
+            region.imageSubresource.layerCount = 1;
+            region.imageOffset = {0, 0, 0};
+            region.imageExtent = {videoTexture.width, videoTexture.height, 1};
+
+            vkCmdCopyBufferToImage(
+                commandBuffer,
+                videoTexture.prevFrameStagingBuffer.buffer,
+                videoTexture.imageHandlePrev.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &region);
+
+            transition(
+                videoTexture.imageHandlePrev.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+            videoTexture.currentLayoutPrev = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            videoTexture.pendingUploadsPrev[frameIndex] = false;
+        }
     }
 
     void updateUniformBuffer(uint32_t frameIndex) {

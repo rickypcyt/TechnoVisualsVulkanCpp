@@ -108,6 +108,7 @@ layout(set = 0, binding = 0, std140) uniform UBO {
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D videoTex;
+layout(set = 0, binding = 2) uniform sampler2D videoTexPrev;
 
 const float PI = 3.1415926535;
 
@@ -186,22 +187,114 @@ float catmullRom(float x) {
     return 0.0;
 }
 
-vec4 sampleBicubic(vec2 st) {
-    vec2 texSize = vec2(textureSize(videoTex, 0));
-    vec2 coord = st * texSize - 0.5;
-    vec2 base = floor(coord);
-    vec2 f = coord - base;
+// FSR 1.0 RCAS (Robust Contrast Adaptive Sharpening)
+// Simplified single-pass implementation for fragment shader
 
-    vec3 color = vec3(0.0);
-    for (int j = -1; j <= 2; ++j) {
-        float wy = catmullRom(float(j) - f.y);
-        for (int i = -1; i <= 2; ++i) {
-            float wx = catmullRom(float(i) - f.x);
-            vec2 sampleCoord = (base + vec2(i, j) + 0.5) / texSize;
-            color += texture(videoTex, sampleCoord).rgb * wx * wy;
-        }
+// Helper function to get the minimum of three values (avoiding name conflict)
+float fsrMin3(float a, float b, float c) {
+    return min(a, min(b, c));
+}
+
+// Helper function to get the maximum of three values (avoiding name conflict)
+float fsrMax3(float a, float b, float c) {
+    return max(a, max(b, c));
+}
+
+// FSR RCAS sharpening for a single color channel
+float fsrRcas(float c, float a, float b, float d, float e, float sharpness) {
+    // Calculate local min and max from neighbors
+    float mn = fsrMin3(a, b, d);
+    float mx = fsrMax3(a, b, d);
+    
+    // Compute the local contrast
+    float amp = clamp(min(mn, 2.0 - mx) / max(mx, 0.001), 0.0, 1.0);
+    
+    // Apply sharpening based on contrast
+    float peak = -1.0 / mix(8.0, 5.0, clamp(sharpness, 0.0, 1.0));
+    
+    // Compute the sharpened value
+    float w = amp / peak;
+    float r = (-mx) * w + c;
+    r = min(w + r, mx);
+    r = max(r, mn);
+    
+    return r;
+}
+
+// Bicubic interpolation with Catmull-Rom kernel
+vec4 fsrBicubic(vec2 st) {
+    vec2 texSize = vec2(textureSize(videoTex, 0));
+    vec2 texel = 1.0 / texSize;
+    
+    vec2 coord = st * texSize - 0.5;
+    vec2 f = fract(coord);
+    vec2 i = floor(coord);
+    
+    // Catmull-Rom weights
+    vec2 w0 = f * (-0.5 + f * (1.0 - 0.5 * f));
+    vec2 w1 = 1.0 + f * f * (-2.5 + 1.5 * f);
+    vec2 w2 = f * (0.5 + f * (2.0 - 1.5 * f));
+    vec2 w3 = f * f * (-0.5 + 0.5 * f);
+    
+    vec2 s0 = w0 + w2;
+    vec2 s1 = w1 + w3;
+    
+    vec2 offset0 = w2 / (w0 + w2 + 0.0001);
+    vec2 offset1 = w3 / (w1 + w3 + 0.0001);
+    
+    vec2 samplePos0 = (i - 1.0 + offset0) * texel;
+    vec2 samplePos1 = (i + 0.0 + offset1) * texel;
+    
+    // Sample 4x4 neighborhood
+    vec3 col00 = texture(videoTex, clamp(samplePos0 + vec2(0.0, 0.0) * texel, 0.0, 1.0)).rgb;
+    vec3 col01 = texture(videoTex, clamp(samplePos0 + vec2(1.0, 0.0) * texel, 0.0, 1.0)).rgb;
+    vec3 col02 = texture(videoTex, clamp(samplePos1 + vec2(0.0, 0.0) * texel, 0.0, 1.0)).rgb;
+    vec3 col03 = texture(videoTex, clamp(samplePos1 + vec2(1.0, 0.0) * texel, 0.0, 1.0)).rgb;
+    
+    vec3 col10 = texture(videoTex, clamp(samplePos0 + vec2(0.0, 1.0) * texel, 0.0, 1.0)).rgb;
+    vec3 col11 = texture(videoTex, clamp(samplePos0 + vec2(1.0, 1.0) * texel, 0.0, 1.0)).rgb;
+    vec3 col12 = texture(videoTex, clamp(samplePos1 + vec2(0.0, 1.0) * texel, 0.0, 1.0)).rgb;
+    vec3 col13 = texture(videoTex, clamp(samplePos1 + vec2(1.0, 1.0) * texel, 0.0, 1.0)).rgb;
+    
+    // Horizontal interpolation
+    vec3 row0 = mix(col00, col01, s0.x) + mix(col02, col03, s1.x);
+    vec3 row1 = mix(col10, col11, s0.x) + mix(col12, col13, s1.x);
+    
+    // Vertical interpolation
+    vec3 bicubic = (mix(row0, row1, s0.y) + mix(row0, row1, s1.y)) / 2.0;
+    
+    return vec4(bicubic, 1.0);
+}
+
+// FSR edge-aware sampling with RCAS sharpening
+vec4 sampleEdgeAware(vec2 st) {
+    // Get bicubic interpolated sample
+    vec4 bicubic = fsrBicubic(st);
+    
+    // Apply RCAS sharpening (combine existing sharpenAmount with a base FSR strength)
+    float sharpness = clamp(ubo.sharpenAmount * 0.5 + 0.2, 0.0, 1.0);
+    
+    if (sharpness <= 0.001) {
+        return bicubic;
     }
-    return vec4(color, 1.0);
+    
+    // Sample neighborhood for RCAS
+    vec2 texSize = vec2(textureSize(videoTex, 0));
+    vec2 texel = 1.0 / texSize;
+    
+    vec3 c = bicubic.rgb;
+    vec3 t  = texture(videoTex, clamp(st + vec2( 0.0, -1.0) * texel, 0.0, 1.0)).rgb;
+    vec3 b  = texture(videoTex, clamp(st + vec2( 0.0,  1.0) * texel, 0.0, 1.0)).rgb;
+    vec3 l  = texture(videoTex, clamp(st + vec2(-1.0,  0.0) * texel, 0.0, 1.0)).rgb;
+    vec3 r  = texture(videoTex, clamp(st + vec2( 1.0,  0.0) * texel, 0.0, 1.0)).rgb;
+    
+    // Apply RCAS to each channel using cross-shaped neighbors
+    vec3 result;
+    result.r = fsrRcas(c.r, t.r, b.r, l.r, r.r, sharpness);
+    result.g = fsrRcas(c.g, t.g, b.g, l.g, r.g, sharpness);
+    result.b = fsrRcas(c.b, t.b, b.b, l.b, r.b, sharpness);
+    
+    return vec4(result, 1.0);
 }
 
 vec3 rgb2yiq(vec3 c) {
@@ -678,17 +771,31 @@ void main() {
     }
 
     vec4 procedural = dispatchMode(ubo.mode, crtUV);
-    vec3 videoColor = ubo.upscaleEnabled > 0.5
-        ? sampleBicubic(crtUV).rgb
+    
+    // Detect if we're upscaling (video smaller than screen)
+    vec2 texSize = vec2(textureSize(videoTex, 0));
+    bool isUpscaling = (texSize.x < ubo.resolution.x) || (texSize.y < ubo.resolution.y);
+    bool useUpscale = ubo.upscaleEnabled > 0.5 && isUpscaling;
+    
+    vec3 videoColor = useUpscale
+        ? sampleEdgeAware(crtUV).rgb
         : texture(videoTex, crtUV).rgb;
+    
+    // Frame interpolation: blend with previous frame
+    if (ubo.temporalInterpolation > 0.0001) {
+        vec3 videoColorPrev = useUpscale
+            ? sampleEdgeAware(crtUV).rgb
+            : texture(videoTexPrev, crtUV).rgb;
+        videoColor = mix(videoColor, videoColorPrev, ubo.temporalInterpolation);
+    }
     
     // Sample R and B channels from aberrated UVs
     if (abs(ubo.aberrationAmount) > 0.0001) {
-        vec3 videoColor_R = ubo.upscaleEnabled > 0.5
-            ? sampleBicubic(crtUV_R).rgb
+        vec3 videoColor_R = useUpscale
+            ? sampleEdgeAware(crtUV_R).rgb
             : texture(videoTex, crtUV_R).rgb;
-        vec3 videoColor_B = ubo.upscaleEnabled > 0.5
-            ? sampleBicubic(crtUV_B).rgb
+        vec3 videoColor_B = useUpscale
+            ? sampleEdgeAware(crtUV_B).rgb
             : texture(videoTex, crtUV_B).rgb;
         videoColor.r = videoColor_R.r;
         videoColor.b = videoColor_B.b;
