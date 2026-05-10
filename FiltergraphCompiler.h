@@ -82,7 +82,10 @@ private:
         // Speed adjustment (setpts)
         if (effects.slow_factor != 1.0f) {
             if (!first) filter << ",";
-            filter << "setpts=" << effects.slow_factor << "*PTS";
+            // Invert slow_factor for setpts: lower value = slower video = higher setpts value
+            // setpts formula: 1.0/slow_factor * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
+            float setpts_value = 1.0f / effects.slow_factor;
+            filter << "setpts=" << setpts_value << "*PTS";
             first = false;
         }
         

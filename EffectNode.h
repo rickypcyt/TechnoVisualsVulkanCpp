@@ -183,7 +183,10 @@ private:
             case EffectType::SPEED: {
                 float factor = node->get_param<float>("factor", 1.0f);
                 if (factor != 1.0f) {
-                    return "setpts=" + std::to_string(factor) + "*PTS";
+                    // Invert factor for setpts: lower value = slower video = higher setpts value
+                    // setpts formula: 1.0/factor * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
+                    float setpts_value = 1.0f / factor;
+                    return "setpts=" + std::to_string(setpts_value) + "*PTS";
                 }
                 break;
             }

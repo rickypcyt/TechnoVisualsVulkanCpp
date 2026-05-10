@@ -385,6 +385,12 @@ public:
             clamped = std::clamp(seconds, 0.0, videoDurationSeconds - frameDurationSeconds);
         }
         int64_t target = static_cast<int64_t>(clamped / av_q2d(stream->time_base));
+
+        // Flush packet before seek to avoid double free
+        if (packet) {
+            av_packet_unref(packet);
+        }
+
         if (av_seek_frame(formatCtx, videoStreamIndex, target, AVSEEK_FLAG_BACKWARD) < 0) {
             return false;
         }
@@ -1752,10 +1758,15 @@ public:
         
         // Initialize formal NLE architecture
         renderWorker = std::make_unique<RenderWorker>();
-        renderWorker->on_render_complete = [this](const std::string& source_file) {
-            std::cout << "[Render] Completed, new version at: " << source_file << std::endl;
-            // Auto-reload disabled to prevent crash with high-resolution videos
-            // User can manually reload if needed
+        renderWorker->on_render_start = [this](std::shared_ptr<RenderJob> job) {
+            // Pause renderer when render starts for faster FFmpeg processing
+            std::cout << "[Render] Pausing renderer for faster FFmpeg processing" << std::endl;
+            playbackClock.pause();
+        };
+        renderWorker->on_render_complete = [this](std::shared_ptr<RenderJob> job) {
+            std::cout << "[Render] Completed, output at: " << job->output_file << std::endl;
+            // Resume rendering after render completes (no reload for Apply Changes)
+            playbackClock.resume();
         };
 
         g_project_state.active_file = videoSourcePath;
@@ -3582,13 +3593,13 @@ private:
             double targetFps = videoPlayer.frameDuration() > 0 ? (1.0 / videoPlayer.frameDuration()) : 0.0;
             lastDebugTime = now;
 
-            std::cout << "[FRAME DEBUG] frameIndex=" << frame.frameIndex
-                      << " writeSlot=" << writeSlot
-                      << " videoSize=" << videoTexture.width << "x" << videoTexture.height
-                      << " screenSize=" << swapchainExtent.width << "x" << swapchainExtent.height
-                      << " targetFps=" << targetFps
-                      << " actualFps=" << actualFps
-                      << " elapsed=" << elapsed << "ms" << std::endl;
+            // std::cout << "[FRAME DEBUG] frameIndex=" << frame.frameIndex
+            //           << " writeSlot=" << writeSlot
+            //           << " videoSize=" << videoTexture.width << "x" << videoTexture.height
+            //           << " screenSize=" << swapchainExtent.width << "x" << swapchainExtent.height
+            //           << " targetFps=" << targetFps
+            //           << " actualFps=" << actualFps
+            //           << " elapsed=" << elapsed << "ms" << std::endl;
         }
 
         if (writeSlot >= videoTexture.stagingSlots.size()) {
@@ -3798,6 +3809,7 @@ private:
         if (!assets.empty()) {
             selectedVideoAsset = 0;
             videoSourcePath = assets[0].metadata.path;
+            g_project_state.active_file = videoSourcePath;  // Keep ProjectState in sync with video asset
             updateRandomizerForSelection(selectedVideoAsset, true);
             if (!assets.empty()) {
                 videoRandomizer.currentVideoDuration = static_cast<float>(assets[0].metadata.duration);
@@ -3821,103 +3833,32 @@ private:
             updateRandomizerForSelection(selectedVideoAsset, true);
         }
 
-        // Build directory tree structure
-        std::map<std::string, std::vector<int>> dirTree;
-        std::set<std::string> allDirs;
-        
-        for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
-            fs::path assetPath(assets[i].metadata.path);
-            fs::path relativePath = fs::relative(assetPath.parent_path(), videoAssetsRoot);
-            std::string dirStr = relativePath.string();
-            
-            // Handle root directory
-            if (dirStr == ".") {
-                dirStr = "";
-            }
-            
-            dirTree[dirStr].push_back(i);
-            allDirs.insert(dirStr);
-            
-            // Add all parent directories
-            fs::path currentPath = relativePath;
-            while (currentPath.has_parent_path() && currentPath.parent_path().string() != ".") {
-                currentPath = currentPath.parent_path();
-                allDirs.insert(currentPath.string());
-            }
-        }
-
         // Display current selection
         std::string currentLabel = assets[selectedVideoAsset].metadata.filename.c_str();
         if (ImGui::BeginCombo("Video Asset", currentLabel.c_str())) {
-            // Helper to draw directory tree recursively
-            std::function<void(const std::string&, int)> drawDirTree = [&](const std::string& dir, int depth) {
-                ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+            // Show all videos in a flat list
+            for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+                bool isSelected = (i == selectedVideoAsset);
+                std::string label = assets[i].metadata.filename;
                 
-                // Find items in this directory
-                auto it = dirTree.find(dir);
-                if (it != dirTree.end() && it->second.size() == 1 && depth > 0) {
-                    // If directory has only one item and not root, auto-expand
-                    nodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
+                // Add relative path if not in root
+                fs::path assetPath(assets[i].metadata.path);
+                fs::path relativePath = fs::relative(assetPath.parent_path(), videoAssetsRoot);
+                if (relativePath.string() != "." && !relativePath.string().empty()) {
+                    label = relativePath.string() + "/" + assets[i].metadata.filename;
                 }
                 
-                // Check if this directory has subdirectories
-                bool hasSubdirs = false;
-                for (const auto& checkDir : allDirs) {
-                    if (!checkDir.empty()) {
-                        fs::path checkPath(checkDir);
-                        if (checkPath.has_parent_path() && checkPath.parent_path().string() == dir) {
-                            hasSubdirs = true;
-                            break;
-                        }
+                if (ImGui::Selectable(label.c_str(), isSelected)) {
+                    if (selectedVideoAsset != i) {
+                        selectedVideoAsset = i;
+                        updateRandomizerForSelection(i, true);
+                        reloadVideoSource(assets[i].metadata.path);
                     }
                 }
-                
-                // Node label
-                std::string nodeLabel = dir.empty() ? videoAssetsRoot : fs::path(dir).filename().string();
-                
-                // Draw node
-                bool nodeOpen = false;
-                if (hasSubdirs || (it != dirTree.end() && it->second.size() > 0)) {
-                    nodeOpen = ImGui::TreeNodeEx(nodeLabel.c_str(), nodeFlags);
-                } else {
-                    ImGui::TreeNodeEx(nodeLabel.c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
                 }
-                
-                // Draw videos in this directory
-                if (it != dirTree.end()) {
-                    for (int assetIdx : it->second) {
-                        bool isSelected = (assetIdx == selectedVideoAsset);
-                        ImGui::Indent();
-                        if (ImGui::Selectable(assets[assetIdx].metadata.filename.c_str(), isSelected)) {
-                            if (selectedVideoAsset != assetIdx) {
-                                selectedVideoAsset = assetIdx;
-                                updateRandomizerForSelection(assetIdx, true);
-                                reloadVideoSource(assets[assetIdx].metadata.path);
-                            }
-                        }
-                        if (isSelected) {
-                            ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::Unindent();
-                    }
-                }
-                
-                // Recursively draw subdirectories
-                if (nodeOpen) {
-                    for (const auto& subDir : allDirs) {
-                        if (!subDir.empty()) {
-                            fs::path subPath(subDir);
-                            if (subPath.has_parent_path() && subPath.parent_path().string() == dir) {
-                                drawDirTree(subDir, depth + 1);
-                            }
-                        }
-                    }
-                    ImGui::TreePop();
-                }
-            };
-            
-            // Start from root
-            drawDirTree("", 0);
+            }
             
             ImGui::EndCombo();
         }
@@ -4473,6 +4414,11 @@ private:
                     g_project_state.height = 240;
                 }
                 ImGui::SameLine();
+                if (ImGui::Button("480p 4:3")) {
+                    g_project_state.width = 640;
+                    g_project_state.height = 480;
+                }
+                ImGui::SameLine();
                 if (ImGui::Button("720p")) {
                     g_project_state.width = 1280;
                     g_project_state.height = 720;
@@ -4521,8 +4467,38 @@ private:
                 
                 ImGui::Separator();
 
-                if (ImGui::Button("Apply Changes")) {
+                if (ImGui::Button("Render/Export to output.mp4")) {
+                    g_project_state.do_swap = false;  // Preview mode - no swap
                     g_project_state.increment_version();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Apply Changes")) {
+                    // Apply Changes: copy existing output.mp4 to original without re-rendering
+                    try {
+                        std::string outputFile = g_project_state.output_file;
+                        std::string activeFile = g_project_state.active_file;
+
+                        // Check if output file exists
+                        if (std::filesystem::exists(outputFile)) {
+                            // Pause video player to prevent concurrent access during copy
+                            playbackClock.pause();
+
+                            std::cout << "[Apply Changes] Copying " << outputFile << " to " << activeFile << std::endl;
+                            std::filesystem::copy_file(outputFile, activeFile, std::filesystem::copy_options::overwrite_existing);
+                            std::cout << "[Apply Changes] Copy completed" << std::endl;
+
+                            // Reload video to force FFmpeg to re-open the file with new content
+                            std::cout << "[Apply Changes] Reloading video with new content" << std::endl;
+                            reloadVideoSource(activeFile);
+
+                            // Resume playback after reload
+                            playbackClock.resume();
+                        } else {
+                            std::cerr << "[Apply Changes] Error: output.mp4 does not exist. Please render first." << std::endl;
+                        }
+                    } catch (const std::exception& e) {
+                        std::cerr << "[Apply Changes] Error: " << e.what() << std::endl;
+                    }
                 }
 
                 ImGui::Separator();
@@ -4966,6 +4942,11 @@ private:
                     ImGui::Text("Bitrate: %.0f kbps", meta.bitrate / 1000.0);
                     ImGui::Text("Audio: %s", meta.hasAudio ? "yes" : "no");
                     ImGui::Separator();
+                    static bool show_rename_input = false;
+                    if (ImGui::Button("Rename Selected Video")) {
+                        show_rename_input = !show_rename_input;
+                    }
+                    ImGui::SameLine();
                     if (ImGui::Button("Delete Selected Video")) {
                         try {
                             std::string videoPath = meta.path;
@@ -4980,6 +4961,41 @@ private:
                             }
                         } catch (const std::exception& e) {
                             std::cerr << "[Delete] Error: " << e.what() << std::endl;
+                        }
+                    }
+
+                    if (show_rename_input) {
+                        static char rename_buf[256] = "";
+                        ImGui::InputText("New Filename", rename_buf, sizeof(rename_buf));
+                        ImGui::SameLine();
+                        if (ImGui::Button("Confirm Rename")) {
+                            try {
+                                if (strlen(rename_buf) > 0) {
+                                    std::string videoPath = meta.path;
+                                    fs::path oldPath(videoPath);
+                                    fs::path newPath = oldPath.parent_path() / rename_buf;
+                                    if (!newPath.has_extension()) {
+                                        newPath += oldPath.extension();
+                                    }
+                                    std::cout << "[Rename] Renaming: " << videoPath << " to " << newPath.string() << std::endl;
+                                    std::filesystem::rename(videoPath, newPath);
+                                    videoRegistry.scan(videoAssetsRoot);
+                                    // Find the new index of the renamed file
+                                    const auto& assets = videoRegistry.getAssets();
+                                    for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+                                        if (assets[i].metadata.path == newPath.string()) {
+                                            selectedVideoAsset = i;
+                                            updateRandomizerForSelection(i, true);
+                                            reloadVideoSource(assets[i].metadata.path);
+                                            break;
+                                        }
+                                    }
+                                    memset(rename_buf, 0, sizeof(rename_buf));
+                                    show_rename_input = false;
+                                }
+                            } catch (const std::exception& e) {
+                                std::cerr << "[Rename] Error: " << e.what() << std::endl;
+                            }
                         }
                     }
                 }
@@ -5277,8 +5293,8 @@ private:
         // Debug: log video resolution periodically
         static int frameCounter = 0;
         if (++frameCounter % 300 == 0) {
-            std::cout << "[UBO] Video resolution: " << videoTexture.width << "x" << videoTexture.height
-                      << " Screen: " << swapchainExtent.width << "x" << swapchainExtent.height << std::endl;
+            // std::cout << "[UBO] Video resolution: " << videoTexture.width << "x" << videoTexture.height
+            //           << " Screen: " << swapchainExtent.width << "x" << swapchainExtent.height << std::endl;
         }
 
         ubo.time = proceduralTime;

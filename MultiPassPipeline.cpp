@@ -548,9 +548,9 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         auto currentTime = std::chrono::steady_clock::now();
         if (pass == 0 && std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastDebugTime).count() > 1000) {
             int prevBuffer = (pass % 2 == 0) ? 1 : 0;
-            printf("[MultiPass DRAW] Pass=%d frameIndex=%u descriptorSet=%p videoImageView=%p videoPrevImageView=%p intermediate[%d].imageView=%p\n",
-                   pass, frameIndex, (void*)passes[pass].descriptorSets[frameIndex],
-                   (void*)videoImageView, (void*)videoPrevImageView, prevBuffer, (void*)intermediate[prevBuffer].imageView);
+            // printf("[MultiPass DRAW] Pass=%d frameIndex=%u descriptorSet=%p videoImageView=%p videoPrevImageView=%p intermediate[%d].imageView=%p\n",
+            //        pass, frameIndex, (void*)passes[pass].descriptorSets[frameIndex],
+            //        (void*)videoImageView, (void*)videoPrevImageView, prevBuffer, (void*)intermediate[prevBuffer].imageView);
             lastDebugTime = currentTime;
         }
 
@@ -738,8 +738,8 @@ void MultiPassPipeline::updateDescriptorSets(
             } else if (pass >= 1 && pass <= 5) {  // Passes B-F need input texture
                 // Use intermediate texture from previous pass as input
                 int prevBuffer = (pass % 2 == 0) ? 1 : 0;
-                printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
-                       pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
+                // printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
+                //        pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
 
                 VkDescriptorImageInfo inputTexInfo{};
                 inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -782,8 +782,8 @@ void MultiPassPipeline::updateDescriptorSets(
             else if (pass == 6) {  // Pass G needs inputTex + proceduralTex
                 // Use intermediate texture from previous pass as input
                 int prevBuffer = (pass % 2 == 0) ? 1 : 0;
-                printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
-                       pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
+                // printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
+                //        pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
 
                 VkDescriptorImageInfo inputTexInfo{};
                 inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

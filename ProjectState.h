@@ -32,6 +32,7 @@ struct ProjectState {
     // Versioning system
     std::atomic<uint64_t> version{0};
     std::atomic<bool> dirty{false};
+    std::atomic<bool> do_swap{true};  // Whether to swap output with original file
     
     std::string active_file = "video.mp4";
     

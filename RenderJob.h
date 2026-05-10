@@ -31,8 +31,9 @@ struct RenderJob {
     std::string output_file;   // Archivo de salida del snapshot
     std::string temp_file;     // Archivo temporal
     RenderMode render_mode;    // Render mode (preview vs export)
+    bool do_swap;              // Whether to swap output with original file
     
-    RenderJob(uint64_t v, const ProjectState& s)
+    RenderJob(uint64_t v, const ProjectState& s, bool swap = true)
         : version(v)
         , speed(s.speed)
         , fps(s.fps)
@@ -44,17 +45,10 @@ struct RenderJob {
         , unsharp_radius(s.unsharp_radius)
         , active_file(s.active_file)
         , output_file(s.output_file)
-        , render_mode(s.render_mode) {
-        // Generar nombre de archivo temporal manteniendo extensión .mp4
-        // Ej: output.mp4 -> output.tmp.1.mp4
-        size_t dot_pos = output_file.find_last_of('.');
-        if (dot_pos != std::string::npos) {
-            std::string base = output_file.substr(0, dot_pos);
-            std::string ext = output_file.substr(dot_pos);
-            temp_file = base + ".tmp." + std::to_string(v) + ext;
-        } else {
-            temp_file = output_file + ".tmp." + std::to_string(v);
-        }
+        , render_mode(s.render_mode)
+        , do_swap(swap) {
+        // Write directly to output file (no temporary files)
+        temp_file = output_file;
     }
     
     // Estado del job
@@ -117,31 +111,31 @@ public:
         : worker_thread(&RenderWorker::worker_loop, this)
         , monitor_thread(&RenderWorker::monitor_completed_jobs, this) {}
 
+    // Callback for when a render starts
+    // WARNING: This is called from the worker thread, not the main thread!
+    std::function<void(std::shared_ptr<RenderJob>)> on_render_start;
+
     // Callback for when a render completes successfully
     // WARNING: This is called from the monitor thread, not the main thread!
     // Vulkan operations must be deferred to the main render thread.
-    std::function<void(const std::string&)> on_render_complete;
+    std::function<void(std::shared_ptr<RenderJob>)> on_render_complete;
 
     void perform_atomic_swap(std::shared_ptr<RenderJob> job) {
-        // Log original file metadata before swap
-        std::cout << "[Render] Original file: " << job->active_file << std::endl;
-        std::string probe_cmd = "ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate,avg_frame_rate,duration -of default=noprint_wrappers=1 \"" + job->active_file + "\"";
-        std::cout << "[Render] Running ffprobe on original: " << probe_cmd << std::endl;
+        // Log output file metadata after render
+        std::cout << "[Render] Output file: " << job->output_file << std::endl;
+        std::string probe_cmd = "ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate,avg_frame_rate,duration -of default=noprint_wrappers=1 \"" + job->output_file + "\"";
+        std::cout << "[Render] Running ffprobe on output: " << probe_cmd << std::endl;
         system(probe_cmd.c_str());
 
-        // Atomic swap: renombrar temp a final
-        std::filesystem::rename(job->temp_file, job->output_file);
+        // Copy output to original file (keeping output intact) if do_swap is true
+        if (job->do_swap && job->output_file != job->active_file) {
+            std::cout << "[Render] Copying output to original: " << job->output_file << " -> " << job->active_file << std::endl;
+            std::filesystem::copy_file(job->output_file, job->active_file, std::filesystem::copy_options::overwrite_existing);
 
-        // Replace original source file with rendered output
-        // This ensures the new version is the "official" version
-        if (job->output_file != job->active_file) {
-            std::cout << "[Render] Replacing original file: " << job->active_file << " with " << job->output_file << std::endl;
-            std::filesystem::rename(job->output_file, job->active_file);
-
-            // Log new file metadata after swap
-            std::cout << "[Render] New file: " << job->active_file << std::endl;
+            // Log new file metadata after copy
+            std::cout << "[Render] Original file updated: " << job->active_file << " (output preserved)" << std::endl;
             std::string probe_cmd_new = "ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate,avg_frame_rate,duration -of default=noprint_wrappers=1 \"" + job->active_file + "\"";
-            std::cout << "[Render] Running ffprobe on new file: " << probe_cmd_new << std::endl;
+            std::cout << "[Render] Running ffprobe on original: " << probe_cmd_new << std::endl;
             system(probe_cmd_new.c_str());
         }
     }
@@ -277,7 +271,8 @@ private:
             snapshot.version.store(current_version);
             
             // Crear job
-            auto job = std::make_shared<RenderJob>(current_version, snapshot);
+            bool should_swap = g_project_state.do_swap.load();
+            auto job = std::make_shared<RenderJob>(current_version, snapshot, should_swap);
             job->status = RenderJob::Status::PROCESSING;
             
             // Track active job
@@ -286,6 +281,11 @@ private:
                 active_jobs[current_version] = job;
             }
             
+            // Notify callback that render is starting
+            if (on_render_start) {
+                on_render_start(job);
+            }
+
             // Ejecutar FFmpeg en subprocess (non-blocking)
             bool success = execute_ffmpeg_render_subprocess(job);
 
@@ -380,9 +380,9 @@ private:
                                     job->status = RenderJob::Status::COMPLETED;
 
                                     // Notify callback that render completed
-                                    // Pass the original file path (which now contains the new version)
+                                    // Pass the complete job so callback can check do_swap flag
                                     if (on_render_complete) {
-                                        on_render_complete(job->active_file);
+                                        on_render_complete(job);
                                     }
 
                                     // Removed auto-increment to prevent infinite render loop
@@ -405,7 +405,7 @@ private:
     }
     
     std::string build_ffmpeg_command(std::shared_ptr<RenderJob> job) {
-        std::string cmd = "ffmpeg -i \"" + job->active_file + "\"";
+        std::string cmd = "ffmpeg -y -i \"" + job->active_file + "\"";
 
         // Agregar efectos del job
         std::string filter = build_filter_from_job(job);
@@ -413,9 +413,13 @@ private:
             cmd += " -vf \"" + filter + "\"";
         }
 
-        // Codec settings
+        // Codec settings with robust encoding
         cmd += " -c:v libx264";
         cmd += " -crf 18";
+        cmd += " -pix_fmt yuv420p";  // Ensure standard pixel format for compatibility
+        cmd += " -movflags +faststart";  // Enable fast start for web playback
+        cmd += " -profile:v baseline";  // Use baseline profile for maximum compatibility
+        cmd += " -level 3.0";  // Use level 3.0 for broad compatibility
 
         // Use faster preset for preview mode
         if (job->render_mode == RenderMode::PREVIEW) {
@@ -454,7 +458,10 @@ private:
         // Speed (setpts) - SEGUNDO
         if (job->speed != 1.0f) {
             if (!first) filter += ",";
-            filter += "setpts=" + std::to_string(job->speed) + "*PTS";
+            // Invert speed for setpts: lower speed value = slower video = higher setpts value
+            // setpts formula: 1.0/speed * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
+            float setpts_value = 1.0f / job->speed;
+            filter += "setpts=" + std::to_string(setpts_value) + "*PTS";
             first = false;
         }
 

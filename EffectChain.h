@@ -35,7 +35,10 @@ struct EffectChain {
         // Speed adjustment (setpts)
         if (slow_factor != 1.0f) {
             if (!first) filter << ",";
-            filter << "setpts=" << slow_factor << "*PTS";
+            // Invert slow_factor for setpts: lower value = slower video = higher setpts value
+            // setpts formula: 1.0/slow_factor * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
+            float setpts_value = 1.0f / slow_factor;
+            filter << "setpts=" << setpts_value << "*PTS";
             first = false;
         }
         
