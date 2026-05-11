@@ -27,6 +27,31 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float grayscaleAmount;
     float sharpenAmount;
     float upscaleEnabled;
+
+    // --- Enable/Disable flags for post FX ---
+    int enablePostCrtCurvature;
+    int enablePostScanMask;
+    int enablePostVignette;
+    int enablePostFishEye;
+    int enablePostBloom;
+    int enablePostAberration;
+    int enablePostGrain;
+    int enablePostBend;
+    int enablePostGlitch;
+    int enablePostColorBalance;
+
+    // --- Enable/Disable flags for VJAY BASICS ---
+    int enableColorGrading;
+    int enableFeedback;
+    int enableDistortion;
+    int enableBlurMotion;
+    int enableSharpen;
+    int enableGlitch;
+    int enableBlending;
+    int enableAnalog;
+    int enableAudioReactive;
+    int enableTemporal;
+
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -149,17 +174,24 @@ vec2 kaleido(vec2 st, float segments) {
 
 vec2 curve(vec2 uv) {
     vec2 p = uv * 2.0 - 1.0;
-    float curvatureY = clamp(ubo.crtCurvature, 0.0, 0.8);
-    float curvatureX = clamp(ubo.crtHorizontalCurvature, 0.0, 0.8);
     
-    if (curvatureY > 0.0001 || curvatureX > 0.0001) {
-        p.x = p.x / (1.0 + curvatureX * p.x * p.x);
-        p.y = p.y / (1.0 + curvatureY * p.y * p.y);
+    // CRT curvature
+    if (ubo.enablePostCrtCurvature == 1) {
+        float curvatureY = clamp(ubo.crtCurvature, 0.0, 0.8);
+        float curvatureX = clamp(ubo.crtHorizontalCurvature, 0.0, 0.8);
+        
+        if (curvatureY > 0.0001 || curvatureX > 0.0001) {
+            p.x = p.x / (1.0 + curvatureX * p.x * p.x);
+            p.y = p.y / (1.0 + curvatureY * p.y * p.y);
+        }
     }
     
-    float radius = length(p);
-    if (ubo.crtFishEye != 0.0) {
-        p *= 1.0 + ubo.crtFishEye * radius * radius;
+    // Fish eye
+    if (ubo.enablePostFishEye == 1) {
+        float radius = length(p);
+        if (ubo.crtFishEye != 0.0) {
+            p *= 1.0 + ubo.crtFishEye * radius * radius;
+        }
     }
     
     return p * 0.5 + 0.5;
@@ -175,55 +207,58 @@ void main() {
     vec2 centered = uv * 2.0 - 1.0;
     vec2 uvOut = uv;
 
-    // UV warp
-    float warp = ubo.uvWarpStrength * (1.0 + audioEnv * 0.5);
-    if (warp > 0.0001) {
-        uvOut += sin((uvOut.yx + ubo.time) * 8.0) * warp * 0.01;
+    // Only apply distortion effects if enabled
+    if (ubo.enableDistortion == 1) {
+        // UV warp
+        float warp = ubo.uvWarpStrength * (1.0 + audioEnv * 0.5);
+        if (warp > 0.0001) {
+            uvOut += sin((uvOut.yx + ubo.time) * 8.0) * warp * 0.01;
+        }
+
+        // Ripple effect
+        if (ubo.rippleStrength > 0.0001) {
+            float radius = length(centered);
+            float wave = sin(radius * max(ubo.rippleFrequency, 0.1) * 12.0 - ubo.time * 4.0);
+            uvOut += normalize(centered + 0.0001) * wave * ubo.rippleStrength * 0.01;
+        }
+
+        // Swirl effect
+        if (abs(ubo.swirlStrength) > 0.0001) {
+            float angle = ubo.swirlStrength * length(centered) * 5.0;
+            float c = cos(angle);
+            float s = sin(angle);
+            vec2 rotated = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
+            uvOut = rotated * 0.5 + 0.5;
+        }
+
+        // Kaleidoscope
+        if (ubo.kaleidoSegments > 0.0) {
+            uvOut = kaleido(uvOut, ubo.kaleidoSegments);
+        }
+
+        // Displacement
+        if (ubo.displacementAmount > 0.0001) {
+            vec2 n = vec2(fbm(centered * 5.0 + ubo.time), fbm(centered * 7.0 - ubo.time));
+            uvOut += (n - 0.5) * ubo.displacementAmount * 0.05;
+        }
+
+        // Tunnel effect
+        if (ubo.tunnelDepth > 0.0001) {
+            vec2 p = centered;
+            float radius = length(p) + 0.0001;
+            float depth = pow(radius, 1.0 - clamp(ubo.tunnelDepth, 0.0, 1.0));
+            float curve = 1.0 + ubo.tunnelCurvature * radius * radius;
+            p = normalize(p) * depth * curve;
+            uvOut = p * 0.5 + 0.5;
+        }
     }
-    
-    // Ripple effect
-    if (ubo.rippleStrength > 0.0001) {
-        float radius = length(centered);
-        float wave = sin(radius * max(ubo.rippleFrequency, 0.1) * 12.0 - ubo.time * 4.0);
-        uvOut += normalize(centered + 0.0001) * wave * ubo.rippleStrength * 0.01;
-    }
-    
-    // Swirl effect
-    if (abs(ubo.swirlStrength) > 0.0001) {
-        float angle = ubo.swirlStrength * length(centered) * 5.0;
-        float c = cos(angle);
-        float s = sin(angle);
-        vec2 rotated = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
-        uvOut = rotated * 0.5 + 0.5;
-    }
-    
-    // Kaleidoscope
-    if (ubo.kaleidoSegments > 0.0) {
-        uvOut = kaleido(uvOut, ubo.kaleidoSegments);
-    }
-    
-    // Displacement
-    if (ubo.displacementAmount > 0.0001) {
-        vec2 n = vec2(fbm(centered * 5.0 + ubo.time), fbm(centered * 7.0 - ubo.time));
-        uvOut += (n - 0.5) * ubo.displacementAmount * 0.05;
-    }
-    
-    // Tunnel effect
-    if (ubo.tunnelDepth > 0.0001) {
-        vec2 p = centered;
-        float radius = length(p) + 0.0001;
-        float depth = pow(radius, 1.0 - clamp(ubo.tunnelDepth, 0.0, 1.0));
-        float curve = 1.0 + ubo.tunnelCurvature * radius * radius;
-        p = normalize(p) * depth * curve;
-        uvOut = p * 0.5 + 0.5;
-    }
-    
+
     // Bend effect
-    if (ubo.bendAmount > 0.0001) {
+    if (ubo.enablePostBend == 1 && ubo.bendAmount > 0.0001) {
         float chaos = sin((centered.x + centered.y) * 60.0 + effectTime * 20.0);
         uvOut += vec2(chaos, cos(effectTime * 10.0 + centered.y * 50.0)) * ubo.bendAmount * 0.05;
     }
-    
+
     // CRT curvature
     uvOut = curve(uvOut);
 

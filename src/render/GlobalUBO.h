@@ -52,6 +52,18 @@ struct GlobalUBO {
     alignas(4) int enablePostGlitch;
     alignas(4) int enablePostColorBalance;
 
+    // --- Enable/Disable flags for VJAY BASICS ---
+    alignas(4) int enableColorGrading;
+    alignas(4) int enableFeedback;
+    alignas(4) int enableDistortion;
+    alignas(4) int enableBlurMotion;
+    alignas(4) int enableSharpen;
+    alignas(4) int enableGlitch;
+    alignas(4) int enableBlending;
+    alignas(4) int enableAnalog;
+    alignas(4) int enableAudioReactive;
+    alignas(4) int enableTemporal;
+
     // --- CRT ---
     alignas(4) float crtCurvature;
     alignas(4) float crtHorizontalCurvature;

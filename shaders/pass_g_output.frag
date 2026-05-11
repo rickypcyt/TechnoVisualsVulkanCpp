@@ -40,6 +40,18 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     int enablePostGlitch;
     int enablePostColorBalance;
 
+    // --- Enable/Disable flags for VJAY BASICS ---
+    int enableColorGrading;
+    int enableFeedback;
+    int enableDistortion;
+    int enableBlurMotion;
+    int enableSharpen;
+    int enableGlitch;
+    int enableBlending;
+    int enableAnalog;
+    int enableAudioReactive;
+    int enableTemporal;
+
     // --- CRT ---
     float crtCurvature;
     float crtHorizontalCurvature;
@@ -194,23 +206,14 @@ void main() {
     }
     
     // Analog scanline focus
-    if (ubo.analogScanlineFocus > 0.0001) {
+    if (ubo.enableAnalog == 1 && ubo.analogScanlineFocus > 0.0001) {
         float lfo = sin(effectTime * 0.01);
         float scan = mix(1.0, 0.4 + 0.6 * sin((uv.y + lfo * 0.01) * PI * 400.0), ubo.analogScanlineFocus);
         color *= scan;
     }
-    
-    // CRT mask pattern
-    if (ubo.enablePostScanMask == 1) {
-        float maskPattern = mix(1.0,
-                                (0.8 + 0.2 * sin(uv.x * PI * ubo.resolution.x)) *
-                                (0.8 + 0.2 * cos(uv.y * PI * ubo.resolution.y)),
-                                clamp(ubo.crtMaskIntensity, 0.0, 1.0));
-        color *= maskPattern;
-    }
 
     // Analog mask balance
-    if (ubo.analogMaskBalance > 0.0001) {
+    if (ubo.enableAnalog == 1 && ubo.analogMaskBalance > 0.0001) {
         float mask = mix(1.0,
                          (0.7 + 0.3 * sin(uv.x * PI * 960.0)) *
                          (0.7 + 0.3 * cos(uv.y * PI * 540.0)),

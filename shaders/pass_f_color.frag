@@ -27,6 +27,31 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float grayscaleAmount;
     float sharpenAmount;
     float upscaleEnabled;
+
+    // --- Enable/Disable flags for post FX ---
+    int enablePostCrtCurvature;
+    int enablePostScanMask;
+    int enablePostVignette;
+    int enablePostFishEye;
+    int enablePostBloom;
+    int enablePostAberration;
+    int enablePostGrain;
+    int enablePostBend;
+    int enablePostGlitch;
+    int enablePostColorBalance;
+
+    // --- Enable/Disable flags for VJAY BASICS ---
+    int enableColorGrading;
+    int enableFeedback;
+    int enableDistortion;
+    int enableBlurMotion;
+    int enableSharpen;
+    int enableGlitch;
+    int enableBlending;
+    int enableAnalog;
+    int enableAudioReactive;
+    int enableTemporal;
+
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -173,6 +198,13 @@ void main() {
     }
 
     // Early return if color grading is disabled
+    if (ubo.enableColorGrading == 0) {
+        color *= ubo.colorBalance;
+        outColor = vec4(color, 1.0);
+        return;
+    }
+
+    // Early return if no color grading effects are active
     bool hasBrightness = abs(ubo.gradeBrightness) > 0.0001;
     bool hasContrast = abs(ubo.gradeContrast - 1.0) > 0.0001;
     bool hasSaturation = abs(ubo.gradeSaturation - 1.0) > 0.0001;
@@ -189,24 +221,24 @@ void main() {
 
     // Brightness
     color += ubo.gradeBrightness;
-    
+
     // Contrast
     color = (color - 0.5) * ubo.gradeContrast + 0.5;
-    
+
     // Saturation
     float lum = dot(color, vec3(0.299, 0.587, 0.114));
     color = mix(vec3(lum), color, ubo.gradeSaturation);
-    
+
     // Hue shift with audio response
     float audioResponse = clamp(ubo.energy * 0.3, 0.0, 1.0);
     color = hueShift(color, ubo.gradeHueShift + audioResponse * 45.0);
-    
+
     // Gamma
     color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));
-    
+
     // LUT
     color = applyLUT(color, ubo.colorLUTIndex);
-    
+
     // Split tone
     color = applySplitTone(color);
 
@@ -221,6 +253,6 @@ void main() {
     color *= ubo.colorBalance;
 
     color = clamp(color, 0.0, 2.0);
-    
+
     outColor = vec4(color, 1.0);
 }

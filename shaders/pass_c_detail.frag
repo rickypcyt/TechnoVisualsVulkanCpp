@@ -27,6 +27,31 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float grayscaleAmount;
     float sharpenAmount;
     float upscaleEnabled;
+
+    // --- Enable/Disable flags for post FX ---
+    int enablePostCrtCurvature;
+    int enablePostScanMask;
+    int enablePostVignette;
+    int enablePostFishEye;
+    int enablePostBloom;
+    int enablePostAberration;
+    int enablePostGrain;
+    int enablePostBend;
+    int enablePostGlitch;
+    int enablePostColorBalance;
+
+    // --- Enable/Disable flags for VJAY BASICS ---
+    int enableColorGrading;
+    int enableFeedback;
+    int enableDistortion;
+    int enableBlurMotion;
+    int enableSharpen;
+    int enableGlitch;
+    int enableBlending;
+    int enableAnalog;
+    int enableAudioReactive;
+    int enableTemporal;
+
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -178,16 +203,16 @@ vec3 localContrast(vec3 color) {
 void main() {
     vec2 centered = uv * 2.0 - 1.0;
     vec3 color = texture(inputTex, uv).rgb;
-    
+
     // Check if any blur is active
-    bool hasBlur = ubo.gaussianBlur > 0.0001 || 
-                   ubo.directionalBlur > 0.0001 || 
-                   ubo.zoomBlur > 0.0001 || 
-                   ubo.motionBlur > 0.0001 || 
+    bool hasBlur = ubo.gaussianBlur > 0.0001 ||
+                   ubo.directionalBlur > 0.0001 ||
+                   ubo.zoomBlur > 0.0001 ||
+                   ubo.motionBlur > 0.0001 ||
                    ubo.temporalBlur > 0.0001;
-    
-    // Apply blur if active
-    if (hasBlur) {
+
+    // Apply blur if enabled and active
+    if (ubo.enableBlurMotion == 1 && hasBlur) {
         float audioBlurMod = clamp(ubo.energy * 0.3, 0.0, 1.0);
 
         if (ubo.gaussianBlur > 0.0001) {
@@ -216,11 +241,15 @@ void main() {
         }
     }
 
-    // Apply sharpening
-    color = unsharpMask(uv, color);
-    
-    // Apply local contrast
-    color = localContrast(color);
-    
+    // Apply sharpening if enabled
+    if (ubo.enableSharpen == 1) {
+        color = unsharpMask(uv, color);
+    }
+
+    // Apply local contrast if enabled
+    if (ubo.enableSharpen == 1) {
+        color = localContrast(color);
+    }
+
     outColor = vec4(color, 1.0);
 }

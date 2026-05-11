@@ -706,6 +706,18 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.enablePostGlitch = visualControls.enablePostGlitch ? 1 : 0;
     ubo.enablePostColorBalance = visualControls.enablePostColorBalance ? 1 : 0;
 
+    // Enable/Disable flags for VJAY BASICS
+    ubo.enableColorGrading = visualControls.enableColorGrading ? 1 : 0;
+    ubo.enableFeedback = visualControls.enableFeedback ? 1 : 0;
+    ubo.enableDistortion = visualControls.enableDistortion ? 1 : 0;
+    ubo.enableBlurMotion = visualControls.enableBlurMotion ? 1 : 0;
+    ubo.enableSharpen = visualControls.enableSharpen ? 1 : 0;
+    ubo.enableGlitch = visualControls.enableGlitch ? 1 : 0;
+    ubo.enableBlending = visualControls.enableBlending ? 1 : 0;
+    ubo.enableAnalog = visualControls.enableAnalog ? 1 : 0;
+    ubo.enableAudioReactive = visualControls.enableAudioReactive ? 1 : 0;
+    ubo.enableTemporal = visualControls.enableTemporal ? 1 : 0;
+
     // CRT
     ubo.crtCurvature = visualControls.crtCurvature;
     ubo.crtHorizontalCurvature = visualControls.crtHorizontalCurvature;

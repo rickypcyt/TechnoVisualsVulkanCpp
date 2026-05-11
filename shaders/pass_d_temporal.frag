@@ -27,6 +27,31 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float grayscaleAmount;
     float sharpenAmount;
     float upscaleEnabled;
+
+    // --- Enable/Disable flags for post FX ---
+    int enablePostCrtCurvature;
+    int enablePostScanMask;
+    int enablePostVignette;
+    int enablePostFishEye;
+    int enablePostBloom;
+    int enablePostAberration;
+    int enablePostGrain;
+    int enablePostBend;
+    int enablePostGlitch;
+    int enablePostColorBalance;
+
+    // --- Enable/Disable flags for VJAY BASICS ---
+    int enableColorGrading;
+    int enableFeedback;
+    int enableDistortion;
+    int enableBlurMotion;
+    int enableSharpen;
+    int enableGlitch;
+    int enableBlending;
+    int enableAnalog;
+    int enableAudioReactive;
+    int enableTemporal;
+
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -107,22 +132,28 @@ layout(set = 0, binding = 2) uniform sampler2D prevFrameTex;
 void main() {
     vec2 centered = uv * 2.0 - 1.0;
     vec3 color = texture(inputTex, uv).rgb;
-    
+
+    // Only apply temporal effects if enabled
+    if (ubo.enableFeedback == 0 && ubo.enableTemporal == 0) {
+        outColor = vec4(color, 1.0);
+        return;
+    }
+
     float amount = clamp(ubo.feedbackAmount * (1.0 + ubo.energy * 0.5), 0.0, 1.0);
-    
+
     if (amount <= 0.0001 && ubo.trailStrength <= 0.0001 && ubo.temporalAccumulation <= 0.0001) {
         outColor = vec4(color, 1.0);
         return;
     }
-    
+
     vec3 accum = color;
     float decay = clamp(1.0 - ubo.feedbackDecay, 0.0, 1.0);
-    
+
     // Spatial feedback with trails
-    if (ubo.trailStrength > 0.0001 || ubo.temporalAccumulation > 0.0001) {
+    if (ubo.enableFeedback == 1 && (ubo.trailStrength > 0.0001 || ubo.temporalAccumulation > 0.0001)) {
         for (int i = 1; i <= 3; ++i) {
             float t = float(i) / 3.0;
-            
+
             vec2 offset = vec2(0.0);
             if (ubo.trailStrength > 0.0001) {
                 offset += centered * t * ubo.trailStrength * 0.15;
@@ -130,30 +161,30 @@ void main() {
             if (ubo.temporalAccumulation > 0.0001) {
                 offset += vec2(0.0, t * 0.03 * ubo.temporalAccumulation);
             }
-            
+
             if (length(offset) < 0.0001) {
                 continue;
             }
-            
+
             vec2 offsetUV = clamp(uv - offset, 0.0, 1.0);
             vec3 sampleColor = texture(inputTex, offsetUV).rgb;
-            
+
             float mixStrength = amount * (1.0 - t * 0.5) * decay;
             accum = mix(accum, sampleColor, mixStrength);
         }
     }
-    
+
     // Recursive blend
-    if (ubo.recursiveBlend > 0.0001) {
+    if (ubo.enableFeedback == 1 && ubo.recursiveBlend > 0.0001) {
         vec3 prevColor = texture(prevFrameTex, uv).rgb;
         accum = mix(accum, prevColor, ubo.recursiveBlend * 0.3);
     }
-    
+
     // Frame accumulation (for long-exposure effects)
-    if (ubo.frameAccumulation > 0.0001) {
+    if (ubo.enableTemporal == 1 && ubo.frameAccumulation > 0.0001) {
         vec3 prevColor = texture(prevFrameTex, uv).rgb;
         accum = mix(accum, prevColor, ubo.frameAccumulation * 0.5);
     }
-    
+
     outColor = vec4(accum, 1.0);
 }
