@@ -151,6 +151,10 @@ struct GlobalUBO {
     alignas(4) float temporalInterpolation;
 
     // --- Efectos extra (VJAY EXTRA) ---
+    alignas(4) int enablePixelate;
+    alignas(4) int enableStrobe;
+    alignas(4) int enableThreshold;
+    alignas(4) int enableSlowZoom;
     alignas(4) float pixelateAmount;
     alignas(4) float strobeSpeed;
     alignas(4) float thresholdLevel;

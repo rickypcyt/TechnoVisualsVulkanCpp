@@ -501,9 +501,71 @@ void Application::mainLoop() {
         auto now = std::chrono::steady_clock::now();
         float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
         lastFrameTimestamp = now;
-        
+
+        // Update auto-randomize
+        if (videoRandomizer.autoRandomize && videoSubsystemInitialized) {
+            videoRandomizer.elapsedSeconds += deltaTime;
+            float targetInterval = (videoRandomizer.useVideoDuration && videoRandomizer.currentVideoDuration > 0.0f)
+                ? videoRandomizer.currentVideoDuration
+                : videoRandomizer.intervalSeconds;
+
+            if (videoRandomizer.elapsedSeconds >= targetInterval) {
+                // Trigger random video change
+                const auto& assets = videoRegistry.getAssets();
+                if (assets.size() > 1) {
+                    std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+                    int newIndex;
+                    do {
+                        newIndex = dist(rng);
+                    } while (newIndex == selectedVideoAsset);
+
+                    selectedVideoAsset = newIndex;
+                    videoSourcePath = assets[newIndex].metadata.path;
+
+                    videoPlayer.shutdown();
+                    int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+                    int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+                    if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                        vkDeviceWaitIdle(vulkanContext.getDevice());
+                        videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                        videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                                     vulkanContext.getCommandPool(),
+                                                     vulkanContext.getGraphicsQueue(),
+                                                     static_cast<uint32_t>(videoPlayer.width()),
+                                                     static_cast<uint32_t>(videoPlayer.height()));
+
+                        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+                            descriptorSetManager.updateSet(
+                                vulkanContext.getDevice(), i,
+                                uniformBufferManager.getBuffers()[i],
+                                const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+                                const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+                            );
+                        }
+
+                        multiPassPipeline.updateDescriptorSets(
+                            uniformBufferManager.getBuffers(),
+                            videoTexture.getImageView(),
+                            videoTexture.getPrevImageView(),
+                            videoTexture.getSampler(),
+                            videoTexture.getSampler()
+                        );
+
+                        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
+                        videoRandomizer.elapsedSeconds = 0.0f;
+                        videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
+                    }
+                }
+            }
+        }
+
         // Update uniform buffer
         updateUniformBuffer(frame.frameIndex);
+
+        // Update video playback rate
+        if (videoSubsystemInitialized) {
+            videoPlayer.setPlaybackRate(visualControls.videoPlaybackRate);
+        }
 
         // Update video texture
         if (videoRenderer) {
@@ -555,7 +617,16 @@ void Application::mainLoop() {
                             const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
                         );
                     }
-                    
+
+                    // Update multipass descriptor sets with new textures
+                    multiPassPipeline.updateDescriptorSets(
+                        uniformBufferManager.getBuffers(),
+                        videoTexture.getImageView(),
+                        videoTexture.getPrevImageView(),
+                        videoTexture.getSampler(),
+                        videoTexture.getSampler()
+                    );
+
                     videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
                     videoRandomizer.elapsedSeconds = 0.0f;
                     videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
@@ -594,7 +665,16 @@ void Application::mainLoop() {
                         const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
                     );
                 }
-                
+
+                // Update multipass descriptor sets with new textures
+                multiPassPipeline.updateDescriptorSets(
+                    uniformBufferManager.getBuffers(),
+                    videoTexture.getImageView(),
+                    videoTexture.getPrevImageView(),
+                    videoTexture.getSampler(),
+                    videoTexture.getSampler()
+                );
+
                 videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
                 videoRandomizer.elapsedSeconds = 0.0f;
                 videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
@@ -717,6 +797,12 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.enableAnalog = visualControls.enableAnalog ? 1 : 0;
     ubo.enableAudioReactive = visualControls.enableAudioReactive ? 1 : 0;
     ubo.enableTemporal = visualControls.enableTemporal ? 1 : 0;
+
+    // Enable/Disable flags for VJAY EXTRA
+    ubo.enablePixelate = visualControls.enablePixelate ? 1 : 0;
+    ubo.enableStrobe = visualControls.enableStrobe ? 1 : 0;
+    ubo.enableThreshold = visualControls.enableThreshold ? 1 : 0;
+    ubo.enableSlowZoom = visualControls.enableSlowZoom ? 1 : 0;
 
     // CRT
     ubo.crtCurvature = visualControls.crtCurvature;
@@ -906,6 +992,9 @@ void Application::cleanup() {
 
     // Cleanup descriptor sets
     descriptorSetManager.destroy(vulkanContext.getDevice());
+
+    // Cleanup multipass pipeline
+    multiPassPipeline.cleanup();
 
     // Cleanup pipelines
     if (fullscreenPipeline != VK_NULL_HANDLE) {

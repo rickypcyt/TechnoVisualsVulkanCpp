@@ -22,7 +22,9 @@ public:
     int height() const;
     double durationSeconds() const;
     double frameDuration() const;
-    
+    void setPlaybackRate(double rate);
+    double getPlaybackRate() const;
+
     bool grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight);
     bool grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidth, int& outHeight);
     bool seekSeconds(double seconds);
@@ -45,6 +47,7 @@ private:
     SwsContext* swsCtx = nullptr;
     int videoStreamIndex = -1;
     int videoWidth = 0;
+    double playbackRate = 1.0;
     int videoHeight = 0;
     double frameDurationSeconds = 0.0;
     bool ready = false;

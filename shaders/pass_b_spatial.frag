@@ -52,6 +52,12 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     int enableAudioReactive;
     int enableTemporal;
 
+    // --- Enable/Disable flags for VJAY EXTRA ---
+    int enablePixelate;
+    int enableStrobe;
+    int enableThreshold;
+    int enableSlowZoom;
+
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -270,7 +276,7 @@ void main() {
     }
 
     // Slow zoom effect
-    if (ubo.slowZoomAmount > 0.0001) {
+    if (ubo.enableSlowZoom == 1 && ubo.slowZoomAmount > 0.0001) {
         vec2 zoomCenter = vec2(0.5);
         float zoomFactor = 1.0 - ubo.slowZoomAmount * 0.3;
         uvOut = zoomCenter + (uvOut - zoomCenter) * zoomFactor;

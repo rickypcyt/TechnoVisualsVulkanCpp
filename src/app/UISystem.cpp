@@ -692,6 +692,11 @@ void UISystem::drawNLEEditor(const UICallbacks& callbacks) {
     ImGui::SliderInt("Height",   &g_project_state.height, 0, 2160);
 
     static char scale_flags_buf[64] = "lanczos";
+    // Sync buffer with scale_flags if they differ
+    if (g_project_state.scale_flags != std::string(scale_flags_buf)) {
+        strncpy(scale_flags_buf, g_project_state.scale_flags.c_str(), sizeof(scale_flags_buf) - 1);
+        scale_flags_buf[sizeof(scale_flags_buf) - 1] = '\0';
+    }
     ImGui::InputText("Scale Flags", scale_flags_buf, sizeof(scale_flags_buf));
     g_project_state.scale_flags = scale_flags_buf;
 
@@ -703,6 +708,11 @@ void UISystem::drawNLEEditor(const UICallbacks& callbacks) {
 
     ImGui::Separator();
     static char output_file_buf[256] = "output.mp4";
+    // Sync buffer with active_file if they differ
+    if (g_project_state.output_file != std::string(output_file_buf)) {
+        strncpy(output_file_buf, g_project_state.output_file.c_str(), sizeof(output_file_buf) - 1);
+        output_file_buf[sizeof(output_file_buf) - 1] = '\0';
+    }
     ImGui::InputText("Output File", output_file_buf, sizeof(output_file_buf));
     g_project_state.output_file = output_file_buf;
     ImGui::Separator();

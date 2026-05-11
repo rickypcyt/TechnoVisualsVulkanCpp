@@ -117,7 +117,15 @@ double VideoPlayer::durationSeconds() const {
 }
 
 double VideoPlayer::frameDuration() const {
-    return frameDurationSeconds;
+    return frameDurationSeconds / playbackRate;
+}
+
+void VideoPlayer::setPlaybackRate(double rate) {
+    playbackRate = std::clamp(rate, 0.1, 8.0);
+}
+
+double VideoPlayer::getPlaybackRate() const {
+    return playbackRate;
 }
 
 bool VideoPlayer::grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight) {
@@ -261,13 +269,14 @@ void VideoPlayer::shutdown() {
         sws_freeContext(swsCtx);
         swsCtx = nullptr;
     }
-    if (codecCtx) {
-        avcodec_free_context(&codecCtx);
-        codecCtx = nullptr;
-    }
+    // Close format context BEFORE freeing codec context to avoid double-free
     if (formatCtx) {
         avformat_close_input(&formatCtx);
         formatCtx = nullptr;
+    }
+    if (codecCtx) {
+        avcodec_free_context(&codecCtx);
+        codecCtx = nullptr;
     }
     
     cachedWidth = 0;

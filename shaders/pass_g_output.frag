@@ -51,6 +51,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     int enableAnalog;
     int enableAudioReactive;
     int enableTemporal;
+    int enablePixelate;
+    int enableStrobe;
+    int enableThreshold;
+    int enableSlowZoom;
 
     // --- CRT ---
     float crtCurvature;
@@ -249,7 +253,7 @@ void main() {
     }
     
     // Strobe effect
-    if (ubo.strobeSpeed > 0.0001) {
+    if (ubo.enableStrobe == 1 && ubo.strobeSpeed > 0.0001) {
         float strobe = step(0.5, sin(effectTime * ubo.strobeSpeed * PI * 2.0));
         color = mix(color, vec3(0.0), strobe * 0.8);
     }

@@ -39,6 +39,26 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     int enablePostBend;
     int enablePostGlitch;
     int enablePostColorBalance;
+    int enablePostAudioReactive;
+    int enablePostTemporal;
+
+    // --- Enable/Disable flags for VJAY BASICS ---
+    int enableColorGrading;
+    int enableFeedback;
+    int enableDistortion;
+    int enableBlurMotion;
+    int enableSharpen;
+    int enableGlitch;
+    int enableBlending;
+    int enableAnalog;
+    int enableAudioReactive;
+    int enableTemporal;
+
+    // --- Enable/Disable flags for VJAY EXTRA ---
+    int enablePixelate;
+    int enableStrobe;
+    int enableThreshold;
+    int enableSlowZoom;
 
     float crtCurvature;
     float crtHorizontalCurvature;
