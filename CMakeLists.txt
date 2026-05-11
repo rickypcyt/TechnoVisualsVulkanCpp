@@ -24,6 +24,8 @@ add_executable(app
     src/video/VideoRegistry.cpp
     src/video/VideoTexture.cpp
     src/video/VideoRenderer.cpp
+    src/video/CpuFramePool.h
+    src/video/StagingRing.h
     src/render/MultiPassPipeline.cpp
     src/render/ShaderCompiler.cpp
     src/render/UniformBufferManager.cpp

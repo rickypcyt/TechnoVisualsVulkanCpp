@@ -177,9 +177,12 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: \
  /usr/include/libswscale/swscale.h \
  /usr/include/libswscale/version_major.h \
  /usr/include/libswscale/version.h /usr/include/libavutil/imgutils.h \
- /usr/include/libavutil/pixdesc.h /usr/include/c++/16.1.1/iostream \
- /usr/include/c++/16.1.1/ostream /usr/include/c++/16.1.1/bits/ostream.h \
- /usr/include/c++/16.1.1/ios /usr/include/c++/16.1.1/exception \
+ /usr/include/libavutil/pixdesc.h \
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
+ /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
+ /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
+ /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
+ /usr/include/c++/16.1.1/exception \
  /usr/include/c++/16.1.1/bits/exception_ptr.h \
  /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
  /usr/include/c++/16.1.1/typeinfo \
@@ -222,7 +225,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: \
  /usr/include/c++/16.1.1/bits/basic_ios.tcc \
  /usr/include/c++/16.1.1/bits/ostream_print.h \
  /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/bits/istream.tcc \
+ /usr/include/c++/16.1.1/bits/istream.tcc /usr/include/c++/16.1.1/cstring \
  /usr/include/c++/16.1.1/algorithm \
  /usr/include/c++/16.1.1/bits/stl_algo.h \
  /usr/include/c++/16.1.1/bits/algorithmfwd.h \

@@ -20,12 +20,15 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: /home/ricky/coding/proyects/vulkan
   /home/ricky/coding/proyects/vulkancpp/src/render/ShaderCompiler.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/Application.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
   /usr/include/SDL2/SDL.h \
   /usr/include/SDL2/SDL_assert.h \
   /usr/include/SDL2/SDL_atomic.h \
@@ -3472,12 +3475,15 @@ CMakeFiles/app.dir/src/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/mai
   /home/ricky/coding/proyects/vulkancpp/src/render/ShaderCompiler.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/Application.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
   /usr/include/SDL2/SDL.h \
   /usr/include/SDL2/SDL_assert.h \
   /usr/include/SDL2/SDL_atomic.h \
@@ -5539,6 +5545,7 @@ CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: /home/ricky/coding/pro
 
 CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.cpp \
   /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -5552,6 +5559,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
+  /usr/include/assert.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
   /usr/include/bits/cpu-set.h \
@@ -5710,6 +5718,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/c++/16.1.1/bits/utility.h \
   /usr/include/c++/16.1.1/bits/vector.tcc \
   /usr/include/c++/16.1.1/bits/version.h \
+  /usr/include/c++/16.1.1/cassert \
   /usr/include/c++/16.1.1/cctype \
   /usr/include/c++/16.1.1/cerrno \
   /usr/include/c++/16.1.1/clocale \
@@ -5719,6 +5728,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/c++/16.1.1/cstdint \
   /usr/include/c++/16.1.1/cstdio \
   /usr/include/c++/16.1.1/cstdlib \
+  /usr/include/c++/16.1.1/cstring \
   /usr/include/c++/16.1.1/ctime \
   /usr/include/c++/16.1.1/cwchar \
   /usr/include/c++/16.1.1/cwctype \
@@ -6193,8 +6203,11 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: /home/ricky/coding/proyects/vu
   /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -6208,6 +6221,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
+  /usr/include/assert.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
   /usr/include/bits/cpu-set.h \
@@ -6357,6 +6371,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/bits/utility.h \
   /usr/include/c++/16.1.1/bits/vector.tcc \
   /usr/include/c++/16.1.1/bits/version.h \
+  /usr/include/c++/16.1.1/cassert \
   /usr/include/c++/16.1.1/cctype \
   /usr/include/c++/16.1.1/cerrno \
   /usr/include/c++/16.1.1/clocale \
@@ -6367,6 +6382,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/cstdint \
   /usr/include/c++/16.1.1/cstdio \
   /usr/include/c++/16.1.1/cstdlib \
+  /usr/include/c++/16.1.1/cstring \
   /usr/include/c++/16.1.1/cwchar \
   /usr/include/c++/16.1.1/cwctype \
   /usr/include/c++/16.1.1/debug/assertions.h \
@@ -6696,6 +6712,8 @@ CMakeFiles/app.dir/src/video/VideoStaging.cpp.o: /home/ricky/coding/proyects/vul
 CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.cpp \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
+  /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
   /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -6709,6 +6727,7 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: /home/ricky/coding/proyects/vul
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
+  /usr/include/assert.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
   /usr/include/bits/cpu-set.h \
@@ -6839,6 +6858,7 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: /home/ricky/coding/proyects/vul
   /usr/include/c++/16.1.1/bits/utility.h \
   /usr/include/c++/16.1.1/bits/vector.tcc \
   /usr/include/c++/16.1.1/bits/version.h \
+  /usr/include/c++/16.1.1/cassert \
   /usr/include/c++/16.1.1/cctype \
   /usr/include/c++/16.1.1/cerrno \
   /usr/include/c++/16.1.1/clocale \
@@ -9002,8 +9022,6 @@ CMakeFiles/app.dir/src/app/ControlState.cpp.o:
 
 /usr/lib32/libmpg123.so.0:
 
-/usr/lib32/liblzma.so.5:
-
 /usr/lib32/libhogweed.so.6:
 
 /usr/lib32/libglib-2.0.so.0:
@@ -9602,11 +9620,9 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 
 /usr/include/glm/ext/vector_float2_precision.hpp:
 
-/usr/include/c++/16.1.1/bits/parse_numbers.h:
+/usr/include/glm/ext/vector_float1_precision.hpp:
 
-/usr/include/sys/types.h:
-
-/usr/include/c++/16.1.1/bits/ostream_insert.h:
+/usr/include/glm/ext/vector_float1.hpp:
 
 /usr/lib32/libbrotlicommon.so.1:
 
@@ -9631,6 +9647,8 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 /usr/include/glm/detail/type_mat4x2.inl:
 
 /usr/include/c++/16.1.1/bits/invoke.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h:
 
 /usr/include/bits/types/__mbstate_t.h:
 
@@ -9721,12 +9739,6 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 /usr/include/c++/16.1.1/bits/new_except.h:
 
 /usr/include/bits/select.h:
-
-/usr/include/glm/ext/vector_float1.hpp:
-
-/usr/include/c++/16.1.1/bits/ostream_print.h:
-
-/usr/include/c++/16.1.1/bits/locale_classes.tcc:
 
 /usr/lib/libopencore-amrnb.so.0:
 
@@ -9888,31 +9900,21 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 
 /usr/include/c++/16.1.1/tr1/riemann_zeta.tcc:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/prfchwintrin.h:
+CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 
-/usr/include/SDL2/SDL_platform.h:
+/usr/lib32/libffi.so.8:
 
-/usr/include/c++/16.1.1/bits/vector.tcc:
+/usr/include/bits/types/wint_t.h:
 
-/home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_demo.cpp:
+/usr/include/glm/ext/scalar_int_sized.hpp:
 
-/usr/include/SDL2/SDL_filesystem.h:
+/usr/include/bits/sigcontext.h:
 
-/usr/include/glm/ext/matrix_double3x2.hpp:
+/usr/lib32/libpangocairo-1.0.so.0:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a:
+/usr/lib32/libgomp.so.1:
 
-/usr/include/vk_video/vulkan_video_codec_h265std_encode.h:
-
-/usr/include/glm/ext/matrix_double4x3.hpp:
-
-/usr/include/asm-generic/posix_types.h:
-
-/home/ricky/coding/proyects/vulkancpp/src/core/VulkanContext.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512vbmi2vlintrin.h:
-
-/usr/include/c++/16.1.1/tr1/modified_bessel_func.tcc:
+/usr/include/c++/16.1.1/locale:
 
 /usr/include/bits/getopt_posix.h:
 
@@ -9923,6 +9925,8 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 /usr/include/SDL2/SDL_syswm.h:
 
 /usr/include/c++/16.1.1/bit:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h:
 
 /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h:
 
@@ -9994,13 +9998,29 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 
 /usr/include/SDL2/SDL_video.h:
 
-/usr/include/SDL2/SDL_events.h:
+/usr/include/SDL2/SDL_audio.h:
+
+/usr/lib/libc.so.6:
+
+/usr/include/bits/fp-fast.h:
+
+/usr/lib/libatomic.so:
+
+/usr/include/glm/detail/type_mat4x2.hpp:
+
+/usr/include/glm/detail/func_exponential.inl:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/pkuintrin.h:
+
+/usr/include/bits/posix1_lim.h:
 
 /usr/include/SDL2/SDL_hidapi.h:
 
 /home/ricky/coding/proyects/vulkancpp/src/render/GlobalUBO.h:
 
 /usr/include/c++/16.1.1/iosfwd:
+
+/usr/include/SDL2/SDL_events.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512fp16intrin.h:
 
@@ -10009,6 +10029,14 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 /usr/include/c++/16.1.1/bits/istream.tcc:
 
 /usr/include/glm/ext/matrix_float2x4_precision.hpp:
+
+/usr/include/bits/sigaction.h:
+
+/usr/lib/libgio-2.0.so.0:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/include/glm/ext/vector_bool1_precision.hpp:
 
 /usr/include/c++/16.1.1/bits/fs_fwd.h:
 
@@ -10041,6 +10069,32 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
 /usr/include/bits/xopen_lim.h:
 
 /home/ricky/coding/proyects/vulkancpp/src/app/Timeline.h:
+
+/home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_demo.cpp:
+
+/usr/include/SDL2/SDL_filesystem.h:
+
+/usr/include/glm/ext/matrix_double3x2.hpp:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a:
+
+/usr/include/vk_video/vulkan_video_codec_h265std_encode.h:
+
+/usr/include/glm/ext/matrix_double4x3.hpp:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/prfchwintrin.h:
+
+/usr/include/SDL2/SDL_platform.h:
+
+/usr/include/c++/16.1.1/bits/vector.tcc:
+
+/usr/include/asm-generic/posix_types.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/core/VulkanContext.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512vbmi2vlintrin.h:
+
+/usr/include/c++/16.1.1/tr1/modified_bessel_func.tcc:
 
 /usr/lib32/libwebpmux.so.3:
 
@@ -10093,6 +10147,12 @@ CMakeFiles/app.dir/src/core/VulkanContext.cpp.o:
 /home/ricky/coding/proyects/vulkancpp/src/app/PlaybackClock.h:
 
 /usr/include/glm/ext/quaternion_common.hpp:
+
+/home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.cpp:
+
+/usr/include/SDL2/SDL_scancode.h:
+
+/usr/include/glm/ext/vector_double3_precision.hpp:
 
 /usr/include/bits/long-double.h:
 
@@ -10172,31 +10232,11 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o:
 
 /usr/include/bits/flt-eval-method.h:
 
-/usr/include/SDL2/SDL_audio.h:
-
-/usr/lib/libc.so.6:
-
-/usr/include/bits/fp-fast.h:
-
-/usr/lib/libatomic.so:
-
-/usr/include/glm/detail/type_mat4x2.hpp:
-
-/usr/include/glm/detail/func_exponential.inl:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/pkuintrin.h:
-
-/usr/include/bits/posix1_lim.h:
-
 CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o:
 
 /usr/lib32/libopus.so.0:
 
 /usr/include/c++/16.1.1/bits/exception_ptr.h:
-
-/home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h:
-
-/usr/include/SDL2/SDL_mutex.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512vnniintrin.h:
 
@@ -10226,11 +10266,37 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o:
 
 /home/ricky/coding/proyects/vulkancpp/src/app/Application.h:
 
+/usr/lib32/liblzma.so.5:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h:
+
 /home/ricky/coding/proyects/vulkancpp/src/render/MultiPassPipeline.h:
 
 /usr/include/SDL2/SDL_thread.h:
 
-/home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h:
+/usr/include/SDL2/SDL_mutex.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h:
+
+/usr/include/bits/types/__locale_t.h:
+
+/usr/include/SDL2/SDL_error.h:
+
+/usr/include/glm/ext/quaternion_geometric.inl:
+
+/usr/lib/libva-drm.so.2:
+
+/usr/include/c++/16.1.1/bits/basic_ios.tcc:
+
+/usr/include/SDL2/SDL_surface.h:
+
+/usr/include/bits/cpu-set.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h:
+
+/usr/include/glm/ext/vector_uint3_sized.hpp:
+
+/usr/include/glm/ext/scalar_constants.inl:
 
 /usr/lib32/libvdpau.so.1:
 
@@ -10251,6 +10317,8 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o:
 /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h:
 
 /usr/include/SDL2/SDL_stdinc.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h:
 
 /usr/include/bits/sigstack.h:
 
@@ -10288,18 +10356,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/SDL2/SDL_log.h:
 
-/home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.cpp:
-
-/usr/include/glm/ext/vector_double3_precision.hpp:
-
-/usr/include/SDL2/SDL_scancode.h:
-
-/usr/lib/libgio-2.0.so.0:
-
-/usr/include/gnu/stubs-64.h:
-
-/usr/include/glm/ext/vector_bool1_precision.hpp:
-
 /usr/include/glm/mat4x2.hpp:
 
 /usr/include/bits/siginfo-consts.h:
@@ -10332,22 +10388,6 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 
 /usr/include/asm/bitsperlong.h:
 
-CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
-
-/usr/lib32/libffi.so.8:
-
-/usr/include/bits/types/wint_t.h:
-
-/usr/include/glm/ext/scalar_int_sized.hpp:
-
-/usr/include/bits/sigcontext.h:
-
-/usr/lib32/libpangocairo-1.0.so.0:
-
-/usr/lib32/libgomp.so.1:
-
-/usr/include/c++/16.1.1/locale:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/ia32intrin.h:
 
 /usr/include/asm/posix_types_64.h:
@@ -10376,26 +10416,6 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 
 /usr/include/bits/confname.h:
 
-/usr/include/bits/types/__locale_t.h:
-
-/usr/include/SDL2/SDL_error.h:
-
-/usr/include/glm/ext/quaternion_geometric.inl:
-
-/home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h:
-
-/usr/include/glm/ext/vector_uint3_sized.hpp:
-
-/usr/include/glm/ext/scalar_constants.inl:
-
-/usr/lib/libva-drm.so.2:
-
-/usr/include/c++/16.1.1/bits/basic_ios.tcc:
-
-/usr/include/SDL2/SDL_surface.h:
-
-/usr/include/bits/cpu-set.h:
-
 /usr/include/bits/errno.h:
 
 /usr/include/bits/floatn.h:
@@ -10414,8 +10434,6 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/cpu_defines.h:
 
-/usr/include/bits/sigaction.h:
-
 /home/ricky/coding/proyects/vulkancpp/src/render/EffectChain.h:
 
 /usr/include/SDL2/SDL_blendmode.h:
@@ -10427,6 +10445,10 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 /usr/include/bits/locale.h:
 
 /usr/include/c++/16.1.1/bits/stl_function.h:
+
+/usr/include/c++/16.1.1/bits/locale_classes.tcc:
+
+/usr/include/c++/16.1.1/bits/ostream_print.h:
 
 /usr/lib32/libexpat.so.1:
 
@@ -10454,12 +10476,6 @@ CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o:
 
 /usr/include/bits/mathcalls-narrow.h:
 
-/usr/include/c++/16.1.1/bits/ostream.h:
-
-/usr/include/bits/pthread_stack_min-dynamic.h:
-
-/usr/include/c++/16.1.1/new:
-
 /usr/include/libavutil/hwcontext.h:
 
 /usr/include/c++/16.1.1/stdexcept:
@@ -10468,13 +10484,31 @@ CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o:
 
 /usr/include/c++/16.1.1/ext/concurrence.h:
 
+/usr/include/bits/sigevent-consts.h:
+
 /usr/include/bits/posix2_lim.h:
 
 /usr/include/glm/ext/matrix_float2x3_precision.hpp:
 
-/usr/include/bits/sigevent-consts.h:
+/usr/include/c++/16.1.1/bits/ostream.h:
+
+/usr/include/bits/pthread_stack_min-dynamic.h:
+
+/usr/include/c++/16.1.1/new:
+
+/usr/include/sys/types.h:
+
+/usr/include/c++/16.1.1/bits/ostream_insert.h:
+
+/usr/include/c++/16.1.1/bits/parse_numbers.h:
 
 /usr/include/c++/16.1.1/bits/predefined_ops.h:
+
+/usr/include/vulkan/vk_platform.h:
+
+/usr/include/glm/ext/vector_float2.hpp:
+
+/usr/include/c++/16.1.1/bits/ptr_traits.h:
 
 /home/ricky/coding/proyects/vulkancpp/src/main.cpp:
 
@@ -10663,8 +10697,6 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o:
 /usr/include/bits/wordsize.h:
 
 /usr/include/c++/16.1.1/chrono:
-
-/usr/include/glm/ext/vector_float1_precision.hpp:
 
 /usr/lib/libwebp.so.7:
 
@@ -11109,9 +11141,3 @@ CMakeFiles/app.dir/src/app/Application.cpp.o:
 /usr/lib32/libfribidi.so.0:
 
 /usr/include/glm/ext/vector_double2.hpp:
-
-/usr/include/vulkan/vk_platform.h:
-
-/usr/include/c++/16.1.1/bits/ptr_traits.h:
-
-/usr/include/glm/ext/vector_float2.hpp:

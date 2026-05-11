@@ -329,6 +329,11 @@ void Application::initVideo() {
         return;
     }
     
+    // Initialize CPU frame pool with initial video resolution
+    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()), 
+                       static_cast<uint32_t>(videoPlayer.height()),
+                       static_cast<uint32_t>(videoPlayer.width()) * 4);
+    
     // Create video texture resources
     videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                  vulkanContext.getCommandPool(),
@@ -338,9 +343,9 @@ void Application::initVideo() {
 
     videoSubsystemInitialized = videoTexture.isReady();
 
-    // Initialize video renderer
+    // Initialize video renderer with CPU frame pool
     if (videoSubsystemInitialized) {
-        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
+        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
     }
 }
 
@@ -534,6 +539,11 @@ void Application::mainLoop() {
                                                      static_cast<uint32_t>(videoPlayer.width()),
                                                      static_cast<uint32_t>(videoPlayer.height()));
 
+                        // Resize CPU frame pool to new resolution
+                        cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                           static_cast<uint32_t>(videoPlayer.height()),
+                                           static_cast<uint32_t>(videoPlayer.width()) * 4);
+
                         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
                             descriptorSetManager.updateSet(
                                 vulkanContext.getDevice(), i,
@@ -551,7 +561,7 @@ void Application::mainLoop() {
                             videoTexture.getSampler()
                         );
 
-                        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
+                        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
                         videoRandomizer.elapsedSeconds = 0.0f;
                         videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
                     }
@@ -608,6 +618,11 @@ void Application::mainLoop() {
                                                  static_cast<uint32_t>(videoPlayer.width()),
                                                  static_cast<uint32_t>(videoPlayer.height()));
                     
+                    // Resize CPU frame pool to new resolution
+                    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                       static_cast<uint32_t>(videoPlayer.height()),
+                                       static_cast<uint32_t>(videoPlayer.width()) * 4);
+                    
                     // Update descriptor sets with new textures
                     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
                         descriptorSetManager.updateSet(
@@ -627,7 +642,7 @@ void Application::mainLoop() {
                         videoTexture.getSampler()
                     );
 
-                    videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
+                    videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
                     videoRandomizer.elapsedSeconds = 0.0f;
                     videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
                 }
@@ -656,6 +671,11 @@ void Application::mainLoop() {
                                              static_cast<uint32_t>(videoPlayer.width()),
                                              static_cast<uint32_t>(videoPlayer.height()));
                 
+                // Resize CPU frame pool to new resolution
+                cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                   static_cast<uint32_t>(videoPlayer.height()),
+                                   static_cast<uint32_t>(videoPlayer.width()) * 4);
+                
                 // Update descriptor sets with new textures
                 for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
                     descriptorSetManager.updateSet(
@@ -675,7 +695,7 @@ void Application::mainLoop() {
                     videoTexture.getSampler()
                 );
 
-                videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
+                videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
                 videoRandomizer.elapsedSeconds = 0.0f;
                 videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
             }
@@ -996,6 +1016,7 @@ void Application::cleanup() {
     // Cleanup video
     videoPlayer.shutdown();
     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+    videoTexture.cleanup(resourceSystem);  // Destroy staging ring
 
     // Cleanup uniform buffers
     uniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());

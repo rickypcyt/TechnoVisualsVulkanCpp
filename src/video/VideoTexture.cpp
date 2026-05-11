@@ -1,4 +1,5 @@
 #include "VideoTexture.h"
+#include "FrameLayout.h"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -11,26 +12,20 @@ VideoTexture::~VideoTexture() {
 
 void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice device, VkCommandPool commandPool,
                                     VkQueue graphicsQueue, uint32_t width, uint32_t height) {
-    // Check if recreation is necessary
-    bool buffersValid = !stagingSlots.empty();
-    for (size_t i = 0; i < stagingSlots.size() && buffersValid; ++i) {
-        if (stagingSlots[i].mapped == nullptr) {
-            buffersValid = false;
-        }
-    }
-
-    size_t requiredSize = static_cast<size_t>(width) * height * 4;
+    // Check if GPU image recreation is necessary
+    FrameLayout newLayout(width, height);  // Assume compact layout for GPU
+    size_t requiredSize = newLayout.compactSize();
     size_t allocatedSize = frameSize;
 
     std::cout << "[VideoTexture] Dimension check: allocated=" << allocatedSize 
               << " required=" << requiredSize 
               << " width=" << width << " height=" << height 
               << " old=" << this->width << "x" << this->height
-              << " ready=" << ready
-              << " buffersValid=" << buffersValid << std::endl;
+              << " ready=" << ready << std::endl;
 
-    if (ready && this->width == width && this->height == height && buffersValid && allocatedSize >= requiredSize) {
-        std::cout << "[VideoTexture] Skipping recreation (valid)" << std::endl;
+    // Skip recreation if dimensions are the same (GPU image only)
+    if (ready && this->width == width && this->height == height) {
+        std::cout << "[VideoTexture] Skipping recreation (same dimensions)" << std::endl;
         return;
     }
 
@@ -38,7 +33,14 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
 
     this->width = width;
     this->height = height;
-    frameSize = static_cast<size_t>(width) * height * 4;
+    this->stride = width * 4;  // GPU expects compact layout
+    frameSize = requiredSize;
+
+    // Create staging ring buffer ONCE (fixed MAX capacity)
+    if (!stagingRing.getSlot(0).mapped) {
+        stagingRing.create(resourceSystem, device);
+        std::cout << "[VideoTexture] Staging ring created with capacity: " << stagingRing.getCapacity() << " bytes" << std::endl;
+    }
 
     // Create current frame texture
     imageHandle = resourceSystem.createImage(
@@ -113,46 +115,9 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     currentLayoutPrev = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     pendingUploadsPrev.fill(false);
 
-    // Allocate CPU buffer for previous frame
+    // Allocate CPU buffer for previous frame (dynamic size)
     previousFrameData.resize(frameSize);
     std::fill(previousFrameData.begin(), previousFrameData.end(), 0);
-
-    // Create staging buffer for previous frame upload
-    auto prevStagingBuffer = resourceSystem.createBuffer(
-        static_cast<VkDeviceSize>(frameSize),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    void* prevMapped = resourceSystem.map(prevStagingBuffer);
-    if (prevMapped == nullptr) {
-        resourceSystem.destroy(prevStagingBuffer);
-        throw std::runtime_error("failed to map previous frame staging buffer");
-    }
-
-    prevFrameStagingBuffer = std::move(prevStagingBuffer);
-    prevFrameStagingMapped = prevMapped;
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        if (frameSize == 0) {
-            stagingSlots[i] = {};
-            continue;
-        }
-
-        auto buffer = resourceSystem.createBuffer(
-            static_cast<VkDeviceSize>(frameSize),
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        void* mapped = resourceSystem.map(buffer);
-        if (mapped == nullptr) {
-            resourceSystem.destroy(buffer);
-            throw std::runtime_error("failed to map video staging buffer");
-        }
-
-        stagingSlots[i].buffer = std::move(buffer);
-        stagingSlots[i].mapped = mapped;
-        stagingSlots[i].capacity = frameSize;
-    }
 
     ready = true;
     std::cout << "[VideoTexture] Resources created successfully" << std::endl;
@@ -161,7 +126,8 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
 void VideoTexture::destroy(ResourceSystem& resourceSystem, VkDevice device) {
     std::cout << "[VideoTexture] Destroy called" << std::endl;
     
-    destroyStagingBuffers(resourceSystem);
+    // NOTE: Staging ring is NOT destroyed here - it has fixed MAX capacity
+    // and persists across resolution changes
 
     if (imageView != VK_NULL_HANDLE) {
         vkDestroyImageView(device, imageView, nullptr);
@@ -184,14 +150,7 @@ void VideoTexture::destroy(ResourceSystem& resourceSystem, VkDevice device) {
         resourceSystem.destroy(imageHandlePrev);
         imageHandlePrev = {};
     }
-    if (prevFrameStagingBuffer.type != ResourceType::Unknown) {
-        if (prevFrameStagingMapped != nullptr) {
-            resourceSystem.unmap(prevFrameStagingBuffer);
-            prevFrameStagingMapped = nullptr;
-        }
-        resourceSystem.destroy(prevFrameStagingBuffer);
-        prevFrameStagingBuffer = {};
-    }
+    
     ready = false;
     descriptorInfo = {};
     descriptorInfoPrev = {};
@@ -209,11 +168,20 @@ void VideoTexture::uploadFrame(uint32_t frameIndex, const uint8_t* data, size_t 
         return;
     }
 
-    auto& slot = stagingSlots[frameIndex];
-    if (slot.mapped != nullptr && size <= slot.capacity) {
-        std::memcpy(slot.mapped, data, size);
-        pendingUploads[frameIndex] = true;
+    // Validate incoming data size against expected compact layout
+    FrameLayout expectedLayout(width, height, stride);
+    if (size != expectedLayout.compactSize()) {
+        std::cerr << "[VideoTexture] Size mismatch: received=" << size 
+                  << " expected=" << expectedLayout.compactSize()
+                  << " for " << width << "x" << height 
+                  << " stride=" << stride << std::endl;
+        // Don't upload invalid data
+        return;
     }
+
+    // Use StagingRing with built-in safety assert
+    stagingRing.upload(data, size, frameIndex);
+    pendingUploads[frameIndex] = true;
 }
 
 void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t frameIndex, VkQueue graphicsQueue) {
@@ -221,7 +189,7 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
         return;
     }
 
-    const auto& slot = stagingSlots[frameIndex];
+    const auto& slot = stagingRing.getSlot(frameIndex);
 
     // Helper function to transition a single image
     auto transition = [&](VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
@@ -309,7 +277,7 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
     }
 
     // Upload to previous frame texture
-    if (pendingUploadsPrev[frameIndex] && !previousFrameData.empty() && prevFrameStagingMapped != nullptr) {
+    if (pendingUploadsPrev[frameIndex] && !previousFrameData.empty()) {
         VkImageLayout startLayout = currentLayoutPrev;
         VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                             ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
@@ -321,8 +289,8 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
                    srcStage,
                    VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-        // Copy previous frame data to staging buffer
-        std::memcpy(prevFrameStagingMapped, previousFrameData.data(), frameSize);
+        // Use staging ring for previous frame upload (same ring buffer, different slot)
+        stagingRing.upload(previousFrameData.data(), frameSize, frameIndex);
 
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -337,7 +305,7 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
 
         vkCmdCopyBufferToImage(
             commandBuffer,
-            prevFrameStagingBuffer.buffer,
+            stagingRing.getSlot(frameIndex).buffer.buffer,
             imageHandlePrev.image,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,
@@ -358,8 +326,8 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
 void VideoTexture::uploadPreviousFrame(VkCommandBuffer commandBuffer, VkQueue graphicsQueue) {
     // This is a simplified version - in the full implementation this would
     // need proper command buffer recording and submission
-    if (!previousFrameData.empty() && prevFrameStagingMapped != nullptr) {
-        std::memcpy(prevFrameStagingMapped, previousFrameData.data(), frameSize);
+    if (!previousFrameData.empty()) {
+        // Will be uploaded via stagingRing in recordPendingUpload
         pendingUploadsPrev.fill(true);
     }
 }
@@ -473,17 +441,11 @@ void VideoTexture::initializeVideoImage(VkDevice device, VkCommandPool commandPo
 }
 
 void VideoTexture::destroyStagingBuffers(ResourceSystem& resourceSystem) {
-    for (size_t i = 0; i < stagingSlots.size(); ++i) {
-        auto& slot = stagingSlots[i];
+    // Staging ring is destroyed separately in cleanup, not here
+    // This function is kept for compatibility but does nothing
+}
 
-        if (slot.mapped != nullptr && slot.buffer.type != ResourceType::Unknown) {
-            resourceSystem.unmap(slot.buffer);
-            slot.mapped = nullptr;
-        }
-        if (slot.buffer.type != ResourceType::Unknown) {
-            resourceSystem.destroy(slot.buffer);
-            slot.buffer = {};
-        }
-        slot.capacity = 0;
-    }
+void VideoTexture::cleanup(ResourceSystem& resourceSystem) {
+    std::cout << "[VideoTexture] Cleanup called - destroying staging ring" << std::endl;
+    stagingRing.destroy(resourceSystem);
 }

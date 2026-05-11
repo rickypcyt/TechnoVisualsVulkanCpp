@@ -1,9 +1,10 @@
 #include "VideoRenderer.h"
 #include <iostream>
 
-VideoRenderer::VideoRenderer(VideoPlayer& player, VideoTexture& texture)
+VideoRenderer::VideoRenderer(VideoPlayer& player, VideoTexture& texture, CpuFramePool& cpuPool)
     : videoPlayer(player)
     , videoTexture(texture)
+    , cpuFramePool(cpuPool)
 {
 }
 
@@ -21,16 +22,17 @@ void VideoRenderer::update(float deltaTime, uint32_t frameIndex) {
 
     accumulatedTime -= frameDuration;
 
-    // Decode next frame
-    int outWidth, outHeight;
-    std::vector<uint8_t> frameData;
+    // Get CPU frame from pool
+    CpuFrame& cpuFrame = cpuFramePool.acquireWriteFrame();
     
-    if (videoPlayer.grabFrame(frameData, outWidth, outHeight)) {
+    // Decode next frame directly into CPU frame pool
+    int outWidth, outHeight;
+    if (videoPlayer.grabFrameInto(cpuFrame.data.data(), cpuFrame.data.capacity(), outWidth, outHeight)) {
         // Store previous frame data for interpolation
-        videoTexture.getPreviousFrameData() = frameData;
+        videoTexture.getPreviousFrameData() = cpuFrame.data;
         
-        // Upload to staging buffer
-        videoTexture.uploadFrame(frameIndex, frameData.data(), frameData.size());
+        // Upload to staging buffer with safety check
+        videoTexture.uploadFrame(frameIndex, cpuFrame.data.data(), cpuFrame.size);
         
         // Mark previous frame for upload
         videoTexture.getPendingUploadsPrev()[frameIndex] = true;
@@ -39,4 +41,9 @@ void VideoRenderer::update(float deltaTime, uint32_t frameIndex) {
 
 void VideoRenderer::reset() {
     accumulatedTime = 0.0f;
+}
+
+void VideoRenderer::resize(uint32_t width, uint32_t height) {
+    // sws_scale produces compact layout, so stride = width * 4
+    cpuFramePool.resize(width, height, width * 4);
 }

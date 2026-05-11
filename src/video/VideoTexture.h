@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include "../gfx/ResourceSystem.h"
+#include "video/StagingRing.h"
 
 class VideoTexture {
 public:
@@ -48,6 +49,7 @@ public:
     void createResources(ResourceSystem& resourceSystem, VkDevice device, VkCommandPool commandPool,
                          VkQueue graphicsQueue, uint32_t width, uint32_t height);
     void destroy(ResourceSystem& resourceSystem, VkDevice device);
+    void cleanup(ResourceSystem& resourceSystem);
 
     // Upload management
     void uploadFrame(uint32_t frameIndex, const uint8_t* data, size_t size);
@@ -98,6 +100,7 @@ private:
     // Dimensions
     uint32_t width = 1;
     uint32_t height = 1;
+    uint32_t stride = 4;  // Expected stride (compact for GPU)
     size_t frameSize = 4;
     bool ready = false;
     
@@ -105,8 +108,8 @@ private:
     VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkImageLayout currentLayoutPrev = VK_IMAGE_LAYOUT_UNDEFINED;
     
-    // Staging buffers
-    std::array<StagingSlot, MAX_FRAMES_IN_FLIGHT> stagingSlots{};
+    // Staging ring buffer (fixed MAX capacity, resize-safe)
+    StagingRing stagingRing;
     std::array<double, MAX_FRAMES_IN_FLIGHT> stagingTimestamps{};
     std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploads{};
     std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploadsPrev{};

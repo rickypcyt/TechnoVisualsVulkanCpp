@@ -141,6 +141,11 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: \
  /usr/include/c++/16.1.1/bits/basic_string.tcc \
  /usr/include/c++/16.1.1/bits/stdexcept_except.h \
  /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
+ /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
+ /usr/include/c++/16.1.1/cstring /usr/include/string.h \
+ /usr/include/strings.h \
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h \
  /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
  /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
  /usr/include/c++/16.1.1/bits/ios_base.h \
@@ -180,5 +185,4 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: \
  /usr/include/c++/16.1.1/bits/basic_ios.tcc \
  /usr/include/c++/16.1.1/bits/ostream_print.h \
  /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/bits/istream.tcc /usr/include/c++/16.1.1/cstring \
- /usr/include/string.h /usr/include/strings.h
+ /usr/include/c++/16.1.1/bits/istream.tcc

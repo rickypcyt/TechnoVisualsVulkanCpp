@@ -11,6 +11,7 @@
 #include "../video/VideoPlayer.h"
 #include "../video/VideoRegistry.h"
 #include "../video/VideoRenderer.h"
+#include "../video/CpuFramePool.h"
 #include "../render/UniformBufferManager.h"
 #include "../render/DescriptorSetManager.h"
 #include "../render/ShaderCompiler.h"
@@ -58,6 +59,7 @@ private:
     VideoTexture videoTexture;
     VideoPlayer videoPlayer;
     VideoRegistry videoRegistry;
+    CpuFramePool cpuFramePool;
     std::unique_ptr<VideoRenderer> videoRenderer;
     std::string videoAssetsRoot = "mp4s";
     std::string videoSourcePath = "media/sample.mp4";

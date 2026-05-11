@@ -349,6 +349,9 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/../gfx/FrameSystem.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoTexture.h \
  /usr/include/c++/16.1.1/array /usr/include/c++/16.1.1/compare \
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
+ /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
+ /usr/include/c++/16.1.1/cstring \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoPlayer.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/../app/ProjectState.h \
  /usr/include/c++/16.1.1/atomic /usr/include/libavcodec/avcodec.h \
@@ -425,11 +428,13 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRenderer.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/CpuFramePool.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/FrameLayout.h \
+ /usr/include/c++/16.1.1/iostream \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/UniformBufferManager.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/GlobalUBO.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
- /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
- /usr/include/assert.h /usr/include/glm/simd/platform.h \
+ /usr/include/glm/detail/setup.hpp /usr/include/glm/simd/platform.h \
  /usr/include/c++/16.1.1/climits /usr/include/c++/16.1.1/cfloat \
  /usr/include/glm/fwd.hpp /usr/include/glm/detail/qualifier.hpp \
  /usr/include/glm/detail/setup.hpp /usr/include/glm/vec2.hpp \
@@ -563,9 +568,8 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/bits/this_thread_sleep.h \
  /usr/include/c++/16.1.1/condition_variable /usr/include/c++/16.1.1/queue \
  /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/future \
- /usr/include/c++/16.1.1/bits/atomic_futex.h \
- /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/cstring \
- /usr/include/c++/16.1.1/map /usr/include/c++/16.1.1/bits/stl_tree.h \
+ /usr/include/c++/16.1.1/bits/atomic_futex.h /usr/include/c++/16.1.1/map \
+ /usr/include/c++/16.1.1/bits/stl_tree.h \
  /usr/include/c++/16.1.1/bits/stl_map.h \
  /usr/include/c++/16.1.1/bits/stl_multimap.h /usr/include/unistd.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \

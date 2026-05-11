@@ -21,12 +21,15 @@ CMakeFiles/app.dir/src/app/Application.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/render/ShaderCompiler.h
  /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h
  /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h
  /home/ricky/coding/proyects/vulkancpp/src/app/Application.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h
  /usr/include/SDL2/SDL.h
  /usr/include/SDL2/SDL_assert.h
  /usr/include/SDL2/SDL_atomic.h
@@ -3481,12 +3484,15 @@ CMakeFiles/app.dir/src/main.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/render/ShaderCompiler.h
  /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h
  /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h
  /home/ricky/coding/proyects/vulkancpp/src/app/Application.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h
  /usr/include/SDL2/SDL.h
  /usr/include/SDL2/SDL_assert.h
  /usr/include/SDL2/SDL_atomic.h
@@ -5553,6 +5559,7 @@ CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o
 CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.cpp
  /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
@@ -5566,6 +5573,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o
  /usr/include/asm/posix_types.h
  /usr/include/asm/posix_types_64.h
  /usr/include/asm/types.h
+ /usr/include/assert.h
  /usr/include/bits/atomic_wide_counter.h
  /usr/include/bits/byteswap.h
  /usr/include/bits/cpu-set.h
@@ -5724,6 +5732,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o
  /usr/include/c++/16.1.1/bits/utility.h
  /usr/include/c++/16.1.1/bits/vector.tcc
  /usr/include/c++/16.1.1/bits/version.h
+ /usr/include/c++/16.1.1/cassert
  /usr/include/c++/16.1.1/cctype
  /usr/include/c++/16.1.1/cerrno
  /usr/include/c++/16.1.1/clocale
@@ -5733,6 +5742,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o
  /usr/include/c++/16.1.1/cstdint
  /usr/include/c++/16.1.1/cstdio
  /usr/include/c++/16.1.1/cstdlib
+ /usr/include/c++/16.1.1/cstring
  /usr/include/c++/16.1.1/ctime
  /usr/include/c++/16.1.1/cwchar
  /usr/include/c++/16.1.1/cwctype
@@ -6209,8 +6219,11 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h
  /home/ricky/coding/proyects/vulkancpp/src/app/ProjectState.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/CpuFramePool.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.h
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
@@ -6224,6 +6237,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o
  /usr/include/asm/posix_types.h
  /usr/include/asm/posix_types_64.h
  /usr/include/asm/types.h
+ /usr/include/assert.h
  /usr/include/bits/atomic_wide_counter.h
  /usr/include/bits/byteswap.h
  /usr/include/bits/cpu-set.h
@@ -6373,6 +6387,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o
  /usr/include/c++/16.1.1/bits/utility.h
  /usr/include/c++/16.1.1/bits/vector.tcc
  /usr/include/c++/16.1.1/bits/version.h
+ /usr/include/c++/16.1.1/cassert
  /usr/include/c++/16.1.1/cctype
  /usr/include/c++/16.1.1/cerrno
  /usr/include/c++/16.1.1/clocale
@@ -6383,6 +6398,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o
  /usr/include/c++/16.1.1/cstdint
  /usr/include/c++/16.1.1/cstdio
  /usr/include/c++/16.1.1/cstdlib
+ /usr/include/c++/16.1.1/cstring
  /usr/include/c++/16.1.1/cwchar
  /usr/include/c++/16.1.1/cwctype
  /usr/include/c++/16.1.1/debug/assertions.h
@@ -6714,6 +6730,8 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.cpp
  /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
@@ -6727,6 +6745,7 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o
  /usr/include/asm/posix_types.h
  /usr/include/asm/posix_types_64.h
  /usr/include/asm/types.h
+ /usr/include/assert.h
  /usr/include/bits/atomic_wide_counter.h
  /usr/include/bits/byteswap.h
  /usr/include/bits/cpu-set.h
@@ -6857,6 +6876,7 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.o
  /usr/include/c++/16.1.1/bits/utility.h
  /usr/include/c++/16.1.1/bits/vector.tcc
  /usr/include/c++/16.1.1/bits/version.h
+ /usr/include/c++/16.1.1/cassert
  /usr/include/c++/16.1.1/cctype
  /usr/include/c++/16.1.1/cerrno
  /usr/include/c++/16.1.1/clocale

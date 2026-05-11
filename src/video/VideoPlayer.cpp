@@ -1,8 +1,10 @@
 #include "video/VideoPlayer.h"
+#include "video/FrameLayout.h"
 #include <iostream>
 #include <algorithm>
 #include <mutex>
 #include <cmath>
+#include <cstring>
 
 namespace {
     void ensureFFmpegInitialized() {
@@ -234,8 +236,11 @@ bool VideoPlayer::grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidt
                 return false;
             }
 
+            // sws_scale converts to compact RGBA layout
+            // frame->linesize[0] is for the SOURCE format (e.g., YUV), not destination
             uint8_t* destPlanes[4] = {dest, nullptr, nullptr, nullptr};
             int destStrides[4] = {videoWidth * 4, 0, 0, 0};
+            
             sws_scale(
                 swsCtx,
                 frame->data,
