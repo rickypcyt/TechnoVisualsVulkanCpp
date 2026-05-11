@@ -3,15 +3,23 @@ app: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o \
   CMakeFiles/app.dir/src/main.cpp.o \
+  CMakeFiles/app.dir/src/app/Application.cpp.o \
   CMakeFiles/app.dir/src/app/UISystem.cpp.o \
   CMakeFiles/app.dir/src/app/ControlState.cpp.o \
+  CMakeFiles/app.dir/src/core/Window.cpp.o \
+  CMakeFiles/app.dir/src/core/VulkanContext.cpp.o \
   CMakeFiles/app.dir/src/video/VideoStaging.cpp.o \
+  CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o \
+  CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o \
+  CMakeFiles/app.dir/src/video/VideoTexture.cpp.o \
+  CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o \
   CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o \
+  CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o \
+  CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o \
+  CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o \
   CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o \
   CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o \
   CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o \
-  CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o \
-  CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o \
   CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o \
   CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o \
   CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o \
@@ -253,23 +261,39 @@ app: \
 
 CMakeFiles/app.dir/src/main.cpp.o:
 
+CMakeFiles/app.dir/src/app/Application.cpp.o:
+
 CMakeFiles/app.dir/src/app/UISystem.cpp.o:
 
 CMakeFiles/app.dir/src/app/ControlState.cpp.o:
 
+CMakeFiles/app.dir/src/core/Window.cpp.o:
+
+CMakeFiles/app.dir/src/core/VulkanContext.cpp.o:
+
 CMakeFiles/app.dir/src/video/VideoStaging.cpp.o:
 
+CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o:
+
+CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o:
+
+CMakeFiles/app.dir/src/video/VideoTexture.cpp.o:
+
+CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o:
+
 CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
+
+CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o:
+
+CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o:
+
+CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o:
 
 CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o:
 
 CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o:
 
 CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o:
-
-CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o:
-
-CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o:
 
 CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o:
 

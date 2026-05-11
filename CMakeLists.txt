@@ -14,15 +14,23 @@ set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 
 add_executable(app
     src/main.cpp
+    src/app/Application.cpp
     src/app/UISystem.cpp
     src/app/ControlState.cpp
+    src/core/Window.cpp
+    src/core/VulkanContext.cpp
     src/video/VideoStaging.cpp
+    src/video/VideoPlayer.cpp
+    src/video/VideoRegistry.cpp
+    src/video/VideoTexture.cpp
+    src/video/VideoRenderer.cpp
     src/render/MultiPassPipeline.cpp
+    src/render/ShaderCompiler.cpp
+    src/render/UniformBufferManager.cpp
+    src/render/DescriptorSetManager.cpp
     src/gfx/FrameSystem.cpp
     src/gfx/MemoryAllocator.cpp
     src/gfx/ResourceSystem.cpp
-    src/video/VideoPlayer.cpp
-    src/video/VideoRegistry.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/imgui_draw.cpp

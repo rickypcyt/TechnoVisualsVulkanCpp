@@ -1,5 +1,5 @@
-CMakeFiles/app.dir/src/main.cpp.o: \
- /home/ricky/coding/proyects/vulkancpp/src/main.cpp \
+CMakeFiles/app.dir/src/main_new.cpp.o: \
+ /home/ricky/coding/proyects/vulkancpp/src/main_new.cpp \
  /usr/include/stdc-predef.h /usr/include/SDL2/SDL.h \
  /usr/include/SDL2/SDL_main.h /usr/include/SDL2/SDL_stdinc.h \
  /usr/include/SDL2/SDL_config.h /usr/include/SDL2/SDL_platform.h \
@@ -439,7 +439,6 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_heap.h \
  /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRenderer.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/UniformBufferManager.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/GlobalUBO.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \

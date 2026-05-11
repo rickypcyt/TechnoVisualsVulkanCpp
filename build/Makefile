@@ -129,6 +129,30 @@ app/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
 .PHONY : app/fast
 
+src/app/Application.o: src/app/Application.cpp.o
+.PHONY : src/app/Application.o
+
+# target to build an object file
+src/app/Application.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/Application.cpp.o
+.PHONY : src/app/Application.cpp.o
+
+src/app/Application.i: src/app/Application.cpp.i
+.PHONY : src/app/Application.i
+
+# target to preprocess a source file
+src/app/Application.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/Application.cpp.i
+.PHONY : src/app/Application.cpp.i
+
+src/app/Application.s: src/app/Application.cpp.s
+.PHONY : src/app/Application.s
+
+# target to generate assembly for a file
+src/app/Application.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/Application.cpp.s
+.PHONY : src/app/Application.cpp.s
+
 src/app/ControlState.o: src/app/ControlState.cpp.o
 .PHONY : src/app/ControlState.o
 
@@ -176,6 +200,54 @@ src/app/UISystem.s: src/app/UISystem.cpp.s
 src/app/UISystem.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/UISystem.cpp.s
 .PHONY : src/app/UISystem.cpp.s
+
+src/core/VulkanContext.o: src/core/VulkanContext.cpp.o
+.PHONY : src/core/VulkanContext.o
+
+# target to build an object file
+src/core/VulkanContext.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/core/VulkanContext.cpp.o
+.PHONY : src/core/VulkanContext.cpp.o
+
+src/core/VulkanContext.i: src/core/VulkanContext.cpp.i
+.PHONY : src/core/VulkanContext.i
+
+# target to preprocess a source file
+src/core/VulkanContext.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/core/VulkanContext.cpp.i
+.PHONY : src/core/VulkanContext.cpp.i
+
+src/core/VulkanContext.s: src/core/VulkanContext.cpp.s
+.PHONY : src/core/VulkanContext.s
+
+# target to generate assembly for a file
+src/core/VulkanContext.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/core/VulkanContext.cpp.s
+.PHONY : src/core/VulkanContext.cpp.s
+
+src/core/Window.o: src/core/Window.cpp.o
+.PHONY : src/core/Window.o
+
+# target to build an object file
+src/core/Window.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/core/Window.cpp.o
+.PHONY : src/core/Window.cpp.o
+
+src/core/Window.i: src/core/Window.cpp.i
+.PHONY : src/core/Window.i
+
+# target to preprocess a source file
+src/core/Window.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/core/Window.cpp.i
+.PHONY : src/core/Window.cpp.i
+
+src/core/Window.s: src/core/Window.cpp.s
+.PHONY : src/core/Window.s
+
+# target to generate assembly for a file
+src/core/Window.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/core/Window.cpp.s
+.PHONY : src/core/Window.cpp.s
 
 src/gfx/FrameSystem.o: src/gfx/FrameSystem.cpp.o
 .PHONY : src/gfx/FrameSystem.o
@@ -273,6 +345,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/render/DescriptorSetManager.o: src/render/DescriptorSetManager.cpp.o
+.PHONY : src/render/DescriptorSetManager.o
+
+# target to build an object file
+src/render/DescriptorSetManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o
+.PHONY : src/render/DescriptorSetManager.cpp.o
+
+src/render/DescriptorSetManager.i: src/render/DescriptorSetManager.cpp.i
+.PHONY : src/render/DescriptorSetManager.i
+
+# target to preprocess a source file
+src/render/DescriptorSetManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.i
+.PHONY : src/render/DescriptorSetManager.cpp.i
+
+src/render/DescriptorSetManager.s: src/render/DescriptorSetManager.cpp.s
+.PHONY : src/render/DescriptorSetManager.s
+
+# target to generate assembly for a file
+src/render/DescriptorSetManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.s
+.PHONY : src/render/DescriptorSetManager.cpp.s
+
 src/render/MultiPassPipeline.o: src/render/MultiPassPipeline.cpp.o
 .PHONY : src/render/MultiPassPipeline.o
 
@@ -296,6 +392,54 @@ src/render/MultiPassPipeline.s: src/render/MultiPassPipeline.cpp.s
 src/render/MultiPassPipeline.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.s
 .PHONY : src/render/MultiPassPipeline.cpp.s
+
+src/render/ShaderCompiler.o: src/render/ShaderCompiler.cpp.o
+.PHONY : src/render/ShaderCompiler.o
+
+# target to build an object file
+src/render/ShaderCompiler.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o
+.PHONY : src/render/ShaderCompiler.cpp.o
+
+src/render/ShaderCompiler.i: src/render/ShaderCompiler.cpp.i
+.PHONY : src/render/ShaderCompiler.i
+
+# target to preprocess a source file
+src/render/ShaderCompiler.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.i
+.PHONY : src/render/ShaderCompiler.cpp.i
+
+src/render/ShaderCompiler.s: src/render/ShaderCompiler.cpp.s
+.PHONY : src/render/ShaderCompiler.s
+
+# target to generate assembly for a file
+src/render/ShaderCompiler.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.s
+.PHONY : src/render/ShaderCompiler.cpp.s
+
+src/render/UniformBufferManager.o: src/render/UniformBufferManager.cpp.o
+.PHONY : src/render/UniformBufferManager.o
+
+# target to build an object file
+src/render/UniformBufferManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o
+.PHONY : src/render/UniformBufferManager.cpp.o
+
+src/render/UniformBufferManager.i: src/render/UniformBufferManager.cpp.i
+.PHONY : src/render/UniformBufferManager.i
+
+# target to preprocess a source file
+src/render/UniformBufferManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.i
+.PHONY : src/render/UniformBufferManager.cpp.i
+
+src/render/UniformBufferManager.s: src/render/UniformBufferManager.cpp.s
+.PHONY : src/render/UniformBufferManager.s
+
+# target to generate assembly for a file
+src/render/UniformBufferManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.s
+.PHONY : src/render/UniformBufferManager.cpp.s
 
 src/video/VideoPlayer.o: src/video/VideoPlayer.cpp.o
 .PHONY : src/video/VideoPlayer.o
@@ -345,6 +489,30 @@ src/video/VideoRegistry.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRegistry.cpp.s
 .PHONY : src/video/VideoRegistry.cpp.s
 
+src/video/VideoRenderer.o: src/video/VideoRenderer.cpp.o
+.PHONY : src/video/VideoRenderer.o
+
+# target to build an object file
+src/video/VideoRenderer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o
+.PHONY : src/video/VideoRenderer.cpp.o
+
+src/video/VideoRenderer.i: src/video/VideoRenderer.cpp.i
+.PHONY : src/video/VideoRenderer.i
+
+# target to preprocess a source file
+src/video/VideoRenderer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRenderer.cpp.i
+.PHONY : src/video/VideoRenderer.cpp.i
+
+src/video/VideoRenderer.s: src/video/VideoRenderer.cpp.s
+.PHONY : src/video/VideoRenderer.s
+
+# target to generate assembly for a file
+src/video/VideoRenderer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoRenderer.cpp.s
+.PHONY : src/video/VideoRenderer.cpp.s
+
 src/video/VideoStaging.o: src/video/VideoStaging.cpp.o
 .PHONY : src/video/VideoStaging.o
 
@@ -368,6 +536,30 @@ src/video/VideoStaging.s: src/video/VideoStaging.cpp.s
 src/video/VideoStaging.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoStaging.cpp.s
 .PHONY : src/video/VideoStaging.cpp.s
+
+src/video/VideoTexture.o: src/video/VideoTexture.cpp.o
+.PHONY : src/video/VideoTexture.o
+
+# target to build an object file
+src/video/VideoTexture.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoTexture.cpp.o
+.PHONY : src/video/VideoTexture.cpp.o
+
+src/video/VideoTexture.i: src/video/VideoTexture.cpp.i
+.PHONY : src/video/VideoTexture.i
+
+# target to preprocess a source file
+src/video/VideoTexture.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoTexture.cpp.i
+.PHONY : src/video/VideoTexture.cpp.i
+
+src/video/VideoTexture.s: src/video/VideoTexture.cpp.s
+.PHONY : src/video/VideoTexture.s
+
+# target to generate assembly for a file
+src/video/VideoTexture.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/video/VideoTexture.cpp.s
+.PHONY : src/video/VideoTexture.cpp.s
 
 third_party/imgui/backends/imgui_impl_sdl2.o: third_party/imgui/backends/imgui_impl_sdl2.cpp.o
 .PHONY : third_party/imgui/backends/imgui_impl_sdl2.o
@@ -546,12 +738,21 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... app"
+	@echo "... src/app/Application.o"
+	@echo "... src/app/Application.i"
+	@echo "... src/app/Application.s"
 	@echo "... src/app/ControlState.o"
 	@echo "... src/app/ControlState.i"
 	@echo "... src/app/ControlState.s"
 	@echo "... src/app/UISystem.o"
 	@echo "... src/app/UISystem.i"
 	@echo "... src/app/UISystem.s"
+	@echo "... src/core/VulkanContext.o"
+	@echo "... src/core/VulkanContext.i"
+	@echo "... src/core/VulkanContext.s"
+	@echo "... src/core/Window.o"
+	@echo "... src/core/Window.i"
+	@echo "... src/core/Window.s"
 	@echo "... src/gfx/FrameSystem.o"
 	@echo "... src/gfx/FrameSystem.i"
 	@echo "... src/gfx/FrameSystem.s"
@@ -564,18 +765,33 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/render/DescriptorSetManager.o"
+	@echo "... src/render/DescriptorSetManager.i"
+	@echo "... src/render/DescriptorSetManager.s"
 	@echo "... src/render/MultiPassPipeline.o"
 	@echo "... src/render/MultiPassPipeline.i"
 	@echo "... src/render/MultiPassPipeline.s"
+	@echo "... src/render/ShaderCompiler.o"
+	@echo "... src/render/ShaderCompiler.i"
+	@echo "... src/render/ShaderCompiler.s"
+	@echo "... src/render/UniformBufferManager.o"
+	@echo "... src/render/UniformBufferManager.i"
+	@echo "... src/render/UniformBufferManager.s"
 	@echo "... src/video/VideoPlayer.o"
 	@echo "... src/video/VideoPlayer.i"
 	@echo "... src/video/VideoPlayer.s"
 	@echo "... src/video/VideoRegistry.o"
 	@echo "... src/video/VideoRegistry.i"
 	@echo "... src/video/VideoRegistry.s"
+	@echo "... src/video/VideoRenderer.o"
+	@echo "... src/video/VideoRenderer.i"
+	@echo "... src/video/VideoRenderer.s"
 	@echo "... src/video/VideoStaging.o"
 	@echo "... src/video/VideoStaging.i"
 	@echo "... src/video/VideoStaging.s"
+	@echo "... src/video/VideoTexture.o"
+	@echo "... src/video/VideoTexture.i"
+	@echo "... src/video/VideoTexture.s"
 	@echo "... third_party/imgui/backends/imgui_impl_sdl2.o"
 	@echo "... third_party/imgui/backends/imgui_impl_sdl2.i"
 	@echo "... third_party/imgui/backends/imgui_impl_sdl2.s"
