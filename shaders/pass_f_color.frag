@@ -222,50 +222,45 @@ void main() {
         color = mix(color, vec3(gray), ubo.grayscaleAmount);
     }
 
-    // Early return if color grading is disabled
-    if (ubo.enableColorGrading == 0) {
-        outColor = vec4(color, 1.0);
-        return;
+    bool shouldProcessColorGrade = false;
+    if (ubo.enableColorGrading == 1) {
+        bool hasBrightness = abs(ubo.gradeBrightness) > 0.0001;
+        bool hasContrast = abs(ubo.gradeContrast - 1.0) > 0.0001;
+        bool hasSaturation = abs(ubo.gradeSaturation - 1.0) > 0.0001;
+        bool hasHue = abs(ubo.gradeHueShift) > 0.0001;
+        bool hasGamma = abs(ubo.gradeGamma - 1.0) > 0.0001;
+        bool hasLUT = ubo.colorLUTIndex > 0;
+        bool hasSplitTone = ubo.splitToneBalance > 0.0001;
+
+        shouldProcessColorGrade = hasBrightness || hasContrast || hasSaturation || hasHue || hasGamma || hasLUT || hasSplitTone;
+
+        if (shouldProcessColorGrade) {
+            // Brightness
+            color += ubo.gradeBrightness;
+
+            // Contrast
+            color = (color - 0.5) * ubo.gradeContrast + 0.5;
+
+            // Saturation
+            float lum = dot(color, vec3(0.299, 0.587, 0.114));
+            color = mix(vec3(lum), color, ubo.gradeSaturation);
+
+            // Hue shift with audio response
+            float audioResponse = clamp(ubo.energy * 0.3, 0.0, 1.0);
+            color = hueShift(color, ubo.gradeHueShift + audioResponse * 45.0);
+
+            // Gamma
+            color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));
+
+            // LUT
+            color = applyLUT(color, ubo.colorLUTIndex);
+
+            // Split tone
+            color = applySplitTone(color);
+
+            color = clamp(color, 0.0, 2.0);
+        }
     }
-
-    // Early return if no color grading effects are active
-    bool hasBrightness = abs(ubo.gradeBrightness) > 0.0001;
-    bool hasContrast = abs(ubo.gradeContrast - 1.0) > 0.0001;
-    bool hasSaturation = abs(ubo.gradeSaturation - 1.0) > 0.0001;
-    bool hasHue = abs(ubo.gradeHueShift) > 0.0001;
-    bool hasGamma = abs(ubo.gradeGamma - 1.0) > 0.0001;
-    bool hasLUT = ubo.colorLUTIndex > 0;
-    bool hasSplitTone = ubo.splitToneBalance > 0.0001;
-
-    if (!hasBrightness && !hasContrast && !hasSaturation && !hasHue && !hasGamma && !hasLUT && !hasSplitTone) {
-        outColor = vec4(color, 1.0);
-        return;
-    }
-
-    // Brightness
-    color += ubo.gradeBrightness;
-
-    // Contrast
-    color = (color - 0.5) * ubo.gradeContrast + 0.5;
-
-    // Saturation
-    float lum = dot(color, vec3(0.299, 0.587, 0.114));
-    color = mix(vec3(lum), color, ubo.gradeSaturation);
-
-    // Hue shift with audio response
-    float audioResponse = clamp(ubo.energy * 0.3, 0.0, 1.0);
-    color = hueShift(color, ubo.gradeHueShift + audioResponse * 45.0);
-
-    // Gamma
-    color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));
-
-    // LUT
-    color = applyLUT(color, ubo.colorLUTIndex);
-
-    // Split tone
-    color = applySplitTone(color);
-
-    color = clamp(color, 0.0, 2.0);
 
     // Threshold effect (black & white threshold) - independent effect
     if (ubo.enableThreshold == 1 && ubo.thresholdLevel > 0.0001) {
