@@ -72,6 +72,7 @@ private:
     std::vector<VkFramebuffer> swapchainFramebuffers;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline fullscreenPipeline = VK_NULL_HANDLE;
+    VkSampler swapchainSampler = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
 
     // UI and controls
@@ -110,6 +111,7 @@ private:
     void initVideo();
     void initUI();
     void initNLE();
+    void initMultiPassPipeline();
 
     // Main loop
     void mainLoop();

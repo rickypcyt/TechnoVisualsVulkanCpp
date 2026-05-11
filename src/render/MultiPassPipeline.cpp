@@ -680,6 +680,7 @@ void MultiPassPipeline::updateDescriptorSets(
     this->videoSamplerPrev = videoSamplerPrev;
 
     // Update descriptor sets for each pass and frame
+    int currentBuffer = 0;  // Ping-pong buffer tracking for descriptor set updates
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
         printf("[MultiPass] Processing pass=%d\n", pass);
         for (size_t frame = 0; frame < uniformBuffers.size(); ++frame) {
@@ -738,7 +739,7 @@ void MultiPassPipeline::updateDescriptorSets(
                 descriptorWrites.push_back(videoTexPrevWrite);
             } else if (pass >= 1 && pass <= 5) {  // Passes B-F need input texture
                 // Use intermediate texture from previous pass as input
-                int prevBuffer = (pass % 2 == 0) ? 1 : 0;
+                int prevBuffer = 1 - currentBuffer;
                 // printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
                 //        pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
 
@@ -782,7 +783,7 @@ void MultiPassPipeline::updateDescriptorSets(
             // Pass G (pass 6) needs input texture and procedural texture
             else if (pass == 6) {  // Pass G needs inputTex + proceduralTex
                 // Use intermediate texture from previous pass as input
-                int prevBuffer = (pass % 2 == 0) ? 1 : 0;
+                int prevBuffer = 1 - currentBuffer;
                 // printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
                 //        pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
 
@@ -824,6 +825,8 @@ void MultiPassPipeline::updateDescriptorSets(
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()),
                                    descriptorWrites.data(), 0, nullptr);
         }
+        // Alternate ping-pong buffer after each pass
+        currentBuffer = 1 - currentBuffer;
     }
 }
 

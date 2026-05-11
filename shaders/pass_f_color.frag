@@ -165,7 +165,13 @@ vec3 applySplitTone(vec3 color) {
 
 void main() {
     vec3 color = texture(inputTex, uv).rgb;
-    
+
+    // Grayscale (apply first)
+    if (ubo.grayscaleAmount > 0.0001) {
+        float gray = dot(color, vec3(0.299, 0.587, 0.114));
+        color = mix(color, vec3(gray), ubo.grayscaleAmount);
+    }
+
     // Early return if color grading is disabled
     bool hasBrightness = abs(ubo.gradeBrightness) > 0.0001;
     bool hasContrast = abs(ubo.gradeContrast - 1.0) > 0.0001;
@@ -174,13 +180,13 @@ void main() {
     bool hasGamma = abs(ubo.gradeGamma - 1.0) > 0.0001;
     bool hasLUT = ubo.colorLUTIndex > 0;
     bool hasSplitTone = ubo.splitToneBalance > 0.0001;
-    
+
     if (!hasBrightness && !hasContrast && !hasSaturation && !hasHue && !hasGamma && !hasLUT && !hasSplitTone) {
         color *= ubo.colorBalance;
         outColor = vec4(color, 1.0);
         return;
     }
-    
+
     // Brightness
     color += ubo.gradeBrightness;
     

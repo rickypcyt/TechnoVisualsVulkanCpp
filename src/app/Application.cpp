@@ -55,7 +55,10 @@ void Application::run() {
     
     // Initialize NLE
     initNLE();
-    
+
+    // Initialize multi-pass pipeline (after video is ready)
+    initMultiPassPipeline();
+
     // Initialize command buffers
     initCommandBuffers();
 
@@ -243,6 +246,28 @@ void Application::initPipelines() {
 
     vkDestroyShaderModule(vulkanContext.getDevice(), fragShaderModule, nullptr);
     vkDestroyShaderModule(vulkanContext.getDevice(), vertShaderModule, nullptr);
+
+    // Create swapchain sampler
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.anisotropyEnable = VK_FALSE;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+    if (vkCreateSampler(vulkanContext.getDevice(), &samplerInfo, nullptr, &swapchainSampler) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create swapchain sampler");
+    }
 }
 
 void Application::initFramebuffers() {
@@ -328,12 +353,54 @@ void Application::initUI() {
 void Application::initNLE() {
     // Initialize NLE components
     g_project_state.active_file = videoSourcePath;
-    
+
     renderWorker = std::make_unique<RenderWorker>();
     renderWorker->on_render_complete = [this](std::shared_ptr<RenderJob> job) {
         std::cout << "[Render] Completed, output at: " << job->output_file << std::endl;
         playbackClock.resume();
     };
+}
+
+void Application::initMultiPassPipeline() {
+    if (!videoSubsystemInitialized) {
+        std::cout << "[Application] Skipping MultiPassPipeline - video not initialized" << std::endl;
+        return;
+    }
+
+    auto extent = vulkanContext.getSwapchainExtent();
+    VkFormat colorFormat = vulkanContext.getSwapchainImageFormat();
+
+    // Get queue family index from VulkanContext
+    uint32_t queueFamilyIndex = 0; // TODO: Get from VulkanContext properly
+
+    if (!multiPassPipeline.initialize(
+        vulkanContext.getPhysicalDevice(),
+        vulkanContext.getDevice(),
+        vulkanContext.getGraphicsQueue(),
+        queueFamilyIndex,
+        extent,
+        colorFormat,
+        videoTexture.getSampler(),
+        videoTexture.getSampler(), // Use same sampler for prev
+        videoTexture.getImageView(),
+        videoTexture.getImageView(), // Use same view for prev
+        uniformBufferManager.getBuffers(),
+        sizeof(GlobalUBO) // Use fixed size
+    )) {
+        std::cerr << "[Application] Failed to initialize MultiPassPipeline" << std::endl;
+        return;
+    }
+
+    // Update descriptor sets with correct texture bindings
+    multiPassPipeline.updateDescriptorSets(
+        uniformBufferManager.getBuffers(),
+        videoTexture.getImageView(),
+        videoTexture.getImageView(), // Use same for prev
+        videoTexture.getSampler(),
+        videoTexture.getSampler()   // Use same for prev
+    );
+
+    std::cout << "[Application] MultiPassPipeline initialized successfully" << std::endl;
 }
 
 void Application::mainLoop() {
@@ -355,7 +422,8 @@ void Application::mainLoop() {
                 SDL_Window* sourceWindow = SDL_GetWindowFromID(event.window.windowID);
                 if (sourceWindow == window.getMainWindow() &&
                     (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-                     event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
+                     event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
+                    initializationComplete) {
                     window.resetResizeFlag();
                     uint32_t width, height;
                     window.getDrawableSize(width, height);
@@ -727,49 +795,60 @@ void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContex
     // Record video texture upload
     videoTexture.recordPendingUpload(commandBuffer, frame.frameIndex, vulkanContext.getGraphicsQueue());
 
-    // Begin render pass
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass;
-    renderPassInfo.framebuffer = swapchainFramebuffers[frame.swapchainImageIndex];
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = vulkanContext.getSwapchainExtent();
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    // Execute multi-pass pipeline
+    if (videoSubsystemInitialized) {
+        VkDescriptorSet descriptorSet = descriptorSetManager.getSet(frame.frameIndex);
+        multiPassPipeline.execute(
+            commandBuffer,
+            frame.frameIndex,
+            descriptorSet,
+            renderPass,
+            swapchainFramebuffers,
+            frame.swapchainImageIndex,
+            fullscreenPipeline,
+            pipelineLayout,
+            descriptorSet,
+            vulkanContext.getSwapchainExtent(),
+            swapchainSampler
+        );
+    } else {
+        // Fallback to fullscreen pipeline if video not initialized
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapchainFramebuffers[frame.swapchainImageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = vulkanContext.getSwapchainExtent();
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
 
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    
-    // Bind pipeline
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
-    
-    // Bind descriptor set
-    VkDescriptorSet descriptorSet = descriptorSetManager.getSet(frame.frameIndex);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-                           0, 1, &descriptorSet, 0, nullptr);
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
+        VkDescriptorSet descriptorSet = descriptorSetManager.getSet(frame.frameIndex);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+                               0, 1, &descriptorSet, 0, nullptr);
 
-    // Set viewport and scissor
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(vulkanContext.getSwapchainExtent().width);
-    viewport.height = static_cast<float>(vulkanContext.getSwapchainExtent().height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(vulkanContext.getSwapchainExtent().width);
+        viewport.height = static_cast<float>(vulkanContext.getSwapchainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = vulkanContext.getSwapchainExtent();
-    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = vulkanContext.getSwapchainExtent();
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    // Draw fullscreen quad
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-    
-    vkCmdEndRenderPass(commandBuffer);
+        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        vkCmdEndRenderPass(commandBuffer);
+    }
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer");
+        throw std::runtime_error("failed to end recording command buffer");
     }
 }
 
@@ -805,6 +884,11 @@ void Application::cleanup() {
     }
     if (pipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(vulkanContext.getDevice(), pipelineLayout, nullptr);
+    }
+
+    // Cleanup swapchain sampler
+    if (swapchainSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(vulkanContext.getDevice(), swapchainSampler, nullptr);
     }
 
     // Cleanup framebuffers
