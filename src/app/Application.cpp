@@ -465,12 +465,24 @@ void Application::mainLoop() {
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                 if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                    vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                     videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                                  vulkanContext.getCommandPool(),
                                                  vulkanContext.getGraphicsQueue(),
                                                  static_cast<uint32_t>(videoPlayer.width()),
                                                  static_cast<uint32_t>(videoPlayer.height()));
+                    
+                    // Update descriptor sets with new textures
+                    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+                        descriptorSetManager.updateSet(
+                            vulkanContext.getDevice(), i,
+                            uniformBufferManager.getBuffers()[i],
+                            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+                            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+                        );
+                    }
+                    
                     videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
                     videoRandomizer.elapsedSeconds = 0.0f;
                     videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
@@ -492,12 +504,24 @@ void Application::mainLoop() {
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
             if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                vkDeviceWaitIdle(vulkanContext.getDevice());
                 videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                 videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                              vulkanContext.getCommandPool(),
                                              vulkanContext.getGraphicsQueue(),
                                              static_cast<uint32_t>(videoPlayer.width()),
                                              static_cast<uint32_t>(videoPlayer.height()));
+                
+                // Update descriptor sets with new textures
+                for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+                    descriptorSetManager.updateSet(
+                        vulkanContext.getDevice(), i,
+                        uniformBufferManager.getBuffers()[i],
+                        const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+                        const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+                    );
+                }
+                
                 videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture);
                 videoRandomizer.elapsedSeconds = 0.0f;
                 videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();

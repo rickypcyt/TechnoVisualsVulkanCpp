@@ -116,6 +116,7 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
 
     // Allocate CPU buffer for previous frame
     previousFrameData.resize(frameSize);
+    std::fill(previousFrameData.begin(), previousFrameData.end(), 0);
 
     // Create staging buffer for previous frame upload
     auto prevStagingBuffer = resourceSystem.createBuffer(
