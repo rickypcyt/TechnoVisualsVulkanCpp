@@ -1,7 +1,8 @@
 #version 450
 
-// PASS B — Spatial effects
-// Responsibilities: warp / ripple / swirl / kaleido / distortion / CRT curvature
+// PASS B — BASE LAYER: Post FX CRT + Spatial
+// Responsibilities: CRT curvature, fish eye, screen bend, UV warp
+// CAPA 1 - BASE (inferior): Procedural Controls + Post FX
 
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
@@ -126,10 +127,27 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
     float slowZoomAmount;
+    int enableEdgeDetect;
+    float edgeStrength;
+    float edgeThreshold;
+    float edgeBlend;
+    vec3 edgeColor;
+
+    int enableMirror;
+    int enableInvert;
+    int enablePosterize;
+    int enableInfrared;
+    int enableZoomPulse;
+    int enableRGBShift;
+    float mirrorAmount;
+    float posterizeLevels;
+    float zoomPulseAmount;
+    float rgbShiftAmount;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;
@@ -269,7 +287,7 @@ void main() {
     uvOut = curve(uvOut);
 
     // Pixelate effect
-    if (ubo.pixelateAmount > 0.0001) {
+    if (ubo.enablePixelate == 1 && ubo.pixelateAmount > 0.0001) {
         float pixels = max(ubo.pixelateAmount * 100.0, 2.0);
         vec2 pixelatedUV = floor(uvOut * pixels) / pixels;
         uvOut = pixelatedUV;

@@ -1,7 +1,8 @@
 #version 450
 
-// PASS C — Detail shaping
-// Responsibilities: sharpen (RCAS or unsharp), blur (unified separable blur)
+// PASS C — BASE LAYER: Post FX Output
+// Responsibilities: bloom, CRT scanlines/mask, vignette, film grain, chromatic aberration, color balance
+// CAPA 1 - BASE (inferior): Procedural Controls + Post FX
 
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
@@ -126,10 +127,27 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
     float slowZoomAmount;
+    int enableEdgeDetect;
+    float edgeStrength;
+    float edgeThreshold;
+    float edgeBlend;
+    vec3 edgeColor;
+
+    int enableMirror;
+    int enableInvert;
+    int enablePosterize;
+    int enableInfrared;
+    int enableZoomPulse;
+    int enableRGBShift;
+    float mirrorAmount;
+    float posterizeLevels;
+    float zoomPulseAmount;
+    float rgbShiftAmount;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;

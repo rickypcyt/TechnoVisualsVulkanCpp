@@ -447,21 +447,21 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
 
     if (ImGui::Button("Randomize VJAY basics")) {
         if (c.enableColorGrading) {
-            c.gradeBrightness = rr(-0.5f,0.5f); c.gradeContrast  = rr(0.5f,1.8f);
-            c.gradeSaturation = rr(0.4f,2.0f);  c.gradeHueShift  = rr(-180,180);
-            c.gradeGamma      = rr(0.6f,2.2f);  c.colorLUTIndex  = ri(0,5);
-            c.splitToneBalance = u01();
-            c.splitToneShadows    = glm::vec3(rr(0,1.2f),rr(0,1.2f),rr(0,1.2f));
-            c.splitToneHighlights = glm::vec3(rr(0.8f,1.4f),rr(0.8f,1.4f),rr(0.8f,1.4f));
+            c.gradeBrightness = rr(-0.2f,0.2f); c.gradeContrast  = rr(0.8f,1.4f);
+            c.gradeSaturation = rr(0.6f,1.6f);  c.gradeHueShift  = rr(-90,90);
+            c.gradeGamma      = rr(0.8f,1.4f);  c.colorLUTIndex  = ri(0,5);
+            c.splitToneBalance = u01() * 0.5f;
+            c.splitToneShadows    = glm::vec3(u01(), u01(), u01());
+            c.splitToneHighlights = glm::vec3(u01(), u01(), u01());
         }
         if (c.enableFeedback) {
             c.feedbackAmount = u01(); c.trailStrength = u01();
             c.temporalAccumulation = u01(); c.feedbackDecay = u01(); c.recursiveBlend = u01();
         }
         if (c.enableDistortion) {
-            c.uvWarpStrength = rr(0,2); c.rippleStrength = rr(0,2); c.rippleFrequency = rr(0.2f,12);
-            c.swirlStrength = rr(-2,2); c.displacementAmount = rr(0,2);
-            c.kaleidoSegments = rr(3,24); c.tunnelDepth = u01(); c.tunnelCurvature = rr(-1,1);
+            c.uvWarpStrength = rr(0,0.5f); c.rippleStrength = rr(0,0.5f); c.rippleFrequency = rr(0.5f,6);
+            c.swirlStrength = rr(-0.5f,0.5f); c.displacementAmount = rr(0,0.5f);
+            c.kaleidoSegments = rr(3,12); c.tunnelDepth = rr(0,0.5f); c.tunnelCurvature = rr(-0.5f,0.5f);
         }
         if (c.enableBlurMotion) {
             c.gaussianBlur = u01(); c.directionalBlur = u01(); c.directionalBlurAngle = rr(0,360);
@@ -552,14 +552,14 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
         changed |= ImGui::SliderFloat("Recursive blend",       &c.recursiveBlend,      0,1,"%.2f");
     )
     VJAY_SECTION("3","Distorsion espacial", enableDistortion,
-        changed |= ImGui::SliderFloat("UV warp",      &c.uvWarpStrength,    0.0f,  2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Ripple",       &c.rippleStrength,    0.0f,  2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Ripple freq",  &c.rippleFrequency,   0.2f, 12.0f, "%.1f");
-        changed |= ImGui::SliderFloat("Swirl",        &c.swirlStrength,    -2.0f,  2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Displacement", &c.displacementAmount,0.0f,  2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Kaleido segs", &c.kaleidoSegments,   3.0f, 24.0f, "%.0f");
-        changed |= ImGui::SliderFloat("Tunnel depth", &c.tunnelDepth,       0.0f,  1.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Tunnel curv",  &c.tunnelCurvature,  -1.0f,  1.0f, "%.2f");
+        changed |= ImGui::SliderFloat("UV warp",      &c.uvWarpStrength,    0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Ripple",       &c.rippleStrength,    0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Ripple freq",  &c.rippleFrequency,   0.5f,  6.0f, "%.1f");
+        changed |= ImGui::SliderFloat("Swirl",        &c.swirlStrength,    -0.5f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Displacement", &c.displacementAmount,0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Kaleido segs", &c.kaleidoSegments,   3.0f, 12.0f, "%.0f");
+        changed |= ImGui::SliderFloat("Tunnel depth", &c.tunnelDepth,       0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Tunnel curv",  &c.tunnelCurvature,  -0.5f,  0.5f, "%.3f");
     )
     VJAY_SECTION("4","Blur & motion", enableBlurMotion,
         changed |= ImGui::SliderFloat("Gaussian blur",     &c.gaussianBlur,        0,1,"%.2f");
@@ -656,6 +656,12 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     EXTRA_SECTION("2","Strobe",    enableStrobe,    changed |= ImGui::SliderFloat("Strobe speed",    &c.strobeSpeed,    0,20,"%.1f Hz");)
     EXTRA_SECTION("3","Threshold", enableThreshold, changed |= ImGui::SliderFloat("Threshold level", &c.thresholdLevel,  0,1,"%.2f");)
     EXTRA_SECTION("4","Slow Zoom", enableSlowZoom,  changed |= ImGui::SliderFloat("Slow zoom amount",&c.slowZoomAmount,  0,1,"%.2f");)
+    EXTRA_SECTION("5","Edge Detect", enableEdgeDetect,
+        changed |= ImGui::SliderFloat("Edge strength",  &c.edgeStrength,  0.1f, 5.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Edge threshold", &c.edgeThreshold, 0.0f, 1.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Edge blend",     &c.edgeBlend,     0.0f, 1.0f, "%.2f");
+        changed |= ImGui::ColorEdit3("Edge color", glm::value_ptr(c.edgeColor));
+    )
 #undef EXTRA_SECTION
 
     ImGui::End();

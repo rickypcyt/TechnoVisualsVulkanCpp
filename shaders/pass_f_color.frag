@@ -1,7 +1,8 @@
 #version 450
 
-// PASS F — Color pipeline
-// Responsibilities: grading (contrast/sat/gamma/LUT), split tone, hue shift
+// PASS F — VJAY BASICS LAYER: Color VJAY
+// Responsibilities: brightness, contrast, saturation, hue shift, gamma, LUT (Filmic, Neon, Noir, Heatmap, Analog CRT), split tone (shadows/highlights)
+// CAPA 2 - VJAY BASICS (medio): Efectos VJAY sobre BASE
 
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
@@ -124,7 +125,27 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+
+    float pixelateAmount;
+    float strobeSpeed;
     float thresholdLevel;
+    float slowZoomAmount;
+    int enableEdgeDetect;
+    float edgeStrength;
+    float edgeThreshold;
+    float edgeBlend;
+    vec3 edgeColor;
+
+    int enableMirror;
+    int enableInvert;
+    int enablePosterize;
+    int enableInfrared;
+    int enableZoomPulse;
+    int enableRGBShift;
+    float mirrorAmount;
+    float posterizeLevels;
+    float zoomPulseAmount;
+    float rgbShiftAmount;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;
@@ -203,7 +224,6 @@ void main() {
 
     // Early return if color grading is disabled
     if (ubo.enableColorGrading == 0) {
-        color *= ubo.colorBalance;
         outColor = vec4(color, 1.0);
         return;
     }
@@ -218,7 +238,6 @@ void main() {
     bool hasSplitTone = ubo.splitToneBalance > 0.0001;
 
     if (!hasBrightness && !hasContrast && !hasSaturation && !hasHue && !hasGamma && !hasLUT && !hasSplitTone) {
-        color *= ubo.colorBalance;
         outColor = vec4(color, 1.0);
         return;
     }
@@ -246,9 +265,6 @@ void main() {
     // Split tone
     color = applySplitTone(color);
 
-    // Color balance
-    color *= ubo.colorBalance;
-
     color = clamp(color, 0.0, 2.0);
 
     // Threshold effect (black & white threshold) - independent effect
@@ -257,6 +273,9 @@ void main() {
         float threshold = clamp(ubo.thresholdLevel, 0.0, 1.0);
         color = mix(vec3(lum), vec3(step(threshold, lum)), 0.8);
     }
+
+    // RGB Mix (color balance) - applied after threshold
+    color *= ubo.colorBalance;
 
     outColor = vec4(color, 1.0);
 }

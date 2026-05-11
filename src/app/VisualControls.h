@@ -132,6 +132,11 @@ struct VisualControls {
     float strobeSpeed = 0.0f;
     float thresholdLevel = 0.5f;
     float slowZoomAmount = 0.0f;
+    bool enableEdgeDetect = false;
+    float edgeStrength = 1.0f;
+    float edgeThreshold = 0.2f;
+    float edgeBlend = 1.0f;
+    glm::vec3 edgeColor = glm::vec3(1.0f);
     bool enablePixelate = false;
     bool enableStrobe = false;
     bool enableThreshold = false;

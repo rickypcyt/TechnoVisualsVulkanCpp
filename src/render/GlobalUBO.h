@@ -64,6 +64,12 @@ struct GlobalUBO {
     alignas(4) int enableAudioReactive;
     alignas(4) int enableTemporal;
 
+    // --- Enable/Disable flags for VJAY EXTRA ---
+    alignas(4) int enablePixelate;
+    alignas(4) int enableStrobe;
+    alignas(4) int enableThreshold;
+    alignas(4) int enableSlowZoom;
+
     // --- CRT ---
     alignas(4) float crtCurvature;
     alignas(4) float crtHorizontalCurvature;
@@ -150,21 +156,32 @@ struct GlobalUBO {
     alignas(4) float slowMotionFactor;
     alignas(4) float temporalInterpolation;
 
+    // --- NLE export parameters ---
+    alignas(4) int   nleOutputWidth;
+    alignas(4) int   nleOutputHeight;
+    alignas(4) float nleGrayscale;
+    alignas(4) float nleBrightness;
+    alignas(4) float nleContrast;
+    alignas(4) float nleSaturation;
+
     // --- Efectos extra (VJAY EXTRA) ---
-    alignas(4) int enablePixelate;
-    alignas(4) int enableStrobe;
-    alignas(4) int enableThreshold;
-    alignas(4) int enableSlowZoom;
+    alignas(4) float pixelateAmount;
+    alignas(4) float strobeSpeed;
+    alignas(4) float thresholdLevel;
+    alignas(4) float slowZoomAmount;
+    alignas(4) int   enableEdgeDetect;
+    alignas(4) float edgeStrength;
+    alignas(4) float edgeThreshold;
+    alignas(4) float edgeBlend;
+    alignas(16) glm::vec3 edgeColor;
+
+    // --- VJAY EXTRA avanzados ---
     alignas(4) int enableMirror;
     alignas(4) int enableInvert;
     alignas(4) int enablePosterize;
     alignas(4) int enableInfrared;
     alignas(4) int enableZoomPulse;
     alignas(4) int enableRGBShift;
-    alignas(4) float pixelateAmount;
-    alignas(4) float strobeSpeed;
-    alignas(4) float thresholdLevel;
-    alignas(4) float slowZoomAmount;
     alignas(4) float mirrorAmount;
     alignas(4) float posterizeLevels;
     alignas(4) float zoomPulseAmount;

@@ -1,7 +1,8 @@
 #version 450
 
-// PASS E — Signal degradation / stylization
-// Responsibilities: glitch, analog/VHS effects, chromatic aberration
+// PASS E — VJAY BASICS LAYER: Temporal VJAY
+// Responsibilities: feedback, trails, temporal accumulation, feedback decay, recursive blend, frame accumulation, slow motion, temporal interpolation
+// CAPA 2 - VJAY BASICS (medio): Efectos VJAY sobre BASE
 
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
@@ -128,10 +129,27 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
     float slowZoomAmount;
+    int enableEdgeDetect;
+    float edgeStrength;
+    float edgeThreshold;
+    float edgeBlend;
+    vec3 edgeColor;
+
+    int enableMirror;
+    int enableInvert;
+    int enablePosterize;
+    int enableInfrared;
+    int enableZoomPulse;
+    int enableRGBShift;
+    float mirrorAmount;
+    float posterizeLevels;
+    float zoomPulseAmount;
+    float rgbShiftAmount;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTex;

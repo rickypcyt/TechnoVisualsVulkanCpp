@@ -921,6 +921,11 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.strobeSpeed = visualControls.strobeSpeed;
     ubo.thresholdLevel = visualControls.thresholdLevel;
     ubo.slowZoomAmount = visualControls.slowZoomAmount;
+    ubo.enableEdgeDetect = visualControls.enableEdgeDetect ? 1 : 0;
+    ubo.edgeStrength = visualControls.edgeStrength;
+    ubo.edgeThreshold = visualControls.edgeThreshold;
+    ubo.edgeBlend = visualControls.edgeBlend;
+    ubo.edgeColor = visualControls.edgeColor;
     ubo.mirrorAmount = visualControls.mirrorAmount;
     ubo.posterizeLevels = visualControls.posterizeLevels;
     ubo.zoomPulseAmount = visualControls.zoomPulseAmount;
