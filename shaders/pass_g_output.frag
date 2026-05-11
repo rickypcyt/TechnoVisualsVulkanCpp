@@ -23,10 +23,24 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float colorBlend;
     int mode;
     float videoMix;
-    float videoAvailable;
+    // --- Post FX basicos ---
     float grayscaleAmount;
     float sharpenAmount;
     float upscaleEnabled;
+
+    // --- Enable/Disable flags for post FX ---
+    int enablePostCrtCurvature;
+    int enablePostScanMask;
+    int enablePostVignette;
+    int enablePostFishEye;
+    int enablePostBloom;
+    int enablePostAberration;
+    int enablePostGrain;
+    int enablePostBend;
+    int enablePostGlitch;
+    int enablePostColorBalance;
+
+    // --- CRT ---
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -158,24 +172,26 @@ void main() {
     vec3 color = texture(inputTex, uv).rgb;
     
     // Bloom
-    if (ubo.bloomIntensity > 0.0001) {
+    if (ubo.enablePostBloom == 1 && ubo.bloomIntensity > 0.0001) {
         float bright = max(max(color.r, color.g), color.b);
         float threshold = clamp(ubo.bloomThreshold, 0.0, 1.0);
         float mask = smoothstep(threshold, 1.0, bright);
         vec3 bloom = blur3x3(inputTex, uv);
         color += bloom * mask * ubo.bloomIntensity * 0.4;
     }
-    
+
     // Analog bloom (use bloomIntensity as fallback)
-    if (ubo.bloomIntensity > 0.0001) {
+    if (ubo.enablePostBloom == 1 && ubo.bloomIntensity > 0.0001) {
         vec3 bloom = blur3x3(inputTex, uv);
         color = mix(color, bloom, clamp(ubo.bloomIntensity * 0.4, 0.0, 1.0));
     }
-    
+
     // CRT scanlines
-    float scanlineFreq = 240.0 * (ubo.resolution.y / 480.0);
-    float scanline = mix(1.0, 0.5 + 0.5 * sin((uv.y + effectTime * 0.2) * PI * scanlineFreq), clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
-    color *= scanline;
+    if (ubo.enablePostScanMask == 1) {
+        float scanlineFreq = 240.0 * (ubo.resolution.y / 480.0);
+        float scanline = mix(1.0, 0.5 + 0.5 * sin((uv.y + effectTime * 0.2) * PI * scanlineFreq), clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
+        color *= scanline;
+    }
     
     // Analog scanline focus
     if (ubo.analogScanlineFocus > 0.0001) {
@@ -185,12 +201,14 @@ void main() {
     }
     
     // CRT mask pattern
-    float maskPattern = mix(1.0,
-                            (0.8 + 0.2 * sin(uv.x * PI * ubo.resolution.x)) *
-                            (0.8 + 0.2 * cos(uv.y * PI * ubo.resolution.y)),
-                            clamp(ubo.crtMaskIntensity, 0.0, 1.0));
-    color *= maskPattern;
-    
+    if (ubo.enablePostScanMask == 1) {
+        float maskPattern = mix(1.0,
+                                (0.8 + 0.2 * sin(uv.x * PI * ubo.resolution.x)) *
+                                (0.8 + 0.2 * cos(uv.y * PI * ubo.resolution.y)),
+                                clamp(ubo.crtMaskIntensity, 0.0, 1.0));
+        color *= maskPattern;
+    }
+
     // Analog mask balance
     if (ubo.analogMaskBalance > 0.0001) {
         float mask = mix(1.0,
@@ -199,15 +217,17 @@ void main() {
                          ubo.analogMaskBalance);
         color *= mask;
     }
-    
+
     // Vignette
-    float radius = length(centered);
-    color = mix(color,
-               color * (1.0 - pow(clamp(radius, 0.0, 1.0), 2.0)),
-               clamp(ubo.crtVignette, 0.0, 1.0));
-    
+    if (ubo.enablePostVignette == 1) {
+        float radius = length(centered);
+        color = mix(color,
+                   color * (1.0 - pow(clamp(radius, 0.0, 1.0), 2.0)),
+                   clamp(ubo.crtVignette, 0.0, 1.0));
+    }
+
     // Grain
-    if (ubo.grainStrength > 0.0001) {
+    if (ubo.enablePostGrain == 1 && ubo.grainStrength > 0.0001) {
         float g = hash21(uv * 2000.0 + effectTime * 30.0) - 0.5;
         color += g * ubo.grainStrength * 0.08;
     }
@@ -216,9 +236,14 @@ void main() {
     vec3 procColor = texture(proceduralTex, uv).rgb;
     vec3 blendProc = blendMode(color, procColor, ubo.blendModeProcedural);
     vec3 blendVideo = blendMode(procColor, color, ubo.blendModeVideo);
-    
+
     color = mix(color, blendProc, clamp(ubo.blendProceduralMix, 0.0, 1.0));
     color = mix(color, blendVideo, clamp(ubo.blendVideoMix, 0.0, 1.0));
+
+    // Color balance
+    if (ubo.enablePostColorBalance == 1) {
+        color *= ubo.colorBalance;
+    }
     
     // Strobe effect
     if (ubo.strobeSpeed > 0.0001) {

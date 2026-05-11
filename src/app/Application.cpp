@@ -411,7 +411,7 @@ void Application::mainLoop() {
             // Pass event to UI system
             uiSystem.processEvent(event);
 
-            // Handle window close
+            // Handle window close (both SDL_QUIT and window close event)
             if (event.type == SDL_QUIT) {
                 running = false;
                 break;
@@ -420,6 +420,11 @@ void Application::mainLoop() {
             // Handle window resize
             if (event.type == SDL_WINDOWEVENT) {
                 SDL_Window* sourceWindow = SDL_GetWindowFromID(event.window.windowID);
+                if (sourceWindow == window.getMainWindow() &&
+                    event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                    running = false;
+                    break;
+                }
                 if (sourceWindow == window.getMainWindow() &&
                     (event.window.event == SDL_WINDOWEVENT_RESIZED ||
                      event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
@@ -688,7 +693,19 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.grayscaleAmount = visualControls.grayscaleAmount;
     ubo.sharpenAmount = visualControls.sharpenAmount;
     ubo.upscaleEnabled = visualControls.upscaleEnabled ? 1.0f : 0.0f;
-    
+
+    // Enable/Disable flags for post FX
+    ubo.enablePostCrtCurvature = visualControls.enablePostCrtCurvature ? 1 : 0;
+    ubo.enablePostScanMask = visualControls.enablePostScanMask ? 1 : 0;
+    ubo.enablePostVignette = visualControls.enablePostVignette ? 1 : 0;
+    ubo.enablePostFishEye = visualControls.enablePostFishEye ? 1 : 0;
+    ubo.enablePostBloom = visualControls.enablePostBloom ? 1 : 0;
+    ubo.enablePostAberration = visualControls.enablePostAberration ? 1 : 0;
+    ubo.enablePostGrain = visualControls.enablePostGrain ? 1 : 0;
+    ubo.enablePostBend = visualControls.enablePostBend ? 1 : 0;
+    ubo.enablePostGlitch = visualControls.enablePostGlitch ? 1 : 0;
+    ubo.enablePostColorBalance = visualControls.enablePostColorBalance ? 1 : 0;
+
     // CRT
     ubo.crtCurvature = visualControls.crtCurvature;
     ubo.crtHorizontalCurvature = visualControls.crtHorizontalCurvature;

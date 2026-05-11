@@ -40,6 +40,18 @@ struct GlobalUBO {
     alignas(4) float sharpenAmount;
     alignas(4) float upscaleEnabled;
 
+    // --- Enable/Disable flags for post FX ---
+    alignas(4) int enablePostCrtCurvature;
+    alignas(4) int enablePostScanMask;
+    alignas(4) int enablePostVignette;
+    alignas(4) int enablePostFishEye;
+    alignas(4) int enablePostBloom;
+    alignas(4) int enablePostAberration;
+    alignas(4) int enablePostGrain;
+    alignas(4) int enablePostBend;
+    alignas(4) int enablePostGlitch;
+    alignas(4) int enablePostColorBalance;
+
     // --- CRT ---
     alignas(4) float crtCurvature;
     alignas(4) float crtHorizontalCurvature;
