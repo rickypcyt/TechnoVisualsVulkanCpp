@@ -35,7 +35,6 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     }
 
     std::cout << "[VideoTexture] Creating video texture resources: " << width << "x" << height << std::endl;
-    destroy(resourceSystem, device);
 
     this->width = width;
     this->height = height;

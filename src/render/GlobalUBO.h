@@ -155,8 +155,18 @@ struct GlobalUBO {
     alignas(4) int enableStrobe;
     alignas(4) int enableThreshold;
     alignas(4) int enableSlowZoom;
+    alignas(4) int enableMirror;
+    alignas(4) int enableInvert;
+    alignas(4) int enablePosterize;
+    alignas(4) int enableInfrared;
+    alignas(4) int enableZoomPulse;
+    alignas(4) int enableRGBShift;
     alignas(4) float pixelateAmount;
     alignas(4) float strobeSpeed;
     alignas(4) float thresholdLevel;
     alignas(4) float slowZoomAmount;
+    alignas(4) float mirrorAmount;
+    alignas(4) float posterizeLevels;
+    alignas(4) float zoomPulseAmount;
+    alignas(4) float rgbShiftAmount;
 };

@@ -136,4 +136,15 @@ struct VisualControls {
     bool enableStrobe = false;
     bool enableThreshold = false;
     bool enableSlowZoom = false;
+    // VJAY EXTRA nuevos
+    bool  enableMirror      = false;
+    bool  enableInvert      = false;
+    bool  enablePosterize   = false;
+    bool  enableInfrared    = false;
+    bool  enableZoomPulse   = false;
+    bool  enableRGBShift    = false;
+    float mirrorAmount      = 0.0f;
+    float posterizeLevels   = 4.0f;
+    float zoomPulseAmount   = 0.5f;
+    float rgbShiftAmount    = 0.02f;
 };

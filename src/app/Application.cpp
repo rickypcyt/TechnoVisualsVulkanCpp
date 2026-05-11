@@ -803,6 +803,12 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.enableStrobe = visualControls.enableStrobe ? 1 : 0;
     ubo.enableThreshold = visualControls.enableThreshold ? 1 : 0;
     ubo.enableSlowZoom = visualControls.enableSlowZoom ? 1 : 0;
+    ubo.enableMirror = visualControls.enableMirror ? 1 : 0;
+    ubo.enableInvert = visualControls.enableInvert ? 1 : 0;
+    ubo.enablePosterize = visualControls.enablePosterize ? 1 : 0;
+    ubo.enableInfrared = visualControls.enableInfrared ? 1 : 0;
+    ubo.enableZoomPulse = visualControls.enableZoomPulse ? 1 : 0;
+    ubo.enableRGBShift = visualControls.enableRGBShift ? 1 : 0;
 
     // CRT
     ubo.crtCurvature = visualControls.crtCurvature;
@@ -895,6 +901,10 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.strobeSpeed = visualControls.strobeSpeed;
     ubo.thresholdLevel = visualControls.thresholdLevel;
     ubo.slowZoomAmount = visualControls.slowZoomAmount;
+    ubo.mirrorAmount = visualControls.mirrorAmount;
+    ubo.posterizeLevels = visualControls.posterizeLevels;
+    ubo.zoomPulseAmount = visualControls.zoomPulseAmount;
+    ubo.rgbShiftAmount = visualControls.rgbShiftAmount;
     
     uniformBufferManager.update(frameIndex, ubo);
 }
