@@ -7,7 +7,9 @@
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
-layout(set = 0, binding = 0, std140) uniform GlobalUBO {
+// Unified UBO - all parameters in single binding
+layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
+    // FrameUBO
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -19,60 +21,12 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float bass;
     float mid;
     float high;
+
+    // ColorPassUBO
     vec4 primaryColor;
     vec4 secondaryColor;
     float colorBlend;
     int mode;
-    float videoMix;
-    float videoAvailable;
-    float grayscaleAmount;
-    float sharpenAmount;
-    float upscaleEnabled;
-
-    // --- Enable/Disable flags for post FX ---
-    int enablePostCrtCurvature;
-    int enablePostScanMask;
-    int enablePostVignette;
-    int enablePostFishEye;
-    int enablePostBloom;
-    int enablePostAberration;
-    int enablePostGrain;
-    int enablePostBend;
-    int enablePostGlitch;
-    int enablePostColorBalance;
-    int enablePostAudioReactive;
-    int enablePostTemporal;
-
-    // --- Enable/Disable flags for VJAY BASICS ---
-    int enableColorGrading;
-    int enableFeedback;
-    int enableDistortion;
-    int enableBlurMotion;
-    int enableSharpen;
-    int enableGlitch;
-    int enableBlending;
-    int enableAnalog;
-    int enableAudioReactive;
-    int enableTemporal;
-
-    // --- Enable/Disable flags for VJAY EXTRA ---
-    int enablePixelate;
-    int enableStrobe;
-    int enableThreshold;
-    int enableSlowZoom;
-
-    float crtCurvature;
-    float crtHorizontalCurvature;
-    float crtScanlineIntensity;
-    float crtMaskIntensity;
-    float crtVignette;
-    float crtFishEye;
-    float bloomIntensity;
-    float bloomThreshold;
-    float aberrationAmount;
-    float grainStrength;
-    float bendAmount;
-    float glitchAmount;
     vec3 colorBalance;
     float gradeBrightness;
     float gradeContrast;
@@ -83,11 +37,53 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float splitToneBalance;
     vec3 splitToneShadows;
     vec3 splitToneHighlights;
+    float grayscaleAmount;
+
+    // CRTPassUBO
+    float crtCurvature;
+    float crtHorizontalCurvature;
+    float crtScanlineIntensity;
+    float crtMaskIntensity;
+    float crtVignette;
+    float crtFishEye;
+    float analogScanlineFocus;
+    float analogMaskBalance;
+    int enablePostCrtCurvature;
+    int enablePostScanMask;
+    int enablePostVignette;
+    int enablePostFishEye;
+
+    // GlitchPassUBO
+    float glitchAmount;
+    float glitchDatamosh;
+    float glitchRGBSplit;
+    float glitchScanlineBreak;
+    float glitchJitter;
+    float glitchTearing;
+    float glitchPixelSort;
+    float glitchBufferCorruption;
+    float aberrationAmount;
+    int enablePostGlitch;
+    int enablePostAberration;
+
+    // TemporalPassUBO
     float feedbackAmount;
     float trailStrength;
     float temporalAccumulation;
     float feedbackDecay;
     float recursiveBlend;
+    float frameAccumulation;
+    float slowMotionFactor;
+    float temporalInterpolation;
+    int enableFeedback;
+    int enableTemporal;
+
+    // BloomPassUBO
+    float bloomIntensity;
+    float bloomThreshold;
+    int enablePostBloom;
+
+    // DistortionPassUBO
     float uvWarpStrength;
     float rippleStrength;
     float rippleFrequency;
@@ -96,50 +92,64 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float kaleidoSegments;
     float tunnelDepth;
     float tunnelCurvature;
+    float bendAmount;
+    int enableDistortion;
+    int enablePostBend;
+
+    // BlurPassUBO
     float gaussianBlur;
     float directionalBlur;
     float directionalBlurAngle;
     float zoomBlur;
     float motionBlur;
     float temporalBlur;
+    int enableBlurMotion;
+
+    // SharpenPassUBO
     float unsharpMask;
     float casAmount;
     float localContrast;
-    float glitchDatamosh;
-    float glitchRGBSplit;
-    float glitchScanlineBreak;
-    float glitchJitter;
-    float glitchTearing;
-    float glitchPixelSort;
-    float glitchBufferCorruption;
-    int blendModeProcedural;
+    float sharpenAmount;
+    int enableSharpen;
+
+    // VideoPassUBO
+    float videoMix;
+    float videoAvailable;
     int blendModeVideo;
+    float blendVideoMix;
+
+    // BlendingPassUBO
+    int blendModeProcedural;
     int blendModeFeedback;
     float blendProceduralMix;
-    float blendVideoMix;
     float blendFeedbackMix;
-    float analogScanlineFocus;
-    float analogMaskBalance;
-    float frameAccumulation;
-    float slowMotionFactor;
-    float temporalInterpolation;
-    int nleOutputWidth;
-    int nleOutputHeight;
-    float nleGrayscale;
-    float nleBrightness;
-    float nleContrast;
-    float nleSaturation;
+    int enableBlending;
 
+    // GrainPassUBO
+    float grainStrength;
+    int enablePostGrain;
+
+    // PostFXPassUBO
+    float upscaleEnabled;
+    int enablePostColorBalance;
+    int enableColorGrading;
+    int enableAnalog;
+    int enableAudioReactive;
+
+    // ExtraEffectsPassUBO
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
     float slowZoomAmount;
+    int enablePixelate;
+    int enableStrobe;
+    int enableThreshold;
+    int enableSlowZoom;
     int enableEdgeDetect;
     float edgeStrength;
     float edgeThreshold;
     float edgeBlend;
     vec3 edgeColor;
-
     int enableMirror;
     int enableInvert;
     int enablePosterize;
@@ -150,9 +160,17 @@ layout(set = 0, binding = 0, std140) uniform GlobalUBO {
     float posterizeLevels;
     float zoomPulseAmount;
     float rgbShiftAmount;
+
+    // NLEExportPassUBO
+    int nleOutputWidth;
+    int nleOutputHeight;
+    float nleGrayscale;
+    float nleBrightness;
+    float nleContrast;
+    float nleSaturation;
 } ubo;
 
-layout(set = 0, binding = 1) uniform sampler2D inputTex;
+layout(set = 1, binding = 0) uniform sampler2D inputTex;
 
 const float PI = 3.1415926535;
 
@@ -179,11 +197,11 @@ vec3 sortComponents(vec3 v) {
 void main() {
     float timeScale = max(ubo.slowMotionFactor, 0.1);
     float effectTime = ubo.time / timeScale;
-    
+
     vec2 centered = uv * 2.0 - 1.0;
     vec2 uvOut = uv;
     vec3 color = texture(inputTex, uv).rgb;
-    
+
     // Check if any degradation effect is active
     bool hasGlitch = ubo.glitchDatamosh > 0.0001 ||
                      ubo.glitchJitter > 0.0001 ||

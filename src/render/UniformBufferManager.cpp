@@ -9,7 +9,7 @@ UniformBufferManager::~UniformBufferManager() {
 }
 
 void UniformBufferManager::createBuffers(ResourceSystem& resourceSystem, VkDevice device) {
-    VkDeviceSize bufferSize = sizeof(GlobalUBO);
+    VkDeviceSize bufferSize = sizeof(GlobalParamsUBO);
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
@@ -57,7 +57,7 @@ void UniformBufferManager::destroy(ResourceSystem& resourceSystem, VkDevice devi
     uniformBuffersMapped.clear();
 }
 
-void UniformBufferManager::update(uint32_t frameIndex, const GlobalUBO& ubo) {
+void UniformBufferManager::update(uint32_t frameIndex, const GlobalParamsUBO& ubo) {
     if (frameIndex >= MAX_FRAMES_IN_FLIGHT || uniformBuffersMapped[frameIndex] == nullptr) {
         return;
     }
@@ -70,7 +70,7 @@ VkDescriptorBufferInfo UniformBufferManager::getDescriptorInfo(uint32_t frameInd
     if (frameIndex < uniformBuffers.size()) {
         bufferInfo.buffer = uniformBuffers[frameIndex];
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(GlobalUBO);
+        bufferInfo.range = sizeof(GlobalParamsUBO);
     }
     return bufferInfo;
 }

@@ -354,73 +354,99 @@ bool MultiPassPipeline::createPipelines() {
         colorBlending.attachmentCount = 1;
         colorBlending.pAttachments = &colorBlendAttachment;
 
-        // Create descriptor set layout for this pass
+        // Create descriptor set layout for set 0 (UBOs) - single binding for GlobalParamsUBO
         VkDescriptorSetLayoutBinding uboBinding{};
         uboBinding.binding = 0;
         uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboBinding.descriptorCount = 1;
         uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        VkDescriptorSetLayoutBinding inputTexBinding{};
-        inputTexBinding.binding = 1;
-        inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        inputTexBinding.descriptorCount = 1;
-        inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
+        set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        set0LayoutInfo.bindingCount = 1;
+        set0LayoutInfo.pBindings = &uboBinding;
 
-        // Pass-specific bindings
-        std::vector<VkDescriptorSetLayoutBinding> bindings = {uboBinding, inputTexBinding};
-
-        // Pass A needs video textures
-        if (i == 0) {
-            VkDescriptorSetLayoutBinding videoTexBinding{};
-            videoTexBinding.binding = 1;
-            videoTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            videoTexBinding.descriptorCount = 1;
-            videoTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            VkDescriptorSetLayoutBinding videoTexPrevBinding{};
-            videoTexPrevBinding.binding = 2;
-            videoTexPrevBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            videoTexPrevBinding.descriptorCount = 1;
-            videoTexPrevBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            bindings = {uboBinding, videoTexBinding, videoTexPrevBinding};
-        }
-        // Pass D needs previous frame
-        else if (i == 3) {
-            VkDescriptorSetLayoutBinding prevFrameBinding{};
-            prevFrameBinding.binding = 2;
-            prevFrameBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            prevFrameBinding.descriptorCount = 1;
-            prevFrameBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            bindings = {uboBinding, inputTexBinding, prevFrameBinding};
-        }
-        // Pass G needs procedural texture
-        else if (i == 6) {
-            VkDescriptorSetLayoutBinding proceduralBinding{};
-            proceduralBinding.binding = 2;
-            proceduralBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            proceduralBinding.descriptorCount = 1;
-            proceduralBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            bindings = {uboBinding, inputTexBinding, proceduralBinding};
-        }
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &passes[i].descriptorSetLayout) != VK_SUCCESS) {
+        if (vkCreateDescriptorSetLayout(device, &set0LayoutInfo, nullptr, &passes[i].descriptorSetLayouts[0]) != VK_SUCCESS) {
+            std::cerr << "[MultiPass] Failed to create descriptor set layout 0 for pass " << i << std::endl;
             return false;
         }
 
-        // Create pipeline layout
+        // Create descriptor set layout for set 1 (textures) - pass-specific texture bindings
+        std::vector<VkDescriptorSetLayoutBinding> textureBindings;
+
+        // Pass A needs video textures at bindings 0 and 1
+        if (i == 0) {
+            VkDescriptorSetLayoutBinding videoTexBinding{};
+            videoTexBinding.binding = 0;
+            videoTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            videoTexBinding.descriptorCount = 1;
+            videoTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(videoTexBinding);
+
+            VkDescriptorSetLayoutBinding videoTexPrevBinding{};
+            videoTexPrevBinding.binding = 1;
+            videoTexPrevBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            videoTexPrevBinding.descriptorCount = 1;
+            videoTexPrevBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(videoTexPrevBinding);
+        }
+        // Pass D needs inputTex and prevFrameTex
+        else if (i == 3) {
+            VkDescriptorSetLayoutBinding inputTexBinding{};
+            inputTexBinding.binding = 0;
+            inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            inputTexBinding.descriptorCount = 1;
+            inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(inputTexBinding);
+
+            VkDescriptorSetLayoutBinding prevFrameBinding{};
+            prevFrameBinding.binding = 1;
+            prevFrameBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            prevFrameBinding.descriptorCount = 1;
+            prevFrameBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(prevFrameBinding);
+        }
+        // Pass G needs inputTex and proceduralTex
+        else if (i == 6) {
+            VkDescriptorSetLayoutBinding inputTexBinding{};
+            inputTexBinding.binding = 0;
+            inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            inputTexBinding.descriptorCount = 1;
+            inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(inputTexBinding);
+
+            VkDescriptorSetLayoutBinding proceduralBinding{};
+            proceduralBinding.binding = 1;
+            proceduralBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            proceduralBinding.descriptorCount = 1;
+            proceduralBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(proceduralBinding);
+        }
+        // Other passes need just inputTex
+        else {
+            VkDescriptorSetLayoutBinding inputTexBinding{};
+            inputTexBinding.binding = 0;
+            inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            inputTexBinding.descriptorCount = 1;
+            inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(inputTexBinding);
+        }
+
+        VkDescriptorSetLayoutCreateInfo set1LayoutInfo{};
+        set1LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        set1LayoutInfo.bindingCount = static_cast<uint32_t>(textureBindings.size());
+        set1LayoutInfo.pBindings = textureBindings.data();
+
+        if (vkCreateDescriptorSetLayout(device, &set1LayoutInfo, nullptr, &passes[i].descriptorSetLayouts[1]) != VK_SUCCESS) {
+            std::cerr << "[MultiPass] Failed to create descriptor set layout 1 for pass " << i << std::endl;
+            return false;
+        }
+
+        // Create pipeline layout with both descriptor set layouts
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &passes[i].descriptorSetLayout;
+        pipelineLayoutInfo.setLayoutCount = 2;
+        pipelineLayoutInfo.pSetLayouts = passes[i].descriptorSetLayouts;
 
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &passes[i].pipelineLayout) != VK_SUCCESS) {
             return false;
@@ -456,17 +482,30 @@ bool MultiPassPipeline::createPipelines() {
 }
 
 bool MultiPassPipeline::createDescriptorSets() {
-    // Calculate total descriptor requirements
+    printf("[MultiPass] Creating descriptor sets...\n");
+
+    // Use the actual number of frames from uniformBuffers
+    uint32_t numFrames = static_cast<uint32_t>(uniformBuffers.size());
+    if (numFrames == 0) {
+        std::cerr << "[MultiPass] ERROR: uniformBuffers is empty!" << std::endl;
+        return false;
+    }
+
+    // Calculate total descriptor sets needed: 2 sets per pass per frame (set 0 for UBOs, set 1 for textures)
+    uint32_t maxSets = NUM_PASSES * numFrames * 2;
+
+    // Calculate pool sizes
     std::vector<VkDescriptorPoolSize> poolSizes = {
-        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 14},
-        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 28}
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_PASSES * numFrames}, // Set 0: one UBO per pass per frame
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 3} // Set 1: up to 3 textures per pass per frame
     };
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = 14;
+    poolInfo.maxSets = maxSets;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         std::cerr << "[MultiPass] Failed to create descriptor pool" << std::endl;
@@ -474,27 +513,39 @@ bool MultiPassPipeline::createDescriptorSets() {
     }
 
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
-        passes[pass].descriptorSets.resize(2);
-        
-        for (int frame = 0; frame < 2; ++frame) {
-            VkDescriptorSetAllocateInfo allocInfo{};
-            allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            allocInfo.descriptorPool = descriptorPool;
-            allocInfo.descriptorSetCount = 1;
-            allocInfo.pSetLayouts = &passes[pass].descriptorSetLayout;
+        passes[pass].descriptorSets[0].resize(numFrames); // Set 0: UBOs
+        passes[pass].descriptorSets[1].resize(numFrames); // Set 1: Textures
 
-            if (vkAllocateDescriptorSets(device, &allocInfo, &passes[pass].descriptorSets[frame]) != VK_SUCCESS) {
-                std::cerr << "[MultiPass] Failed to allocate descriptor sets for pass " << pass << std::endl;
+        for (uint32_t frame = 0; frame < numFrames; ++frame) {
+            // Allocate set 0 (UBOs)
+            VkDescriptorSetAllocateInfo allocInfo0{};
+            allocInfo0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            allocInfo0.descriptorPool = descriptorPool;
+            allocInfo0.descriptorSetCount = 1;
+            allocInfo0.pSetLayouts = &passes[pass].descriptorSetLayouts[0];
+
+            if (vkAllocateDescriptorSets(device, &allocInfo0, &passes[pass].descriptorSets[0][frame]) != VK_SUCCESS) {
+                std::cerr << "[MultiPass] Failed to allocate descriptor set 0 for pass " << pass << " frame " << frame << std::endl;
+                return false;
+            }
+
+            // Allocate set 1 (textures)
+            VkDescriptorSetAllocateInfo allocInfo1{};
+            allocInfo1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            allocInfo1.descriptorPool = descriptorPool;
+            allocInfo1.descriptorSetCount = 1;
+            allocInfo1.pSetLayouts = &passes[pass].descriptorSetLayouts[1];
+
+            if (vkAllocateDescriptorSets(device, &allocInfo1, &passes[pass].descriptorSets[1][frame]) != VK_SUCCESS) {
+                std::cerr << "[MultiPass] Failed to allocate descriptor set 1 for pass " << pass << " frame " << frame << std::endl;
                 return false;
             }
         }
     }
 
-    std::cout << "[MultiPass] Descriptor pool and sets created" << std::endl;
-    
-    // Populate with initial UBO data (use per-frame uniform buffers)
+    // Update UBO descriptor sets (set 0)
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
-        for (int frame = 0; frame < 2; ++frame) {
+        for (uint32_t frame = 0; frame < numFrames; ++frame) {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[frame];
             bufferInfo.offset = 0;
@@ -502,7 +553,7 @@ bool MultiPassPipeline::createDescriptorSets() {
 
             VkWriteDescriptorSet uboWrite{};
             uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            uboWrite.dstSet = passes[pass].descriptorSets[frame];
+            uboWrite.dstSet = passes[pass].descriptorSets[0][frame];
             uboWrite.dstBinding = 0;
             uboWrite.dstArrayElement = 0;
             uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -538,8 +589,11 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
     int currentBuffer = 0;
 
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
-        // Validate descriptor set before drawing
-        if (frameIndex >= passes[pass].descriptorSets.size() || passes[pass].descriptorSets[frameIndex] == VK_NULL_HANDLE) {
+        // Validate descriptor sets before drawing
+        if (frameIndex >= passes[pass].descriptorSets[0].size() ||
+            frameIndex >= passes[pass].descriptorSets[1].size() ||
+            passes[pass].descriptorSets[0][frameIndex] == VK_NULL_HANDLE ||
+            passes[pass].descriptorSets[1][frameIndex] == VK_NULL_HANDLE) {
             std::cerr << "[MultiPass] ERROR: Pass " << pass << " descriptor set is NULL for frame " << frameIndex << std::endl;
             return;
         }
@@ -549,9 +603,9 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         auto currentTime = std::chrono::steady_clock::now();
         if (pass == 0 && std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastDebugTime).count() > 1000) {
             int prevBuffer = (pass % 2 == 0) ? 1 : 0;
-            // printf("[MultiPass DRAW] Pass=%d frameIndex=%u descriptorSet=%p videoImageView=%p videoPrevImageView=%p intermediate[%d].imageView=%p\n",
-            //        pass, frameIndex, (void*)passes[pass].descriptorSets[frameIndex],
-            //        (void*)videoImageView, (void*)videoPrevImageView, prevBuffer, (void*)intermediate[prevBuffer].imageView);
+            // printf("[MultiPass DRAW] Pass=%d frameIndex=%u descriptorSet0=%p descriptorSet1=%p videoImageView=%p\n",
+            //        pass, frameIndex, (void*)passes[pass].descriptorSets[0][frameIndex],
+            //        (void*)passes[pass].descriptorSets[1][frameIndex], (void*)videoImageView);
             lastDebugTime = currentTime;
         }
 
@@ -575,11 +629,13 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         // Bind pipeline
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, passes[pass].pipeline);
 
-        // Bind descriptor sets
-        if (frameIndex < passes[pass].descriptorSets.size()) {
-            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, passes[pass].pipelineLayout,
-                                    0, 1, &passes[pass].descriptorSets[frameIndex], 0, nullptr);
-        }
+        // Bind both descriptor sets (set 0: UBOs, set 1: textures)
+        VkDescriptorSet descriptorSetsToBind[2] = {
+            passes[pass].descriptorSets[0][frameIndex],
+            passes[pass].descriptorSets[1][frameIndex]
+        };
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, passes[pass].pipelineLayout,
+                                0, 2, descriptorSetsToBind, 0, nullptr);
 
         // Draw fullscreen quad using vertex shader (no vertex buffer needed)
         vkCmdDraw(cmd, 4, 1, 0, 0);
@@ -680,68 +736,50 @@ void MultiPassPipeline::updateDescriptorSets(
     this->videoSamplerPrev = videoSamplerPrev;
 
     // Update descriptor sets for each pass and frame
+    // Note: Set 0 (UBOs) is already updated in createDescriptorSets, so we only update set 1 (textures) here
     int currentBuffer = 0;  // Ping-pong buffer tracking for descriptor set updates
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
         printf("[MultiPass] Processing pass=%d\n", pass);
         for (size_t frame = 0; frame < uniformBuffers.size(); ++frame) {
             printf("[MultiPass] Processing pass=%d frame=%zu\n", pass, frame);
-            std::vector<VkWriteDescriptorSet> descriptorWrites;
+            std::vector<VkWriteDescriptorSet> textureWrites;
 
-            // UBO binding (binding 0) - use per-frame uniform buffer
-            VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[frame];
-            bufferInfo.offset = 0;
-            bufferInfo.range = uniformBufferSize;
-            
-            VkWriteDescriptorSet uboWrite{};
-            uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            uboWrite.dstSet = passes[pass].descriptorSets[frame];
-            uboWrite.dstBinding = 0;
-            uboWrite.dstArrayElement = 0;
-            uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            uboWrite.descriptorCount = 1;
-            uboWrite.pBufferInfo = &bufferInfo;
-            
-            descriptorWrites.push_back(uboWrite);
-            
-            // Pass-specific texture bindings
-            if (pass == 0) {  // Pass A needs video textures
+            // Pass-specific texture bindings for set 1
+            if (pass == 0) {  // Pass A needs video textures at bindings 0 and 1
                 VkDescriptorImageInfo videoTexInfo{};
                 videoTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 videoTexInfo.imageView = videoImageView;
                 videoTexInfo.sampler = videoSampler;
-                
+
                 VkWriteDescriptorSet videoTexWrite{};
                 videoTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                videoTexWrite.dstSet = passes[pass].descriptorSets[frame];
-                videoTexWrite.dstBinding = 1;
+                videoTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
+                videoTexWrite.dstBinding = 0;  // Set 1, binding 0
                 videoTexWrite.dstArrayElement = 0;
                 videoTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 videoTexWrite.descriptorCount = 1;
                 videoTexWrite.pImageInfo = &videoTexInfo;
-                
-                descriptorWrites.push_back(videoTexWrite);
-                
+
+                textureWrites.push_back(videoTexWrite);
+
                 VkDescriptorImageInfo videoTexPrevInfo{};
                 videoTexPrevInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 videoTexPrevInfo.imageView = videoPrevImageView;
                 videoTexPrevInfo.sampler = videoSamplerPrev;
-                
+
                 VkWriteDescriptorSet videoTexPrevWrite{};
                 videoTexPrevWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                videoTexPrevWrite.dstSet = passes[pass].descriptorSets[frame];
-                videoTexPrevWrite.dstBinding = 2;
+                videoTexPrevWrite.dstSet = passes[pass].descriptorSets[1][frame];
+                videoTexPrevWrite.dstBinding = 1;  // Set 1, binding 1
                 videoTexPrevWrite.dstArrayElement = 0;
                 videoTexPrevWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 videoTexPrevWrite.descriptorCount = 1;
                 videoTexPrevWrite.pImageInfo = &videoTexPrevInfo;
-                
-                descriptorWrites.push_back(videoTexPrevWrite);
-            } else if (pass >= 1 && pass <= 5) {  // Passes B-F need input texture
+
+                textureWrites.push_back(videoTexPrevWrite);
+            } else if (pass >= 1 && pass <= 5) {  // Passes B-F need input texture at binding 0
                 // Use intermediate texture from previous pass as input
                 int prevBuffer = 1 - currentBuffer;
-                // printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
-                //        pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
 
                 VkDescriptorImageInfo inputTexInfo{};
                 inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -750,19 +788,17 @@ void MultiPassPipeline::updateDescriptorSets(
 
                 VkWriteDescriptorSet inputTexWrite{};
                 inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                inputTexWrite.dstSet = passes[pass].descriptorSets[frame];
-                inputTexWrite.dstBinding = 1;
+                inputTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
+                inputTexWrite.dstBinding = 0;  // Set 1, binding 0
                 inputTexWrite.dstArrayElement = 0;
                 inputTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 inputTexWrite.descriptorCount = 1;
                 inputTexWrite.pImageInfo = &inputTexInfo;
 
-                descriptorWrites.push_back(inputTexWrite);
+                textureWrites.push_back(inputTexWrite);
 
-                // Pass D (pass 3) also needs prevFrameTex at binding 2
+                // Pass D (pass 3) also needs prevFrameTex at binding 1
                 if (pass == 3) {
-                    // Use the same input texture as prevFrameTex for now (fallback)
-                    // TODO: Implement proper temporal feedback with previous frame
                     VkDescriptorImageInfo prevFrameTexInfo{};
                     prevFrameTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     prevFrameTexInfo.imageView = intermediate[prevBuffer].imageView;
@@ -770,22 +806,19 @@ void MultiPassPipeline::updateDescriptorSets(
 
                     VkWriteDescriptorSet prevFrameTexWrite{};
                     prevFrameTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                    prevFrameTexWrite.dstSet = passes[pass].descriptorSets[frame];
-                    prevFrameTexWrite.dstBinding = 2;
+                    prevFrameTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
+                    prevFrameTexWrite.dstBinding = 1;  // Set 1, binding 1
                     prevFrameTexWrite.dstArrayElement = 0;
                     prevFrameTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                     prevFrameTexWrite.descriptorCount = 1;
                     prevFrameTexWrite.pImageInfo = &prevFrameTexInfo;
 
-                    descriptorWrites.push_back(prevFrameTexWrite);
+                    textureWrites.push_back(prevFrameTexWrite);
                 }
             }
             // Pass G (pass 6) needs input texture and procedural texture
             else if (pass == 6) {  // Pass G needs inputTex + proceduralTex
-                // Use intermediate texture from previous pass as input
                 int prevBuffer = 1 - currentBuffer;
-                // printf("[MultiPass UPDATE] Pass=%d frame=%zu binding inputTex to intermediate[%d].imageView=%p\n",
-                //        pass, frame, prevBuffer, (void*)intermediate[prevBuffer].imageView);
 
                 VkDescriptorImageInfo inputTexInfo{};
                 inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -794,17 +827,16 @@ void MultiPassPipeline::updateDescriptorSets(
 
                 VkWriteDescriptorSet inputTexWrite{};
                 inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                inputTexWrite.dstSet = passes[pass].descriptorSets[frame];
-                inputTexWrite.dstBinding = 1;
+                inputTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
+                inputTexWrite.dstBinding = 0;  // Set 1, binding 0
                 inputTexWrite.dstArrayElement = 0;
                 inputTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 inputTexWrite.descriptorCount = 1;
                 inputTexWrite.pImageInfo = &inputTexInfo;
 
-                descriptorWrites.push_back(inputTexWrite);
+                textureWrites.push_back(inputTexWrite);
 
                 // For now, use the same input texture as procedural texture (fallback)
-                // TODO: Create actual procedural texture framebuffer
                 VkDescriptorImageInfo proceduralTexInfo{};
                 proceduralTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 proceduralTexInfo.imageView = intermediate[prevBuffer].imageView;
@@ -812,18 +844,20 @@ void MultiPassPipeline::updateDescriptorSets(
 
                 VkWriteDescriptorSet proceduralTexWrite{};
                 proceduralTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                proceduralTexWrite.dstSet = passes[pass].descriptorSets[frame];
-                proceduralTexWrite.dstBinding = 2;
+                proceduralTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
+                proceduralTexWrite.dstBinding = 1;  // Set 1, binding 1
                 proceduralTexWrite.dstArrayElement = 0;
                 proceduralTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 proceduralTexWrite.descriptorCount = 1;
                 proceduralTexWrite.pImageInfo = &proceduralTexInfo;
 
-                descriptorWrites.push_back(proceduralTexWrite);
+                textureWrites.push_back(proceduralTexWrite);
             }
 
-            vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()),
-                                   descriptorWrites.data(), 0, nullptr);
+            if (!textureWrites.empty()) {
+                vkUpdateDescriptorSets(device, static_cast<uint32_t>(textureWrites.size()),
+                                       textureWrites.data(), 0, nullptr);
+            }
         }
         // Alternate ping-pong buffer after each pass
         currentBuffer = 1 - currentBuffer;
@@ -885,9 +919,14 @@ void MultiPassPipeline::cleanupPipelines() {
             vkDestroyPipelineLayout(device, passes[i].pipelineLayout, nullptr);
             passes[i].pipelineLayout = VK_NULL_HANDLE;
         }
-        if (passes[i].descriptorSetLayout != VK_NULL_HANDLE) {
-            vkDestroyDescriptorSetLayout(device, passes[i].descriptorSetLayout, nullptr);
-            passes[i].descriptorSetLayout = VK_NULL_HANDLE;
+        // Clean up both descriptor set layouts
+        if (passes[i].descriptorSetLayouts[0] != VK_NULL_HANDLE) {
+            vkDestroyDescriptorSetLayout(device, passes[i].descriptorSetLayouts[0], nullptr);
+            passes[i].descriptorSetLayouts[0] = VK_NULL_HANDLE;
+        }
+        if (passes[i].descriptorSetLayouts[1] != VK_NULL_HANDLE) {
+            vkDestroyDescriptorSetLayout(device, passes[i].descriptorSetLayouts[1], nullptr);
+            passes[i].descriptorSetLayouts[1] = VK_NULL_HANDLE;
         }
     }
 }
@@ -896,6 +935,11 @@ void MultiPassPipeline::cleanupDescriptorSets() {
     if (descriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         descriptorPool = VK_NULL_HANDLE;
+    }
+    // Clear descriptor set arrays
+    for (int i = 0; i < NUM_PASSES; ++i) {
+        passes[i].descriptorSets[0].clear();
+        passes[i].descriptorSets[1].clear();
     }
 }
 

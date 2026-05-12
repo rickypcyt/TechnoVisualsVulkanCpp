@@ -24,8 +24,8 @@ public:
     struct PassConfig {
         VkPipeline pipeline = VK_NULL_HANDLE;
         VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-        VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-        std::vector<VkDescriptorSet> descriptorSets;
+        VkDescriptorSetLayout descriptorSetLayouts[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE}; // Set 0: UBOs, Set 1: Textures
+        std::vector<VkDescriptorSet> descriptorSets[2]; // descriptorSets[0] for UBOs, descriptorSets[1] for textures
     };
 
     struct FramebufferResources {

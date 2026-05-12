@@ -390,7 +390,7 @@ void Application::initMultiPassPipeline() {
         videoTexture.getImageView(),
         videoTexture.getImageView(), // Use same view for prev
         uniformBufferManager.getBuffers(),
-        sizeof(GlobalUBO) // Use fixed size
+        sizeof(GlobalParamsUBO) // Use fixed size
     )) {
         std::cerr << "[Application] Failed to initialize MultiPassPipeline" << std::endl;
         return;
@@ -759,7 +759,7 @@ void Application::mainLoop() {
 }
 
 void Application::updateUniformBuffer(uint32_t frameIndex) {
-    GlobalUBO ubo{};
+    GlobalParamsUBO ubo{};
     auto currentTime = std::chrono::steady_clock::now();
     float time = std::chrono::duration<float>(currentTime - startTime).count();
     
@@ -812,7 +812,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.enableDistortion = visualControls.enableDistortion ? 1 : 0;
     ubo.enableBlurMotion = visualControls.enableBlurMotion ? 1 : 0;
     ubo.enableSharpen = visualControls.enableSharpen ? 1 : 0;
-    ubo.enableGlitch = visualControls.enableGlitch ? 1 : 0;
+    ubo.enablePostGlitch = visualControls.enableGlitch ? 1 : 0;
     ubo.enableBlending = visualControls.enableBlending ? 1 : 0;
     ubo.enableAnalog = visualControls.enableAnalog ? 1 : 0;
     ubo.enableAudioReactive = visualControls.enableAudioReactive ? 1 : 0;
