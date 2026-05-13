@@ -1,0 +1,87 @@
+// @EFFECT name="Message Tunnel" index=41 desc="Audio-reactive tunnel riff with trace marching" author="System"
+// Little Message Redux - audio-reactive tunnel riff
+const int kMessageTraceSteps = 48;
+const float kMessagePi = 3.14159265359;
+
+mat2 messageRot(float a) {
+    float c = cos(a);
+    float s = sin(a);
+    return mat2(c, s, -s, c);
+}
+
+float messageMap(vec3 p, float time, float energy, float bass, float mid, float high) {
+    vec3 pp = p;
+    pp.z = abs(pp.z) - 2.0;
+    pp.z = abs(pp.z) - 2.0;
+
+    float gate = (time * 2.0) + bass * 1.5;
+    pp.x += gate;
+
+    float d = 1000.0;
+    const int n = 16;
+    float freqMix = clamp(0.4 + bass * 0.3 + high * 0.2, 0.2, 1.0);
+    for (int i = 1; i < n; ++i) {
+        float x = float(i) / float(n);
+        vec3 q = pp;
+        q.x += x * kMessagePi * 1.0;
+        q.z = abs(q.z) - 1.0;
+        q.yz *= messageRot(x * q.x * freqMix);
+        q.y = abs(q.y) - mix(1.4, 2.2, clamp(energy, 0.0, 1.0));
+        q.y += x * kMessagePi * 0.5;
+        float k = length(q.yz) - mix(0.08, 0.16, clamp(high, 0.0, 1.0));
+        d = min(d, k);
+        d = max(d, 1.6 * x + gate - pp.x);
+    }
+    return min(d, 4.0 + gate - pp.x);
+}
+
+float messageTrace(vec3 origin, vec3 ray, float time, float energy, float bass, float mid, float high) {
+    float t = 0.0;
+    for (int i = 0; i < kMessageTraceSteps; ++i) {
+        vec3 pos = origin + ray * t;
+        float dist = messageMap(pos, time, energy, bass, mid, high) * 0.55;
+        t += dist;
+        if (abs(dist) < 0.0006 || t > 18.0) {
+            break;
+        }
+    }
+    return t;
+}
+
+vec3 messageShade(vec3 o, vec3 r, float time, float energy, float bass, float mid, float high) {
+    float t = messageTrace(o, r, time, energy, bass, mid, high);
+    vec3 w = o + r * t;
+    float fd = messageMap(w, time, energy, bass, mid, high);
+
+    // Removed distance-based attenuation (fog) for better sharpness
+    float inv = 1.0;
+
+    vec3 baseColor = mix(uPrimaryColor * 0.6, uSecondaryColor * 0.8, clamp(0.4 + high * 0.6, 0.0, 1.0));
+    vec3 color = baseColor * inv;
+
+    float bloom = 1.0 / (1.0 + t * t * 0.18);
+    color = mix(color, vec3(1.0), bloom * 0.35);
+
+    float scan = sign((fract((r.y + 0.5) * 14.0) - 0.5) / 16.0) * 0.5 + 0.5;
+    float vignette = smoothstep(1.2, 0.2, length(r.xy));
+    color = mix(color * 0.55, color, scan * vignette);
+
+    color *= 1.0 + vec3(bass * 0.3, mid * 0.25, high * 0.4);
+    return clamp(color, 0.0, 1.0);
+}
+
+vec4 renderMessageTunnel(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    // Apply exact raymarched object coordinate system like Walker
+    vec2 uv = st;
+    uv.x *= uResolution.x / max(uResolution.y, 1.0);
+
+    vec3 r = normalize(vec3(uv, 1.0 - dot(uv, uv) * 0.45));
+    vec3 o = vec3(0.0);  // Neutral origin like raymarched object
+
+    r.xz *= messageRot(kMessagePi * 0.5 + tempo * 0.15);
+
+    vec3 color = messageShade(o, r, time, energy, bass, mid, high);
+    float alpha = clamp(0.65 + length(color) * 0.3 + energy * 0.2, 0.0, 1.0);
+
+    return vec4(color, alpha);
+}

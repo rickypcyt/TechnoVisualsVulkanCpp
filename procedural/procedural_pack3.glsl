@@ -1,0 +1,607 @@
+// @EFFECT name="Voronoi Cells" index=13 desc="Voronoi cell pattern with edge glow" author="System"
+// @EFFECT name="Raymarched Object" index=14 desc="3D raymarched metallic object" author="System"
+// @EFFECT name="Reaction Diffusion" index=15 desc="Reaction diffusion pattern" author="System"
+// @EFFECT name="Liquid Refraction" index=16 desc="Liquid refraction with caustics" author="System"
+// @EFFECT name="Starfield Warp" index=17 desc="Warping starfield effect" author="System"
+// @EFFECT name="Plasma Classic" index=18 desc="Classic plasma effect" author="System"
+// @EFFECT name="Domain Warped Fractal" index=19 desc="Domain warped fractal noise" author="System"
+// @EFFECT name="Volumetric Starfield" index=21 desc="Volumetric starfield with depth" author="System"
+// @EFFECT name="Fractal Infinity" index=37 desc="Infinite fractal maze" author="System"
+// @EFFECT name="Walker" index=38 desc="Walking figure assembly" author="System"
+// @EFFECT name="Voxel Path Tracer" index=22 desc="Voxel path tracing scene" author="System"
+// @EFFECT name="Fractal Tunnel" index=20 desc="Fractal tunnel journey" author="System"
+
+vec4 renderVoronoiCells(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    float scale = mix(1.4, 3.8, clamp(bass * 0.9, 0.0, 1.0));
+    vec2 p = st * (3.0 + energy * 1.2);
+    p *= scale;
+    float edge;
+    float cellSeed;
+    float distance = voronoi(p + time * 0.12, edge, cellSeed);
+    float interior = smoothstep(0.0, 0.9, distance * 1.5);
+    float edgeGlow = smoothstep(0.02, 0.2, 1.0 - edge);
+
+    // Dark background
+    vec3 bgColor = vec3(0.05, 0.05, 0.08);
+
+    // Darker cell colors
+    vec3 cellColor = mix(uPrimaryColor * (0.2 + bass * 0.2),
+                         uSecondaryColor * (0.3 + high * 0.25),
+                         interior);
+    cellColor += vec3(0.08, 0.12, 0.1) * cellSeed * 0.3;
+    cellColor += vec3(0.15, 0.2, 0.25) * edgeGlow * (0.2 + high * 0.35);
+    cellColor = clamp(cellColor, 0.0, 1.0);
+
+    // Mix with dark background
+    cellColor = mix(bgColor, cellColor, 0.7);
+
+    float alpha = clamp(0.25 + interior * 0.5 + edgeGlow * (0.35 + high * 0.2) + energy * 0.2, 0.0, 1.0);
+    return vec4(cellColor, alpha);
+}
+
+vec4 renderRaymarchedObject(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec3 ro = vec3(0.0, 0.0, 3.0);
+    vec3 target = vec3(0.0);
+    vec3 forward = normalize(target - ro);
+    vec3 right = normalize(vec3(forward.z, 0.0, -forward.x));
+    vec3 up = normalize(cross(right, forward));
+    vec3 rd = normalize(forward + right * st.x * 1.4 + up * st.y * 1.0);
+    float t = 0.0;
+    float d = 0.0;
+    bool hit = false;
+    for (int i = 0; i < 48; ++i) {
+        vec3 pos = ro + rd * t;
+        d = mapScene(pos, time, energy, bass, mid, high);
+        if (d < 0.0015) {
+            hit = true;
+            break;
+        }
+        t += d * 0.85;
+        if (t > 12.0) {
+            break;
+        }
+    }
+
+    vec3 color;
+    float alpha;
+    if (hit) {
+        vec3 pos = ro + rd * t;
+        vec3 normal = estimateNormal(pos, time, energy, bass, mid, high);
+        vec3 lightDir = normalize(vec3(0.6, 0.8, -0.4));
+        float diff = max(dot(normal, lightDir), 0.0);
+        float spec = pow(max(dot(reflect(-lightDir, normal), -rd), 0.0), 24.0);
+        float rim = pow(1.0 - max(dot(normal, -rd), 0.0), 3.0);
+        vec3 base = mix(uPrimaryColor, uSecondaryColor, 0.45 + high * 0.35);
+        color = base * (0.25 + diff * (0.9 + energy * 0.4));
+        color += vec3(0.6, 0.4, 1.0) * spec * (0.3 + high * 0.6);
+        color += base.bgr * rim * (0.3 + energy * 0.5);
+        color = clamp(color, 0.0, 1.0);
+        alpha = clamp(0.35 + diff * 0.4 + rim * 0.4 + energy * 0.25, 0.0, 1.0);
+    } else {
+        float fade = clamp(1.0 - t / 12.0, 0.0, 1.0);
+        vec3 bg = mix(uPrimaryColor * 0.15, uSecondaryColor * 0.45, fade);
+        bg += vec3(0.08, 0.1, 0.14) * fbm(st * 3.0 + time * 0.2);
+        color = clamp(bg, 0.0, 1.0);
+        alpha = clamp(fade * 0.4, 0.0, 0.6);
+    }
+    return vec4(color, alpha);
+}
+
+vec4 renderReactionDiffusionPattern(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 p = st * (3.2 + energy * 1.4);
+    vec2 warp = vec2(
+        fbm(p + time * 0.35),
+        fbm(p + vec2(-4.2, 3.8) - time * 0.27)
+    );
+    p += warp * (0.7 + mid * 0.7);
+    float pattern = fbm(p * (2.6 + tempo * 0.4) + time * 0.12);
+    float threshold = mix(0.42, 0.32, clamp(bass * 0.9, 0.0, 1.0));
+    float blot = smoothstep(threshold, threshold + 0.18 + high * 0.15, pattern);
+    float detail = fbm(p * 5.5 - time * 0.2);
+    float veins = smoothstep(0.55, 0.72, detail) * smoothstep(0.35, 0.6, 1.0 - detail);
+    vec3 base = mix(uPrimaryColor * 0.5, uSecondaryColor, blot);
+    base = mix(base, vec3(0.95, 0.86, 0.68), veins * (0.3 + high * 0.5));
+    base += vec3(0.1, 0.06, 0.12) * warp.x * (0.4 + energy * 0.5);
+    base = clamp(base, 0.0, 1.0);
+    float alpha = clamp(0.3 + blot * 0.5 + veins * 0.3 + energy * 0.2, 0.0, 1.0);
+    return vec4(base, alpha);
+}
+
+vec4 renderLiquidRefraction(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 p = st;
+    vec2 offset = vec2(
+        fbm(p * (4.0 + energy) + time * 0.6),
+        fbm(p * (4.3 + mid * 1.2) - time * 0.55)
+    );
+    float strength = (0.12 + energy * 0.12 + bass * 0.05);
+    vec2 uv = p + offset * (0.18 + high * 0.12) * strength;
+    float bg = fbm(uv * (3.2 + tempo * 0.5) - time * 0.2);
+    vec3 base = mix(uPrimaryColor, uSecondaryColor, clamp(0.5 + bg * 0.5, 0.0, 1.0));
+    vec2 grad = vec2(dFdx(bg), dFdy(bg));
+    float caustic = clamp(length(grad) * (0.7 + high * 0.6), 0.0, 1.2);
+    vec3 highlight = vec3(0.8, 0.9, 1.1) * caustic;
+    vec3 color = base + highlight + vec3(0.05, 0.04, 0.03) * offset.x;
+    color = clamp(color, 0.0, 1.0);
+    float alpha = clamp(0.25 + bg * 0.3 + caustic * 0.4 + energy * 0.2, 0.0, 1.0);
+    return vec4(color, alpha);
+}
+
+vec4 renderStarfieldWarp(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 uv = st;
+    float speed = 0.35 + tempo * 0.3 + energy * 0.25;
+    float stretch = 1.2 + bass * 0.8;
+    float accum = 0.0;
+    float glow = 0.0;
+    for (int i = 0; i < 6; ++i) {
+        float depth = fract(float(i) / 6.0 + time * speed * 0.18);
+        float fade = smoothstep(0.05, 0.25, depth) * (1.0 - depth);
+        vec2 dir = uv / (depth * stretch + 0.25);
+        vec2 cell = floor(dir);
+        vec2 local = fract(dir) - 0.5;
+        float seed = hash(cell + float(i));
+        vec2 jitter = (seed - 0.5) * vec2(0.4, 0.2);
+        float dist = length(local + jitter);
+        float star = smoothstep(0.4, 0.0, dist);
+        accum += star * fade;
+        glow += star * fade * (0.4 + seed);
+    }
+    vec3 color = mix(uPrimaryColor, vec3(1.0, 0.95, 0.8), clamp(high + energy * 0.5, 0.0, 1.0));
+    color *= accum * (1.2 + high * 0.7);
+    color += vec3(0.05, 0.08, 0.12) * (0.8 - length(uv)) * (0.4 + energy * 0.3);
+    color += vec3(0.4, 0.5, 0.7) * glow * 0.25;
+    color = clamp(color, 0.0, 1.0);
+    float alpha = clamp(accum * (0.65 + energy * 0.4), 0.0, 1.0);
+    return vec4(color, alpha);
+}
+
+vec4 renderPlasmaClassic(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 p = st;
+    float v =
+        sin(p.x * (10.0 + tempo * 1.8) + time) +
+        sin(p.y * (10.0 + high * 4.0) + time * 1.3) +
+        sin((p.x + p.y) * (10.0 + tempo) + time * 0.7);
+    v = v / 3.0;
+    float wave = sin(time * 1.5 + v * 4.0);
+    vec3 base = mix(uPrimaryColor, uSecondaryColor, 0.5 + 0.5 * v);
+    base += vec3(0.15, 0.10, 0.20) * wave * (0.4 + mid * 0.4);
+    base = clamp(base, 0.0, 1.0);
+    float alpha = clamp(0.35 + abs(v) * 0.4 + energy * 0.25, 0.0, 1.0);
+    return vec4(base, alpha);
+}
+
+vec4 renderDomainWarpedFractal(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 base = st * (2.4 + energy * 0.8);
+    vec2 q = vec2(
+        fbm(base * (3.0 + tempo * 0.3) + time * 0.4),
+        fbm(base * (3.0 + tempo * 0.3) - time * 0.45)
+    );
+    vec2 p = base + q * (0.8 + high * 0.5);
+    float f = fbm(p * (4.0 + mid * 0.5));
+    float ridge = fbm(p * 8.0 - time * 0.3);
+    vec3 color = mix(uPrimaryColor, uSecondaryColor, clamp(0.5 + f * 0.5, 0.0, 1.0));
+    color += vec3(0.18, 0.10, 0.30) * ridge * (0.4 + high * 0.6);
+    color += vec3(0.05, 0.09, 0.12) * q.x;
+    color = clamp(color, 0.0, 1.0);
+    float alpha = clamp(0.3 + f * 0.5 + ridge * 0.2 + energy * 0.2, 0.0, 1.0);
+    return vec4(color, alpha);
+}
+
+vec4 renderVolumetricStarfield(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    
+    float aspect = max(uResolution.x / uResolution.y, 0.0001);
+    vec2 uv = vec2(st.x / aspect, st.y / aspect);
+    
+    // Fondo negro base
+    vec3 color = vec3(0.0);
+    
+    float temporalSpeed = kVolSpeed + tempo * 0.004 + energy * 0.008;
+    float twist = sin(time * (12.0 + high * 6.0)) * 0.1 + 1.0;
+    
+    // --- ESTRELLAS/FLAKES VISIBLES (luz sobre negro) ---
+    for (int layer = 0; layer < kSnowLayers; ++layer) {
+        float layerFrac = float(layer) / float(kSnowLayers);
+        float d = fract(layerFrac + time * temporalSpeed);
+        float s = mix(40.0, 0.5, d);
+        float layerFade = d * smoothstep(1.0, 0.8, d);
+        
+        vec2 snowUV = kSnowOffset + uv - vec2(0.25 * sin(time * 0.2 + layerFrac * 3.14), 0.0);
+        vec2 id = floor(snowUV * s + layerFrac * 50.0);
+        vec2 p = fract(snowUV * s + layerFrac * 50.0) - 0.5;
+        
+        float randSeed = hash(id + layerFrac);
+        float randPhase = randSeed * 6.28318;
+        p += vec2(sin(time + randPhase), cos(time + randPhase)) * 0.3;
+        
+        // FORMA VISIBLE: estrella/flake
+        float starValue = happyStar(p * 10.0, twist);
+        float flake = smoothstep(0.5, 0.0, starValue); // Ajustado para mejor visibilidad
+        
+        // Color de la estrella - brillante sobre negro
+        float paletteBias = clamp(uColorBlend, 0.0, 1.0);
+        vec3 starColor = mix(uPrimaryColor, uSecondaryColor, randSeed) * 1.5;
+        
+        // Variación temporal del brillo
+        float twinkle = 0.7 + 0.3 * sin(time * 3.0 + randSeed * 10.0);
+        
+        // Sumamos luz al fondo negro
+        color += starColor * flake * layerFade * twinkle * 0.8;
+    }
+    
+    // --- NEBULOSA VOLUMÉTRICA OSCURA ---
+    vec3 dir = normalize(vec3(uv * (kVolZoom + energy * 0.25), 1.0));
+    float paletteBias = clamp(uColorBlend, 0.0, 1.0);
+    vec3 nebulaColor = mix(uPrimaryColor, uSecondaryColor, paletteBias) * 0.2;
+    
+    float s = 0.1;
+    float fade = 1.0;
+    vec3 v = vec3(0.0);
+    
+    float rotationAngle = time * (0.01 + mid * 0.01);
+    mat2 rot = mat2(cos(rotationAngle), sin(rotationAngle),
+                   -sin(rotationAngle), cos(rotationAngle));
+    
+    for (int r = 0; r < kVolSteps; ++r) {
+        vec3 pos = nebulaColor + s * dir * 0.5;
+        pos = abs(vec3(kVolTile) - mod(pos, vec3(kVolTile * 2.0)));
+        
+        vec3 pp = pos;
+        float pa = 0.0;
+        float a = 0.0;
+        
+        for (int i = 0; i < kVolIterations; ++i) {
+            float denom = max(dot(pp, pp), 0.0001);
+            pp = abs(pp) / denom - vec3(kVolFormuParam);
+            pp.xy = rot * pp.xy;
+            float len = length(pp);
+            a += abs(len - pa);
+            pa = len;
+        }
+        
+        float dm = max(0.0, kVolDarkMatter - a * a * 0.001);
+        a *= a * a;
+        
+        if (r > 6) fade *= 1.5 - dm;
+        
+        vec3 weight = vec3(s, s * s, s * s * s * s);
+        v += weight * a * (kVolBrightness * 0.5) * fade; // Reducido para no saturar
+        
+        fade *= kVolDistFading + bass * 0.05;
+        s += kVolStepSize;
+    }
+    
+    // Volumen muy oscuro, casi silueta
+    v = mix(vec3(length(v) * 0.3), v * 0.5, kVolSaturation);
+    color += v * 0.002; // Contribución mínima al color
+    
+    // --- EFECTOS FINALES ---
+    
+    // Vignette que oscurece bordes (mantiene centro más visible)
+    float vignette = 1.0 - smoothstep(0.3, 1.2, dot(uv, uv));
+    color *= vignette;
+    
+    // Respuesta al audio - pulso de brillo
+    color *= 1.0 + energy * 0.3;
+    color.r *= 1.0 + bass * 0.2;
+    color.g *= 1.0 + mid * 0.15;
+    color.b *= 1.0 + high * 0.25;
+    
+    // Limitamos para evitar saturación
+    color = clamp(color, 0.0, 1.0);
+    
+    // Alpha
+    float alpha = clamp(length(color) * 1.5, 0.0, 1.0);
+    
+    return vec4(color, alpha);
+}
+
+float fractalInfinitySDF(vec3 p, mat3 m) {
+    float q = 1.0;
+    float d = 1e9;
+    for(int n = 0; n < 5; n++) {
+        p *= m;
+        d = min(d,max(max(abs(p.x),max(abs(p.y),abs(p.z))) - 1.0,0.8-min(max(abs(p.x),abs(p.y)),min(max(abs(p.y),abs(p.z)),max(abs(p.z),abs(p.x))))) / q);
+        p = abs(p) - 0.9;
+        p *= 2.1;
+        q *= 2.1;
+    }
+    return d;
+}
+
+vec4 renderFractalInfinity(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 r = uResolution.xy;
+    vec3 raypos = vec3(0,0,-5);
+    vec3 raydir = normalize(vec3((st + st - r) / sqrt(r.x * r.y),1));
+    
+    float t = time + tempo * 0.1 + energy * 0.2;
+    mat3 rot = mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+    for(int j = 0; j < 8; j++) {
+        rot *= mat3(cos(t), 0.0, sin(t), 0.0, 1.0, 0.0, -sin(t), 0.0, cos(t));
+        rot *= mat3(0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0);
+        t /= -1.237415;
+    }
+    
+    vec4 c = vec4(2.0); // Increased initial brightness
+
+    for(int i = 0; i < 80; i++) {
+        float dist = fractalInfinitySDF(raypos,rot);
+        raypos += raydir * dist;
+        if(dist < 0.0001) {
+            break;
+        }
+        c /= 1.03; // Reduced fade factor for better visibility
+    }
+
+    // Ensure minimum brightness to prevent black screen
+    c = max(c, vec4(0.3)); // Minimum brightness floor
+
+    // Add color based on audio reactivity
+    vec3 color = c.rgb;
+    color.r *= 1.0 + bass * 0.3;
+    color.g *= 1.0 + mid * 0.2;
+    color.b *= 1.0 + high * 0.4;
+
+    // Mix with user colors
+    float paletteBias = clamp(uColorBlend, 0.0, 1.0);
+    color = mix(color * uPrimaryColor, color * uSecondaryColor, paletteBias);
+
+    float alpha = clamp(length(c.rgb) + energy * 0.3, 0.0, 1.0);
+    return vec4(clamp(color, 0.0, 1.0), alpha);
+}
+
+vec2 walkerRotate(vec2 inVec, float alpha) {
+    float c = cos(alpha);
+    float s = sin(alpha);
+    return vec2(
+        inVec.x * c + inVec.y * s,
+        inVec.y * c - inVec.x * s
+    );
+}
+
+float walkerAudioEnergy(float bass, float mid, float high) {
+    float energy = bass * 0.5 + mid * 0.3 + high * 0.2;
+    return max(energy, 0.25);
+}
+
+float walkerAssemblyFactor(float bass, float mid, float high) {
+    return smoothstep(0.15, 0.85, walkerAudioEnergy(bass, mid, high));
+}
+
+float walkerZoneThreshold(vec2 uv, float assemblyFactor) {
+    float normalizedHeight = clamp((uv.y + 0.9) / 1.8, 0.0, 1.0);
+    float threshold;
+    if (normalizedHeight > 0.75) {
+        threshold = 0.46;
+    } else if (normalizedHeight > 0.45) {
+        threshold = 0.32;
+    } else if (normalizedHeight > 0.2) {
+        threshold = 0.2;
+    } else {
+        threshold = 0.08;
+    }
+
+    float noise = sin(uv.x * 11.0 + uTime * 2.1) * cos(uv.y * 7.0 + uTime * 1.6);
+    threshold += noise * 0.05 * (1.0 - assemblyFactor);
+    return threshold;
+}
+
+float walkerBody(vec2 uv, vec2 leftLeg, vec2 rightLeg, vec2 center) {
+    float baseRadius = 0.18;
+    vec2 leftLeg2 = leftLeg - center;
+    vec2 rightLeg2 = rightLeg - center;
+    float leftRadius = length(leftLeg2);
+    float rightRadius = length(rightLeg2);
+    vec2 leftDir = leftLeg2 / max(leftRadius, 1e-4);
+    vec2 rightDir = rightLeg2 / max(rightRadius, 1e-4);
+    vec2 r = uv - center;
+    float lenUV = length(r);
+
+    vec2 uvDir = r / max(lenUV, 1e-4);
+    float leftDist = length(uvDir - leftDir);
+    float rightDist = length(uvDir - rightDir);
+    float leftFactor = pow(max(1.0 - leftDist, 0.0), 3.0);
+    float rightFactor = pow(max(1.0 - rightDist, 0.0), 3.0);
+    float centerFactor = clamp(1.0 - leftFactor - rightFactor, 0.0, 1.0);
+
+    float radius = leftFactor * leftRadius + rightFactor * rightRadius + centerFactor * baseRadius;
+    return lenUV - radius;
+}
+
+vec2 getWalkerLegCenter(float angle) {
+    vec2 legCenter = vec2(sin(angle), max(cos(angle), 0.0));
+    return vec2(0.4, 0.2) * legCenter + vec2(0.0, -0.6);
+}
+
+float walkerLeg(vec2 uv, vec2 legCenter) {
+    float angle = (legCenter.y + 0.6) * 1.5;
+    vec2 diff = uv - legCenter;
+    diff = walkerRotate(diff, angle);
+    diff.y *= 1.6;
+    if (diff.y < 0.0) {
+        diff.y *= 5.2;
+    }
+    return length(diff) - 0.2;
+}
+
+float walkerHead(vec2 diff) {
+    vec2 diff2 = walkerRotate(diff, -0.4);
+    diff2 *= vec2(5.0, 7.0);
+    return length(diff2) - 1.0;
+}
+
+float walkerCoreDistance(vec2 uv, float time, float energy, float bass, float mid, float high) {
+    float progress = 6.66 * time + bass * 0.5 + mid * 0.3;
+
+    vec2 leftLegCenter = getWalkerLegCenter(progress);
+    vec2 rightLegCenter = getWalkerLegCenter(progress + PI);
+
+    vec2 achillesOffset = vec2(-0.15, 0.0);
+
+    vec2 bodyCenter = vec2(0.0, -0.05 + 0.1 * sin(progress * 2.0) + energy * 0.1);
+    vec2 headCenter = bodyCenter + vec2(0.10 + 0.08 * cos(progress * 2.0 + 0.3), 0.23);
+
+    float leftLegDist = walkerLeg(uv, leftLegCenter);
+    float rightLegDist = walkerLeg(uv, rightLegCenter);
+    float bodyDist = walkerBody(uv, leftLegCenter + achillesOffset, rightLegCenter + achillesOffset, bodyCenter);
+    float headDist = walkerHead(uv - headCenter);
+
+    float dist = min(min(leftLegDist, rightLegDist), min(bodyDist, headDist));
+
+    if (uv.y < -0.6) {
+        dist = max(dist, uv.y + 0.6);
+    }
+
+    return dist;
+}
+
+float walkerDistance(vec2 uv, float time, float energy, float bass, float mid, float high, float assemblyFactor) {
+    float baseDist = walkerCoreDistance(uv, time, energy, bass, mid, high);
+    float threshold = walkerZoneThreshold(uv, assemblyFactor);
+    float gating = smoothstep(threshold - 0.12, threshold + 0.12, assemblyFactor);
+    return mix(0.6, baseDist, gating);
+}
+
+vec4 renderWalker(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    // Apply exact raymarched object coordinate system with proper aspect ratio
+    vec2 uv = st;
+    float aspect = uResolution.x / uResolution.y;
+    uv.x *= aspect;
+    uv *= 1.6;  // Small change from 1.5 to 1.6
+
+    float assemblyFactor = walkerAssemblyFactor(bass, mid, high);
+
+    float dist = walkerDistance(uv, time, energy, bass, mid, high, assemblyFactor);
+    float distY = walkerDistance(uv - vec2(0.0, 0.01), time, energy, bass, mid, high, assemblyFactor);
+    float distX = walkerDistance(uv - vec2(0.01, 0.0), time, energy, bass, mid, high, assemblyFactor);
+
+    float mask = smoothstep(0.0, -0.02, dist);
+    float edge = abs(mask - smoothstep(0.0, -0.02, distY));
+    edge += abs(mask - smoothstep(0.0, -0.02, distX));
+
+    float outline = smoothstep(0.0, 0.025, edge);
+    float glow = exp(-35.0 * abs(dist)) * (0.4 + assemblyFactor * 0.6);
+
+    float paletteBias = clamp(uColorBlend, 0.0, 1.0);
+    vec3 basePalette = mix(uPrimaryColor, uSecondaryColor, paletteBias);
+    vec3 edgeColor = mix(basePalette, vec3(1.0), 0.35 + assemblyFactor * 0.3);
+
+    vec3 color = outline * edgeColor;
+    color += glow * mix(vec3(0.1, 0.15, 0.2), edgeColor, clamp(energy * 0.6, 0.0, 1.0));
+
+    color.r *= 1.0 + bass * 0.35;
+    color.g *= 1.0 + mid * 0.3;
+    color.b *= 1.0 + high * 0.4;
+
+    color = clamp(color, 0.0, 1.0);
+    float alpha = clamp(outline * (0.55 + assemblyFactor * 0.45), 0.0, 1.0);
+    return vec4(color, alpha);
+}
+
+vec4 renderVoxelPathTracer(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 uv = st;
+    
+    // Dynamic resolution scaling for performance
+    float pixelCount = uResolution.x * uResolution.y;
+    float resolutionScale = 1.0;
+    if (pixelCount > 1920.0 * 1080.0) {
+        resolutionScale = 0.5;
+    } else if (pixelCount > 1280.0 * 720.0) {
+        resolutionScale = 0.7;
+    }
+    uv *= resolutionScale;
+
+    float tempoFactor = max(0.4, tempo * 0.8 + 0.4);
+    float fallSpeed = (kVoxelBpm / 60.0) * (0.6 + tempoFactor * 0.6 + energy * 0.4);
+    float heightRange = kVoxelHeightRangeBase * (1.0 + energy * 0.6 + high * 0.5);
+    float bumpFactor = kVoxelBumpFactorBase * (1.0 + high * 0.7);
+
+    vec3 camPos = vec3(0.5 + sin(time * 0.25) * tempoFactor * 0.35,
+                       6.0 + energy * 3.0,
+                       -time * fallSpeed * 1.2);
+    camPos.x += cos(time * 0.3) * bass * 1.4;
+    camPos.z += sin(time * 0.21) * mid * 0.9;
+
+    vec3 dir = normalize(vec3(0.3, -0.4, -1.0));
+    dir.xy = voxelRotate(time * 0.18 + tempoFactor * 0.3) * dir.xy;
+    vec3 side = normalize(cross(dir, vec3(0.0, 1.0, 0.0)));
+    vec3 up = cross(side, dir);
+    float fovScale = 1.0 / tan(radians(kVoxelFovDegrees) * 0.5);
+    vec3 rd = normalize(uv.x * side + uv.y * up + dir * fovScale);
+
+    float pathSeed = hash12f(uv * uResolution.xy + vec2(time * 21.37, time * 17.53)) * 500.0;
+
+    vec3 col = voxelPathTrace(camPos, rd, time, fallSpeed, heightRange, bumpFactor, bass, mid, high, pathSeed);
+    col = pow(col, vec3(0.4545));
+
+    vec3 base = mix(uPrimaryColor, uSecondaryColor, clamp(uColorBlend, 0.0, 1.0));
+    col = mix(base, col, 0.7);
+    float luminance = clamp((col.r + col.g + col.b) / 3.0, 0.0, 1.0);
+    float alpha = clamp(0.35 + luminance * 0.4 + energy * 0.2, 0.0, 1.0);
+    return vec4(col, alpha);
+}
+
+vec4 renderFractalTunnel(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 uv = st * (0.25 + energy * 0.05);
+    float twist = sin(time * 0.3) * 0.4 + mid * 0.6;
+    uv = rotate(uv, twist);
+    vec3 dir = normalize(vec3(uv, 0.8));
+    float speed = 1.05 + tempo * 0.7 + energy * 0.45;
+    float travel = time * speed;
+    vec3 accum = vec3(0.0);
+    float alpha = 0.0;
+    float fade = 1.0;
+
+    for (int i = 0; i < 36; ++i) {
+        float t = float(i) * 0.18;
+        vec3 pos = dir * (t + travel);
+        pos.z = mod(pos.z, 4.0) - 2.0;
+
+        float radius = length(pos.xy);
+        float angle = atan(pos.y, pos.x);
+        float sectors = 6.0 + floor(mid * 8.0);
+        float sectorAngle = 2.0 * PI / max(sectors, 1.0);
+        float folded = abs(mod(angle, sectorAngle) - sectorAngle * 0.5);
+        float petals = exp(-folded * folded * (18.0 + high * 18.0));
+
+        vec2 coord1 = pos.xy * (2.8 + high * 1.3) + vec2(pos.z * 0.8, pos.z * 0.5);
+        vec2 coord2 = pos.yz * (2.2 + energy * 0.8) - vec2(time * 0.18, time * 0.22);
+        float warpA = fbm(coord1 + vec2(time * 0.25, -time * 0.21));
+        float warpB = fbm(coord2);
+        float shell = sin((pos.z + travel) * (4.0 + bass * 3.5) + warpA * 4.0);
+        float rings = smoothstep(0.25, 0.85, shell * 0.5 + 0.5);
+
+        float targetRadius = 0.85 + warpA * 0.35 + sin((pos.z + travel) * 1.6) * 0.12;
+        float radial = exp(-pow(radius - targetRadius, 2.0) * (10.0 + bass * 9.0));
+
+        float density = petals * rings * (0.55 + warpB * 0.45);
+        density *= radial;
+        density = clamp(density, 0.0, 1.0);
+
+        float distFade = exp(-t * (0.45 + energy * 0.18));
+        float beat = 0.5 + 0.5 * sin(travel * 1.5 + bass * 3.0);
+
+        vec3 layerColor = mix(uPrimaryColor, uSecondaryColor, clamp(warpA * 0.5 + 0.5, 0.0, 1.0));
+        layerColor += vec3(0.32, 0.14, 0.45) * petals * (0.35 + high * 0.6);
+        layerColor += vec3(0.08, 0.13, 0.18) * rings * (0.3 + bass * 0.45);
+        layerColor = clamp(layerColor, 0.0, 1.0);
+
+        accum += layerColor * density * distFade * fade;
+        alpha += density * distFade * 0.06 * fade;
+        fade *= (0.96 - high * 0.01);
+    }
+
+    float coreGlow = exp(-dot(uv, uv) * (3.0 + energy * 1.4));
+    vec3 coreColor = mix(uPrimaryColor, uSecondaryColor, clamp(0.5 + 0.5 * sin(travel + high * 2.5), 0.0, 1.0));
+    accum += coreColor * coreGlow * (0.4 + high * 0.4 + energy * 0.3);
+    alpha += coreGlow * (0.18 + energy * 0.15);
+
+    // Black background - remove colored background
+    float brightness = dot(accum, vec3(0.299, 0.587, 0.114));
+    vec3 bgColor = vec3(0.0);
+    float mixFactor = smoothstep(0.1, 0.4, brightness);
+    accum = mix(bgColor, accum, mixFactor);
+    accum *= 0.6;
+
+    accum = clamp(accum, 0.0, 1.0);
+    alpha = clamp(alpha, 0.0, 1.0);
+    return vec4(accum, alpha);
+}

@@ -1,0 +1,100 @@
+// @EFFECT name="Iridescent Eye" index=53 desc="Tiled iris eye inspired by stb" author="stb"
+
+float hash11_eye(float p) {
+    const vec3 MOD3 = vec3(443.8975, 397.2973, 491.1871);
+    vec3 p3 = fract(vec3(p) * MOD3);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+float smoothHash_eye(float a) {
+    float i = floor(a);
+    float f = fract(a);
+    return mix(hash11_eye(i), hash11_eye(i + 1.0), f * f * (3.0 - 2.0 * f));
+}
+
+vec4 permute_eye(vec4 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
+vec2 fade_eye(vec2 t) { return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); }
+
+float cnoise_eye(vec2 P, float rep) {
+    P.x = mod(P.x, rep);
+    vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+    Pi.z = mod(Pi.z, rep);
+    vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+    Pi = mod(Pi, 289.0);
+    vec4 ix = Pi.xzxz;
+    vec4 iy = Pi.yyww;
+    vec4 fx = Pf.xzxz;
+    vec4 fy = Pf.yyww;
+    vec4 i = permute_eye(permute_eye(ix) + iy);
+    vec4 gx = 2.0 * fract(i * 0.0243902439) - 1.0;
+    vec4 gy = abs(gx) - 0.5;
+    vec4 tx = floor(gx + 0.5);
+    gx = gx - tx;
+    vec2 g00 = vec2(gx.x, gy.x);
+    vec2 g10 = vec2(gx.y, gy.y);
+    vec2 g01 = vec2(gx.z, gy.z);
+    vec2 g11 = vec2(gx.w, gy.w);
+    vec4 norm = 1.79284291400159 - 0.85373472095314 *
+        vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11));
+    g00 *= norm.x;
+    g01 *= norm.y;
+    g10 *= norm.z;
+    g11 *= norm.w;
+    float n00 = dot(g00, vec2(fx.x, fy.x));
+    float n10 = dot(g10, vec2(fx.y, fy.y));
+    float n01 = dot(g01, vec2(fx.z, fy.z));
+    float n11 = dot(g11, vec2(fx.w, fy.w));
+    vec2 fade_xy = fade_eye(Pf.xy);
+    vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+    float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+    return 2.3 * n_xy;
+}
+
+float renderEyePattern(vec2 p, float pupil, vec2 lpos) {
+    vec2 original = p;
+    p /= 1.0 - 0.1 * dot(p, p);
+    p -= lpos;
+
+    float adjustedPupil = pupil + 0.3 * (1.0 - length(lpos)) - 0.1;
+    vec2 pr = vec2(atan(p.x, p.y) / PI / 2.0,
+                   clamp((length(p) - 1.0) / adjustedPupil + 0.8, 0.0, 1.0));
+    pr.y = smoothstep(0.0, 1.0, pr.y);
+
+    vec2 freq = vec2(30.0, 1.5);
+    float f = pow((cnoise_eye(pr * freq, freq.x) + 1.0) / 4.0, 0.65);
+    f -= pow((cnoise_eye(pr * freq * vec2(2.0, 3.0) + 9.0, 2.0 * freq.x) + 1.0) / 2.0 - 0.5, 2.0);
+
+    float shade = dot(p, lpos);
+    f += 0.7 * shade;
+    f *= pow(smoothstep(0.0, 0.5, pr.y), 0.15);
+    f = mix(f, 0.25, smoothstep(0.5, 1.0, pr.y + 0.2));
+    f = mix(f, 1.0 - 0.1 * dot(p, p) + 0.25 * shade, smoothstep(0.7, 0.85, pr.y));
+    f = mix(1.0, f, clamp((length(p + lpos * 1.33) - 0.15) / 0.025, 0.0, 1.0));
+    f = mix(f, 0.0, clamp((length(vec2(original.x, abs(original.y)) + vec2(0.0, 1.2)) - 2.0) / 0.04, 0.0, 1.0));
+
+    return f;
+}
+
+vec4 renderIridescentEye(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 fragCoord = (st * 0.5 + 0.5) * uResolution;
+    vec2 p = 7.0 * (fragCoord - uResolution * 0.5) / uResolution.y;
+
+    float pupil = 0.7 + 0.2 * smoothHash_eye(1.5 * time);
+    p /= (dot(p, p) / 12.0);
+    p.x += time * 0.5;
+    p = mod(p + vec2(floor(p.y / 2.0) * 2.0, 0.0), vec2(4.0, 2.0)) - vec2(2.0, 1.0);
+
+    float lookSwing = sin(time * 0.4 + high * 1.6) * (0.25 + high * 0.15);
+    float lookTilt = cos(time * 0.3 + mid * 1.2) * (0.2 + mid * 0.2);
+    float focus = clamp(0.75 + energy * 0.3 + bass * 0.2, 0.6, 1.2);
+    vec2 lightPos = vec2(1.4 * lookSwing, 0.7 * lookTilt) * focus;
+    float eyeValue = renderEyePattern(p, pupil, lightPos);
+
+    vec3 irisColor = vec3(1.0, 1.3, 1.7) * eyeValue;
+    vec3 palette = mix(uPrimaryColor, uSecondaryColor, clamp(uColorBlend + mid * 0.1, 0.0, 1.0));
+    vec3 color = mix(irisColor, irisColor * palette, 0.4 + high * 0.1);
+    color *= 0.8 + energy * 0.4;
+
+    return vec4(clamp(color, 0.0, 1.0), 1.0);
+}

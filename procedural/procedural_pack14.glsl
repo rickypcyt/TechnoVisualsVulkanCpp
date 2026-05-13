@@ -1,0 +1,113 @@
+// @EFFECT name="Phi Fields" index=36 desc="Stabilized lissajous spiral field with tonemapping" author="System"
+// Eye of Phi Redux: stabilized lissajous/spiral field with controlled tonemapping
+const float kPhiScale = 7.5;
+const float kPhiPI = 3.14159265359;
+const float kPhiTAU = kPhiPI * 2.0;
+
+vec2 phiRotate(float a) {
+    return vec2(cos(a), sin(a));
+}
+
+float phiLine(vec2 p, float thickness) {
+    return smoothstep(0.0, thickness, thickness - length(p));
+}
+
+vec3 phiGradient(vec3 base, float func, float phase, float width, float strength, bool reciprocal) {
+    float n = max(abs(func), 1e-3);
+    float g = min(n, 1.0 / n);
+    float s = abs(sin(func * kPhiPI - phase));
+    if (reciprocal) {
+        float alt = abs(sin(kPhiPI / n + phase));
+        s = min(s, alt);
+    }
+    float mask = 1.0 - pow(clamp(s, 0.0, 1.0), width);
+    return base * mask * pow(g, strength);
+}
+
+float phiSpiralMask(vec2 uv, float exponent, float decimal, float width, float hardness, float rotation) {
+    float radius = length(uv);
+    float sr = pow(max(radius, 1e-3), exponent);
+    float angle = round(sr) * decimal * kPhiTAU + rotation;
+    vec2 target = phiRotate(angle) * radius;
+    float line = phiLine(uv - target, width);
+    float smoothVal = abs(fract(sr + 0.5) - 0.5);
+    float falloff = pow(1.0 - clamp(smoothVal * 1.6, 0.0, 1.0), hardness);
+    return line * falloff;
+}
+
+vec3 phiPalette(float l, float hueShift, float mixFactor) {
+    vec3 baseA = mix(vec3(1.0, 0.75, 0.25), uPrimaryColor, 0.5);
+    vec3 baseB = mix(vec3(0.35, 0.55, 0.95), uSecondaryColor, 0.5);
+    float wave = sin(l + hueShift) * 0.5 + 0.5;
+    return mix(baseA, baseB, mixFactor * wave + (1.0 - mixFactor) * 0.5);
+}
+
+vec3 phiToneMap(vec3 c) {
+    return c / (1.0 + c);
+}
+
+vec4 renderPhiFields(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 aspect = vec2(uResolution.x / max(uResolution.y, 1.0), 1.0);
+    vec2 pixel = (st - 0.5) * aspect;
+
+    float zoom = mix(0.8, 1.3, clamp(bass * 0.6 + energy * 0.4, 0.0, 1.0));
+    float exponent = mix(0.85, 1.25, clamp(mid * 0.9 + tempo * 0.2, 0.0, 1.0));
+    float spiralExponent = mix(-1.15, 1.15, clamp(high * 1.4 - 0.2, -1.15, 1.15));
+    float hueShift = uTime * 0.4 + energy * 0.6;
+
+    vec3 accum = vec3(0.0);
+    const int AA = 2;
+    for (int j = 0; j < AA; ++j) {
+        for (int k = 0; k < AA; ++k) {
+            vec2 jitter = (vec2(float(j), float(k)) + vec2(0.5)) / float(AA);
+            vec2 uv = (pixel + jitter / uResolution.y) * kPhiScale * zoom;
+
+            vec2 warped = exp(log(max(abs(uv), vec2(1e-4))) * exponent) * sign(uv);
+            uv = mix(uv, warped, clamp(mid * 0.7 + high * 0.2, 0.0, 1.0));
+
+            float px = length(fwidth(uv)) + 1e-4;
+            float x = uv.x;
+            float y = uv.y;
+            float len = max(length(uv), 1e-3);
+
+            float metallicCircle = (x * x + y * y - 1.0) / max(y, 1e-3);
+            vec3 palette = phiPalette(len, hueShift, clamp(0.35 + energy * 0.3, 0.0, 0.7));
+
+            float width = mix(0.08, 0.14, clamp(energy * 0.6 + bass * 0.3, 0.0, 1.0));
+            float depth = mix(0.3, 0.55, clamp(energy, 0.0, 1.0));
+
+            vec3 color = vec3(0.0);
+            color += phiGradient(palette, metallicCircle, -hueShift, width, depth, false);
+            color += phiGradient(palette, abs(y / max(x, 1e-3)) * sign(y), -hueShift, width, depth, false);
+            color += phiGradient(palette, (x * x) / max(y * y, 1e-3) * sign(y), -hueShift, width, depth, false);
+            color += phiGradient(palette, (x * x) + (y * y), hueShift, width, depth, true);
+
+            float spiralWidth = px * 2.0 * mix(0.9, 1.3, clamp(energy, 0.0, 1.0));
+            float timeSpiral = (uTime * 0.3 + energy * 0.4) / kPhiTAU;
+            color += palette * phiSpiralMask(uv, spiralExponent, timeSpiral, spiralWidth, 2.0, 0.0);
+            color += palette * phiSpiralMask(uv, spiralExponent, timeSpiral, spiralWidth, 2.0, kPhiPI);
+            color += palette * phiSpiralMask(uv, -spiralExponent, timeSpiral, spiralWidth, 2.0, 0.0);
+            color += palette * phiSpiralMask(uv, -spiralExponent, timeSpiral, spiralWidth, 2.0, kPhiPI);
+
+            float glow = pow(max(1.0 - len, 0.0), mix(2.0, 3.5, clamp(energy, 0.0, 1.0)));
+            color += glow * mix(vec3(0.25, 0.3, 0.45), palette, 0.6);
+
+            float gridAmt = clamp(bass * 0.4 + energy * 0.25 - 0.15, 0.0, 1.0);
+            if (gridAmt > 0.01) {
+                vec2 grid = abs(fract(uv + 0.5) - 0.5) / px;
+                float gridMask = 1.0 - clamp(min(grid.x, grid.y), 0.0, 1.0);
+                color.gb += gridAmt * 0.15 * gridMask;
+            }
+
+            accum += max(color, 0.0);
+        }
+    }
+
+    float sampleWeight = 1.0 / float(AA * AA);
+    vec3 finalColor = accum * sampleWeight;
+    finalColor *= vec3(1.0 + bass * 0.25, 1.0 + mid * 0.25, 1.0 + high * 0.3);
+    finalColor = phiToneMap(finalColor);
+
+    float alpha = clamp(0.55 + length(finalColor) * 0.35 + energy * 0.2, 0.0, 1.0);
+    return vec4(finalColor, alpha);
+}

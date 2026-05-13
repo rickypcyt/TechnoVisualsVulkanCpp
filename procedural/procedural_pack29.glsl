@@ -1,0 +1,196 @@
+// @EFFECT name="Voronoi Gate Stream" index=54 desc="Layered gates and flowing light stream" author="Shadertoy"
+
+vec2 rotate2D_gate(vec2 p, float a) {
+    float c = cos(a);
+    float s = sin(a);
+    return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+}
+
+float box_gate(vec2 p, vec2 b, float r) {
+    return length(max(abs(p) - b, 0.0)) - r;
+}
+
+vec3 intersectPlane(vec3 ro, vec3 rd, vec3 c, vec3 u, vec3 v) {
+    vec3 q = ro - c;
+    vec3 cu = cross(u, v);
+    float denom = dot(cross(v, u), rd);
+    return vec3(
+        dot(cu, q),
+        dot(cross(q, u), rd),
+        dot(cross(v, q), rd)
+    ) / denom;
+}
+
+float rand11_gate(float p) {
+    return fract(sin(p * 591.32) * 43758.5357);
+}
+
+float rand12_gate(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5357);
+}
+
+vec2 rand21_gate(float p) {
+    return fract(vec2(sin(p * 591.32), cos(p * 391.32)));
+}
+
+vec2 rand22_gate(vec2 p) {
+    return fract(vec2(
+        sin(p.x * 591.32 + p.y * 154.077),
+        cos(p.x * 391.32 + p.y * 49.077)
+    ));
+}
+
+float noise11_gate(float p) {
+    float fl = floor(p);
+    return mix(rand11_gate(fl), rand11_gate(fl + 1.0), fract(p));
+}
+
+vec3 noise31_gate(float p) {
+    return vec3(
+        noise11_gate(p),
+        noise11_gate(p + 18.952),
+        noise11_gate(p - 11.372)
+    ) * 2.0 - 1.0;
+}
+
+vec3 voronoi_gate(vec2 x) {
+    vec2 n = floor(x);
+    vec2 f = fract(x);
+    vec2 mg = vec2(0.0);
+    float md = 8.0;
+    float md2 = 8.0;
+    vec2 mr = vec2(0.0);
+    for (int j = -1; j <= 1; ++j) {
+        for (int i = -1; i <= 1; ++i) {
+            vec2 g = vec2(float(i), float(j));
+            vec2 o = rand22_gate(n + g);
+            vec2 r = g + o - f;
+            float d = max(abs(r.x), abs(r.y));
+            if (d < md) {
+                md2 = md;
+                md = d;
+                mr = r;
+                mg = g;
+            } else if (d < md2) {
+                md2 = d;
+            }
+        }
+    }
+    return vec3(n + mg, md2 - md);
+}
+
+#define A2V_GATE(a) vec2(sin((a) * 6.28318531 / 100.0), cos((a) * 6.28318531 / 100.0))
+
+float circles_gate(vec2 p, float timeFactor) {
+    float l = length(p);
+    vec2 pp = rotate2D_gate(p, timeFactor * 3.0);
+    float c = max(dot(pp, normalize(vec2(-0.2, 0.5))), -dot(pp, normalize(vec2(0.2, 0.5))));
+    c = min(c, max(dot(pp, normalize(vec2(0.5, -0.5))), -dot(pp, normalize(vec2(0.2, -0.5)))));
+    c = min(c, max(dot(pp, normalize(vec2(0.3, 0.5))), -dot(pp, normalize(vec2(0.2, 0.5)))));
+
+    float v = abs(l - 0.5) - 0.03;
+    v = max(v, -c);
+    v = min(v, abs(l - 0.54) - 0.02);
+    v = min(v, abs(l - 0.64) - 0.05);
+
+    pp = rotate2D_gate(p, timeFactor * -1.333);
+    c = max(dot(pp, A2V_GATE(-5.0)), -dot(pp, A2V_GATE(5.0)));
+    c = min(c, max(dot(pp, A2V_GATE(20.0)), -dot(pp, A2V_GATE(30.0))));
+    c = min(c, max(dot(pp, A2V_GATE(45.0)), -dot(pp, A2V_GATE(55.0))));
+    c = min(c, max(dot(pp, A2V_GATE(70.0)), -dot(pp, A2V_GATE(80.0))));
+
+    float w = abs(l - 0.83) - 0.09;
+    v = min(v, max(w, c));
+    return v;
+}
+
+float shade_gate(float d) {
+    float v = 1.0 - smoothstep(0.0, 0.12, d);
+    float g = exp(d * -20.0);
+    return v + g * 0.5;
+}
+
+vec4 renderVoronoiGateStream(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 fragCoord = (st * 0.5 + 0.5) * uResolution;
+    vec2 uv = fragCoord / uResolution;
+    uv = uv * 2.0 - 1.0;
+    uv.x *= uResolution.x / uResolution.y;
+
+    float t = time;
+    vec3 ro = 0.7 * vec3(cos(0.2), 0.0, sin(0.2));
+    ro.y = cos(0.6) * 0.3 + 0.65;
+    vec3 ta = vec3(0.0, 0.2, 0.0);
+
+    float shake = 0.0;
+    float stime = 0.0;
+    vec3 ww = normalize(ta - ro + noise31_gate(stime) * shake * 0.01);
+    vec3 uu = normalize(cross(ww, normalize(vec3(0.0, 1.0, 0.2))));
+    vec3 vv = normalize(cross(uu, ww));
+    vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.0 * ww);
+
+    ro += noise31_gate(-stime) * shake * 0.015;
+    ro.x += t * -10.0;
+
+    float intensity = 0.0;
+    vec3 its;
+    float v;
+
+    // Voronoi floors
+    for (int i = 0; i < 4; ++i) {
+        float layer = float(i);
+        its = intersectPlane(ro, rd, vec3(0.0, -5.0 - layer * 5.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+        if (its.x > 0.0) {
+            vec3 vo = voronoi_gate((its.yz) * 0.05 + 8.0 * rand21_gate(float(i)));
+            v = exp(-100.0 * (vo.z - 0.02));
+            float fx = 0.0;
+            if (i == 3) {
+                float fxi = cos(vo.x * 0.2 + t * 1.5);
+                fx = clamp(smoothstep(0.9, 1.0, fxi), 0.0, 0.9) * rand12_gate(vo.xy);
+                fx *= exp(-3.0 * vo.z) * 2.0;
+            }
+            intensity += v * 0.1 + fx;
+            intensity *= 64.0 / its.x;
+        }
+    }
+
+    // Gates
+    float gatex = floor(ro.x / 8.0 + 0.5) * 8.0 + 4.0;
+    float go = -32.0;
+    for (int i = 0; i < 4; ++i) {
+        its = intersectPlane(ro, rd, vec3(gatex + go, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
+        if (dot(its.yz, its.yz) < 2.0 && its.x > 0.0) {
+            v = circles_gate(its.yz, t);
+            intensity += shade_gate(v) * 0.25;
+        }
+        go += 8.0;
+    }
+
+    // Stream particles
+    for (int j = 0; j < 20; ++j) {
+        float id = float(j);
+        vec3 bp = vec3(0.0, (rand11_gate(id) * 2.0 - 1.0) * 0.25, 0.0);
+        vec3 itp = intersectPlane(ro, rd, bp, vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+        if (itp.x > 0.0) {
+            vec2 pp = itp.yz;
+            float spd = (1.0 + rand11_gate(id) * 3.0) * -2.5;
+            pp.y += t * spd;
+            pp += (rand21_gate(id) * 2.0 - 1.0) * vec2(0.3, 1.0);
+            float rep = rand11_gate(id) + 1.5;
+            pp.y = mod(pp.y, rep * 2.0) - rep;
+            float d = box_gate(pp, vec2(0.02, 0.3), 0.1);
+            float vGlow = 1.0 - smoothstep(0.0, 0.03, abs(d) - 0.001);
+            float gGlow = min(exp(d * -20.0), 2.0);
+            intensity += (vGlow + gGlow * 0.7) * 0.5;
+        }
+    }
+
+    intensity = max(intensity, 0.0);
+    float rayMask = smoothstep(0.3, 0.75, intensity);
+    vec3 palette = mix(uPrimaryColor, uSecondaryColor, clamp(uColorBlend + bass * 0.2, 0.0, 1.0));
+    vec3 rayColor = palette * pow(vec3(clamp(intensity, 0.0, 1.0)), vec3(1.5));
+    vec3 color = mix(vec3(0.0), rayColor, rayMask);
+    color *= 0.7 + energy * 0.5;
+    color = clamp(color, 0.0, 1.0);
+
+    return vec4(color, 1.0);
+}
