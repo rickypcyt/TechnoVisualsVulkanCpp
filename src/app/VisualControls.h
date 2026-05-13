@@ -154,4 +154,9 @@ struct VisualControls {
     float posterizeLevels   = 4.0f;
     float zoomPulseAmount   = 0.5f;
     float rgbShiftAmount    = 0.02f;
+    // FXAA (Fast Approximate Anti-Aliasing)
+    bool  enableFXAA             = true;
+    float fxaaQualitySubpix      = 0.75f;
+    float fxaaQualityEdgeThreshold = 0.125f;
+    float fxaaQualityEdgeThresholdMin = 0.0625f;
 };

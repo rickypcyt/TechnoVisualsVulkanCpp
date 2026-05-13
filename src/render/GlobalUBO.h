@@ -202,6 +202,14 @@ struct NLEExportPassUBO {
     alignas(4) float nleSaturation;
 };
 
+// --- FXAAPassUBO: Fast Approximate Anti-Aliasing ---
+struct FXAAPassUBO {
+    alignas(4) int enableFXAA;
+    alignas(4) float fxaaQualitySubpix;
+    alignas(4) float fxaaQualityEdgeThreshold;
+    alignas(4) float fxaaQualityEdgeThresholdMin;
+};
+
 // ============================================================================
 // PACKED GlobalParamsUBO: Single unified UBO for all pass parameters
 // This consolidates all domain-specific UBOs into a single descriptor binding
@@ -367,6 +375,12 @@ struct GlobalParamsUBO {
     alignas(4) float nleBrightness;
     alignas(4) float nleContrast;
     alignas(4) float nleSaturation;
+
+    // FXAAPassUBO
+    alignas(4) int enableFXAA;
+    alignas(4) float fxaaQualitySubpix;
+    alignas(4) float fxaaQualityEdgeThreshold;
+    alignas(4) float fxaaQualityEdgeThresholdMin;
 };
 
 // ============================================================================
@@ -530,6 +544,12 @@ struct GlobalUBO {
     alignas(4) float nleBrightness;
     alignas(4) float nleContrast;
     alignas(4) float nleSaturation;
+
+    // --- FXAA (Fast Approximate Anti-Aliasing) ---
+    alignas(4) int   enableFXAA;
+    alignas(4) float fxaaQualitySubpix;
+    alignas(4) float fxaaQualityEdgeThreshold;
+    alignas(4) float fxaaQualityEdgeThresholdMin;
 
     // --- Efectos extra (VJAY EXTRA) ---
     alignas(4) float pixelateAmount;

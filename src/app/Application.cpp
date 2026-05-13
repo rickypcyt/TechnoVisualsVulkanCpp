@@ -967,6 +967,12 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.zoomPulseAmount = visualControls.zoomPulseAmount;
     ubo.rgbShiftAmount = visualControls.rgbShiftAmount;
     
+    // FXAA
+    ubo.enableFXAA = visualControls.enableFXAA ? 1 : 0;
+    ubo.fxaaQualitySubpix = visualControls.fxaaQualitySubpix;
+    ubo.fxaaQualityEdgeThreshold = visualControls.fxaaQualityEdgeThreshold;
+    ubo.fxaaQualityEdgeThresholdMin = visualControls.fxaaQualityEdgeThresholdMin;
+    
     uniformBufferManager.update(frameIndex, ubo);
 }
 

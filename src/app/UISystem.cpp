@@ -658,6 +658,10 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     if (ImGui::Button("Reset VJAY extra")) {
         c.pixelateAmount = 0; c.strobeSpeed = 0; c.thresholdLevel = 0.5f; c.slowZoomAmount = 0;
         c.enablePixelate = c.enableStrobe = c.enableThreshold = c.enableSlowZoom = false;
+        c.enableFXAA = true;
+        c.fxaaQualitySubpix = 0.75f;
+        c.fxaaQualityEdgeThreshold = 0.125f;
+        c.fxaaQualityEdgeThresholdMin = 0.0625f;
         changed = true; controlsDirty = true;
     }
 
@@ -680,6 +684,16 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
         changed |= ImGui::ColorEdit3("Edge color", glm::value_ptr(c.edgeColor));
     )
 #undef EXTRA_SECTION
+
+    // FXAA - Fast Approximate Anti-Aliasing for smooth HD edges
+    ImGui::Spacing(); ImGui::Text("6. FXAA (Anti-Aliasing)"); ImGui::SameLine();
+    changed |= ImGui::Checkbox("On##FXAA", &c.enableFXAA);
+    ImGui::Separator();
+    ImGui::BeginDisabled(!c.enableFXAA);
+    changed |= ImGui::SliderFloat("Quality Subpix",      &c.fxaaQualitySubpix,       0.0f, 1.0f, "%.3f");
+    changed |= ImGui::SliderFloat("Edge Threshold",      &c.fxaaQualityEdgeThreshold, 0.0f, 0.5f, "%.4f");
+    changed |= ImGui::SliderFloat("Edge Threshold Min",  &c.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f, "%.4f");
+    ImGui::EndDisabled();
 
     ImGui::End();
     if (changed) controlsDirty = true;

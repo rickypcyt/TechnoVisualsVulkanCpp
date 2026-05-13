@@ -168,6 +168,12 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+
+    // FXAAPassUBO
+    int enableFXAA;
+    float fxaaQualitySubpix;
+    float fxaaQualityEdgeThreshold;
+    float fxaaQualityEdgeThresholdMin;
 } ubo;
 
 layout(set = 1, binding = 0) uniform sampler2D inputTex;
@@ -183,6 +189,60 @@ float hash21(vec2 p) {
 
 float luminance(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+// FXAA 3.11 implementation - Fast Approximate Anti-Aliasing
+// Optimized for quality and performance
+vec3 fxaa(sampler2D tex, vec2 uv) {
+    vec2 texel = 1.0 / max(ubo.resolution, vec2(1.0));
+    
+    vec3 rgbNW = texture(tex, uv + vec2(-1.0, -1.0) * texel).rgb;
+    vec3 rgbNE = texture(tex, uv + vec2( 1.0, -1.0) * texel).rgb;
+    vec3 rgbSW = texture(tex, uv + vec2(-1.0,  1.0) * texel).rgb;
+    vec3 rgbSE = texture(tex, uv + vec2( 1.0,  1.0) * texel).rgb;
+    vec3 rgbM  = texture(tex, uv).rgb;
+    
+    float lumaNW = luminance(rgbNW);
+    float lumaNE = luminance(rgbNE);
+    float lumaSW = luminance(rgbSW);
+    float lumaSE = luminance(rgbSE);
+    float lumaM  = luminance(rgbM);
+    
+    float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
+    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
+    
+    float lumaRange = lumaMax - lumaMin;
+    
+    if (lumaRange < max(ubo.fxaaQualityEdgeThresholdMin, lumaMax * ubo.fxaaQualityEdgeThreshold)) {
+        return rgbM;
+    }
+    
+    vec2 dir;
+    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+    dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+    
+    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.25 * ubo.fxaaQualitySubpix, 0.125);
+    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+    
+    dir = clamp(dir * rcpDirMin, vec2(-8.0), vec2(8.0));
+    
+    vec2 uv1 = uv + dir * texel * (1.0/3.0 - 0.5);
+    vec2 uv2 = uv + dir * texel * (2.0/3.0 - 0.5);
+    
+    vec3 rgbA = 0.5 * (texture(tex, uv1).rgb + texture(tex, uv2).rgb);
+    
+    vec2 uv3 = uv + dir * texel * -0.5;
+    vec2 uv4 = uv + dir * texel * 0.5;
+    
+    vec3 rgbB = rgbA * 0.5 + 0.25 * (texture(tex, uv3).rgb + texture(tex, uv4).rgb);
+    
+    float lumaB = luminance(rgbB);
+    
+    if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
+        return rgbA;
+    } else {
+        return rgbB;
+    }
 }
 
 // Simple 3x3 blur for bloom
@@ -332,6 +392,11 @@ void main() {
     // Color balance (RGB Mix) - applied at very end, on top of all effects
     if (ubo.enablePostColorBalance == 1) {
         color *= ubo.colorBalance;
+    }
+
+    // FXAA - Fast Approximate Anti-Aliasing for smooth HD edges
+    if (ubo.enableFXAA == 1) {
+        color = fxaa(inputTex, uv);
     }
 
     color = clamp(color, 0.0, 1.5);
