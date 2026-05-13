@@ -28,6 +28,12 @@ struct UIDiagnostics {
     bool     videoReady          = false;
     uint32_t videoWidth          = 0;
     uint32_t videoHeight         = 0;
+    float    animationTime       = 0.0f;
+    float    animationDelta      = 0.0f;
+    float    animationModulo     = 0.0f;
+    float    animationRelativeSpeed = 1.0f;
+    float    animationSecondsPerUnit = 1.0f;
+    float    animationElapsedSeconds = 0.0f;
 };
 
 // ---------------------------------------------------------------------------

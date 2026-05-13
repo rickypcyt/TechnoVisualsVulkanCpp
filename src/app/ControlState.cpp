@@ -97,6 +97,7 @@ void ControlState::load(
     VisualControls loaded = c;
 
     loaded.animationSpeed          = readFloat(kv, "animationSpeed",          loaded.animationSpeed);
+    loaded.animationTargetSeconds  = readFloat(kv, "animationTargetSeconds",  loaded.animationTargetSeconds);
     loaded.tempo                   = readFloat(kv, "tempo",                   loaded.tempo);
     loaded.energy                  = readFloat(kv, "energy",                  loaded.energy);
     loaded.bass                    = readFloat(kv, "bass",                    loaded.bass);
@@ -254,6 +255,7 @@ void ControlState::save(
     auto wv4= [&](const char* k, const glm::vec4& v){ file << k<<"="<<v.r<<" "<<v.g<<" "<<v.b<<" "<<v.a<<"\n"; };
 
     wf("animationSpeed",          c.animationSpeed);
+    wf("animationTargetSeconds",  c.animationTargetSeconds);
     wf("tempo",                   c.tempo);
     wf("energy",                  c.energy);
     wf("bass",                    c.bass);

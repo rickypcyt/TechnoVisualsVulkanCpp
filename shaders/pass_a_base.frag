@@ -234,7 +234,6 @@ vec4 fsrBicubic(vec2 st) {
     vec3 col01 = texture(videoTex, clamp(samplePos0 + vec2(1.0, 0.0) * texel, 0.0, 1.0)).rgb;
     vec3 col02 = texture(videoTex, clamp(samplePos1 + vec2(0.0, 0.0) * texel, 0.0, 1.0)).rgb;
     vec3 col03 = texture(videoTex, clamp(samplePos1 + vec2(1.0, 0.0) * texel, 0.0, 1.0)).rgb;
-    
     vec3 col10 = texture(videoTex, clamp(samplePos0 + vec2(0.0, 1.0) * texel, 0.0, 1.0)).rgb;
     vec3 col11 = texture(videoTex, clamp(samplePos0 + vec2(1.0, 1.0) * texel, 0.0, 1.0)).rgb;
     vec3 col12 = texture(videoTex, clamp(samplePos1 + vec2(0.0, 1.0) * texel, 0.0, 1.0)).rgb;
@@ -281,7 +280,28 @@ vec4 renderMode0(vec2 st) {
 }
 
 vec4 renderMode1(vec2 st) {
-    return vec4(st, 0.5 + 0.5 * sin(ubo.time), 1.0);
+    float baseTime = ubo.time;
+    float fastPhase = baseTime * 6.2831853;          // wrap roughly every second (since CPU already wraps time)
+    float microPhase = fract(baseTime * 0.125) * 6.2831853;
+    float uvPhase = dot(st, vec2(11.37, 17.91));
+
+    vec2 centered = st - 0.5;
+    float radius = length(centered);
+    float angle = atan(centered.y, centered.x) + fastPhase * 0.08;
+
+    // Flowing UV space
+    vec2 flow = centered;
+    flow += 0.12 * vec2(sin(fastPhase + st.y * 18.0), cos(fastPhase + st.x * 18.0));
+    flow += 0.05 * vec2(cos(microPhase + uvPhase * 6.0), sin(microPhase - uvPhase * 5.0));
+
+    float spiral = 0.5 + 0.5 * sin(angle * 10.0 + radius * 30.0 + fastPhase * 0.4);
+    float rings = 0.5 + 0.5 * cos((flow.x + flow.y) * 20.0 - fastPhase * 0.6);
+    float twirl = 0.5 + 0.5 * sin(radius * 55.0 - microPhase * 5.0 + uvPhase * 10.0);
+
+    vec3 color = vec3(spiral, rings, twirl);
+    color *= 1.0 - smoothstep(0.48, 0.75, radius);
+
+    return vec4(color, 1.0);
 }
 
 vec4 dispatchMode(int m, vec2 st) {
@@ -291,7 +311,15 @@ vec4 dispatchMode(int m, vec2 st) {
 }
 
 void main() {
-    // Simple: just sample the video texture directly
-    vec3 videoColor = texture(videoTex, uv).rgb;
-    outColor = vec4(videoColor, 1.0);
+    // Sample video texture
+    vec4 videoColor = vec4(texture(videoTex, uv).rgb, 1.0);
+
+    // Get procedural rendering
+    vec4 proceduralColor = dispatchMode(ubo.mode, uv);
+
+    // Mix video and procedural based on videoMix parameter
+    // videoMix = 0.0: only procedural, videoMix = 1.0: only video
+    vec4 mixedColor = mix(proceduralColor, videoColor, ubo.videoMix * ubo.videoAvailable);
+
+    outColor = mixedColor;
 }

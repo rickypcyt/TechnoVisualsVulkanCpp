@@ -323,6 +323,6 @@ void main() {
     // Sample from input texture with transformed UVs
     uvOut = clamp(uvOut, 0.0, 1.0);
     vec3 color = texture(inputTex, uvOut).rgb;
-    
+
     outColor = vec4(color, 1.0);
 }

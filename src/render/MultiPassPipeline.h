@@ -75,6 +75,9 @@ public:
         VkSampler videoSamplerPrev
     );
 
+    // Update intermediate texture descriptors for passes B-F (called each frame)
+    void updateIntermediateDescriptors(uint32_t frameIndex);
+
     // Recreate on resize
     void recreate(VkExtent2D extent);
 

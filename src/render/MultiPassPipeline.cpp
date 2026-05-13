@@ -207,7 +207,6 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
     std::cout << "[MultiPass] Intermediate framebuffers created" << std::endl;
     return true;
 }
-
 bool MultiPassPipeline::createFullscreenQuad() {
     // Fullscreen quad vertices (position, texcoord)
     struct Vertex {
@@ -585,6 +584,10 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
                                 VkRenderPass swapchainRenderPass, std::vector<VkFramebuffer>& swapchainFramebuffers,
                                 uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
                                 VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler) {
+    // Update intermediate texture descriptors before each frame
+    // This ensures passes B-F read from the correct intermediate textures
+    updateIntermediateDescriptors(frameIndex);
+
     // Execute all 7 passes in sequence to offscreen buffers
     int currentBuffer = 0;
 
@@ -981,4 +984,74 @@ VkShaderModule MultiPassPipeline::createShaderModule(const std::vector<char>& co
         return VK_NULL_HANDLE;
     }
     return shaderModule;
+}
+
+void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
+    // Update intermediate texture descriptors for passes B-F (passes 1-5)
+    // Pass B (pass 1) reads from intermediate[0] (output of pass A)
+    // Pass C (pass 2) reads from intermediate[1] (output of pass B)
+    // And so on with ping-pong
+
+    for (int pass = 1; pass < NUM_PASSES - 1; ++pass) {  // Passes B-F (1-5)
+        // Calculate which intermediate buffer this pass should read from
+        // Pass 1 reads from buffer 0 (output of pass 0)
+        // Pass 2 reads from buffer 1 (output of pass 1)
+        // Pass 3 reads from buffer 0 (output of pass 2)
+        // etc.
+        int prevBuffer = (pass % 2 == 1) ? 0 : 1;
+
+        VkDescriptorImageInfo inputTexInfo{};
+        inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        inputTexInfo.imageView = intermediate[prevBuffer].imageView;
+        inputTexInfo.sampler = videoSampler;
+
+        VkWriteDescriptorSet inputTexWrite{};
+        inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        inputTexWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
+        inputTexWrite.dstBinding = 0;  // Set 1, binding 0
+        inputTexWrite.dstArrayElement = 0;
+        inputTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        inputTexWrite.descriptorCount = 1;
+        inputTexWrite.pImageInfo = &inputTexInfo;
+
+        vkUpdateDescriptorSets(device, 1, &inputTexWrite, 0, nullptr);
+
+        // Pass D (pass 3) also needs prevFrameTex at binding 1
+        if (pass == 3) {
+            VkDescriptorImageInfo prevFrameTexInfo{};
+            prevFrameTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            prevFrameTexInfo.imageView = intermediate[prevBuffer].imageView;
+            prevFrameTexInfo.sampler = videoSampler;
+
+            VkWriteDescriptorSet prevFrameTexWrite{};
+            prevFrameTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            prevFrameTexWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
+            prevFrameTexWrite.dstBinding = 1;  // Set 1, binding 1
+            prevFrameTexWrite.dstArrayElement = 0;
+            prevFrameTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            prevFrameTexWrite.descriptorCount = 1;
+            prevFrameTexWrite.pImageInfo = &prevFrameTexInfo;
+
+            vkUpdateDescriptorSets(device, 1, &prevFrameTexWrite, 0, nullptr);
+        }
+    }
+
+    // Pass G (pass 6) needs inputTex at binding 0 and proceduralTex at binding 1
+    // Pass G reads from buffer 1 (output of pass F)
+    int passGBuffer = 1;
+    VkDescriptorImageInfo inputTexInfoG{};
+    inputTexInfoG.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    inputTexInfoG.imageView = intermediate[passGBuffer].imageView;
+    inputTexInfoG.sampler = videoSampler;
+
+    VkWriteDescriptorSet inputTexWriteG{};
+    inputTexWriteG.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    inputTexWriteG.dstSet = passes[6].descriptorSets[1][frameIndex];
+    inputTexWriteG.dstBinding = 0;  // Set 1, binding 0
+    inputTexWriteG.dstArrayElement = 0;
+    inputTexWriteG.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    inputTexWriteG.descriptorCount = 1;
+    inputTexWriteG.pImageInfo = &inputTexInfoG;
+
+    vkUpdateDescriptorSets(device, 1, &inputTexWriteG, 0, nullptr);
 }

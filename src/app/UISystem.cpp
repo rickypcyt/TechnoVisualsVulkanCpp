@@ -191,7 +191,14 @@ void UISystem::drawProceduralControls(
     if (!ImGui::Begin("Procedural Controls")) { ImGui::End(); return; }
 
     ImGui::Text("Animation");
-    changed |= ImGui::SliderFloat("Speed", &controls.animationSpeed, 0.05f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Speed", &controls.animationSpeed, 0.1f, 8.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Target change (s)", &controls.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
+    ImGui::SameLine();
+    if (ImGui::Button("Snap 1s")) {
+        controls.animationTargetSeconds = 1.0f;
+        controls.animationSpeed = 1.0f;
+        changed = true;
+    }
 
     ImGui::Separator();
     ImGui::Text("Layers");
@@ -849,6 +856,29 @@ void UISystem::drawDiagnostics(
                 memset(renameBuf, 0, sizeof(renameBuf));
                 showRename = false;
             }
+        }
+    }
+
+    ImGui::Separator();
+    if (ImGui::CollapsingHeader("Animation Debug", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("CPU elapsed: %.3f s", diag.animationElapsedSeconds);
+        ImGui::Text("UBO time: %.3f", diag.animationTime);
+        ImGui::Text("UBO delta: %.6f", diag.animationDelta);
+        ImGui::Text("Speed multiplier: %.2fx", diag.animationRelativeSpeed);
+        ImGui::Text("Seconds per unit: %.3f", diag.animationSecondsPerUnit);
+        bool targetChanged = ImGui::SliderFloat("Target seconds", &controls.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
+        if (targetChanged && callbacks.onControlsChanged) callbacks.onControlsChanged();
+        float suggestedSpeed = 1.0f / std::max(0.1f, controls.animationTargetSeconds);
+        ImGui::Text("Suggested speed: %.2fx", suggestedSpeed);
+        if (ImGui::Button("Apply suggested speed")) {
+            controls.animationSpeed = suggestedSpeed;
+            if (callbacks.onControlsChanged) callbacks.onControlsChanged();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset time phase")) {
+            controls.animationSpeed = 1.0f;
+            controls.animationTargetSeconds = 1.0f;
+            if (callbacks.onControlsChanged) callbacks.onControlsChanged();
         }
     }
 

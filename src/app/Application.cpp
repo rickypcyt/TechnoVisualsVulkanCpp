@@ -1,6 +1,8 @@
 #include "Application.h"
 #include <stdexcept>
 #include <iostream>
+#include <cmath>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -391,7 +393,7 @@ void Application::initMultiPassPipeline() {
         videoTexture.getImageView(),
         videoTexture.getImageView(), // Use same view for prev
         uniformBufferManager.getBuffers(),
-        sizeof(GlobalParamsUBO) // Use fixed size
+        UniformBufferManager::getBufferSize() // Use consistent size from UniformBufferManager
     )) {
         std::cerr << "[Application] Failed to initialize MultiPassPipeline" << std::endl;
         return;
@@ -450,7 +452,9 @@ void Application::mainLoop() {
                     swapchainFramebuffers.clear();
 
                     if (videoSubsystemInitialized) {
+                        vkDeviceWaitIdle(vulkanContext.getDevice());
                         videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                        videoTexture.cleanup(resourceSystem);  // Destroy staging ring
                     }
 
                     // 3. Recreate swapchain
@@ -463,6 +467,15 @@ void Application::mainLoop() {
                                                      vulkanContext.getGraphicsQueue(),
                                                      static_cast<uint32_t>(videoPlayer.width()),
                                                      static_cast<uint32_t>(videoPlayer.height()));
+
+                        // Update multipass descriptor sets with new video texture handles
+                        multiPassPipeline.updateDescriptorSets(
+                            uniformBufferManager.getBuffers(),
+                            videoTexture.getImageView(),
+                            videoTexture.getPrevImageView(),
+                            videoTexture.getSampler(),
+                            videoTexture.getSampler()
+                        );
                     }
 
                     // 5. Recreate framebuffers
@@ -554,6 +567,7 @@ void Application::mainLoop() {
                     if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
                         vkDeviceWaitIdle(vulkanContext.getDevice());
                         videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                        videoTexture.cleanup(resourceSystem);  // Destroy staging ring
                         videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                                      vulkanContext.getCommandPool(),
                                                      vulkanContext.getGraphicsQueue(),
@@ -619,11 +633,20 @@ void Application::mainLoop() {
 
         // Render UI
         UIDiagnostics diag;
+        diag.lastFrameFrameIndex = frame.frameIndex;
+        diag.lastFrameImageIndex = frame.swapchainImageIndex;
         diag.swapchainWidth = vulkanContext.getSwapchainExtent().width;
         diag.swapchainHeight = vulkanContext.getSwapchainExtent().height;
+        diag.currentMode = visualControls.activeMode;
         diag.videoReady = videoSubsystemInitialized && videoTexture.isReady();
         diag.videoWidth = videoTexture.getWidth();
         diag.videoHeight = videoTexture.getHeight();
+        diag.animationTime = debugAnimationTime;
+        diag.animationDelta = debugAnimationDelta;
+        diag.animationModulo = debugAnimationModulo;
+        diag.animationRelativeSpeed = debugAnimationRelativeSpeed;
+        diag.animationSecondsPerUnit = debugAnimationSecondsPerUnit;
+        diag.animationElapsedSeconds = debugAnimationElapsedSeconds;
         
         UICallbacks callbacks;
         callbacks.onControlsChanged = [this]() { controlsDirty = true; };
@@ -647,12 +670,13 @@ void Application::mainLoop() {
                 if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
                     vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                    videoTexture.cleanup(resourceSystem);  // Destroy staging ring
                     videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                                  vulkanContext.getCommandPool(),
                                                  vulkanContext.getGraphicsQueue(),
                                                  static_cast<uint32_t>(videoPlayer.width()),
                                                  static_cast<uint32_t>(videoPlayer.height()));
-                    
+
                     // Resize CPU frame pool to new resolution
                     cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
                                        static_cast<uint32_t>(videoPlayer.height()),
@@ -701,12 +725,13 @@ void Application::mainLoop() {
             if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
                 vkDeviceWaitIdle(vulkanContext.getDevice());
                 videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                videoTexture.cleanup(resourceSystem);  // Destroy staging ring
                 videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                              vulkanContext.getCommandPool(),
                                              vulkanContext.getGraphicsQueue(),
                                              static_cast<uint32_t>(videoPlayer.width()),
                                              static_cast<uint32_t>(videoPlayer.height()));
-                
+
                 // Resize CPU frame pool to new resolution
                 cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
                                    static_cast<uint32_t>(videoPlayer.height()),
@@ -797,7 +822,34 @@ void Application::mainLoop() {
 void Application::updateUniformBuffer(uint32_t frameIndex) {
     GlobalParamsUBO ubo{};
     auto currentTime = std::chrono::steady_clock::now();
-    float time = std::chrono::duration<float>(currentTime - startTime).count();
+    const double elapsedSeconds = std::chrono::duration<double>(currentTime - startTime).count();
+
+    const double baseSpeed = static_cast<double>(visualControls.animationSpeed);
+    const double relativeSpeed = std::max(0.01, baseSpeed);
+    const double scaledTime = elapsedSeconds * relativeSpeed;
+    const double TIME_WRAP = 60000.0; // keep precision for long sessions (~16 hours)
+    double wrappedTime = std::fmod(scaledTime, TIME_WRAP);
+    if (wrappedTime < 0.0) {
+        wrappedTime += TIME_WRAP;
+    }
+    float time = static_cast<float>(wrappedTime);
+
+    debugAnimationElapsedSeconds = static_cast<float>(elapsedSeconds);
+    debugAnimationTime = time;
+    debugAnimationRelativeSpeed = static_cast<float>(relativeSpeed);
+    debugAnimationSecondsPerUnit = relativeSpeed > 0.0 ? static_cast<float>(1.0 / relativeSpeed) : 0.0f;
+    debugAnimationModulo = static_cast<float>(TIME_WRAP);
+    if (animationTimeInitialized) {
+        float delta = time - previousAnimationTime;
+        if (delta < 0.0f) {
+            delta += debugAnimationModulo;
+        }
+        debugAnimationDelta = delta;
+    } else {
+        debugAnimationDelta = 0.0f;
+        animationTimeInitialized = true;
+    }
+    previousAnimationTime = time;
     
     // Set basic UBO values
     ubo.model = glm::mat4(1.0f);
@@ -972,8 +1024,8 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.fxaaQualitySubpix = visualControls.fxaaQualitySubpix;
     ubo.fxaaQualityEdgeThreshold = visualControls.fxaaQualityEdgeThreshold;
     ubo.fxaaQualityEdgeThresholdMin = visualControls.fxaaQualityEdgeThresholdMin;
-    
-    uniformBufferManager.update(frameIndex, ubo);
+
+    uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }
 
 void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContext& frame) {

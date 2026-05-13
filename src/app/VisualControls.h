@@ -4,7 +4,8 @@
 // VisualControls - pure data struct for visual effect parameters
 // This struct contains all the adjustable parameters for the video effects
 struct VisualControls {
-    float animationSpeed = 0.3f;
+    float animationSpeed = 1.0f;
+    float animationTargetSeconds = 1.0f;
     float tempo = 1.0f;
     float energy = 0.5f;
     float bass = 0.3f;
@@ -13,7 +14,7 @@ struct VisualControls {
     float colorBlend = 0.5f;
     glm::vec4 primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
     glm::vec4 secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
-    int activeMode = -1;
+    int activeMode = 1;
     float videoMix = 1.0f;
     float videoPlaybackRate = 1.0f;
     float videoDecodeOversample = 1.0f;

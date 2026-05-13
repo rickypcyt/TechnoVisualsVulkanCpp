@@ -19,12 +19,13 @@ public:
     void destroy(ResourceSystem& resourceSystem, VkDevice device);
 
     // Update uniform buffer for a specific frame
-    void update(uint32_t frameIndex, const GlobalParamsUBO& ubo);
+    void update(uint32_t frameIndex, const GlobalParamsUBO& ubo, VkDevice device);
 
     // Getters
     const std::vector<VkBuffer>& getBuffers() const { return uniformBuffers; }
     const std::vector<ResourceHandle>& getHandles() const { return uniformBufferHandles; }
     VkDescriptorBufferInfo getDescriptorInfo(uint32_t frameIndex) const;
+    static size_t getBufferSize() { return sizeof(GlobalParamsUBO); }
 
 private:
     std::vector<VkBuffer> uniformBuffers;

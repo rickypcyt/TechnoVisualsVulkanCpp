@@ -57,12 +57,21 @@ void UniformBufferManager::destroy(ResourceSystem& resourceSystem, VkDevice devi
     uniformBuffersMapped.clear();
 }
 
-void UniformBufferManager::update(uint32_t frameIndex, const GlobalParamsUBO& ubo) {
+void UniformBufferManager::update(uint32_t frameIndex, const GlobalParamsUBO& ubo, VkDevice device) {
     if (frameIndex >= MAX_FRAMES_IN_FLIGHT || uniformBuffersMapped[frameIndex] == nullptr) {
         return;
     }
-    
+
     memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo));
+
+    // Flush the memory to ensure GPU sees the updated data
+    // Use VK_WHOLE_SIZE to avoid alignment issues
+    VkMappedMemoryRange flushRange{};
+    flushRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    flushRange.memory = uniformBuffersMemory[frameIndex];
+    flushRange.offset = 0;
+    flushRange.size = VK_WHOLE_SIZE;
+    vkFlushMappedMemoryRanges(device, 1, &flushRange);
 }
 
 VkDescriptorBufferInfo UniformBufferManager::getDescriptorInfo(uint32_t frameIndex) const {
