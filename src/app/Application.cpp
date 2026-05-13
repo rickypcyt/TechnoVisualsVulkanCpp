@@ -70,6 +70,7 @@ void Application::run() {
     startTime = std::chrono::steady_clock::now();
     lastControlSaveTime = startTime;
     lastFrameTimestamp = startTime;
+    lastRandomJumpTime = startTime;
     initializationComplete = true;
     
     // Load control state
@@ -518,11 +519,31 @@ void Application::mainLoop() {
                 // Trigger random video change
                 const auto& assets = videoRegistry.getAssets();
                 if (assets.size() > 1) {
-                    std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
                     int newIndex;
-                    do {
-                        newIndex = dist(rng);
-                    } while (newIndex == selectedVideoAsset);
+
+                    if (videoRandomizer.useShuffleMode) {
+                        // Shuffle mode: use pre-shuffled queue
+                        if (videoRandomizer.shuffleQueue.empty() ||
+                            videoRandomizer.currentShuffleIndex >= static_cast<int>(videoRandomizer.shuffleQueue.size())) {
+                            // Regenerate shuffle queue
+                            videoRandomizer.shuffleQueue.clear();
+                            for (size_t i = 0; i < assets.size(); ++i) {
+                                videoRandomizer.shuffleQueue.push_back(static_cast<int>(i));
+                            }
+                            std::shuffle(videoRandomizer.shuffleQueue.begin(), videoRandomizer.shuffleQueue.end(), rng);
+                            videoRandomizer.currentShuffleIndex = 0;
+                        }
+
+                        // Get next video from shuffle queue
+                        newIndex = videoRandomizer.shuffleQueue[videoRandomizer.currentShuffleIndex];
+                        videoRandomizer.currentShuffleIndex++;
+                    } else {
+                        // Original random mode: pick random, avoid current
+                        std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+                        do {
+                            newIndex = dist(rng);
+                        } while (newIndex == selectedVideoAsset);
+                    }
 
                     selectedVideoAsset = newIndex;
                     videoSourcePath = assets[newIndex].metadata.path;
@@ -565,6 +586,20 @@ void Application::mainLoop() {
                         videoRandomizer.elapsedSeconds = 0.0f;
                         videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
                     }
+                }
+            }
+        }
+
+        // Update auto random jump interval
+        if (visualControls.enableRandomJumpInterval && visualControls.randomVideoStart && videoSubsystemInitialized) {
+            auto timeSinceLastJump = std::chrono::duration<float>(now - lastRandomJumpTime).count();
+            if (timeSinceLastJump >= visualControls.randomJumpInterval) {
+                // Perform random jump within full video range (0% to 100%)
+                double duration = videoPlayer.durationSeconds();
+                if (duration > 0) {
+                    std::uniform_real_distribution<double> dist(0.0, duration);
+                    videoPlayer.seekSeconds(dist(rng));
+                    lastRandomJumpTime = now;
                 }
             }
         }
@@ -652,6 +687,7 @@ void Application::mainLoop() {
             if (videoSubsystemInitialized) {
                 double duration = videoPlayer.durationSeconds();
                 if (duration > 0) {
+                    // Use full video range (0% to 100%)
                     std::uniform_real_distribution<double> dist(0.0, duration);
                     videoPlayer.seekSeconds(dist(rng));
                 }

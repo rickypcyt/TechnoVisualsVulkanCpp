@@ -25,6 +25,9 @@ struct VideoRandomizerState {
     float currentVideoDuration = 0.0f;
     int historyWindow = 3;
     std::deque<int> recentHistory;
+    bool useShuffleMode = true; // New: use shuffle to ensure all videos play before repeat
+    std::vector<int> shuffleQueue; // New: shuffled order of video indices
+    int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
 #include <filesystem>
@@ -240,6 +243,13 @@ void UISystem::drawProceduralControls(
         }
     }
 
+    ImGui::Indent();
+    changed |= ImGui::Checkbox("Auto jump interval", &controls.enableRandomJumpInterval);
+    if (controls.enableRandomJumpInterval) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval, 1.0f, 60.0f, "%.1f s");
+    }
+    ImGui::Unindent();
+
     changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
 
     // --- Post FX ---
@@ -409,6 +419,13 @@ void UISystem::drawProceduralControls(
                            : randomizer.intervalSeconds;
         ImGui::Text("Next shuffle in %.1f s", std::max(0.0f, target - randomizer.elapsedSeconds));
     }
+
+    ImGui::Indent();
+    changed |= ImGui::Checkbox("Shuffle all videos", &randomizer.useShuffleMode);
+    if (randomizer.useShuffleMode && !randomizer.shuffleQueue.empty()) {
+        ImGui::Text("Playing %d/%d", randomizer.currentShuffleIndex + 1, static_cast<int>(randomizer.shuffleQueue.size()));
+    }
+    ImGui::Unindent();
     ImGui::EndDisabled();
 
     ImGui::Separator();

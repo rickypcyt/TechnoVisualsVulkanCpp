@@ -35,6 +35,9 @@ struct VideoRandomizerState {
     float currentVideoDuration = 0.0f;
     int historyWindow = 3;
     std::deque<int> recentHistory;
+    bool useShuffleMode = true; // New: use shuffle to ensure all videos play before repeat
+    std::vector<int> shuffleQueue; // New: shuffled order of video indices
+    int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
 class Application {
@@ -99,6 +102,7 @@ private:
     bool initializationComplete = false;
     std::chrono::steady_clock::time_point startTime;
     std::chrono::steady_clock::time_point lastFrameTimestamp;
+    std::chrono::steady_clock::time_point lastRandomJumpTime;
     
     // Command buffers
     std::vector<VkCommandBuffer> commandBuffers;

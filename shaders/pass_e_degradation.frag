@@ -236,9 +236,13 @@ void main() {
         // Sample with glitched UVs
         vec3 glitched = texture(inputTex, uvOut).rgb;
 
-        // RGB split (glitch version)
+        // RGB split (glitch version) - smooth progressive
         if (ubo.glitchRGBSplit > 0.0) {
-            vec2 texel = ubo.glitchRGBSplit * 0.008 / ubo.resolution;
+            // Smooth oscillation for progressive RGB shift
+            float smoothOscillation = sin(effectTime * 2.0) * 0.5 + 0.5; // 0 to 1 smooth
+            float smoothAmount = ubo.glitchRGBSplit * smoothOscillation;
+
+            vec2 texel = smoothAmount * 0.008 / ubo.resolution;
             glitched.r = texture(inputTex, clamp(uvOut + texel, 0.0, 1.0)).r;
             glitched.b = texture(inputTex, clamp(uvOut - texel, 0.0, 1.0)).b;
         }
@@ -280,9 +284,13 @@ void main() {
         color = texture(inputTex, uv).rgb;
     }
 
-    // Chromatic aberration (main)
+    // Chromatic aberration (main) - smooth progressive
     if (ubo.enablePostAberration == 1 && ubo.aberrationAmount > 0.0001) {
-        vec2 texel = ubo.aberrationAmount * centered * 0.01;
+        // Smooth oscillation for progressive RGB shift
+        float smoothOscillation = sin(effectTime * 0.5) * 0.5 + 0.5; // 0 to 1 smooth
+        float smoothAmount = ubo.aberrationAmount * smoothOscillation;
+
+        vec2 texel = smoothAmount * centered * 0.01;
         color.r = texture(inputTex, clamp(uv + texel, 0.0, 1.0)).r;
         color.b = texture(inputTex, clamp(uv - texel, 0.0, 1.0)).b;
     }

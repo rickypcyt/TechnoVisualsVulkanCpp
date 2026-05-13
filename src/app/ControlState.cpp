@@ -20,6 +20,9 @@ struct VideoRandomizerState {
     float currentVideoDuration = 0.0f;
     int historyWindow = 3;
     std::deque<int> recentHistory;
+    bool useShuffleMode = true; // New: use shuffle to ensure all videos play before repeat
+    std::vector<int> shuffleQueue; // New: shuffled order of video indices
+    int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
 // -----------------------------------------------------------------------
@@ -212,6 +215,7 @@ void ControlState::load(
     rLoaded.autoRandomize    = readBool (kv, "autoRandomize",    rLoaded.autoRandomize);
     rLoaded.intervalSeconds  = readFloat(kv, "intervalSeconds",  rLoaded.intervalSeconds);
     rLoaded.useVideoDuration = readBool (kv, "useVideoDuration", rLoaded.useVideoDuration);
+    rLoaded.useShuffleMode   = readBool (kv, "useShuffleMode",   rLoaded.useShuffleMode);
 
     allowDimensionChangeRecreation =
         readBool(kv, "allowDimensionChangeRecreation", allowDimensionChangeRecreation);
@@ -367,5 +371,6 @@ void ControlState::save(
     wb("autoRandomize",                r.autoRandomize);
     wf("intervalSeconds",              r.intervalSeconds);
     wb("useVideoDuration",             r.useVideoDuration);
+    wb("useShuffleMode",               r.useShuffleMode);
     wb("allowDimensionChangeRecreation", allowDimensionChangeRecreation);
 }

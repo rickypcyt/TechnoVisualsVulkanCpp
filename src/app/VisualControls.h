@@ -35,6 +35,8 @@ struct VisualControls {
     float bendAmount = 0.0f;
     float glitchAmount = 0.0f;
     bool randomVideoStart = false;
+    float randomJumpInterval = 5.0f;
+    bool enableRandomJumpInterval = false;
     glm::vec3 colorBalance = glm::vec3(1.0f);
     bool enablePostCrtCurvature = true;
     bool enablePostScanMask = true;
