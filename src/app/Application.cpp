@@ -316,8 +316,8 @@ void Application::initCommandBuffers() {
 }
 
 void Application::initVideo() {
-    videoRegistry.scan(videoAssetsRoot);
-    const auto& assets = videoRegistry.getAssets();
+    videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
+    const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
     if (!assets.empty()) {
         selectedVideoAsset = 0;
         videoSourcePath = assets[0].metadata.path;
@@ -331,6 +331,7 @@ void Application::initVideo() {
         std::cerr << "[Application] Failed to initialize video player" << std::endl;
         return;
     }
+    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
     
     // Initialize CPU frame pool with initial video resolution
     cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()), 
@@ -521,6 +522,46 @@ void Application::mainLoop() {
         float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
         lastFrameTimestamp = now;
 
+        // Update auto-randomize colors with smooth interpolation
+        if (visualControls.autoRandomizeColors) {
+            visualControls.colorRandomizeElapsed += deltaTime;
+            
+            if (visualControls.colorRandomizeElapsed >= visualControls.colorRandomizeInterval) {
+                // Generate new target colors
+                std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
+                std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
+                std::uniform_real_distribution<float> valDist(0.7f, 1.0f);
+                
+                float primaryHue = hueDist(rng);
+                float primarySat = satDist(rng);
+                float primaryVal = valDist(rng);
+                float secondaryHue = fmod(primaryHue + 180.0f, 360.0f);
+                
+                auto hsvToRgb = [](float h, float s, float v) -> glm::vec3 {
+                    float c = v * s;
+                    float x = c * (1.0f - fabs(fmod(h / 60.0f, 2.0f) - 1.0f));
+                    float m = v - c;
+                    float r, g, b;
+                    if (h < 60.0f) { r = c; g = x; b = 0; }
+                    else if (h < 120.0f) { r = x; g = c; b = 0; }
+                    else if (h < 180.0f) { r = 0; g = c; b = x; }
+                    else if (h < 240.0f) { r = 0; g = x; b = c; }
+                    else if (h < 300.0f) { r = x; g = 0; b = c; }
+                    else { r = c; g = 0; b = x; }
+                    return glm::vec3(r + m, g + m, b + m);
+                };
+                
+                visualControls.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
+                visualControls.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, primarySat, primaryVal), 1.0f);
+                visualControls.colorRandomizeElapsed = 0.0f;
+            }
+            
+            // Smooth interpolation towards target colors
+            float lerpSpeed = 2.0f * deltaTime; // Adjust speed factor as needed
+            visualControls.primaryColor = glm::mix(visualControls.primaryColor, visualControls.primaryColorTarget, lerpSpeed);
+            visualControls.secondaryColor = glm::mix(visualControls.secondaryColor, visualControls.secondaryColorTarget, lerpSpeed);
+        }
+
         // Update auto-randomize
         if (videoRandomizer.autoRandomize && videoSubsystemInitialized) {
             videoRandomizer.elapsedSeconds += deltaTime;
@@ -530,7 +571,7 @@ void Application::mainLoop() {
 
             if (videoRandomizer.elapsedSeconds >= targetInterval) {
                 // Trigger random video change
-                const auto& assets = videoRegistry.getAssets();
+                const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
                 if (assets.size() > 1) {
                     int newIndex;
 
@@ -565,6 +606,7 @@ void Application::mainLoop() {
                     int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                     int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                     if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                        videoPlayer.setAutoScale(visualControls.autoScaleVideo);
                         vkDeviceWaitIdle(vulkanContext.getDevice());
                         videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                         videoTexture.cleanup(resourceSystem);  // Destroy staging ring
@@ -650,8 +692,39 @@ void Application::mainLoop() {
         
         UICallbacks callbacks;
         callbacks.onControlsChanged = [this]() { controlsDirty = true; };
+        callbacks.onFolderChanged = [this]() {
+            videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
+            const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+            if (!assets.empty()) {
+                selectedVideoAsset = 0;
+                videoSourcePath = assets[0].metadata.path;
+                videoPlayer.shutdown();
+                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+                if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                    vkDeviceWaitIdle(vulkanContext.getDevice());
+                    videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                    videoTexture.cleanup(resourceSystem);
+                    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                                 vulkanContext.getCommandPool(),
+                                                 vulkanContext.getGraphicsQueue(),
+                                                 static_cast<uint32_t>(videoPlayer.width()),
+                                                 static_cast<uint32_t>(videoPlayer.height()));
+                    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                       static_cast<uint32_t>(videoPlayer.height()),
+                                       static_cast<uint32_t>(videoPlayer.width()) * 4);
+                    multiPassPipeline.updateDescriptorSets(
+                        uniformBufferManager.getBuffers(),
+                        videoTexture.getImageView(),
+                        videoTexture.getPrevImageView(),
+                        videoTexture.getSampler(),
+                        videoTexture.getSampler());
+                }
+            }
+        };
         callbacks.onRandomizeVideo = [this]() {
-            const auto& assets = videoRegistry.getAssets();
+            const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
             if (assets.size() > 1) {
                 // Select a random video different from current
                 std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
@@ -668,6 +741,7 @@ void Application::mainLoop() {
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                 if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
                     vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                     videoTexture.cleanup(resourceSystem);  // Destroy staging ring
@@ -723,6 +797,7 @@ void Application::mainLoop() {
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
             if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                videoPlayer.setAutoScale(visualControls.autoScaleVideo);
                 vkDeviceWaitIdle(vulkanContext.getDevice());
                 videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                 videoTexture.cleanup(resourceSystem);  // Destroy staging ring

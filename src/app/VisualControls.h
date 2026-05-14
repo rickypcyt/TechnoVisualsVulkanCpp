@@ -14,10 +14,18 @@ struct VisualControls {
     float colorBlend = 0.5f;
     glm::vec4 primaryColor = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
     glm::vec4 secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+    // Auto randomize colors with smooth interpolation
+    bool autoRandomizeColors = false;
+    float colorRandomizeInterval = 1.0f;
+    float colorRandomizeElapsed = 0.0f;
+    glm::vec4 primaryColorTarget = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
+    glm::vec4 secondaryColorTarget = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
     int activeMode = 1;
     float videoMix = 1.0f;
     float videoPlaybackRate = 1.0f;
     float videoDecodeOversample = 1.0f;
+    bool autoScaleVideo = true;
+    std::string selectedVideoFolder = "";
     float grayscaleAmount = 0.0f;
     float sharpenAmount = 0.35f;
     bool upscaleEnabled = true;

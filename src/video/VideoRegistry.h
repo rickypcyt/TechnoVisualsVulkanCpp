@@ -32,7 +32,9 @@ struct VideoAsset {
 class VideoRegistry {
 public:
     void scan(const std::string& rootPath);
+    void scan(const std::string& rootPath, const std::string& subfolderFilter);
     const std::vector<VideoAsset>& getAssets() const;
+    const std::vector<VideoAsset>& getFilteredAssets(const std::string& subfolderFilter) const;
 
 private:
     static bool isVideoExtension(std::string ext);

@@ -76,6 +76,13 @@ glm::vec4 readVec4(const KVMap& kv, const char* key, glm::vec4 def) {
     }
     return def;
 }
+std::string readString(const KVMap& kv, const char* key, std::string def) {
+    auto it = kv.find(key);
+    if (it != kv.end()) {
+        return it->second;
+    }
+    return def;
+}
 
 } // namespace anónimo
 
@@ -106,10 +113,14 @@ void ControlState::load(
     loaded.colorBlend              = readFloat(kv, "colorBlend",              loaded.colorBlend);
     loaded.primaryColor            = readVec4 (kv, "primaryColor",            loaded.primaryColor);
     loaded.secondaryColor          = readVec4 (kv, "secondaryColor",          loaded.secondaryColor);
+    loaded.autoRandomizeColors     = readBool (kv, "autoRandomizeColors",     loaded.autoRandomizeColors);
+    loaded.colorRandomizeInterval  = readFloat(kv, "colorRandomizeInterval",  loaded.colorRandomizeInterval);
     loaded.activeMode              = std::clamp(readInt(kv, "activeMode", loaded.activeMode), 0, 1);
     loaded.videoMix                = readFloat(kv, "videoMix",                loaded.videoMix);
     loaded.videoPlaybackRate       = readFloat(kv, "videoPlaybackRate",       loaded.videoPlaybackRate);
     loaded.videoDecodeOversample   = readFloat(kv, "videoDecodeOversample",   loaded.videoDecodeOversample);
+    loaded.autoScaleVideo          = readBool (kv, "autoScaleVideo",          loaded.autoScaleVideo);
+    loaded.selectedVideoFolder     = readString(kv, "selectedVideoFolder", loaded.selectedVideoFolder);
     loaded.forcedFpsIndex          = std::clamp(readInt(kv, "forcedFpsIndex", loaded.forcedFpsIndex), 0, 4);
     loaded.loopBlendSeconds        = std::clamp(readFloat(kv, "loopBlendSeconds", loaded.loopBlendSeconds), 0.0f, 5.0f);
     loaded.grayscaleAmount         = readFloat(kv, "grayscaleAmount",         loaded.grayscaleAmount);
@@ -253,6 +264,7 @@ void ControlState::save(
     auto wb = [&](const char* k, bool v)          { file << k << "=" << (v?1:0) << "\n"; };
     auto wv3= [&](const char* k, const glm::vec3& v){ file << k<<"="<<v.r<<" "<<v.g<<" "<<v.b<<"\n"; };
     auto wv4= [&](const char* k, const glm::vec4& v){ file << k<<"="<<v.r<<" "<<v.g<<" "<<v.b<<" "<<v.a<<"\n"; };
+    auto ws = [&](const char* k, const std::string& v){ file << k << "=" << v << "\n"; };
 
     wf("animationSpeed",          c.animationSpeed);
     wf("animationTargetSeconds",  c.animationTargetSeconds);
@@ -264,10 +276,14 @@ void ControlState::save(
     wf("colorBlend",              c.colorBlend);
     wv4("primaryColor",           c.primaryColor);
     wv4("secondaryColor",         c.secondaryColor);
+    wb("autoRandomizeColors",     c.autoRandomizeColors);
+    wf("colorRandomizeInterval",  c.colorRandomizeInterval);
     wi("activeMode",              c.activeMode);
     wf("videoMix",                c.videoMix);
     wf("videoPlaybackRate",       c.videoPlaybackRate);
     wf("videoDecodeOversample",   c.videoDecodeOversample);
+    wb("autoScaleVideo",          c.autoScaleVideo);
+    ws("selectedVideoFolder",     c.selectedVideoFolder);
     wi("forcedFpsIndex",          c.forcedFpsIndex);
     wf("loopBlendSeconds",        c.loopBlendSeconds);
     wf("grayscaleAmount",         c.grayscaleAmount);

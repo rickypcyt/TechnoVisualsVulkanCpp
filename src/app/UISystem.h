@@ -47,6 +47,9 @@ struct UICallbacks {
     // Pide randomizar el video actual
     std::function<void()> onRandomizeVideo;
 
+    // Pide recargar videos cuando cambia la carpeta seleccionada
+    std::function<void()> onFolderChanged;
+
     // Pide un jump aleatorio dentro del clip actual
     std::function<void()> onJumpRandom;
 

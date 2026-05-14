@@ -74,7 +74,7 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     int outputHeight = codecCtx->height;
     int originalWidth = outputWidth;
     int originalHeight = outputHeight;
-    computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight, targetScreenWidth, targetScreenHeight);
+    computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight, targetScreenWidth, targetScreenHeight, autoScaleEnabled);
 
     if (outputWidth != originalWidth || outputHeight != originalHeight) {
         std::cout << "[Video] Downscaling " << originalWidth << "x" << originalHeight
@@ -123,11 +123,19 @@ double VideoPlayer::frameDuration() const {
 }
 
 void VideoPlayer::setPlaybackRate(double rate) {
-    playbackRate = std::clamp(rate, 0.1, 8.0);
+    playbackRate = std::clamp(rate, 0.05, 8.0);
 }
 
 double VideoPlayer::getPlaybackRate() const {
     return playbackRate;
+}
+
+void VideoPlayer::setAutoScale(bool autoScale) {
+    autoScaleEnabled = autoScale;
+}
+
+bool VideoPlayer::getAutoScale() const {
+    return autoScaleEnabled;
 }
 
 bool VideoPlayer::grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight) {
@@ -450,7 +458,7 @@ bool VideoPlayer::convertFrameToRGBA(AVFrame* src, std::vector<uint8_t>& out) {
     return true;
 }
 
-void VideoPlayer::computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight, int screenWidth, int screenHeight) const {
+void VideoPlayer::computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight, int screenWidth, int screenHeight, bool autoScale) const {
     int clampedSrcWidth = std::max(1, srcWidth);
     int clampedSrcHeight = std::max(1, srcHeight);
 
@@ -459,7 +467,7 @@ void VideoPlayer::computeOutputDimensions(int srcWidth, int srcHeight, int& outW
 
     // Fit to screen size while maintaining aspect ratio
     // This prevents performance issues by not decoding at full 1080p when screen is smaller
-    if (screenWidth > 0 && screenHeight > 0) {
+    if (autoScale && screenWidth > 0 && screenHeight > 0) {
         if (clampedSrcHeight > screenHeight) {
             // Video is taller than screen - scale down to fit
             double scale = static_cast<double>(screenHeight) / clampedSrcHeight;
@@ -487,7 +495,7 @@ bool VideoPlayer::ensureScalingContext(int srcWidth, int srcHeight, AVPixelForma
     int clampedSrcHeight = std::max(1, srcHeight);
     int targetWidth = clampedSrcWidth;
     int targetHeight = clampedSrcHeight;
-    computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight, targetScreenWidth, targetScreenHeight);
+    computeOutputDimensions(clampedSrcWidth, clampedSrcHeight, targetWidth, targetHeight, targetScreenWidth, targetScreenHeight, autoScaleEnabled);
 
     bool needsContext = (!swsCtx ||
                          cachedWidth != clampedSrcWidth ||

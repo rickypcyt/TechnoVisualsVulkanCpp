@@ -18,6 +18,10 @@ namespace {
 }
 
 void VideoRegistry::scan(const std::string& rootPath) {
+    scan(rootPath, "");
+}
+
+void VideoRegistry::scan(const std::string& rootPath, const std::string& subfolderFilter) {
     assets.clear();
 
     fs::path root(rootPath);
@@ -25,7 +29,15 @@ void VideoRegistry::scan(const std::string& rootPath) {
         return;
     }
 
-    for (const auto& entry : fs::recursive_directory_iterator(root)) {
+    fs::path scanPath = root;
+    if (!subfolderFilter.empty()) {
+        scanPath = root / subfolderFilter;
+        if (!fs::exists(scanPath) || !fs::is_directory(scanPath)) {
+            return;
+        }
+    }
+
+    for (const auto& entry : fs::recursive_directory_iterator(scanPath)) {
         if (!entry.is_regular_file()) {
             continue;
         }
@@ -57,6 +69,27 @@ void VideoRegistry::scan(const std::string& rootPath) {
 
 const std::vector<VideoAsset>& VideoRegistry::getAssets() const {
     return assets;
+}
+
+const std::vector<VideoAsset>& VideoRegistry::getFilteredAssets(const std::string& subfolderFilter) const {
+    if (subfolderFilter.empty()) {
+        return assets;
+    }
+    
+    // Create a filtered vector (cache this in production if needed)
+    static std::vector<VideoAsset> filteredAssets;
+    filteredAssets.clear();
+    
+    for (const auto& asset : assets) {
+        fs::path assetPath(asset.metadata.path);
+        // Check if the file is in the specified subfolder
+        std::string relativePath = assetPath.string();
+        if (relativePath.find(subfolderFilter) != std::string::npos) {
+            filteredAssets.push_back(asset);
+        }
+    }
+    
+    return filteredAssets;
 }
 
 bool VideoRegistry::isVideoExtension(std::string ext) {

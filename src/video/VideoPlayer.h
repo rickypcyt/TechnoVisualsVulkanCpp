@@ -24,6 +24,8 @@ public:
     double frameDuration() const;
     void setPlaybackRate(double rate);
     double getPlaybackRate() const;
+    void setAutoScale(bool autoScale);
+    bool getAutoScale() const;
 
     bool grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight);
     bool grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidth, int& outHeight);
@@ -37,7 +39,7 @@ public:
 private:
     double computeFrameDuration(const AVStream* stream) const;
     bool convertFrameToRGBA(AVFrame* src, std::vector<uint8_t>& out);
-    void computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight, int screenWidth = 0, int screenHeight = 0) const;
+    void computeOutputDimensions(int srcWidth, int srcHeight, int& outWidth, int& outHeight, int screenWidth = 0, int screenHeight = 0, bool autoScale = true) const;
     bool ensureScalingContext(int srcWidth, int srcHeight, AVPixelFormat srcFormat);
 
     AVFormatContext* formatCtx = nullptr;
@@ -61,4 +63,5 @@ private:
     double videoDurationSeconds = 0.0;
     int targetScreenWidth = 0;
     int targetScreenHeight = 0;
+    bool autoScaleEnabled = true;
 };

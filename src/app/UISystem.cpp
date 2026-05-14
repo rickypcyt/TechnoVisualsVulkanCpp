@@ -209,6 +209,51 @@ void UISystem::drawProceduralControls(
     changed |= ImGui::ColorEdit4("Primary",   glm::value_ptr(controls.primaryColor));
     changed |= ImGui::ColorEdit4("Secondary", glm::value_ptr(controls.secondaryColor));
     changed |= ImGui::SliderFloat("Blend", &controls.colorBlend, 0.0f, 1.0f);
+    
+    if (ImGui::Button("Randomize Colors")) {
+        // Generate random colors with good gradient potential using HSV
+        std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
+        std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
+        std::uniform_real_distribution<float> valDist(0.7f, 1.0f);
+        
+        float primaryHue = hueDist(rng);
+        float primarySat = satDist(rng);
+        float primaryVal = valDist(rng);
+        
+        // Secondary color: complementary or analogous for good gradient
+        float secondaryHue = fmod(primaryHue + 180.0f, 360.0f); // Complementary
+        float secondarySat = primarySat;
+        float secondaryVal = primaryVal;
+        
+        // Convert HSV to RGB
+        auto hsvToRgb = [](float h, float s, float v) -> glm::vec3 {
+            float c = v * s;
+            float x = c * (1.0f - fabs(fmod(h / 60.0f, 2.0f) - 1.0f));
+            float m = v - c;
+            
+            float r, g, b;
+            if (h < 60.0f) { r = c; g = x; b = 0; }
+            else if (h < 120.0f) { r = x; g = c; b = 0; }
+            else if (h < 180.0f) { r = 0; g = c; b = x; }
+            else if (h < 240.0f) { r = 0; g = x; b = c; }
+            else if (h < 300.0f) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            
+            return glm::vec3(r + m, g + m, b + m);
+        };
+        
+        controls.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
+        controls.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, secondarySat, secondaryVal), 1.0f);
+        controls.primaryColor = controls.primaryColorTarget;
+        controls.secondaryColor = controls.secondaryColorTarget;
+        changed = true;
+        controlsDirty = true;
+    }
+    
+    changed |= ImGui::Checkbox("Auto Randomize", &controls.autoRandomizeColors);
+    if (controls.autoRandomizeColors) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.colorRandomizeInterval, 0.1f, 5.0f, "%.1fs");
+    }
 
     ImGui::Separator();
     ImGui::Text("Audio-inspired inputs");
@@ -227,6 +272,8 @@ void UISystem::drawProceduralControls(
         controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
         changed = true;
     }
+
+    changed |= ImGui::Checkbox("Auto Scale Video", &controls.autoScaleVideo);
 
     static const char* forceFpsLabels[] = {"Off", "15 fps", "24 fps", "30 fps", "60 fps"};
     int forceIdx = std::clamp(controls.forcedFpsIndex, 0,
@@ -363,9 +410,64 @@ void UISystem::drawProceduralControls(
     // --- Video asset selector ---
     ImGui::TextWrapped("Video %s", diag.videoReady ? "online" : "unavailable");
 
-    const auto& assets = registry.getAssets();
+    // Folder selector
+    static std::vector<std::string> availableFolders;
+    static bool foldersScanned = false;
+    if (!foldersScanned) {
+        availableFolders.clear();
+        availableFolders.push_back("All Folders");
+        try {
+            fs::path mp4sPath("mp4s");
+            if (fs::exists(mp4sPath) && fs::is_directory(mp4sPath)) {
+                for (const auto& entry : fs::directory_iterator(mp4sPath)) {
+                    if (entry.is_directory()) {
+                        availableFolders.push_back(entry.path().filename().string());
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[UISystem] Error scanning mp4s folder: " << e.what() << std::endl;
+        }
+        foldersScanned = true;
+    }
+
+    static std::vector<const char*> folderItems;
+    folderItems.clear();
+    for (auto& folder : availableFolders) {
+        folderItems.push_back(folder.c_str());
+    }
+
+    int currentFolderIndex = 0;
+    if (!controls.selectedVideoFolder.empty()) {
+        for (size_t i = 0; i < availableFolders.size(); ++i) {
+            if (availableFolders[i] == controls.selectedVideoFolder) {
+                currentFolderIndex = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    if (ImGui::Combo("Load Folder", &currentFolderIndex, folderItems.data(), static_cast<int>(folderItems.size()))) {
+        std::string newFolder = (currentFolderIndex == 0) ? "" : availableFolders[currentFolderIndex];
+        if (controls.selectedVideoFolder != newFolder) {
+            controls.selectedVideoFolder = newFolder;
+            if (callbacks.onFolderChanged) {
+                callbacks.onFolderChanged();
+            }
+        }
+    }
+
+    // Show current loaded folder
+    if (controls.selectedVideoFolder.empty()) {
+        ImGui::Text("Current loaded folder: All Folders");
+    } else {
+        ImGui::Text("Current loaded folder: %s", controls.selectedVideoFolder.c_str());
+    }
+
+    // Video assets from current folder
+    const auto& assets = registry.getFilteredAssets(controls.selectedVideoFolder);
     if (assets.empty()) {
-        ImGui::TextDisabled("No videos found");
+        ImGui::TextDisabled("No videos found in this folder");
     } else {
         if (selectedAsset < 0 || selectedAsset >= static_cast<int>(assets.size()))
             selectedAsset = 0;
@@ -375,8 +477,6 @@ void UISystem::drawProceduralControls(
             for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
                 bool isSelected = (i == selectedAsset);
                 std::string label = assets[i].metadata.filename;
-                fs::path assetPath(assets[i].metadata.path);
-                // Mostrar subruta si no esta en la raiz
                 if (ImGui::Selectable(label.c_str(), isSelected)) {
                     if (selectedAsset != i) {
                         selectedAsset = i;
@@ -388,6 +488,7 @@ void UISystem::drawProceduralControls(
             }
             ImGui::EndCombo();
         }
+        ImGui::Text("Videos in folder: %zu", assets.size());
     }
 
     // --- Randomizer ---
