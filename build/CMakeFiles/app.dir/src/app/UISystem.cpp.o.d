@@ -491,6 +491,27 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/glm/ext/vector_uint1_sized.hpp \
  /usr/include/c++/16.1.1/cstring /usr/include/glm/gtc/type_ptr.inl \
  /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src/RtMidi.h \
+ /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
+ /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
+ /usr/include/c++/16.1.1/streambuf \
+ /usr/include/c++/16.1.1/bits/streambuf.tcc \
+ /usr/include/c++/16.1.1/bits/basic_ios.h \
+ /usr/include/c++/16.1.1/bits/locale_facets.h \
+ /usr/include/c++/16.1.1/cwctype /usr/include/wctype.h \
+ /usr/include/bits/wctype-wchar.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
+ /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
+ /usr/include/c++/16.1.1/bits/locale_facets.tcc \
+ /usr/include/c++/16.1.1/bits/basic_ios.tcc \
+ /usr/include/c++/16.1.1/bits/ostream_print.h \
+ /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
+ /usr/include/c++/16.1.1/bits/istream.tcc /usr/include/c++/16.1.1/map \
+ /usr/include/c++/16.1.1/bits/stl_tree.h \
+ /usr/include/c++/16.1.1/bits/stl_map.h \
+ /usr/include/c++/16.1.1/bits/stl_multimap.h \
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h \
  /home/ricky/coding/proyects/vulkancpp/src/video/../app/ProjectState.h \
  /usr/include/c++/16.1.1/atomic \
@@ -533,15 +554,6 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/ctime \
  /usr/include/c++/16.1.1/bits/parse_numbers.h \
  /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/locale \
- /usr/include/c++/16.1.1/bits/locale_facets.h \
- /usr/include/c++/16.1.1/cwctype /usr/include/wctype.h \
- /usr/include/bits/wctype-wchar.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
- /usr/include/c++/16.1.1/streambuf \
- /usr/include/c++/16.1.1/bits/streambuf.tcc \
- /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
- /usr/include/c++/16.1.1/bits/locale_facets.tcc \
  /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
@@ -550,14 +562,8 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/locale_conv.h \
  /usr/include/c++/16.1.1/iomanip \
  /usr/include/c++/16.1.1/bits/quoted_string.h \
- /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/ios /usr/include/c++/16.1.1/bits/basic_ios.h \
- /usr/include/c++/16.1.1/bits/basic_ios.tcc \
- /usr/include/c++/16.1.1/ostream /usr/include/c++/16.1.1/bits/ostream.h \
- /usr/include/c++/16.1.1/bits/ostream_print.h \
- /usr/include/c++/16.1.1/bits/ostream.tcc \
- /usr/include/c++/16.1.1/bits/istream.tcc \
- /usr/include/c++/16.1.1/bits/sstream.tcc /usr/include/c++/16.1.1/codecvt \
+ /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/bits/sstream.tcc \
+ /usr/include/c++/16.1.1/codecvt \
  /usr/include/c++/16.1.1/ext/concurrence.h \
  /usr/include/c++/16.1.1/bits/shared_ptr.h \
  /usr/include/c++/16.1.1/bits/shared_ptr_base.h \
@@ -586,11 +592,7 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/deque /usr/include/c++/16.1.1/bits/stl_deque.h \
  /usr/include/c++/16.1.1/bits/deque.tcc \
  /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/future \
- /usr/include/c++/16.1.1/bits/atomic_futex.h \
- /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/map \
- /usr/include/c++/16.1.1/bits/stl_tree.h \
- /usr/include/c++/16.1.1/bits/stl_map.h \
- /usr/include/c++/16.1.1/bits/stl_multimap.h /usr/include/unistd.h \
+ /usr/include/c++/16.1.1/bits/atomic_futex.h /usr/include/unistd.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
  /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
  /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \

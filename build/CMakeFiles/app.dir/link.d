@@ -6,6 +6,7 @@ app: \
   CMakeFiles/app.dir/src/app/Application.cpp.o \
   CMakeFiles/app.dir/src/app/UISystem.cpp.o \
   CMakeFiles/app.dir/src/app/ControlState.cpp.o \
+  CMakeFiles/app.dir/src/app/MidiSystem.cpp.o \
   CMakeFiles/app.dir/src/core/Window.cpp.o \
   CMakeFiles/app.dir/src/core/VulkanContext.cpp.o \
   CMakeFiles/app.dir/src/video/VideoStaging.cpp.o \
@@ -30,6 +31,7 @@ app: \
   /usr/lib/libvulkan.so \
   /usr/lib/libSDL2-2.0.so.0.3200.68 \
   /usr/lib/libglm.a \
+  _deps/rtmidi-build/librtmidi.so.6.0.0 \
   /usr/lib/libavformat.so \
   /usr/lib/libavcodec.so \
   /usr/lib/libswscale.so \
@@ -65,6 +67,9 @@ app: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o \
+  /usr/lib/libjack.so.0 \
+  /usr/lib32/libasound.so.2 \
+  /usr/lib/libasound.so.2 \
   /usr/lib32/libxml2.so.16 \
   /usr/lib/libxml2.so.16 \
   /usr/lib32/libbz2.so.1.0 \
@@ -143,6 +148,8 @@ app: \
   /usr/lib/libdrm.so.2 \
   /usr/lib/libOpenCL.so.1 \
   /usr/lib/ld-linux-x86-64.so.2 \
+  /usr/lib32/libpipewire-0.3.so.0 \
+  /usr/lib/libpipewire-0.3.so.0 \
   /usr/lib32/libicuuc.so.78 \
   /usr/lib/libicuuc.so.78 \
   /usr/lib32/libmpg123.so.0 \
@@ -267,6 +274,8 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o:
 
 CMakeFiles/app.dir/src/app/ControlState.cpp.o:
 
+CMakeFiles/app.dir/src/app/MidiSystem.cpp.o:
+
 CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 CMakeFiles/app.dir/src/core/VulkanContext.cpp.o:
@@ -314,6 +323,8 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/lib/libSDL2-2.0.so.0.3200.68:
 
 /usr/lib/libglm.a:
+
+_deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/lib/libavformat.so:
 
@@ -384,6 +395,12 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o:
+
+/usr/lib/libjack.so.0:
+
+/usr/lib32/libasound.so.2:
+
+/usr/lib/libasound.so.2:
 
 /usr/lib32/libxml2.so.16:
 
@@ -540,6 +557,10 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o:
 /usr/lib/libOpenCL.so.1:
 
 /usr/lib/ld-linux-x86-64.so.2:
+
+/usr/lib32/libpipewire-0.3.so.0:
+
+/usr/lib/libpipewire-0.3.so.0:
 
 /usr/lib32/libicuuc.so.78:
 

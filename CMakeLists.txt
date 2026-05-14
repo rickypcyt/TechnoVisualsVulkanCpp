@@ -3,11 +3,21 @@ project(VulkanApp)
 
 set(CMAKE_CXX_STANDARD 17)
 
+include(FetchContent)
+
 find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale libswresample)
+
+# RtMidi for MIDI support
+FetchContent_Declare(
+    rtmidi
+    GIT_REPOSITORY https://github.com/thestk/rtmidi.git
+    GIT_TAG 5.0.0
+)
+FetchContent_MakeAvailable(rtmidi)
 
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
@@ -17,6 +27,7 @@ add_executable(app
     src/app/Application.cpp
     src/app/UISystem.cpp
     src/app/ControlState.cpp
+    src/app/MidiSystem.cpp
     src/core/Window.cpp
     src/core/VulkanContext.cpp
     src/video/VideoStaging.cpp
@@ -49,4 +60,5 @@ target_link_libraries(app
     SDL2::SDL2
     glm::glm
     PkgConfig::FFMPEG
+    rtmidi
 )

@@ -19,6 +19,7 @@
 #include "../app/UISystem.h"
 #include "../app/VisualControls.h"
 #include "../app/ControlState.h"
+#include "../app/MidiSystem.h"
 #include "../app/PlaybackClock.h"
 #include "../app/ProjectState.h"
 #include "../app/Timeline.h"
@@ -84,6 +85,7 @@ private:
     UISystem uiSystem;
     VisualControls visualControls;
     VideoRandomizerState videoRandomizer;
+    MidiSystem midiSystem;
     std::string controlStatePath = "controls_state.cfg";
     bool controlsDirty = false;
     bool allowDimensionChangeRecreation = false;
@@ -126,6 +128,7 @@ private:
     void initUI();
     void initNLE();
     void initMultiPassPipeline();
+    void initMidi();
 
     // Main loop
     void mainLoop();

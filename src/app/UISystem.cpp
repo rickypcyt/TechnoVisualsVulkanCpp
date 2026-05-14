@@ -11,6 +11,7 @@
 
 // Tus tipos existentes
 #include "app/VisualControls.h"      // struct VisualControls
+#include "app/MidiSystem.h"          // class MidiSystem
 #include "video/VideoPlayer.h"         // class VideoPlayer
 #include "video/VideoRegistry.h"       // class VideoRegistry
 #include "app/ProjectState.h"        // g_project_state
@@ -116,7 +117,8 @@ void UISystem::render(
     bool&                 controlsDirty,
     std::mt19937&         rng,
     const UIDiagnostics&  diag,
-    const UICallbacks&    callbacks)
+    const UICallbacks&    callbacks,
+    MidiSystem&           midiSystem)
 {
     if (!initialized || !renderer) return;
 
@@ -136,6 +138,10 @@ void UISystem::render(
 
     if (showDiagnostics) {
         drawDiagnostics(diag, player, registry, selectedVideoAsset, controls, callbacks);
+    }
+
+    if (showMidiWindow) {
+        drawMidiControls(midiSystem);
     }
 
     if (showDemoWindow) {
@@ -991,7 +997,6 @@ void UISystem::drawDiagnostics(
         ImGui::Text("Suggested speed: %.2fx", suggestedSpeed);
         if (ImGui::Button("Apply suggested speed")) {
             controls.animationSpeed = suggestedSpeed;
-            if (callbacks.onControlsChanged) callbacks.onControlsChanged();
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset time phase")) {
@@ -1000,6 +1005,284 @@ void UISystem::drawDiagnostics(
             if (callbacks.onControlsChanged) callbacks.onControlsChanged();
         }
     }
+
+    ImGui::End();
+}
+
+void UISystem::drawMidiControls(MidiSystem& midiSystem) {
+    ImGui::Begin("MIDI Controls", &showMidiWindow);
+
+    // Enable/Disable MIDI
+    bool enabled = midiSystem.isEnabled();
+    if (ImGui::Checkbox("Enable MIDI", &enabled)) {
+        midiSystem.setEnabled(enabled);
+    }
+
+    ImGui::Separator();
+
+    // Port selection
+    unsigned int portCount = midiSystem.getPortCount();
+    ImGui::Text("MIDI Ports: %u", portCount);
+
+    static int selectedPort = 0;
+    if (portCount > 0) {
+        auto ports = midiSystem.getAvailablePorts();
+        std::vector<const char*> portNames;
+        for (const auto& port : ports) {
+            portNames.push_back(port.c_str());
+        }
+
+        if (ImGui::Combo("Port", &selectedPort, portNames.data(), static_cast<int>(portCount))) {
+            midiSystem.closePort();
+            if (midiSystem.openPort(selectedPort)) {
+                std::cout << "[UI] Opened MIDI port " << selectedPort << std::endl;
+            }
+        }
+    } else {
+        ImGui::Text("No MIDI devices detected");
+    }
+
+    ImGui::Separator();
+
+    // MIDI Learn Wizard
+    ImGui::Text("MIDI Learn Wizard");
+    bool learnMode = midiSystem.isLearnMode();
+    if (ImGui::Checkbox("Learn Mode", &learnMode)) {
+        midiSystem.setLearnMode(learnMode);
+    }
+
+    if (midiSystem.isLearnMode()) {
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Move a knob or press a key on your MIDI device...");
+    }
+
+    if (midiSystem.hasLearnedMessage()) {
+        MidiMessage msg = midiSystem.getLastLearnedMessage();
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Detected MIDI Message:");
+        
+        if (msg.type == MidiEventType::CONTROL_CHANGE) {
+            ImGui::Text("Type: Control Change");
+            ImGui::Text("CC Number: %d", msg.controller);
+            ImGui::Text("Value: %d", msg.value);
+        } else if (msg.type == MidiEventType::NOTE_ON) {
+            ImGui::Text("Type: Note On");
+            ImGui::Text("Note: %d", msg.note);
+            ImGui::Text("Velocity: %d", msg.velocity);
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Assign to Parameter:");
+
+        // List of all VisualControls parameters with their default ranges and categories
+        struct ParameterInfo {
+            const char* category;
+            const char* name;
+            float minVal;
+            float maxVal;
+        };
+        static const ParameterInfo parameters[] = {
+            // Procedural Controls
+            {"Procedural", "animationSpeed", 0.0f, 3.0f},
+            {"Procedural", "tempo", 0.0f, 2.0f},
+            {"Procedural", "energy", 0.0f, 1.0f},
+            {"Procedural", "bass", 0.0f, 1.0f},
+            {"Procedural", "mid", 0.0f, 1.0f},
+            {"Procedural", "high", 0.0f, 1.0f},
+            {"Procedural", "colorBlend", 0.0f, 1.0f},
+            {"Procedural", "uvWarpStrength", 0.0f, 1.0f},
+            {"Procedural", "rippleStrength", 0.0f, 1.0f},
+            {"Procedural", "rippleFrequency", 0.0f, 5.0f},
+            {"Procedural", "swirlStrength", 0.0f, 1.0f},
+            {"Procedural", "displacementAmount", 0.0f, 1.0f},
+            {"Procedural", "kaleidoSegments", 1.0f, 12.0f},
+            {"Procedural", "tunnelDepth", 0.0f, 1.0f},
+            {"Procedural", "tunnelCurvature", 0.0f, 1.0f},
+            // Post FX
+            {"Post FX", "bloomIntensity", 0.0f, 1.0f},
+            {"Post FX", "bloomThreshold", 0.0f, 1.0f},
+            {"Post FX", "aberrationAmount", 0.0f, 0.1f},
+            {"Post FX", "grainStrength", 0.0f, 1.0f},
+            {"Post FX", "crtCurvature", 0.0f, 0.5f},
+            {"Post FX", "crtScanlineIntensity", 0.0f, 1.0f},
+            {"Post FX", "crtMaskIntensity", 0.0f, 1.0f},
+            {"Post FX", "crtVignette", 0.0f, 1.0f},
+            {"Post FX", "crtFishEye", 0.0f, 0.5f},
+            {"Post FX", "gaussianBlur", 0.0f, 1.0f},
+            {"Post FX", "directionalBlur", 0.0f, 1.0f},
+            {"Post FX", "directionalBlurAngle", 0.0f, 360.0f},
+            {"Post FX", "zoomBlur", 0.0f, 1.0f},
+            {"Post FX", "motionBlur", 0.0f, 1.0f},
+            {"Post FX", "temporalBlur", 0.0f, 1.0f},
+            {"Post FX", "unsharpMask", 0.0f, 1.0f},
+            {"Post FX", "casAmount", 0.0f, 1.0f},
+            {"Post FX", "localContrast", 0.0f, 1.0f},
+            {"Post FX", "pixelateAmount", 0.0f, 1.0f},
+            {"Post FX", "strobeSpeed", 0.0f, 10.0f},
+            {"Post FX", "thresholdLevel", 0.0f, 1.0f},
+            {"Post FX", "slowZoomAmount", 0.0f, 1.0f},
+            {"Post FX", "edgeStrength", 0.0f, 2.0f},
+            {"Post FX", "edgeThreshold", 0.0f, 1.0f},
+            {"Post FX", "edgeBlend", 0.0f, 1.0f},
+            {"Post FX", "fxaaQualitySubpix", 0.0f, 1.0f},
+            {"Post FX", "fxaaQualityEdgeThreshold", 0.0f, 0.5f},
+            {"Post FX", "fxaaQualityEdgeThresholdMin", 0.0f, 0.2f},
+            // VJay Basics
+            {"VJay Basics", "videoPlaybackRate", 0.1f, 3.0f},
+            {"VJay Basics", "videoDecodeOversample", 1.0f, 4.0f},
+            {"VJay Basics", "videoMix", 0.0f, 1.0f},
+            {"VJay Basics", "grayscaleAmount", 0.0f, 1.0f},
+            {"VJay Basics", "sharpenAmount", 0.0f, 1.0f},
+            {"VJay Basics", "gradeBrightness", -1.0f, 1.0f},
+            {"VJay Basics", "gradeContrast", 0.0f, 2.0f},
+            {"VJay Basics", "gradeSaturation", 0.0f, 2.0f},
+            {"VJay Basics", "gradeHueShift", 0.0f, 360.0f},
+            {"VJay Basics", "gradeGamma", 0.1f, 3.0f},
+            {"VJay Basics", "colorLUTIndex", 0.0f, 10.0f},
+            {"VJay Basics", "splitToneBalance", 0.0f, 1.0f},
+            {"VJay Basics", "blendProceduralMix", 0.0f, 1.0f},
+            {"VJay Basics", "blendVideoMix", 0.0f, 1.0f},
+            {"VJay Basics", "blendFeedbackMix", 0.0f, 1.0f},
+            // VJay Extra
+            {"VJay Extra", "feedbackAmount", 0.0f, 1.0f},
+            {"VJay Extra", "trailStrength", 0.0f, 1.0f},
+            {"VJay Extra", "temporalAccumulation", 0.0f, 1.0f},
+            {"VJay Extra", "feedbackDecay", 0.0f, 1.0f},
+            {"VJay Extra", "recursiveBlend", 0.0f, 1.0f},
+            {"VJay Extra", "glitchAmount", 0.0f, 1.0f},
+            {"VJay Extra", "glitchDatamosh", 0.0f, 1.0f},
+            {"VJay Extra", "glitchRGBSplit", 0.0f, 1.0f},
+            {"VJay Extra", "glitchScanlineBreak", 0.0f, 1.0f},
+            {"VJay Extra", "glitchJitter", 0.0f, 1.0f},
+            {"VJay Extra", "glitchTearing", 0.0f, 1.0f},
+            {"VJay Extra", "glitchPixelSort", 0.0f, 1.0f},
+            {"VJay Extra", "glitchBufferCorruption", 0.0f, 1.0f},
+            {"VJay Extra", "analogScanlineFocus", 0.0f, 1.0f},
+            {"VJay Extra", "analogMaskBalance", 0.0f, 1.0f},
+            {"VJay Extra", "analogNoise", 0.0f, 1.0f},
+            {"VJay Extra", "analogBloom", 0.0f, 1.0f},
+            {"VJay Extra", "vhsDistortion", 0.0f, 1.0f},
+            {"VJay Extra", "analogChromaticAberration", 0.0f, 0.1f},
+            {"VJay Extra", "mirrorAmount", 0.0f, 1.0f},
+            {"VJay Extra", "posterizeLevels", 2.0f, 16.0f},
+            {"VJay Extra", "zoomPulseAmount", 0.0f, 1.0f},
+            {"VJay Extra", "rgbShiftAmount", 0.0f, 0.1f},
+            {"VJay Extra", "audioWarpResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioFeedbackResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioBlurResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioColorResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioGlitchResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioBeatSync", 0.0f, 2.0f},
+            {"VJay Extra", "audioLfoRate", 0.0f, 2.0f},
+            {"VJay Extra", "temporalInterpolation", 0.0f, 1.0f},
+            {"VJay Extra", "temporalBlendStrength", 0.0f, 1.0f},
+            {"VJay Extra", "slowMotionFactor", 0.1f, 2.0f},
+            {"VJay Extra", "frameAccumulation", 0.0f, 1.0f}
+        };
+        static int selectedParamIndex = 0;
+
+        // Build display strings with category prefix
+        static std::vector<std::string> displayStrings;
+        if (displayStrings.empty()) {
+            displayStrings.reserve(IM_ARRAYSIZE(parameters));
+            for (size_t i = 0; i < IM_ARRAYSIZE(parameters); ++i) {
+                displayStrings.push_back(std::string(parameters[i].category) + ": " + parameters[i].name);
+            }
+        }
+
+        if (ImGui::Combo("Parameter", &selectedParamIndex, [](void* data, int idx) -> const char* {
+            const std::vector<std::string>* strings = static_cast<const std::vector<std::string>*>(data);
+            return (*strings)[idx].c_str();
+        }, (void*)&displayStrings, static_cast<int>(displayStrings.size()))) {
+            // Parameter selection changed
+        }
+
+        static bool invert = false;
+        ImGui::Checkbox("Invert", &invert);
+
+        ImGui::Text("Range: %.2f to %.2f", parameters[selectedParamIndex].minVal, parameters[selectedParamIndex].maxVal);
+
+        if (ImGui::Button("Assign Mapping")) {
+            std::string paramName = parameters[selectedParamIndex].name;
+            if (msg.type == MidiEventType::CONTROL_CHANGE) {
+                midiSystem.addMapping(msg.controller, paramName,
+                    parameters[selectedParamIndex].minVal,
+                    parameters[selectedParamIndex].maxVal, invert);
+                std::cout << "[UI] Assigned CC " << msg.controller << " to " << paramName << std::endl;
+            }
+            midiSystem.clearLearnedMessage();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            midiSystem.clearLearnedMessage();
+        }
+    }
+
+    ImGui::Separator();
+
+    // MIDI mappings display
+    ImGui::Text("Current Mappings:");
+    const auto& mappings = midiSystem.getMappings();
+    if (ImGui::BeginTable("MidiMappings", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("CC");
+        ImGui::TableSetupColumn("Parameter");
+        ImGui::TableSetupColumn("Min");
+        ImGui::TableSetupColumn("Max");
+        ImGui::TableSetupColumn("Action");
+        ImGui::TableHeadersRow();
+
+        // Copy to vector to avoid iterator invalidation when removing
+        std::vector<std::pair<int, MidiMapping>> mappingsCopy(mappings.begin(), mappings.end());
+        for (const auto& [cc, mapping] : mappingsCopy) {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%d", cc);
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", mapping.parameterName.c_str());
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%.2f", mapping.minValue);
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("%.2f", mapping.maxValue);
+            ImGui::TableSetColumnIndex(4);
+            std::string label = "Remove##" + std::to_string(cc);
+            if (ImGui::Button(label.c_str())) {
+                midiSystem.removeMapping(cc);
+            }
+        }
+        ImGui::EndTable();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Default CC Mappings (can be overridden):");
+    ImGui::Text("CC 1: animationSpeed");
+    ImGui::Text("CC 2: tempo");
+    ImGui::Text("CC 3: energy");
+    ImGui::Text("CC 4: bass");
+    ImGui::Text("CC 5: mid");
+    ImGui::Text("CC 6: high");
+    ImGui::Text("CC 7: colorBlend");
+    ImGui::Text("CC 8: bloomIntensity");
+    ImGui::Text("CC 9: bloomThreshold");
+    ImGui::Text("CC 10: aberrationAmount");
+    ImGui::Text("CC 11: grainStrength");
+    ImGui::Text("CC 12: feedbackAmount");
+    ImGui::Text("CC 13: uvWarpStrength");
+    ImGui::Text("CC 14: glitchAmount");
+    ImGui::Text("CC 15: gradeBrightness");
+    ImGui::Text("CC 16: gradeContrast");
+    ImGui::Text("CC 17: gradeSaturation");
+    ImGui::Text("CC 18: videoPlaybackRate");
+    ImGui::Text("CC 19: pixelateAmount");
+    ImGui::Text("CC 20: strobeSpeed");
+
+    ImGui::Separator();
+    ImGui::Text("Note Triggers:");
+    ImGui::Text("Notes 36-48: Mode switching");
+    ImGui::Text("Note 60: Random video change");
+    ImGui::Text("Note 62: Toggle bloom");
+    ImGui::Text("Note 64: Toggle glitch");
+    ImGui::Text("Note 65: Toggle bend");
+    ImGui::Text("Note 67: Toggle feedback");
 
     ImGui::End();
 }

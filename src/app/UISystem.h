@@ -11,6 +11,7 @@ struct VisualControls;
 struct VideoRandomizerState;
 class VideoPlayer;
 class VideoRegistry;
+class MidiSystem;
 
 // Agregamos solo lo imprescindible de imgui aqui.
 // El .cpp incluye los headers completos de imgui.
@@ -99,7 +100,8 @@ public:
         bool&                 controlsDirty,
         std::mt19937&         rng,
         const UIDiagnostics&  diag,
-        const UICallbacks&    callbacks
+        const UICallbacks&    callbacks,
+        MidiSystem&           midiSystem
     );
 
 private:
@@ -123,6 +125,7 @@ private:
     bool showDiagnostics = true;
     bool showDemoWindow  = false;
     bool showNLEWindow   = true;
+    bool showMidiWindow  = true;
 
 private:
     void beginFrame();
@@ -163,6 +166,8 @@ private:
         VisualControls&      controls,
         const UICallbacks&   callbacks
     );
+
+    void drawMidiControls(MidiSystem& midiSystem);
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;

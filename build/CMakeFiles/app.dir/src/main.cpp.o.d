@@ -595,5 +595,7 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/VisualControls.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/ControlState.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/MidiSystem.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src/RtMidi.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/PlaybackClock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h

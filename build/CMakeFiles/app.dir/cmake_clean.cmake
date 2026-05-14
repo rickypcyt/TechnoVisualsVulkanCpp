@@ -4,6 +4,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/app.dir/src/app/Application.cpp.o.d"
   "CMakeFiles/app.dir/src/app/ControlState.cpp.o"
   "CMakeFiles/app.dir/src/app/ControlState.cpp.o.d"
+  "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o"
+  "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o.d"
   "CMakeFiles/app.dir/src/app/UISystem.cpp.o"
   "CMakeFiles/app.dir/src/app/UISystem.cpp.o.d"
   "CMakeFiles/app.dir/src/core/VulkanContext.cpp.o"

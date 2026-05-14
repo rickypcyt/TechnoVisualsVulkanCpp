@@ -54,12 +54,15 @@ void Application::run() {
     
     // Initialize UI
     initUI();
-    
+
     // Initialize NLE
     initNLE();
 
     // Initialize multi-pass pipeline (after video is ready)
     initMultiPassPipeline();
+
+    // Initialize MIDI
+    initMidi();
 
     // Initialize command buffers
     initCommandBuffers();
@@ -76,7 +79,7 @@ void Application::run() {
     initializationComplete = true;
     
     // Load control state
-    ControlState::load(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation);
+    ControlState::load(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem);
     
     // Run main loop
     mainLoop();
@@ -370,6 +373,33 @@ void Application::initNLE() {
     };
 }
 
+void Application::initMidi() {
+    if (!midiSystem.initialize()) {
+        std::cerr << "[Application] Failed to initialize MIDI system" << std::endl;
+        return;
+    }
+
+    // Set up MIDI event callback to apply to visual controls
+    midiSystem.setEventCallback([this](const MidiMessage& msg) {
+        midiSystem.applyToVisualControls(msg, visualControls);
+    });
+
+    // Try to open the first available MIDI port
+    unsigned int portCount = midiSystem.getPortCount();
+    if (portCount > 0) {
+        std::cout << "[Application] Found " << portCount << " MIDI port(s)" << std::endl;
+        for (unsigned int i = 0; i < portCount; ++i) {
+            std::cout << "[Application]   Port " << i << ": " << midiSystem.getAvailablePorts()[i] << std::endl;
+        }
+        // Open first port by default (can be changed via UI)
+        if (midiSystem.openPort(0)) {
+            std::cout << "[Application] MIDI port 0 opened successfully" << std::endl;
+        }
+    } else {
+        std::cout << "[Application] No MIDI ports detected" << std::endl;
+    }
+}
+
 void Application::initMultiPassPipeline() {
     if (!videoSubsystemInitialized) {
         std::cout << "[Application] Skipping MultiPassPipeline - video not initialized" << std::endl;
@@ -660,6 +690,9 @@ void Application::mainLoop() {
             }
         }
 
+        // Update MIDI system
+        midiSystem.update();
+
         // Update uniform buffer
         updateUniformBuffer(frame.frameIndex);
 
@@ -839,7 +872,7 @@ void Application::mainLoop() {
         
         uiSystem.render(visualControls, videoRandomizer, videoPlayer, videoRegistry,
                        selectedVideoAsset, transitionDuration, allowDimensionChangeRecreation,
-                       controlsDirty, rng, diag, callbacks);
+                       controlsDirty, rng, diag, callbacks, midiSystem);
         
         // Record command buffer
         recordCommandBuffer(commandBuffers[frame.frameIndex], frame);
@@ -1186,7 +1219,7 @@ void Application::cleanup() {
     vkDeviceWaitIdle(vulkanContext.getDevice());
 
     // Save control state
-    ControlState::save(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation);
+    ControlState::save(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem);
 
     // Shutdown UI
     uiSystem.shutdown();

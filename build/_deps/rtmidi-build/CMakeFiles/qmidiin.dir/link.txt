@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wl,--dependency-file=CMakeFiles/qmidiin.dir/link.d CMakeFiles/qmidiin.dir/tests/qmidiin.cpp.o -o tests/qmidiin  -Wl,-rpath,/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build librtmidi.so.6.0.0

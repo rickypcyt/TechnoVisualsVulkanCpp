@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wl,--dependency-file=CMakeFiles/midiout.dir/link.d CMakeFiles/midiout.dir/tests/midiout.cpp.o -o tests/midiout  -Wl,-rpath,/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build librtmidi.so.6.0.0

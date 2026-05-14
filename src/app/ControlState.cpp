@@ -1,5 +1,6 @@
 #include "ControlState.h"
 #include "VisualControls.h"
+#include "MidiSystem.h"
 
 #include <glm/glm.hpp>
 
@@ -93,12 +94,41 @@ void ControlState::load(
     const std::string&    path,
     VisualControls&       c,
     VideoRandomizerState& r,
-    bool&                 allowDimensionChangeRecreation)
+    bool&                 allowDimensionChangeRecreation,
+    MidiSystem&           midiSystem)
 {
     std::ifstream file(path);
     if (!file.is_open()) return;
 
     const KVMap kv = parseFile(file);
+
+    // Clear existing MIDI mappings before loading
+    midiSystem.clearMappings();
+
+    // Load MIDI mappings
+    for (const auto& [key, value] : kv) {
+        if (key.find("midi_cc_") == 0) {
+            // Parse key to get CC number
+            try {
+                int ccNumber = std::stoi(key.substr(8)); // "midi_cc_" is 8 chars
+
+                // Parse value: parameterName,minValue,maxValue,invert
+                std::istringstream iss(value);
+                std::string paramName;
+                float minVal, maxVal;
+                int invert;
+                char comma;
+
+                if (std::getline(iss, paramName, ',') &&
+                    (iss >> minVal >> comma >> maxVal >> comma >> invert)) {
+                    midiSystem.addMapping(ccNumber, paramName, minVal, maxVal, invert != 0);
+                    std::cout << "[ControlState] Loaded MIDI CC " << ccNumber << " -> " << paramName << std::endl;
+                }
+            } catch (...) {
+                std::cerr << "[ControlState] Failed to parse MIDI mapping: " << key << "=" << value << std::endl;
+            }
+        }
+    }
 
     // Leemos sobre una copia para que si algo falla no corromper el estado actual
     VisualControls loaded = c;
@@ -247,7 +277,8 @@ void ControlState::save(
     const std::string&        path,
     const VisualControls&     c,
     const VideoRandomizerState& r,
-    bool                      allowDimensionChangeRecreation)
+    bool                      allowDimensionChangeRecreation,
+    const MidiSystem&         midiSystem)
 {
     std::ofstream file(path);
     if (!file.is_open()) {
@@ -257,6 +288,16 @@ void ControlState::save(
 
     file << "# VJAY Control State - Key=Value\n"
          << "# Add new fields freely, no version bump needed\n\n";
+
+    // Save MIDI mappings
+    const auto& mappings = midiSystem.getMappings();
+    for (const auto& [cc, mapping] : mappings) {
+        file << "midi_cc_" << cc << "=" << mapping.parameterName << ","
+             << mapping.minValue << "," << mapping.maxValue << ","
+             << (mapping.invert ? 1 : 0) << "\n";
+    }
+
+    file << "\n";
 
     // Helpers locales con lambdas (mas limpio que repetir file<<key<<"="<<val<<"\n")
     auto wf = [&](const char* k, float v)        { file << k << "=" << v << "\n"; };

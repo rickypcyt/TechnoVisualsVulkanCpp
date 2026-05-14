@@ -64,33 +64,108 @@ CMAKE_BINARY_DIR = /home/ricky/coding/proyects/vulkancpp/build
 
 # The main recursive "all" target.
 all: CMakeFiles/app.dir/all
+all: _deps/rtmidi-build/all
 .PHONY : all
 
 # The main recursive "codegen" target.
 codegen: CMakeFiles/app.dir/codegen
+codegen: _deps/rtmidi-build/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
-preinstall:
+preinstall: _deps/rtmidi-build/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/app.dir/clean
+clean: _deps/rtmidi-build/clean
 .PHONY : clean
+
+#=============================================================================
+# Directory level rules for directory _deps/rtmidi-build
+
+# Recursive "all" directory target.
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/cmidiin.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/midiclock.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/midiout.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/midiprobe.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/qmidiin.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/sysextest.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/apinames.dir/all
+_deps/rtmidi-build/all: _deps/rtmidi-build/CMakeFiles/testcapi.dir/all
+.PHONY : _deps/rtmidi-build/all
+
+# Recursive "codegen" directory target.
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/midiout.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/apinames.dir/codegen
+_deps/rtmidi-build/codegen: _deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen
+.PHONY : _deps/rtmidi-build/codegen
+
+# Recursive "preinstall" directory target.
+_deps/rtmidi-build/preinstall:
+.PHONY : _deps/rtmidi-build/preinstall
+
+# Recursive "clean" directory target.
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/Experimental.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/Nightly.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/Continuous.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/cmidiin.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/midiclock.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/midiout.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/midiprobe.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/qmidiin.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/sysextest.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/apinames.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/testcapi.dir/clean
+_deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
+.PHONY : _deps/rtmidi-build/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/app.dir
 
 # All Build rule for target.
-CMakeFiles/app.dir/all:
+CMakeFiles/app.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 "Built target app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29 "Built target app"
 .PHONY : CMakeFiles/app.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/app.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 30
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/app.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : CMakeFiles/app.dir/rule
@@ -102,13 +177,1229 @@ app: CMakeFiles/app.dir/rule
 # codegen rule for target.
 CMakeFiles/app.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 "Finished codegen for target app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29 "Finished codegen for target app"
 .PHONY : CMakeFiles/app.dir/codegen
 
 # clean rule for target.
 CMakeFiles/app.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/clean
 .PHONY : CMakeFiles/app.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/rtmidi.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/rtmidi.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=40,41,42 "Built target rtmidi"
+.PHONY : _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/rtmidi.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 3
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/rtmidi.dir/rule
+
+# Convenience name for target.
+rtmidi: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/rule
+.PHONY : rtmidi
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=40,41,42 "Finished codegen for target rtmidi"
+.PHONY : _deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/rtmidi.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/rtmidi.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/Experimental.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/Experimental.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Experimental.dir/build.make _deps/rtmidi-build/CMakeFiles/Experimental.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Experimental.dir/build.make _deps/rtmidi-build/CMakeFiles/Experimental.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target Experimental"
+.PHONY : _deps/rtmidi-build/CMakeFiles/Experimental.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/Experimental.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/Experimental.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/Experimental.dir/rule
+
+# Convenience name for target.
+Experimental: _deps/rtmidi-build/CMakeFiles/Experimental.dir/rule
+.PHONY : Experimental
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/Experimental.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Experimental.dir/build.make _deps/rtmidi-build/CMakeFiles/Experimental.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target Experimental"
+.PHONY : _deps/rtmidi-build/CMakeFiles/Experimental.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/Experimental.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Experimental.dir/build.make _deps/rtmidi-build/CMakeFiles/Experimental.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/Experimental.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/Nightly.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/Nightly.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Nightly.dir/build.make _deps/rtmidi-build/CMakeFiles/Nightly.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Nightly.dir/build.make _deps/rtmidi-build/CMakeFiles/Nightly.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target Nightly"
+.PHONY : _deps/rtmidi-build/CMakeFiles/Nightly.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/Nightly.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/Nightly.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/Nightly.dir/rule
+
+# Convenience name for target.
+Nightly: _deps/rtmidi-build/CMakeFiles/Nightly.dir/rule
+.PHONY : Nightly
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/Nightly.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Nightly.dir/build.make _deps/rtmidi-build/CMakeFiles/Nightly.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target Nightly"
+.PHONY : _deps/rtmidi-build/CMakeFiles/Nightly.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/Nightly.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Nightly.dir/build.make _deps/rtmidi-build/CMakeFiles/Nightly.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/Nightly.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/Continuous.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/Continuous.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Continuous.dir/build.make _deps/rtmidi-build/CMakeFiles/Continuous.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Continuous.dir/build.make _deps/rtmidi-build/CMakeFiles/Continuous.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target Continuous"
+.PHONY : _deps/rtmidi-build/CMakeFiles/Continuous.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/Continuous.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/Continuous.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/Continuous.dir/rule
+
+# Convenience name for target.
+Continuous: _deps/rtmidi-build/CMakeFiles/Continuous.dir/rule
+.PHONY : Continuous
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/Continuous.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Continuous.dir/build.make _deps/rtmidi-build/CMakeFiles/Continuous.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target Continuous"
+.PHONY : _deps/rtmidi-build/CMakeFiles/Continuous.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/Continuous.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/Continuous.dir/build.make _deps/rtmidi-build/CMakeFiles/Continuous.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/Continuous.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyMemoryCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/rule
+
+# Convenience name for target.
+NightlyMemoryCheck: _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/rule
+.PHONY : NightlyMemoryCheck
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyMemoryCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemoryCheck.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyStart.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyStart.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyStart"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyStart.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/rule
+
+# Convenience name for target.
+NightlyStart: _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/rule
+.PHONY : NightlyStart
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyStart.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyStart"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyStart.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyStart.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyUpdate"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/rule
+
+# Convenience name for target.
+NightlyUpdate: _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/rule
+.PHONY : NightlyUpdate
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyUpdate"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyUpdate.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyConfigure"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/rule
+
+# Convenience name for target.
+NightlyConfigure: _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/rule
+.PHONY : NightlyConfigure
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyConfigure"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyConfigure.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyBuild"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/rule
+
+# Convenience name for target.
+NightlyBuild: _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/rule
+.PHONY : NightlyBuild
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyBuild"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyBuild.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyTest.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyTest.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyTest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyTest.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/rule
+
+# Convenience name for target.
+NightlyTest: _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/rule
+.PHONY : NightlyTest
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyTest.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyTest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyTest.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyTest.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyCoverage"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/rule
+
+# Convenience name for target.
+NightlyCoverage: _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/rule
+.PHONY : NightlyCoverage
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyCoverage"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyCoverage.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlyMemCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/rule
+
+# Convenience name for target.
+NightlyMemCheck: _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/rule
+.PHONY : NightlyMemCheck
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlyMemCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlyMemCheck.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target NightlySubmit"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/rule
+
+# Convenience name for target.
+NightlySubmit: _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/rule
+.PHONY : NightlySubmit
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target NightlySubmit"
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/NightlySubmit.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalStart"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/rule
+
+# Convenience name for target.
+ExperimentalStart: _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/rule
+.PHONY : ExperimentalStart
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalStart"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalStart.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalUpdate"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/rule
+
+# Convenience name for target.
+ExperimentalUpdate: _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/rule
+.PHONY : ExperimentalUpdate
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalUpdate"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalUpdate.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalConfigure"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/rule
+
+# Convenience name for target.
+ExperimentalConfigure: _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/rule
+.PHONY : ExperimentalConfigure
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalConfigure"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalConfigure.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalBuild"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/rule
+
+# Convenience name for target.
+ExperimentalBuild: _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/rule
+.PHONY : ExperimentalBuild
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalBuild"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalBuild.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalTest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/rule
+
+# Convenience name for target.
+ExperimentalTest: _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/rule
+.PHONY : ExperimentalTest
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalTest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalTest.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalCoverage"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/rule
+
+# Convenience name for target.
+ExperimentalCoverage: _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/rule
+.PHONY : ExperimentalCoverage
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalCoverage"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalCoverage.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalMemCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/rule
+
+# Convenience name for target.
+ExperimentalMemCheck: _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/rule
+.PHONY : ExperimentalMemCheck
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalMemCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalMemCheck.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ExperimentalSubmit"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/rule
+
+# Convenience name for target.
+ExperimentalSubmit: _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/rule
+.PHONY : ExperimentalSubmit
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ExperimentalSubmit"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ExperimentalSubmit.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousStart"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/rule
+
+# Convenience name for target.
+ContinuousStart: _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/rule
+.PHONY : ContinuousStart
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousStart"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousStart.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousUpdate"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/rule
+
+# Convenience name for target.
+ContinuousUpdate: _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/rule
+.PHONY : ContinuousUpdate
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousUpdate"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousUpdate.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousConfigure"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/rule
+
+# Convenience name for target.
+ContinuousConfigure: _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/rule
+.PHONY : ContinuousConfigure
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousConfigure"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousConfigure.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousBuild"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/rule
+
+# Convenience name for target.
+ContinuousBuild: _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/rule
+.PHONY : ContinuousBuild
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousBuild"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousBuild.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousTest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/rule
+
+# Convenience name for target.
+ContinuousTest: _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/rule
+.PHONY : ContinuousTest
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousTest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousTest.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousCoverage"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/rule
+
+# Convenience name for target.
+ContinuousCoverage: _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/rule
+.PHONY : ContinuousCoverage
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousCoverage"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousCoverage.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousMemCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/rule
+
+# Convenience name for target.
+ContinuousMemCheck: _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/rule
+.PHONY : ContinuousMemCheck
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousMemCheck"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousMemCheck.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target ContinuousSubmit"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/rule
+
+# Convenience name for target.
+ContinuousSubmit: _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/rule
+.PHONY : ContinuousSubmit
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target ContinuousSubmit"
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/build.make _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/cmidiin.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/cmidiin.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=30,31 "Built target cmidiin"
+.PHONY : _deps/rtmidi-build/CMakeFiles/cmidiin.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/cmidiin.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/cmidiin.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/cmidiin.dir/rule
+
+# Convenience name for target.
+cmidiin: _deps/rtmidi-build/CMakeFiles/cmidiin.dir/rule
+.PHONY : cmidiin
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=30,31 "Finished codegen for target cmidiin"
+.PHONY : _deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/cmidiin.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/cmidiin.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/midiclock.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/midiclock.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=32,33 "Built target midiclock"
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/midiclock.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/midiclock.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/rule
+
+# Convenience name for target.
+midiclock: _deps/rtmidi-build/CMakeFiles/midiclock.dir/rule
+.PHONY : midiclock
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=32,33 "Finished codegen for target midiclock"
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/midiclock.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/midiout.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/midiout.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=34,35 "Built target midiout"
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiout.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/midiout.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/midiout.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiout.dir/rule
+
+# Convenience name for target.
+midiout: _deps/rtmidi-build/CMakeFiles/midiout.dir/rule
+.PHONY : midiout
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/midiout.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=34,35 "Finished codegen for target midiout"
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiout.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/midiout.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiout.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/midiprobe.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/midiprobe.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=36,37 "Built target midiprobe"
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiprobe.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/midiprobe.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/midiprobe.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiprobe.dir/rule
+
+# Convenience name for target.
+midiprobe: _deps/rtmidi-build/CMakeFiles/midiprobe.dir/rule
+.PHONY : midiprobe
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=36,37 "Finished codegen for target midiprobe"
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/midiprobe.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/midiprobe.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/qmidiin.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/qmidiin.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=38,39 "Built target qmidiin"
+.PHONY : _deps/rtmidi-build/CMakeFiles/qmidiin.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/qmidiin.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/qmidiin.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/qmidiin.dir/rule
+
+# Convenience name for target.
+qmidiin: _deps/rtmidi-build/CMakeFiles/qmidiin.dir/rule
+.PHONY : qmidiin
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=38,39 "Finished codegen for target qmidiin"
+.PHONY : _deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/qmidiin.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/qmidiin.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/sysextest.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/sysextest.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=43,44 "Built target sysextest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/sysextest.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/sysextest.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/sysextest.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/sysextest.dir/rule
+
+# Convenience name for target.
+sysextest: _deps/rtmidi-build/CMakeFiles/sysextest.dir/rule
+.PHONY : sysextest
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=43,44 "Finished codegen for target sysextest"
+.PHONY : _deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/sysextest.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/sysextest.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/apinames.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/apinames.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1,2 "Built target apinames"
+.PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/apinames.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/apinames.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/rule
+
+# Convenience name for target.
+apinames: _deps/rtmidi-build/CMakeFiles/apinames.dir/rule
+.PHONY : apinames
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/apinames.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1,2 "Finished codegen for target apinames"
+.PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/apinames.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/testcapi.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/testcapi.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=45,46 "Built target testcapi"
+.PHONY : _deps/rtmidi-build/CMakeFiles/testcapi.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/testcapi.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/testcapi.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/testcapi.dir/rule
+
+# Convenience name for target.
+testcapi: _deps/rtmidi-build/CMakeFiles/testcapi.dir/rule
+.PHONY : testcapi
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=45,46 "Finished codegen for target testcapi"
+.PHONY : _deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/testcapi.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/testcapi.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/rtmidi-build/CMakeFiles/uninstall.dir
+
+# All Build rule for target.
+_deps/rtmidi-build/CMakeFiles/uninstall.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/uninstall.dir/build.make _deps/rtmidi-build/CMakeFiles/uninstall.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/uninstall.dir/build.make _deps/rtmidi-build/CMakeFiles/uninstall.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target uninstall"
+.PHONY : _deps/rtmidi-build/CMakeFiles/uninstall.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/rtmidi-build/CMakeFiles/uninstall.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/uninstall.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/rtmidi-build/CMakeFiles/uninstall.dir/rule
+
+# Convenience name for target.
+uninstall: _deps/rtmidi-build/CMakeFiles/uninstall.dir/rule
+.PHONY : uninstall
+
+# codegen rule for target.
+_deps/rtmidi-build/CMakeFiles/uninstall.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/uninstall.dir/build.make _deps/rtmidi-build/CMakeFiles/uninstall.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target uninstall"
+.PHONY : _deps/rtmidi-build/CMakeFiles/uninstall.dir/codegen
+
+# clean rule for target.
+_deps/rtmidi-build/CMakeFiles/uninstall.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/uninstall.dir/build.make _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
+.PHONY : _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.
