@@ -1,6 +1,7 @@
 #include "ControlState.h"
 #include "VisualControls.h"
 #include "MidiSystem.h"
+#include "OscSystem.h"
 
 #include <glm/glm.hpp>
 
@@ -95,7 +96,8 @@ void ControlState::load(
     VisualControls&       c,
     VideoRandomizerState& r,
     bool&                 allowDimensionChangeRecreation,
-    MidiSystem&           midiSystem)
+    MidiSystem&           midiSystem,
+    OscSystem&            oscSystem)
 {
     std::ifstream file(path);
     if (!file.is_open()) return;
@@ -104,6 +106,10 @@ void ControlState::load(
 
     // Clear existing MIDI mappings before loading
     midiSystem.clearMappings();
+
+    // Clear existing OSC mappings before loading
+    oscSystem.clearMappings();
+    oscSystem.clearTriggerMappings();
 
     // Load MIDI mappings
     for (const auto& [key, value] : kv) {
@@ -126,6 +132,46 @@ void ControlState::load(
                 }
             } catch (...) {
                 std::cerr << "[ControlState] Failed to parse MIDI mapping: " << key << "=" << value << std::endl;
+            }
+        }
+    }
+
+    // Load OSC mappings
+    for (const auto& [key, value] : kv) {
+        if (key.find("osc_mapping_") == 0) {
+            // Parse key to get OSC address
+            std::string oscAddress = key.substr(13); // "osc_mapping_" is 13 chars
+
+            try {
+                // Parse value: parameterName,minValue,maxValue,invert
+                std::istringstream iss(value);
+                std::string paramName;
+                float minVal, maxVal;
+                int invert;
+                char comma;
+
+                if (std::getline(iss, paramName, ',') &&
+                    (iss >> minVal >> comma >> maxVal >> comma >> invert)) {
+                    oscSystem.addMapping(oscAddress, paramName, minVal, maxVal, invert != 0);
+                    std::cout << "[ControlState] Loaded OSC mapping " << oscAddress << " -> " << paramName << std::endl;
+                }
+            } catch (...) {
+                std::cerr << "[ControlState] Failed to parse OSC mapping: " << key << "=" << value << std::endl;
+            }
+        }
+    }
+
+    // Load OSC trigger mappings
+    for (const auto& [key, value] : kv) {
+        if (key.find("osc_trigger_") == 0) {
+            // Parse key to get OSC address
+            std::string oscAddress = key.substr(12); // "osc_trigger_" is 12 chars
+
+            try {
+                oscSystem.addTriggerMapping(oscAddress, value);
+                std::cout << "[ControlState] Loaded OSC trigger " << oscAddress << " -> " << value << std::endl;
+            } catch (...) {
+                std::cerr << "[ControlState] Failed to parse OSC trigger: " << key << "=" << value << std::endl;
             }
         }
     }
@@ -278,7 +324,8 @@ void ControlState::save(
     const VisualControls&     c,
     const VideoRandomizerState& r,
     bool                      allowDimensionChangeRecreation,
-    const MidiSystem&         midiSystem)
+    const MidiSystem&         midiSystem,
+    const OscSystem&          oscSystem)
 {
     std::ofstream file(path);
     if (!file.is_open()) {
@@ -295,6 +342,20 @@ void ControlState::save(
         file << "midi_cc_" << cc << "=" << mapping.parameterName << ","
              << mapping.minValue << "," << mapping.maxValue << ","
              << (mapping.invert ? 1 : 0) << "\n";
+    }
+
+    // Save OSC mappings
+    const auto& oscMappings = oscSystem.getMappings();
+    for (const auto& [address, mapping] : oscMappings) {
+        file << "osc_mapping_" << address << "=" << mapping.parameterName << ","
+             << mapping.minValue << "," << mapping.maxValue << ","
+             << (mapping.invert ? 1 : 0) << "\n";
+    }
+
+    // Save OSC trigger mappings
+    const auto& oscTriggers = oscSystem.getTriggerMappings();
+    for (const auto& [address, mapping] : oscTriggers) {
+        file << "osc_trigger_" << address << "=" << mapping.actionName << "\n";
     }
 
     file << "\n";

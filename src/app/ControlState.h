@@ -7,12 +7,13 @@
 struct VisualControls;
 struct VideoRandomizerState;
 class MidiSystem;
+class OscSystem;
 
 // Lee y escribe controls_state.cfg.
 // No sabe nada de Vulkan, ImGui ni SDL.
 // Uso:
-//   ControlState::load("controls_state.cfg", controls, randomizer, allowDimChange);
-//   ControlState::save("controls_state.cfg", controls, randomizer, allowDimChange);
+//   ControlState::load("controls_state.cfg", controls, randomizer, allowDimChange, midiSystem, oscSystem);
+//   ControlState::save("controls_state.cfg", controls, randomizer, allowDimChange, midiSystem, oscSystem);
 namespace ControlState {
 
 void load(
@@ -20,7 +21,8 @@ void load(
     VisualControls&     controls,
     VideoRandomizerState& randomizer,
     bool&               allowDimensionChangeRecreation,
-    MidiSystem&         midiSystem
+    MidiSystem&         midiSystem,
+    OscSystem&          oscSystem
 );
 
 void save(
@@ -28,7 +30,8 @@ void save(
     const VisualControls&     controls,
     const VideoRandomizerState& randomizer,
     bool                      allowDimensionChangeRecreation,
-    const MidiSystem&         midiSystem
+    const MidiSystem&         midiSystem,
+    const OscSystem&          oscSystem
 );
 
 } // namespace ControlState

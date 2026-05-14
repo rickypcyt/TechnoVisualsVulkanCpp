@@ -150,6 +150,10 @@ void UISystem::render(
         drawOscControls(oscSystem);
     }
 
+    if (showParameterIndex) {
+        drawParameterIndex();
+    }
+
     if (showDemoWindow) {
         ImGui::ShowDemoWindow(&showDemoWindow);
     }
@@ -1307,6 +1311,13 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
     // Port display
     ImGui::Text("OSC Port: %d", oscSystem.getPort());
     ImGui::Text("Listening for OSC messages on UDP port");
+    ImGui::Separator();
+    std::string localIP = OscSystem::getLocalIPAddress();
+    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.5f, 1.0f), "IP Address: %s", localIP.c_str());
+    ImGui::Text("Configure your OSC client with:");
+    ImGui::Text("Host: %s", localIP.c_str());
+    ImGui::Text("Port: %d", oscSystem.getPort());
+    ImGui::Text("Protocol: UDP");
 
     ImGui::Separator();
 
@@ -1341,16 +1352,132 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
         ImGui::Separator();
         ImGui::Text("Assign to Parameter:");
 
-        // Simplified parameter list for OSC
-        static const char* parameters[] = {
-            "animationSpeed", "tempo", "energy", "bass", "mid", "high",
-            "colorBlend", "uvWarpStrength", "rippleStrength", "swirlStrength",
-            "bloomIntensity", "bloomThreshold", "aberrationAmount", "grainStrength",
-            "feedbackAmount", "trailStrength", "glitchAmount", "glitchRGBSplit",
-            "videoPlaybackRate", "gradeBrightness", "gradeContrast", "gradeSaturation"
+        // List of all VisualControls parameters with their default ranges and categories (same as MIDI)
+        struct ParameterInfo {
+            const char* category;
+            const char* name;
+            float minVal;
+            float maxVal;
+        };
+        static const ParameterInfo parameters[] = {
+            // Procedural Controls
+            {"Procedural", "animationSpeed", 0.0f, 3.0f},
+            {"Procedural", "tempo", 0.0f, 2.0f},
+            {"Procedural", "energy", 0.0f, 1.0f},
+            {"Procedural", "bass", 0.0f, 1.0f},
+            {"Procedural", "mid", 0.0f, 1.0f},
+            {"Procedural", "high", 0.0f, 1.0f},
+            {"Procedural", "colorBlend", 0.0f, 1.0f},
+            {"Procedural", "uvWarpStrength", 0.0f, 1.0f},
+            {"Procedural", "rippleStrength", 0.0f, 1.0f},
+            {"Procedural", "rippleFrequency", 0.0f, 5.0f},
+            {"Procedural", "swirlStrength", 0.0f, 1.0f},
+            {"Procedural", "displacementAmount", 0.0f, 1.0f},
+            {"Procedural", "kaleidoSegments", 1.0f, 12.0f},
+            {"Procedural", "tunnelDepth", 0.0f, 1.0f},
+            {"Procedural", "tunnelCurvature", 0.0f, 1.0f},
+            // Post FX
+            {"Post FX", "bloomIntensity", 0.0f, 1.0f},
+            {"Post FX", "bloomThreshold", 0.0f, 1.0f},
+            {"Post FX", "aberrationAmount", 0.0f, 0.1f},
+            {"Post FX", "grainStrength", 0.0f, 1.0f},
+            {"Post FX", "crtCurvature", 0.0f, 0.5f},
+            {"Post FX", "crtScanlineIntensity", 0.0f, 1.0f},
+            {"Post FX", "crtMaskIntensity", 0.0f, 1.0f},
+            {"Post FX", "crtVignette", 0.0f, 1.0f},
+            {"Post FX", "crtFishEye", 0.0f, 0.5f},
+            {"Post FX", "gaussianBlur", 0.0f, 1.0f},
+            {"Post FX", "directionalBlur", 0.0f, 1.0f},
+            {"Post FX", "directionalBlurAngle", 0.0f, 360.0f},
+            {"Post FX", "zoomBlur", 0.0f, 1.0f},
+            {"Post FX", "motionBlur", 0.0f, 1.0f},
+            {"Post FX", "temporalBlur", 0.0f, 1.0f},
+            {"Post FX", "unsharpMask", 0.0f, 1.0f},
+            {"Post FX", "casAmount", 0.0f, 1.0f},
+            {"Post FX", "localContrast", 0.0f, 1.0f},
+            {"Post FX", "pixelateAmount", 0.0f, 1.0f},
+            {"Post FX", "strobeSpeed", 0.0f, 10.0f},
+            {"Post FX", "thresholdLevel", 0.0f, 1.0f},
+            {"Post FX", "slowZoomAmount", 0.0f, 1.0f},
+            {"Post FX", "edgeStrength", 0.0f, 2.0f},
+            {"Post FX", "edgeThreshold", 0.0f, 1.0f},
+            {"Post FX", "edgeBlend", 0.0f, 1.0f},
+            {"Post FX", "fxaaQualitySubpix", 0.0f, 1.0f},
+            {"Post FX", "fxaaQualityEdgeThreshold", 0.0f, 0.5f},
+            {"Post FX", "fxaaQualityEdgeThresholdMin", 0.0f, 0.2f},
+            // VJay Basics
+            {"VJay Basics", "videoPlaybackRate", 0.1f, 3.0f},
+            {"VJay Basics", "videoDecodeOversample", 1.0f, 4.0f},
+            {"VJay Basics", "videoMix", 0.0f, 1.0f},
+            {"VJay Basics", "grayscaleAmount", 0.0f, 1.0f},
+            {"VJay Basics", "sharpenAmount", 0.0f, 1.0f},
+            {"VJay Basics", "gradeBrightness", -1.0f, 1.0f},
+            {"VJay Basics", "gradeContrast", 0.0f, 2.0f},
+            {"VJay Basics", "gradeSaturation", 0.0f, 2.0f},
+            {"VJay Basics", "gradeHueShift", 0.0f, 360.0f},
+            {"VJay Basics", "gradeGamma", 0.1f, 3.0f},
+            {"VJay Basics", "colorLUTIndex", 0.0f, 10.0f},
+            {"VJay Basics", "splitToneBalance", 0.0f, 1.0f},
+            {"VJay Basics", "blendProceduralMix", 0.0f, 1.0f},
+            {"VJay Basics", "blendVideoMix", 0.0f, 1.0f},
+            {"VJay Basics", "blendFeedbackMix", 0.0f, 1.0f},
+            // VJay Extra
+            {"VJay Extra", "feedbackAmount", 0.0f, 1.0f},
+            {"VJay Extra", "trailStrength", 0.0f, 1.0f},
+            {"VJay Extra", "temporalAccumulation", 0.0f, 1.0f},
+            {"VJay Extra", "feedbackDecay", 0.0f, 1.0f},
+            {"VJay Extra", "recursiveBlend", 0.0f, 1.0f},
+            {"VJay Extra", "glitchAmount", 0.0f, 1.0f},
+            {"VJay Extra", "glitchDatamosh", 0.0f, 1.0f},
+            {"VJay Extra", "glitchRGBSplit", 0.0f, 1.0f},
+            {"VJay Extra", "glitchScanlineBreak", 0.0f, 1.0f},
+            {"VJay Extra", "glitchJitter", 0.0f, 1.0f},
+            {"VJay Extra", "glitchTearing", 0.0f, 1.0f},
+            {"VJay Extra", "glitchPixelSort", 0.0f, 1.0f},
+            {"VJay Extra", "glitchBufferCorruption", 0.0f, 1.0f},
+            {"VJay Extra", "analogScanlineFocus", 0.0f, 1.0f},
+            {"VJay Extra", "analogMaskBalance", 0.0f, 1.0f},
+            {"VJay Extra", "analogNoise", 0.0f, 1.0f},
+            {"VJay Extra", "analogBloom", 0.0f, 1.0f},
+            {"VJay Extra", "vhsDistortion", 0.0f, 1.0f},
+            {"VJay Extra", "analogChromaticAberration", 0.0f, 0.1f},
+            {"VJay Extra", "mirrorAmount", 0.0f, 1.0f},
+            {"VJay Extra", "posterizeLevels", 2.0f, 16.0f},
+            {"VJay Extra", "zoomPulseAmount", 0.0f, 1.0f},
+            {"VJay Extra", "rgbShiftAmount", 0.0f, 0.1f},
+            {"VJay Extra", "audioWarpResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioFeedbackResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioBlurResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioColorResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioGlitchResponse", 0.0f, 1.0f},
+            {"VJay Extra", "audioBeatSync", 0.0f, 2.0f},
+            {"VJay Extra", "audioLfoRate", 0.0f, 2.0f},
+            {"VJay Extra", "temporalInterpolation", 0.0f, 1.0f},
+            {"VJay Extra", "temporalBlendStrength", 0.0f, 1.0f},
+            {"VJay Extra", "slowMotionFactor", 0.1f, 2.0f},
+            {"VJay Extra", "frameAccumulation", 0.0f, 1.0f}
         };
         static int selectedParamIndex = 0;
-        ImGui::Combo("Parameter", &selectedParamIndex, parameters, IM_ARRAYSIZE(parameters));
+
+        // Build display strings with category prefix
+        static std::vector<std::string> displayStrings;
+        if (displayStrings.empty()) {
+            displayStrings.reserve(IM_ARRAYSIZE(parameters));
+            for (size_t i = 0; i < IM_ARRAYSIZE(parameters); ++i) {
+                displayStrings.push_back(std::string(parameters[i].category) + ": " + parameters[i].name);
+            }
+        }
+
+        // Convert to const char* array for ImGui
+        static std::vector<const char*> displayPtrs;
+        if (displayPtrs.empty()) {
+            displayPtrs.reserve(displayStrings.size());
+            for (const auto& str : displayStrings) {
+                displayPtrs.push_back(str.c_str());
+            }
+        }
+
+        ImGui::Combo("Parameter", &selectedParamIndex, displayPtrs.data(), displayPtrs.size());
 
         static float minVal = 0.0f;
         static float maxVal = 1.0f;
@@ -1361,8 +1488,8 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
         ImGui::Checkbox("Invert", &invert);
 
         if (ImGui::Button("Assign Mapping")) {
-            oscSystem.addMapping(msg.address, parameters[selectedParamIndex], minVal, maxVal, invert);
-            std::cout << "[UI] Assigned OSC address " << msg.address << " to " << parameters[selectedParamIndex] << std::endl;
+            oscSystem.addMapping(msg.address, parameters[selectedParamIndex].name, minVal, maxVal, invert);
+            std::cout << "[UI] Assigned OSC address " << msg.address << " to " << parameters[selectedParamIndex].name << std::endl;
             oscSystem.clearLearnedMessage();
         }
 
@@ -1404,6 +1531,196 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
     ImGui::Text("/vjay/bloomIntensity");
     ImGui::Text("/vjay/feedbackAmount");
     ImGui::Text("Send float values 0.0-1.0 for normalized control");
+
+    ImGui::Separator();
+    ImGui::Text("OSC Triggers (Buttons):");
+    const auto& triggerMappings = oscSystem.getTriggerMappings();
+    if (ImGui::BeginTable("OscTriggers", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Address");
+        ImGui::TableSetupColumn("Action");
+        ImGui::TableSetupColumn("Remove");
+        ImGui::TableHeadersRow();
+
+        for (const auto& [addr, mapping] : triggerMappings) {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%s", addr.c_str());
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", mapping.actionName.c_str());
+            ImGui::TableSetColumnIndex(2);
+            std::string label = "Remove##" + addr;
+            if (ImGui::Button(label.c_str())) {
+                oscSystem.removeTriggerMapping(addr);
+            }
+        }
+        ImGui::EndTable();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Add Trigger Mapping:");
+    static char triggerAddress[256] = "/vjay/";
+    ImGui::InputText("OSC Address", triggerAddress, IM_ARRAYSIZE(triggerAddress));
+
+    static const char* actions[] = {
+        "randomizeVideo",
+        "jumpRandom",
+        "folderChanged",
+        "applyChanges"
+    };
+    static int selectedAction = 0;
+    ImGui::Combo("Action", &selectedAction, actions, IM_ARRAYSIZE(actions));
+
+    if (ImGui::Button("Add Trigger")) {
+        oscSystem.addTriggerMapping(triggerAddress, actions[selectedAction]);
+        std::cout << "[UI] Added OSC trigger " << triggerAddress << " -> " << actions[selectedAction] << std::endl;
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Trigger Examples:");
+    ImGui::Text("/vjay/randomize (no arguments)");
+    ImGui::Text("/vjay/jump (no arguments)");
+    ImGui::Text("Send messages without arguments for triggers");
+
+    ImGui::End();
+}
+
+void UISystem::drawParameterIndex() {
+    ImGui::Begin("Parameter Index", &showParameterIndex);
+
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.5f, 1.0f), "Complete Parameter Reference");
+    ImGui::Separator();
+    ImGui::Text("Use these parameter names for MIDI CC and OSC mapping");
+
+    if (ImGui::BeginTabBar("ParameterTabs")) {
+        if (ImGui::BeginTabItem("Procedural")) {
+            ImGui::Text("animationSpeed - 0.0 to 3.0");
+            ImGui::Text("tempo - 0.0 to 2.0");
+            ImGui::Text("energy - 0.0 to 1.0");
+            ImGui::Text("bass - 0.0 to 1.0");
+            ImGui::Text("mid - 0.0 to 1.0");
+            ImGui::Text("high - 0.0 to 1.0");
+            ImGui::Text("colorBlend - 0.0 to 1.0");
+            ImGui::Text("uvWarpStrength - 0.0 to 1.0");
+            ImGui::Text("rippleStrength - 0.0 to 1.0");
+            ImGui::Text("rippleFrequency - 0.0 to 5.0");
+            ImGui::Text("swirlStrength - 0.0 to 1.0");
+            ImGui::Text("displacementAmount - 0.0 to 1.0");
+            ImGui::Text("kaleidoSegments - 1.0 to 12.0");
+            ImGui::Text("tunnelDepth - 0.0 to 1.0");
+            ImGui::Text("tunnelCurvature - 0.0 to 1.0");
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Post FX")) {
+            ImGui::Text("bloomIntensity - 0.0 to 1.0");
+            ImGui::Text("bloomThreshold - 0.0 to 1.0");
+            ImGui::Text("aberrationAmount - 0.0 to 0.1");
+            ImGui::Text("grainStrength - 0.0 to 1.0");
+            ImGui::Text("crtCurvature - 0.0 to 0.5");
+            ImGui::Text("crtScanlineIntensity - 0.0 to 1.0");
+            ImGui::Text("crtMaskIntensity - 0.0 to 1.0");
+            ImGui::Text("crtVignette - 0.0 to 1.0");
+            ImGui::Text("crtFishEye - 0.0 to 0.5");
+            ImGui::Text("gaussianBlur - 0.0 to 1.0");
+            ImGui::Text("directionalBlur - 0.0 to 1.0");
+            ImGui::Text("directionalBlurAngle - 0.0 to 360.0");
+            ImGui::Text("zoomBlur - 0.0 to 1.0");
+            ImGui::Text("motionBlur - 0.0 to 1.0");
+            ImGui::Text("temporalBlur - 0.0 to 1.0");
+            ImGui::Text("unsharpMask - 0.0 to 1.0");
+            ImGui::Text("casAmount - 0.0 to 1.0");
+            ImGui::Text("localContrast - 0.0 to 1.0");
+            ImGui::Text("pixelateAmount - 0.0 to 1.0");
+            ImGui::Text("strobeSpeed - 0.0 to 20.0");
+            ImGui::Text("thresholdLevel - 0.0 to 1.0");
+            ImGui::Text("slowZoomAmount - 0.0 to 1.0");
+            ImGui::Text("edgeStrength - 0.1 to 5.0");
+            ImGui::Text("edgeThreshold - 0.0 to 1.0");
+            ImGui::Text("edgeBlend - 0.0 to 1.0");
+            ImGui::Text("fxaaQualitySubpix - 0.0 to 1.0");
+            ImGui::Text("fxaaQualityEdgeThreshold - 0.0 to 1.0");
+            ImGui::Text("fxaaQualityEdgeThresholdMin - 0.0 to 1.0");
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("VJay Basics")) {
+            ImGui::Text("videoPlaybackRate - 0.0 to 2.0");
+            ImGui::Text("videoDecodeOversample - 1.0 to 4.0");
+            ImGui::Text("videoMix - 0.0 to 1.0");
+            ImGui::Text("grayscaleAmount - 0.0 to 1.0");
+            ImGui::Text("sharpenAmount - 0.0 to 1.0");
+            ImGui::Text("gradeBrightness - 0.0 to 2.0");
+            ImGui::Text("gradeContrast - 0.0 to 2.0");
+            ImGui::Text("gradeSaturation - 0.0 to 2.0");
+            ImGui::Text("gradeHueShift - 0.0 to 360.0");
+            ImGui::Text("gradeGamma - 0.0 to 2.0");
+            ImGui::Text("colorLUTIndex - 0.0 to 10.0");
+            ImGui::Text("splitToneBalance - 0.0 to 1.0");
+            ImGui::Text("blendProceduralMix - 0.0 to 1.0");
+            ImGui::Text("blendVideoMix - 0.0 to 1.0");
+            ImGui::Text("blendFeedbackMix - 0.0 to 1.0");
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("VJay Extra")) {
+            ImGui::Text("feedbackAmount - 0.0 to 1.0");
+            ImGui::Text("trailStrength - 0.0 to 1.0");
+            ImGui::Text("temporalAccumulation - 0.0 to 1.0");
+            ImGui::Text("feedbackDecay - 0.0 to 1.0");
+            ImGui::Text("recursiveBlend - 0.0 to 1.0");
+            ImGui::Text("glitchAmount - 0.0 to 1.0");
+            ImGui::Text("glitchDatamosh - 0.0 to 1.0");
+            ImGui::Text("glitchRGBSplit - 0.0 to 1.0");
+            ImGui::Text("glitchScanlineBreak - 0.0 to 1.0");
+            ImGui::Text("glitchJitter - 0.0 to 1.0");
+            ImGui::Text("glitchTearing - 0.0 to 1.0");
+            ImGui::Text("glitchPixelSort - 0.0 to 1.0");
+            ImGui::Text("glitchBufferCorruption - 0.0 to 1.0");
+            ImGui::Text("analogScanlineFocus - 0.0 to 1.0");
+            ImGui::Text("analogMaskBalance - 0.0 to 1.0");
+            ImGui::Text("analogNoise - 0.0 to 1.0");
+            ImGui::Text("analogBloom - 0.0 to 1.0");
+            ImGui::Text("vhsDistortion - 0.0 to 1.0");
+            ImGui::Text("analogChromaticAberration - 0.0 to 1.0");
+            ImGui::Text("mirrorAmount - 0.0 to 1.0");
+            ImGui::Text("posterizeLevels - 0.0 to 16.0");
+            ImGui::Text("zoomPulseAmount - 0.0 to 1.0");
+            ImGui::Text("rgbShiftAmount - 0.0 to 1.0");
+            ImGui::Text("audioWarpResponse - 0.0 to 1.0");
+            ImGui::Text("audioFeedbackResponse - 0.0 to 1.0");
+            ImGui::Text("audioBlurResponse - 0.0 to 1.0");
+            ImGui::Text("audioColorResponse - 0.0 to 1.0");
+            ImGui::Text("audioGlitchResponse - 0.0 to 1.0");
+            ImGui::Text("audioBeatSync - 0.0 to 1.0");
+            ImGui::Text("audioLfoRate - 0.0 to 10.0");
+            ImGui::Text("temporalInterpolation - 0.0 to 1.0");
+            ImGui::Text("temporalBlendStrength - 0.0 to 1.0");
+            ImGui::Text("slowMotionFactor - 0.0 to 1.0");
+            ImGui::Text("frameAccumulation - 0.0 to 1.0");
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Trigger Actions")) {
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.5f, 1.0f), "OSC Triggers (send message without arguments)");
+            ImGui::Text("randomizeVideo - Randomize current video");
+            ImGui::Text("jumpRandom - Random jump within current video");
+            ImGui::Text("folderChanged - Reload video folder");
+            ImGui::Text("applyChanges - Apply render changes");
+            
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.5f, 1.0f), "MIDI Note Triggers");
+            ImGui::Text("Notes 36-48 - Mode switching");
+            ImGui::Text("Note 60 - Random video change");
+            ImGui::Text("Note 62 - Toggle bloom");
+            ImGui::Text("Note 64 - Toggle glitch");
+            ImGui::Text("Note 65 - Toggle bend");
+            ImGui::Text("Note 67 - Toggle feedback");
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
 
     ImGui::End();
 }

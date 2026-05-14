@@ -129,6 +129,7 @@ private:
     bool showNLEWindow   = true;
     bool showMidiWindow  = true;
     bool showOscWindow   = true;
+    bool showParameterIndex = true;
 
 private:
     void beginFrame();
@@ -172,6 +173,7 @@ private:
 
     void drawMidiControls(MidiSystem& midiSystem);
     void drawOscControls(OscSystem& oscSystem);
+    void drawParameterIndex();
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;

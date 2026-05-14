@@ -133,6 +133,9 @@ private:
     void initMidi();
     void initOsc();
 
+    // OSC trigger action handlers
+    void handleOscTrigger(const std::string& action);
+
     // Main loop
     void mainLoop();
     void updateUniformBuffer(uint32_t frameIndex);

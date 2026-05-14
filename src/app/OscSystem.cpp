@@ -1,6 +1,11 @@
 #include "OscSystem.h"
 #include <iostream>
 #include <cstring>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 
 OscSystem::OscSystem()
     : serverThread(nullptr)
@@ -82,6 +87,68 @@ void OscSystem::setPort(int port) {
     this->port = port;
 }
 
+std::string OscSystem::getLocalIPAddress() {
+    struct ifaddrs *ifaddr, *ifa;
+    char host[NI_MAXHOST];
+
+    if (getifaddrs(&ifaddr) == -1) {
+        return "127.0.0.1";
+    }
+
+    for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == nullptr) {
+            continue;
+        }
+
+        // Skip loopback and non-AF_INET interfaces
+        if (ifa->ifa_addr->sa_family != AF_INET) {
+            continue;
+        }
+
+        // Skip loopback interface
+        if (strcmp(ifa->ifa_name, "lo") == 0) {
+            continue;
+        }
+
+        // Prefer wlan0 or eth0
+        if (strcmp(ifa->ifa_name, "wlan0") == 0 || strcmp(ifa->ifa_name, "eth0") == 0) {
+            int s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
+                               host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
+            if (s != 0) {
+                continue;
+            }
+            freeifaddrs(ifaddr);
+            return std::string(host);
+        }
+    }
+
+    // Fallback: return first non-loopback interface
+    for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == nullptr) {
+            continue;
+        }
+
+        if (ifa->ifa_addr->sa_family != AF_INET) {
+            continue;
+        }
+
+        if (strcmp(ifa->ifa_name, "lo") == 0) {
+            continue;
+        }
+
+        int s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
+                           host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
+        if (s != 0) {
+            continue;
+        }
+        freeifaddrs(ifaddr);
+        return std::string(host);
+    }
+
+    freeifaddrs(ifaddr);
+    return "127.0.0.1";
+}
+
 void OscSystem::update() {
     if (!enabled || !initialized) {
         return;
@@ -99,6 +166,10 @@ void OscSystem::update() {
 
 void OscSystem::setEventCallback(std::function<void(const OscMessage&)> callback) {
     eventCallback = callback;
+}
+
+void OscSystem::setTriggerCallback(std::function<void(const std::string&)> callback) {
+    triggerCallback = callback;
 }
 
 void OscSystem::addMapping(const std::string& address, const std::string& parameterName, float minVal, float maxVal, bool invert) {
@@ -121,6 +192,25 @@ void OscSystem::clearMappings() {
 
 const std::map<std::string, OscMapping>& OscSystem::getMappings() const {
     return mappings;
+}
+
+void OscSystem::addTriggerMapping(const std::string& address, const std::string& actionName) {
+    OscTriggerMapping mapping;
+    mapping.address = address;
+    mapping.actionName = actionName;
+    triggerMappings[address] = mapping;
+}
+
+void OscSystem::removeTriggerMapping(const std::string& address) {
+    triggerMappings.erase(address);
+}
+
+void OscSystem::clearTriggerMappings() {
+    triggerMappings.clear();
+}
+
+const std::map<std::string, OscTriggerMapping>& OscSystem::getTriggerMappings() const {
+    return triggerMappings;
 }
 
 void OscSystem::applyToVisualControls(const OscMessage& msg, VisualControls& controls) {
@@ -171,6 +261,16 @@ int OscSystem::oscHandler(const char* path, const char* types, lo_arg** argv, in
     try {
         OscMessage oscMsg = oscSystem->parseMessage(path, types, argv, argc);
 
+        // Check if this is a trigger (no arguments)
+        if (oscMsg.type == OscMessageType::TRIGGER && oscSystem->triggerCallback) {
+            // Call trigger callback directly for immediate response
+            auto it = oscSystem->triggerMappings.find(oscMsg.address);
+            if (it != oscSystem->triggerMappings.end()) {
+                oscSystem->triggerCallback(it->second.actionName);
+            }
+            return 1;
+        }
+
         // Learn mode: capture the first message
         if (oscSystem->learnMode && !oscSystem->hasLearned) {
             oscSystem->lastLearnedMessage = oscMsg;
@@ -181,6 +281,8 @@ int OscSystem::oscHandler(const char* path, const char* types, lo_arg** argv, in
                 std::cout << " value: " << oscMsg.floatValue << std::endl;
             } else if (oscMsg.type == OscMessageType::INT) {
                 std::cout << " value: " << oscMsg.intValue << std::endl;
+            } else if (oscMsg.type == OscMessageType::TRIGGER) {
+                std::cout << " (trigger)" << std::endl;
             }
             return 1;
         }
@@ -199,33 +301,37 @@ OscMessage OscSystem::parseMessage(const char* path, const char* types, lo_arg**
     OscMessage msg;
     msg.address = path;
 
-    if (argc > 0) {
-        switch (types[0]) {
-            case 'f':
-                msg.type = OscMessageType::FLOAT;
-                msg.floatValue = argv[0]->f;
-                break;
-            case 'i':
-                msg.type = OscMessageType::INT;
-                msg.intValue = argv[0]->i;
-                break;
-            case 's':
-                msg.type = OscMessageType::STRING;
-                msg.stringValue = &argv[0]->s;
-                break;
-            case 'T':
-                msg.type = OscMessageType::BOOL;
-                msg.boolValue = true;
-                break;
-            case 'F':
-                msg.type = OscMessageType::BOOL;
-                msg.boolValue = false;
-                break;
-            default:
-                msg.type = OscMessageType::FLOAT;
-                msg.floatValue = 0.0f;
-                break;
-        }
+    // No arguments = trigger
+    if (argc == 0) {
+        msg.type = OscMessageType::TRIGGER;
+        return msg;
+    }
+
+    switch (types[0]) {
+        case 'f':
+            msg.type = OscMessageType::FLOAT;
+            msg.floatValue = argv[0]->f;
+            break;
+        case 'i':
+            msg.type = OscMessageType::INT;
+            msg.intValue = argv[0]->i;
+            break;
+        case 's':
+            msg.type = OscMessageType::STRING;
+            msg.stringValue = &argv[0]->s;
+            break;
+        case 'T':
+            msg.type = OscMessageType::BOOL;
+            msg.boolValue = true;
+            break;
+        case 'F':
+            msg.type = OscMessageType::BOOL;
+            msg.boolValue = false;
+            break;
+        default:
+            msg.type = OscMessageType::FLOAT;
+            msg.floatValue = 0.0f;
+            break;
     }
 
     return msg;

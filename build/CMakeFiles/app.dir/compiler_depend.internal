@@ -1679,6 +1679,7 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.h
  /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h
  /usr/include/alloca.h
+ /usr/include/arpa/inet.h
  /usr/include/asm-generic/bitsperlong.h
  /usr/include/asm-generic/errno-base.h
  /usr/include/asm-generic/errno.h
@@ -2084,6 +2085,7 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o
  /usr/include/glm/vector_relational.hpp
  /usr/include/gnu/stubs-64.h
  /usr/include/gnu/stubs.h
+ /usr/include/ifaddrs.h
  /usr/include/limits.h
  /usr/include/linux/errno.h
  /usr/include/linux/limits.h
@@ -2101,6 +2103,7 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o
  /usr/include/lo/lo_types.h
  /usr/include/locale.h
  /usr/include/math.h
+ /usr/include/net/if.h
  /usr/include/netdb.h
  /usr/include/netinet/in.h
  /usr/include/pthread.h

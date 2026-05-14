@@ -1675,6 +1675,7 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o: /home/ricky/coding/proyects/vulkancp
   /home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h \
   /usr/include/alloca.h \
+  /usr/include/arpa/inet.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
@@ -2080,6 +2081,7 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o: /home/ricky/coding/proyects/vulkancp
   /usr/include/glm/vector_relational.hpp \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
+  /usr/include/ifaddrs.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -2097,6 +2099,7 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o: /home/ricky/coding/proyects/vulkancp
   /usr/include/lo/lo_types.h \
   /usr/include/locale.h \
   /usr/include/math.h \
+  /usr/include/net/if.h \
   /usr/include/netdb.h \
   /usr/include/netinet/in.h \
   /usr/include/pthread.h \
@@ -9947,6 +9950,8 @@ CMakeFiles/app.dir/src/video/VideoStaging.cpp.o:
 
 CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o:
 
+CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o:
+
 /usr/include/glm/ext/vector_bool1.hpp:
 
 /usr/include/bits/wchar.h:
@@ -10321,6 +10326,8 @@ CMakeFiles/app.dir/src/app/Application.cpp.o:
 
 /usr/include/c++/16.1.1/bits/specfun.h:
 
+/usr/include/ifaddrs.h:
+
 /usr/include/c++/16.1.1/bits/shared_ptr.h:
 
 /usr/lib32/libfreetype.so.6:
@@ -10546,6 +10553,10 @@ CMakeFiles/app.dir/src/app/Application.cpp.o:
 /usr/include/SDL2/SDL_endian.h:
 
 /usr/lib32/libtasn1.so.6:
+
+CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o:
+
+/usr/include/glm/ext/matrix_transform.hpp:
 
 /usr/include/c++/16.1.1/mutex:
 
@@ -11243,6 +11254,10 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 
 /usr/include/c++/16.1.1/bits/enable_special_members.h:
 
+CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o:
+
+/usr/include/c++/16.1.1/bits/fs_dir.h:
+
 /usr/include/c++/16.1.1/condition_variable:
 
 /usr/include/c++/16.1.1/fstream:
@@ -11486,8 +11501,6 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/include/c++/16.1.1/bits/stl_algobase.h:
 
 /usr/include/libavutil/samplefmt.h:
-
-CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o:
 
 /usr/include/libavutil/version.h:
 
@@ -11795,6 +11808,8 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h:
 
+/usr/include/net/if.h:
+
 /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/keylockerintrin.h:
@@ -11850,6 +11865,8 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/include/glm/ext/vector_int1_sized.hpp:
 
 /usr/lib/Scrt1.o:
+
+/usr/include/arpa/inet.h:
 
 /usr/lib/libatomic_asneeded.so:
 
@@ -12166,11 +12183,3 @@ CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o:
 CMakeFiles/app.dir/src/main.cpp.o:
 
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o:
-
-/usr/include/c++/16.1.1/bits/fs_dir.h:
-
-CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o:
-
-/usr/include/glm/ext/matrix_transform.hpp:
-
-CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o:

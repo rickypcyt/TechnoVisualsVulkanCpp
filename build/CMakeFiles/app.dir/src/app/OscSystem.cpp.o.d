@@ -343,4 +343,5 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/ostream_print.h \
  /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
  /usr/include/c++/16.1.1/bits/istream.tcc /usr/include/c++/16.1.1/cstring \
- /usr/include/string.h /usr/include/strings.h
+ /usr/include/string.h /usr/include/strings.h /usr/include/arpa/inet.h \
+ /usr/include/ifaddrs.h /usr/include/net/if.h

@@ -82,7 +82,7 @@ void Application::run() {
     initializationComplete = true;
     
     // Load control state
-    ControlState::load(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem);
+    ControlState::load(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem, oscSystem);
     
     // Run main loop
     mainLoop();
@@ -414,11 +414,108 @@ void Application::initOsc() {
         oscSystem.applyToVisualControls(msg, visualControls);
     });
 
+    // Set up OSC trigger callback for button actions
+    oscSystem.setTriggerCallback([this](const std::string& action) {
+        handleOscTrigger(action);
+    });
+
     // Start OSC listener
     if (oscSystem.start()) {
         std::cout << "[Application] OSC system started on port 9000" << std::endl;
     } else {
         std::cerr << "[Application] Failed to start OSC listener" << std::endl;
+    }
+}
+
+void Application::handleOscTrigger(const std::string& action) {
+    if (action == "randomizeVideo") {
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+        if (assets.size() > 1) {
+            std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+            int newIndex;
+            do {
+                newIndex = dist(rng);
+            } while (newIndex == selectedVideoAsset);
+            selectedVideoAsset = newIndex;
+            videoSourcePath = assets[newIndex].metadata.path;
+            videoPlayer.shutdown();
+            int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+            int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+            if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                vkDeviceWaitIdle(vulkanContext.getDevice());
+                videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                videoTexture.cleanup(resourceSystem);
+                videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                             vulkanContext.getCommandPool(),
+                                             vulkanContext.getGraphicsQueue(),
+                                             static_cast<uint32_t>(videoPlayer.width()),
+                                             static_cast<uint32_t>(videoPlayer.height()));
+                cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                   static_cast<uint32_t>(videoPlayer.height()),
+                                   static_cast<uint32_t>(videoPlayer.width()) * 4);
+                for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+                    descriptorSetManager.updateSet(
+                        vulkanContext.getDevice(), i,
+                        uniformBufferManager.getBuffers()[i],
+                        const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+                        const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+                    );
+                }
+                multiPassPipeline.updateDescriptorSets(
+                    uniformBufferManager.getBuffers(),
+                    videoTexture.getImageView(),
+                    videoTexture.getPrevImageView(),
+                    videoTexture.getSampler(),
+                    videoTexture.getSampler()
+                );
+                videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
+                videoRandomizer.elapsedSeconds = 0.0f;
+                videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
+            }
+        }
+    } else if (action == "jumpRandom") {
+        if (videoSubsystemInitialized) {
+            double duration = videoPlayer.durationSeconds();
+            if (duration > 0) {
+                std::uniform_real_distribution<double> dist(0.0, duration);
+                videoPlayer.seekSeconds(dist(rng));
+            }
+        }
+    } else if (action == "folderChanged") {
+        videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+        if (!assets.empty()) {
+            selectedVideoAsset = 0;
+            videoSourcePath = assets[0].metadata.path;
+            videoPlayer.shutdown();
+            int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+            int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+            if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+                videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                vkDeviceWaitIdle(vulkanContext.getDevice());
+                videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+                videoTexture.cleanup(resourceSystem);
+                videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                             vulkanContext.getCommandPool(),
+                                             vulkanContext.getGraphicsQueue(),
+                                             static_cast<uint32_t>(videoPlayer.width()),
+                                             static_cast<uint32_t>(videoPlayer.height()));
+                cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                   static_cast<uint32_t>(videoPlayer.height()),
+                                   static_cast<uint32_t>(videoPlayer.width()) * 4);
+                multiPassPipeline.updateDescriptorSets(
+                    uniformBufferManager.getBuffers(),
+                    videoTexture.getImageView(),
+                    videoTexture.getPrevImageView(),
+                    videoTexture.getSampler(),
+                    videoTexture.getSampler()
+                );
+            }
+        }
+    } else if (action == "applyChanges") {
+        // Visual controls are applied through uniform buffer updates
+        controlsDirty = true;
     }
 }
 
@@ -834,18 +931,6 @@ void Application::mainLoop() {
                     );
 
                     videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-                    videoRandomizer.elapsedSeconds = 0.0f;
-                    videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
-                }
-            }
-        };
-        callbacks.onJumpRandom = [this]() {
-            if (videoSubsystemInitialized) {
-                double duration = videoPlayer.durationSeconds();
-                if (duration > 0) {
-                    // Use full video range (0% to 100%)
-                    std::uniform_real_distribution<double> dist(0.0, duration);
-                    videoPlayer.seekSeconds(dist(rng));
                 }
             }
         };
@@ -894,7 +979,7 @@ void Application::mainLoop() {
                 videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
             }
         };
-        
+
         uiSystem.render(visualControls, videoRandomizer, videoPlayer, videoRegistry,
                        selectedVideoAsset, transitionDuration, allowDimensionChangeRecreation,
                        controlsDirty, rng, diag, callbacks, midiSystem, oscSystem);
@@ -1244,7 +1329,7 @@ void Application::cleanup() {
     vkDeviceWaitIdle(vulkanContext.getDevice());
 
     // Save control state
-    ControlState::save(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem);
+    ControlState::save(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem, oscSystem);
 
     // Shutdown UI
     uiSystem.shutdown();

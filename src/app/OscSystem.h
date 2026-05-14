@@ -16,7 +16,8 @@ enum class OscMessageType {
     INT,
     STRING,
     BOOL,
-    BUNDLE
+    BUNDLE,
+    TRIGGER  // No arguments, just a trigger
 };
 
 // OSC message structure
@@ -38,6 +39,12 @@ struct OscMapping {
     bool invert;
 };
 
+// OSC trigger mapping: maps OSC addresses to callbacks (buttons)
+struct OscTriggerMapping {
+    std::string address;
+    std::string actionName;  // "randomizeVideo", "jumpRandom", etc.
+};
+
 class OscSystem {
 public:
     OscSystem();
@@ -55,17 +62,29 @@ public:
     int getPort() const;
     void setPort(int port);
 
+    // Get local IP address
+    static std::string getLocalIPAddress();
+
     // Process incoming OSC messages (call this in main loop)
     void update();
 
     // Set callback for OSC events
     void setEventCallback(std::function<void(const OscMessage&)> callback);
 
+    // Set callback for OSC triggers (button presses)
+    void setTriggerCallback(std::function<void(const std::string&)> callback);
+
     // OSC mapping functions
     void addMapping(const std::string& address, const std::string& parameterName, float minVal, float maxVal, bool invert = false);
     void removeMapping(const std::string& address);
     void clearMappings();
     const std::map<std::string, OscMapping>& getMappings() const;
+
+    // OSC trigger mapping functions (for buttons)
+    void addTriggerMapping(const std::string& address, const std::string& actionName);
+    void removeTriggerMapping(const std::string& address);
+    void clearTriggerMappings();
+    const std::map<std::string, OscTriggerMapping>& getTriggerMappings() const;
 
     // Apply OSC message to VisualControls
     void applyToVisualControls(const OscMessage& msg, VisualControls& controls);
@@ -93,7 +112,9 @@ private:
     bool hasLearned;
     OscMessage lastLearnedMessage;
     std::function<void(const OscMessage&)> eventCallback;
+    std::function<void(const std::string&)> triggerCallback;
     std::map<std::string, OscMapping> mappings;
+    std::map<std::string, OscTriggerMapping> triggerMappings;
     std::vector<OscMessage> messageQueue;
     std::mutex queueMutex;
 
