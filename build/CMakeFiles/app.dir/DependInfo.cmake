@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/ricky/coding/proyects/vulkancpp/src/app/Application.cpp" "CMakeFiles/app.dir/src/app/Application.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/Application.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/app/AudioSystem.cpp" "CMakeFiles/app.dir/src/app/AudioSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/AudioSystem.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/ControlState.cpp" "CMakeFiles/app.dir/src/app/ControlState.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/ControlState.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.cpp" "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.cpp" "CMakeFiles/app.dir/src/app/OscSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/OscSystem.cpp.o.d"

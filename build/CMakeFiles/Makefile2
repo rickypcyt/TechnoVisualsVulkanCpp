@@ -304,12 +304,12 @@ _deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
 CMakeFiles/app.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 "Built target app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 "Built target app"
 .PHONY : CMakeFiles/app.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/app.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 31
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 32
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/app.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : CMakeFiles/app.dir/rule
@@ -321,7 +321,7 @@ app: CMakeFiles/app.dir/rule
 # codegen rule for target.
 CMakeFiles/app.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 "Finished codegen for target app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 "Finished codegen for target app"
 .PHONY : CMakeFiles/app.dir/codegen
 
 # clean rule for target.
@@ -1456,12 +1456,12 @@ _deps/rtmidi-build/CMakeFiles/sysextest.dir/clean:
 _deps/rtmidi-build/CMakeFiles/apinames.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1,2 "Built target apinames"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1 "Built target apinames"
 .PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/all
 
 # Build rule for subdir invocation for target.
 _deps/rtmidi-build/CMakeFiles/apinames.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/apinames.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/rule
@@ -1473,7 +1473,7 @@ apinames: _deps/rtmidi-build/CMakeFiles/apinames.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/apinames.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/apinames.dir/build.make _deps/rtmidi-build/CMakeFiles/apinames.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1,2 "Finished codegen for target apinames"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=1 "Finished codegen for target apinames"
 .PHONY : _deps/rtmidi-build/CMakeFiles/apinames.dir/codegen
 
 # clean rule for target.

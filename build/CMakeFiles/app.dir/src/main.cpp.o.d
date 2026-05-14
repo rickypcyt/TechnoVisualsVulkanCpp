@@ -630,5 +630,7 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/bits/netdb.h /usr/include/lo/lo_osc_types.h \
  /usr/include/lo/lo_errors.h /usr/include/lo/lo_lowlevel.h \
  /usr/include/lo/lo_serverthread.h /usr/include/lo/lo_macros.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/AudioSystem.h \
+ /usr/local/include/portaudio.h /usr/include/c++/16.1.1/complex \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/PlaybackClock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h

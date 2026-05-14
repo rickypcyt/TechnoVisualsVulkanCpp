@@ -796,6 +796,30 @@ src/app/Application.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/Application.cpp.s
 .PHONY : src/app/Application.cpp.s
 
+src/app/AudioSystem.o: src/app/AudioSystem.cpp.o
+.PHONY : src/app/AudioSystem.o
+
+# target to build an object file
+src/app/AudioSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/AudioSystem.cpp.o
+.PHONY : src/app/AudioSystem.cpp.o
+
+src/app/AudioSystem.i: src/app/AudioSystem.cpp.i
+.PHONY : src/app/AudioSystem.i
+
+# target to preprocess a source file
+src/app/AudioSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/AudioSystem.cpp.i
+.PHONY : src/app/AudioSystem.cpp.i
+
+src/app/AudioSystem.s: src/app/AudioSystem.cpp.s
+.PHONY : src/app/AudioSystem.s
+
+# target to generate assembly for a file
+src/app/AudioSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/AudioSystem.cpp.s
+.PHONY : src/app/AudioSystem.cpp.s
+
 src/app/ControlState.o: src/app/ControlState.cpp.o
 .PHONY : src/app/ControlState.o
 
@@ -1482,6 +1506,9 @@ help:
 	@echo "... src/app/Application.o"
 	@echo "... src/app/Application.i"
 	@echo "... src/app/Application.s"
+	@echo "... src/app/AudioSystem.o"
+	@echo "... src/app/AudioSystem.i"
+	@echo "... src/app/AudioSystem.s"
 	@echo "... src/app/ControlState.o"
 	@echo "... src/app/ControlState.i"
 	@echo "... src/app/ControlState.s"

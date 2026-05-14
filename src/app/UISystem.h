@@ -13,6 +13,7 @@ class VideoPlayer;
 class VideoRegistry;
 class MidiSystem;
 class OscSystem;
+class AudioSystem;
 
 // Agregamos solo lo imprescindible de imgui aqui.
 // El .cpp incluye los headers completos de imgui.
@@ -103,7 +104,8 @@ public:
         const UIDiagnostics&  diag,
         const UICallbacks&    callbacks,
         MidiSystem&           midiSystem,
-        OscSystem&            oscSystem
+        OscSystem&            oscSystem,
+        AudioSystem&          audioSystem
     );
 
 private:
@@ -129,6 +131,7 @@ private:
     bool showNLEWindow   = true;
     bool showMidiWindow  = true;
     bool showOscWindow   = true;
+    bool showAudioWindow = true;
     bool showParameterIndex = true;
 
 private:
@@ -173,6 +176,7 @@ private:
 
     void drawMidiControls(MidiSystem& midiSystem);
     void drawOscControls(OscSystem& oscSystem);
+    void drawAudioDebug(AudioSystem& audioSystem);
     void drawParameterIndex();
 
     SDL_Window*   window   = nullptr;

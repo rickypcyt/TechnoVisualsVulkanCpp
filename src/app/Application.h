@@ -21,6 +21,7 @@
 #include "../app/ControlState.h"
 #include "../app/MidiSystem.h"
 #include "../app/OscSystem.h"
+#include "../app/AudioSystem.h"
 #include "../app/PlaybackClock.h"
 #include "../app/ProjectState.h"
 #include "../app/Timeline.h"
@@ -88,6 +89,7 @@ private:
     VideoRandomizerState videoRandomizer;
     MidiSystem midiSystem;
     OscSystem oscSystem;
+    AudioSystem audioSystem;
     std::string controlStatePath = "controls_state.cfg";
     bool controlsDirty = false;
     bool allowDimensionChangeRecreation = false;
@@ -132,6 +134,7 @@ private:
     void initMultiPassPipeline();
     void initMidi();
     void initOsc();
+    void initAudio();
 
     // OSC trigger action handlers
     void handleOscTrigger(const std::string& action);

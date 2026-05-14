@@ -2,6 +2,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/app.dir/link.d"
   "CMakeFiles/app.dir/src/app/Application.cpp.o"
   "CMakeFiles/app.dir/src/app/Application.cpp.o.d"
+  "CMakeFiles/app.dir/src/app/AudioSystem.cpp.o"
+  "CMakeFiles/app.dir/src/app/AudioSystem.cpp.o.d"
   "CMakeFiles/app.dir/src/app/ControlState.cpp.o"
   "CMakeFiles/app.dir/src/app/ControlState.cpp.o.d"
   "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o"

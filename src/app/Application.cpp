@@ -67,6 +67,9 @@ void Application::run() {
     // Initialize OSC
     initOsc();
 
+    // Initialize Audio
+    initAudio();
+
     // Initialize command buffers
     initCommandBuffers();
 
@@ -424,6 +427,20 @@ void Application::initOsc() {
         std::cout << "[Application] OSC system started on port 9000" << std::endl;
     } else {
         std::cerr << "[Application] Failed to start OSC listener" << std::endl;
+    }
+}
+
+void Application::initAudio() {
+    if (!audioSystem.initialize()) {
+        std::cerr << "[Application] Failed to initialize Audio system" << std::endl;
+        return;
+    }
+
+    // Start audio stream
+    if (audioSystem.startStream()) {
+        std::cout << "[Application] Audio system started successfully" << std::endl;
+    } else {
+        std::cerr << "[Application] Failed to start audio stream" << std::endl;
     }
 }
 
@@ -982,7 +999,7 @@ void Application::mainLoop() {
 
         uiSystem.render(visualControls, videoRandomizer, videoPlayer, videoRegistry,
                        selectedVideoAsset, transitionDuration, allowDimensionChangeRecreation,
-                       controlsDirty, rng, diag, callbacks, midiSystem, oscSystem);
+                       controlsDirty, rng, diag, callbacks, midiSystem, oscSystem, audioSystem);
         
         // Record command buffer
         recordCommandBuffer(commandBuffers[frame.frameIndex], frame);

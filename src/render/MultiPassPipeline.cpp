@@ -742,9 +742,9 @@ void MultiPassPipeline::updateDescriptorSets(
     // Note: Set 0 (UBOs) is already updated in createDescriptorSets, so we only update set 1 (textures) here
     int currentBuffer = 0;  // Ping-pong buffer tracking for descriptor set updates
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
-        printf("[MultiPass] Processing pass=%d\n", pass);
+        // printf("[MultiPass] Processing pass=%d\n", pass);
         for (size_t frame = 0; frame < uniformBuffers.size(); ++frame) {
-            printf("[MultiPass] Processing pass=%d frame=%zu\n", pass, frame);
+            // printf("[MultiPass] Processing pass=%d frame=%zu\n", pass, frame);
             std::vector<VkWriteDescriptorSet> textureWrites;
 
             // Pass-specific texture bindings for set 1

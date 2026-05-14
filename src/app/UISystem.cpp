@@ -1,5 +1,6 @@
 #include "UISystem.h"
 #include "OscSystem.h"
+#include "AudioSystem.h"
 
 // ImGui
 #include "imgui.h"
@@ -120,7 +121,8 @@ void UISystem::render(
     const UIDiagnostics&  diag,
     const UICallbacks&    callbacks,
     MidiSystem&           midiSystem,
-    OscSystem&            oscSystem
+    OscSystem&            oscSystem,
+    AudioSystem&          audioSystem
 ) {
     if (!initialized || !renderer) return;
 
@@ -148,6 +150,10 @@ void UISystem::render(
 
     if (showOscWindow) {
         drawOscControls(oscSystem);
+    }
+
+    if (showAudioWindow) {
+        drawAudioDebug(audioSystem);
     }
 
     if (showParameterIndex) {
@@ -1581,6 +1587,71 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
     ImGui::Text("/vjay/jump (no arguments)");
     ImGui::Text("Send messages without arguments for triggers");
 
+    ImGui::End();
+}
+
+void UISystem::drawAudioDebug(AudioSystem& audioSystem) {
+    ImGui::Begin("Audio Debug", &showAudioWindow);
+    
+    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.5f, 1.0f), "Audio Reactive Debug");
+    ImGui::Separator();
+    
+    // Status
+    ImGui::Text("Audio Stream: %s", audioSystem.isRunning() ? "Running" : "Stopped");
+    
+    ImGui::Separator();
+    
+    // RMS Level
+    float rms = audioSystem.getRMS();
+    ImGui::Text("RMS Level: %.4f", rms);
+    ImGui::ProgressBar(rms, ImVec2(200, 0));
+    
+    ImGui::Separator();
+    
+    // Raw Band Levels
+    ImGui::Text("Raw Band Levels:");
+    ImGui::Text("Bass: %.4f", audioSystem.getBass());
+    ImGui::Text("Mid:  %.4f", audioSystem.getMid());
+    ImGui::Text("High: %.4f", audioSystem.getHigh());
+    
+    ImGui::Separator();
+    
+    // Smoothed Band Levels
+    ImGui::Text("Smoothed Band Levels:");
+    ImGui::Text("Bass: %.4f", audioSystem.getSmoothedBass());
+    ImGui::Text("Mid:  %.4f", audioSystem.getSmoothedMid());
+    ImGui::Text("High: %.4f", audioSystem.getSmoothedHigh());
+    
+    ImGui::Separator();
+    
+    // FFT Visualization
+    ImGui::Text("FFT Spectrum (256 bins):");
+    const std::vector<float>& fftMagnitudes = audioSystem.getFFTMagnitudes();
+    
+    // Draw FFT bars
+    float maxMagnitude = 0.0f;
+    for (float mag : fftMagnitudes) {
+        if (mag > maxMagnitude) maxMagnitude = mag;
+    }
+    
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    float barWidth = 200.0f / fftMagnitudes.size();
+    float maxHeight = 100.0f;
+    
+    for (size_t i = 0; i < fftMagnitudes.size(); i++) {
+        float normalizedHeight = maxMagnitude > 0 ? (fftMagnitudes[i] / maxMagnitude) * maxHeight : 0;
+        ImVec2 barMin(p.x + i * barWidth, p.y + maxHeight - normalizedHeight);
+        ImVec2 barMax(p.x + (i + 1) * barWidth - 1, p.y + maxHeight);
+        
+        // Color gradient from bass (blue) to high (red)
+        float t = static_cast<float>(i) / fftMagnitudes.size();
+        ImColor color(t, 0.5f * (1.0f - t), 1.0f - t);
+        drawList->AddRectFilled(barMin, barMax, color);
+    }
+    
+    ImGui::Dummy(ImVec2(200, maxHeight + 5));
+    
     ImGui::End();
 }
 

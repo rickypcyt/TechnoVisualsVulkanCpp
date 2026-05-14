@@ -45,6 +45,7 @@ add_executable(app
     src/app/ControlState.cpp
     src/app/MidiSystem.cpp
     src/app/OscSystem.cpp
+    src/app/AudioSystem.cpp
     src/core/Window.cpp
     src/core/VulkanContext.cpp
     src/video/VideoStaging.cpp
