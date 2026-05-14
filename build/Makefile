@@ -668,6 +668,110 @@ uninstall/fast:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/uninstall.dir/build.make _deps/rtmidi-build/CMakeFiles/uninstall.dir/build
 .PHONY : uninstall/fast
 
+#=============================================================================
+# Target rules for targets named kfr_dsp_sse2
+
+# Build rule for target.
+kfr_dsp_sse2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_dsp_sse2
+.PHONY : kfr_dsp_sse2
+
+# fast build rule for target.
+kfr_dsp_sse2/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build
+.PHONY : kfr_dsp_sse2/fast
+
+#=============================================================================
+# Target rules for targets named kfr_dsp_sse41
+
+# Build rule for target.
+kfr_dsp_sse41: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_dsp_sse41
+.PHONY : kfr_dsp_sse41
+
+# fast build rule for target.
+kfr_dsp_sse41/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build
+.PHONY : kfr_dsp_sse41/fast
+
+#=============================================================================
+# Target rules for targets named kfr_dsp_avx
+
+# Build rule for target.
+kfr_dsp_avx: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_dsp_avx
+.PHONY : kfr_dsp_avx
+
+# fast build rule for target.
+kfr_dsp_avx/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build
+.PHONY : kfr_dsp_avx/fast
+
+#=============================================================================
+# Target rules for targets named kfr_dsp_avx2
+
+# Build rule for target.
+kfr_dsp_avx2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_dsp_avx2
+.PHONY : kfr_dsp_avx2
+
+# fast build rule for target.
+kfr_dsp_avx2/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build
+.PHONY : kfr_dsp_avx2/fast
+
+#=============================================================================
+# Target rules for targets named kfr_dsp_avx512
+
+# Build rule for target.
+kfr_dsp_avx512: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_dsp_avx512
+.PHONY : kfr_dsp_avx512
+
+# fast build rule for target.
+kfr_dsp_avx512/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build
+.PHONY : kfr_dsp_avx512/fast
+
+#=============================================================================
+# Target rules for targets named boost_math
+
+# Build rule for target.
+boost_math: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 boost_math
+.PHONY : boost_math
+
+# fast build rule for target.
+boost_math/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/boost_math-build/CMakeFiles/boost_math.dir/build.make _deps/boost_math-build/CMakeFiles/boost_math.dir/build
+.PHONY : boost_math/fast
+
+#=============================================================================
+# Target rules for targets named kfr_io
+
+# Build rule for target.
+kfr_io: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_io
+.PHONY : kfr_io
+
+# fast build rule for target.
+kfr_io/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build
+.PHONY : kfr_io/fast
+
+#=============================================================================
+# Target rules for targets named kfr_audio
+
+# Build rule for target.
+kfr_audio: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kfr_audio
+.PHONY : kfr_audio
+
+# fast build rule for target.
+kfr_audio/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build
+.PHONY : kfr_audio/fast
+
 src/app/Application.o: src/app/Application.cpp.o
 .PHONY : src/app/Application.o
 
@@ -1359,7 +1463,15 @@ help:
 	@echo "... uninstall"
 	@echo "... apinames"
 	@echo "... app"
+	@echo "... boost_math"
 	@echo "... cmidiin"
+	@echo "... kfr_audio"
+	@echo "... kfr_dsp_avx"
+	@echo "... kfr_dsp_avx2"
+	@echo "... kfr_dsp_avx512"
+	@echo "... kfr_dsp_sse2"
+	@echo "... kfr_dsp_sse41"
+	@echo "... kfr_io"
 	@echo "... midiclock"
 	@echo "... midiout"
 	@echo "... midiprobe"

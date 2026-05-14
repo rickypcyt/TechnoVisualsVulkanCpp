@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(VulkanApp)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
@@ -18,6 +18,15 @@ FetchContent_Declare(
     GIT_TAG 5.0.0
 )
 FetchContent_MakeAvailable(rtmidi)
+
+# KFR for DSP/audio processing
+set(KFR_IO OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+    kfr
+    GIT_REPOSITORY https://github.com/kfrlib/kfr.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(kfr)
 
 # liblo for OSC support
 find_package(PkgConfig REQUIRED)
@@ -61,7 +70,7 @@ add_executable(app
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
 )
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS})
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include)
 
 target_link_libraries(app
     Vulkan::Vulkan
@@ -69,6 +78,7 @@ target_link_libraries(app
     glm::glm
     PkgConfig::FFMPEG
     rtmidi
+    kfr
     ${LIBLO_LIBRARIES}
     ${PORTAUDIO_LIBRARIES}
 )

@@ -2,7 +2,13 @@
 	"InstallScripts" : 
 	[
 		"/home/ricky/coding/proyects/vulkancpp/build/cmake_install.cmake",
-		"/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/cmake_install.cmake"
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/cmake_install.cmake",
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/cmake_install.cmake",
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/src/dsp/cmake_install.cmake",
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-build/cmake_install.cmake",
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-build/test/cmake_install.cmake",
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/src/io/cmake_install.cmake",
+		"/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/src/audio/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

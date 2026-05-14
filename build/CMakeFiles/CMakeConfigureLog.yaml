@@ -4661,3 +4661,1041 @@ events:
       CMAKE_SYSTEM_LIBRARY_PATH:
         - "/usr/lib/X11"
 ...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "build/_deps/kfr-src/CMakeLists.txt:301 (try_run)"
+    directories:
+      source: "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/tmpdir/CMakeFiles/CMakeTmp"
+      binary: "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/tmpdir/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_CXX_STDLIB_MODULES_JSON: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "COMPILE_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/tmpdir/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_746a6/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_746a6.dir/build.make CMakeFiles/cmTC_746a6.dir/build
+        make[1]: Entering directory '/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/tmpdir/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_746a6.dir/detect_cpu.cpp.o
+        /usr/bin/c++  -I/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src/include -DCPU_target=1 -std=gnu++20 -o CMakeFiles/cmTC_746a6.dir/detect_cpu.cpp.o -c /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src/cmake/detect_cpu.cpp
+        Linking CXX executable cmTC_746a6
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_746a6.dir/link.txt --verbose=1
+        /usr/bin/c++  -DCPU_target=1 CMakeFiles/cmTC_746a6.dir/detect_cpu.cpp.o -o cmTC_746a6
+        make[1]: Leaving directory '/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/tmpdir/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "RUN_RESULT"
+      cached: true
+      stdout: |
+        sse2
+      exitCode: 0
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "build/_deps/kfr-src/src/audio/CMakeLists.txt:12 (find_package)"
+    name: "Ogg"
+    configs:
+      -
+        filename: "Ogg.cps"
+        kind: "cps"
+      -
+        filename: "ogg.cps"
+        kind: "cps"
+      -
+        filename: "OggConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "ogg-config.cmake"
+        kind: "cmake"
+    version_request:
+      exact: false
+    settings:
+      required: "optional"
+      quiet: false
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "Ogg"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/OggConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/ogg-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/Ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/ogg.cps"
+        mode: "cps"
+        reason: "no_exist"
+    found:
+      path: "/usr/lib/cmake/Ogg/OggConfig.cmake"
+      mode: "config"
+      version: "1.3.6"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "build/_deps/kfr-src/src/audio/CMakeLists.txt:14 (find_package)"
+    name: "FLAC"
+    configs:
+      -
+        filename: "FLAC.cps"
+        kind: "cps"
+      -
+        filename: "flac.cps"
+        kind: "cps"
+      -
+        filename: "FLACConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "flac-config.cmake"
+        kind: "cmake"
+    version_request:
+      exact: false
+    settings:
+      required: "optional"
+      quiet: false
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "FLAC"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/pkgRedirects/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.cargo/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.local/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.bun-global/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/emulator/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/Android/Sdk/platform-tools/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/ricky/.sdkman/candidates/java/current/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/flac-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/FLAC.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/flac.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/FLAC/FLACConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+    found:
+      path: "/usr/lib/cmake/FLAC/flac-config.cmake"
+      mode: "config"
+      version: "1.5.0"
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "build/_deps/kfr-src/src/audio/CMakeLists.txt:43 (find_path)"
+    mode: "path"
+    variable: "ALAC_INCLUDE_DIRS"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "alac/ALACDecoder.h"
+    candidate_directories:
+      - "/home/ricky/.bun/bin/include/"
+      - "/home/ricky/.bun/bin/"
+      - "/home/ricky/.cargo/bin/include/"
+      - "/home/ricky/.cargo/bin/"
+      - "/home/ricky/.local/bin/include/"
+      - "/home/ricky/.local/bin/"
+      - "/home/ricky/.bun-global/bin/include/"
+      - "/home/ricky/.bun-global/bin/"
+      - "/home/ricky/Android/Sdk/tools/bin/include/"
+      - "/home/ricky/Android/Sdk/tools/bin/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/include/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/"
+      - "/home/ricky/Android/Sdk/emulator/include/"
+      - "/home/ricky/Android/Sdk/emulator/"
+      - "/home/ricky/Android/Sdk/platform-tools/include/"
+      - "/home/ricky/Android/Sdk/platform-tools/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/include/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/"
+      - "/usr/local/bin/include/"
+      - "/usr/local/bin/"
+      - "/usr/bin/include/"
+      - "/usr/bin/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/include/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/include/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.dotnet/tools/include/"
+      - "/home/ricky/.dotnet/tools/"
+      - "/usr/local/include/include/"
+      - "/usr/local/include/"
+      - "/usr/local/include/"
+      - "/usr/local/"
+      - "/usr/include/include/"
+      - "/usr/include/"
+      - "/usr/include/"
+      - "/usr/"
+      - "/include/include/"
+      - "/include/"
+      - "/usr/X11R6/include/include/"
+      - "/usr/X11R6/include/"
+      - "/usr/X11R6/include/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/include/include/"
+      - "/usr/pkg/include/"
+      - "/usr/pkg/include/"
+      - "/usr/pkg/"
+      - "/opt/include/include/"
+      - "/opt/include/"
+      - "/opt/include/"
+      - "/opt/"
+      - "/usr/include/X11/include/"
+      - "/usr/include/X11/"
+    searched_directories:
+      - "/home/ricky/.bun/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/.bun/bin/alac/ALACDecoder.h"
+      - "/home/ricky/.cargo/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/.cargo/bin/alac/ALACDecoder.h"
+      - "/home/ricky/.local/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/.local/bin/alac/ALACDecoder.h"
+      - "/home/ricky/.bun-global/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/.bun-global/bin/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/tools/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/tools/bin/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/emulator/include/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/emulator/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/platform-tools/include/alac/ALACDecoder.h"
+      - "/home/ricky/Android/Sdk/platform-tools/alac/ALACDecoder.h"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/include/alac/ALACDecoder.h"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/alac/ALACDecoder.h"
+      - "/usr/local/bin/include/alac/ALACDecoder.h"
+      - "/usr/local/bin/alac/ALACDecoder.h"
+      - "/usr/bin/include/alac/ALACDecoder.h"
+      - "/usr/bin/alac/ALACDecoder.h"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/include/alac/ALACDecoder.h"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/alac/ALACDecoder.h"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/include/alac/ALACDecoder.h"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/alac/ALACDecoder.h"
+      - "/home/ricky/.dotnet/tools/include/alac/ALACDecoder.h"
+      - "/home/ricky/.dotnet/tools/alac/ALACDecoder.h"
+      - "/usr/local/include/include/alac/ALACDecoder.h"
+      - "/usr/local/include/alac/ALACDecoder.h"
+      - "/usr/local/include/alac/ALACDecoder.h"
+      - "/usr/local/alac/ALACDecoder.h"
+      - "/usr/include/include/alac/ALACDecoder.h"
+      - "/usr/include/alac/ALACDecoder.h"
+      - "/usr/include/alac/ALACDecoder.h"
+      - "/usr/alac/ALACDecoder.h"
+      - "/include/include/alac/ALACDecoder.h"
+      - "/include/alac/ALACDecoder.h"
+      - "/usr/X11R6/include/include/alac/ALACDecoder.h"
+      - "/usr/X11R6/include/alac/ALACDecoder.h"
+      - "/usr/X11R6/include/alac/ALACDecoder.h"
+      - "/usr/X11R6/alac/ALACDecoder.h"
+      - "/usr/pkg/include/include/alac/ALACDecoder.h"
+      - "/usr/pkg/include/alac/ALACDecoder.h"
+      - "/usr/pkg/include/alac/ALACDecoder.h"
+      - "/usr/pkg/alac/ALACDecoder.h"
+      - "/opt/include/include/alac/ALACDecoder.h"
+      - "/opt/include/alac/ALACDecoder.h"
+      - "/opt/include/alac/ALACDecoder.h"
+      - "/opt/alac/ALACDecoder.h"
+      - "/usr/include/X11/include/alac/ALACDecoder.h"
+      - "/usr/include/X11/alac/ALACDecoder.h"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_INCLUDE_PATH:
+        - "/usr/include/X11"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "build/_deps/kfr-src/src/audio/CMakeLists.txt:47 (find_library)"
+    mode: "library"
+    variable: "ALAC_LIBRARY"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "libalac"
+      - "alac"
+    candidate_directories:
+      - "/home/ricky/.bun/bin/lib/"
+      - "/home/ricky/.bun/bin/"
+      - "/home/ricky/.cargo/bin/lib/"
+      - "/home/ricky/.cargo/bin/"
+      - "/home/ricky/.local/bin/lib/"
+      - "/home/ricky/.local/bin/"
+      - "/home/ricky/.bun-global/bin/lib/"
+      - "/home/ricky/.bun-global/bin/"
+      - "/home/ricky/Android/Sdk/tools/bin/lib/"
+      - "/home/ricky/Android/Sdk/tools/bin/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/lib/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/"
+      - "/home/ricky/Android/Sdk/emulator/lib/"
+      - "/home/ricky/Android/Sdk/emulator/"
+      - "/home/ricky/Android/Sdk/platform-tools/lib/"
+      - "/home/ricky/Android/Sdk/platform-tools/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/lib/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/"
+      - "/usr/local/bin/lib/"
+      - "/usr/local/bin/"
+      - "/usr/bin/lib/"
+      - "/usr/bin/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/lib/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/lib/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.dotnet/tools/lib/"
+      - "/home/ricky/.dotnet/tools/"
+      - "/usr/local/lib/lib/"
+      - "/usr/local/lib/"
+      - "/usr/local/lib/"
+      - "/usr/local/"
+      - "/usr/lib/lib/"
+      - "/usr/lib/"
+      - "/usr/lib/"
+      - "/usr/"
+      - "/lib/lib/"
+      - "/lib/"
+      - "/usr/X11R6/lib/lib/"
+      - "/usr/X11R6/lib/"
+      - "/usr/X11R6/lib/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/lib/lib/"
+      - "/usr/pkg/lib/"
+      - "/usr/pkg/lib/"
+      - "/usr/pkg/"
+      - "/opt/lib/lib/"
+      - "/opt/lib/"
+      - "/opt/lib/"
+      - "/opt/"
+      - "/usr/lib/X11/lib/"
+      - "/usr/lib/X11/"
+    searched_directories:
+      - "/home/ricky/.bun/bin/lib/"
+      - "/home/ricky/.bun/bin/"
+      - "/home/ricky/.cargo/bin/lib/"
+      - "/home/ricky/.cargo/bin/"
+      - "/home/ricky/.local/bin/lib/"
+      - "/home/ricky/.local/bin/"
+      - "/home/ricky/.bun-global/bin/lib/"
+      - "/home/ricky/.bun-global/bin/"
+      - "/home/ricky/Android/Sdk/tools/bin/lib/"
+      - "/home/ricky/Android/Sdk/tools/bin/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/lib/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/"
+      - "/home/ricky/Android/Sdk/emulator/lib/"
+      - "/home/ricky/Android/Sdk/emulator/"
+      - "/home/ricky/Android/Sdk/platform-tools/lib/"
+      - "/home/ricky/Android/Sdk/platform-tools/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/lib/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/"
+      - "/usr/local/bin/lib/"
+      - "/usr/local/bin/"
+      - "/usr/bin/lib/"
+      - "/usr/bin/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/lib/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/lib/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.dotnet/tools/lib/"
+      - "/home/ricky/.dotnet/tools/"
+      - "/usr/local/lib/lib/"
+      - "/usr/local/lib/"
+      - "/usr/local/lib/"
+      - "/usr/local/"
+      - "/usr/lib/lib/"
+      - "/usr/lib/"
+      - "/usr/lib/"
+      - "/usr/"
+      - "/lib/lib/"
+      - "/lib/"
+      - "/usr/X11R6/lib/lib/"
+      - "/usr/X11R6/lib/"
+      - "/usr/X11R6/lib/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/lib/lib/"
+      - "/usr/pkg/lib/"
+      - "/usr/pkg/lib/"
+      - "/usr/pkg/"
+      - "/opt/lib/lib/"
+      - "/opt/lib/"
+      - "/opt/lib/"
+      - "/opt/"
+      - "/usr/lib/X11/lib/"
+      - "/usr/lib/X11/"
+      - "/home/ricky/.bun/bin/lib/"
+      - "/home/ricky/.bun/bin/"
+      - "/home/ricky/.cargo/bin/lib/"
+      - "/home/ricky/.cargo/bin/"
+      - "/home/ricky/.local/bin/lib/"
+      - "/home/ricky/.local/bin/"
+      - "/home/ricky/.bun-global/bin/lib/"
+      - "/home/ricky/.bun-global/bin/"
+      - "/home/ricky/Android/Sdk/tools/bin/lib/"
+      - "/home/ricky/Android/Sdk/tools/bin/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/lib/"
+      - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin/"
+      - "/home/ricky/Android/Sdk/emulator/lib/"
+      - "/home/ricky/Android/Sdk/emulator/"
+      - "/home/ricky/Android/Sdk/platform-tools/lib/"
+      - "/home/ricky/Android/Sdk/platform-tools/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/lib/"
+      - "/home/ricky/.sdkman/candidates/java/current/bin/"
+      - "/usr/local/bin/lib/"
+      - "/usr/local/bin/"
+      - "/usr/bin/lib/"
+      - "/usr/bin/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/lib/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/lib/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.dotnet/tools/lib/"
+      - "/home/ricky/.dotnet/tools/"
+      - "/usr/local/lib/lib/"
+      - "/usr/local/lib/"
+      - "/usr/local/lib/"
+      - "/usr/local/"
+      - "/usr/lib/lib/"
+      - "/usr/lib/"
+      - "/usr/lib/"
+      - "/usr/"
+      - "/lib/lib/"
+      - "/lib/"
+      - "/usr/X11R6/lib/lib/"
+      - "/usr/X11R6/lib/"
+      - "/usr/X11R6/lib/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/lib/lib/"
+      - "/usr/pkg/lib/"
+      - "/usr/pkg/lib/"
+      - "/usr/pkg/"
+      - "/opt/lib/lib/"
+      - "/opt/lib/"
+      - "/opt/lib/"
+      - "/opt/"
+      - "/usr/lib/X11/lib/"
+      - "/usr/lib/X11/"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/home/ricky/.bun/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/Android/Sdk/tools/bin"
+        - "/home/ricky/Android/Sdk/cmdline-tools/latest/bin"
+        - "/home/ricky/Android/Sdk/emulator"
+        - "/home/ricky/Android/Sdk/platform-tools"
+        - "/home/ricky/.sdkman/candidates/java/current/bin"
+        - "/home/ricky/.local/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/home/ricky/.bun-global/bin"
+        - "/home/ricky/.cargo/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
+...

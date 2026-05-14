@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/CMakeFiles/boost_math-populate"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/CMakeFiles/boost_math-populate.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/CMakeFiles/boost_math-populate-complete.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-build.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-configure.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-download.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-install.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-patch.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-test.rule"
+		},
+		{
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/src/boost_math-populate-stamp/boost_math-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"boost_math-populate"
+		],
+		"name" : "boost_math-populate"
+	}
+}

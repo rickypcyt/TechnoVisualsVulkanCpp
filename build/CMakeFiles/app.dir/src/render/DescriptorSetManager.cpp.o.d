@@ -44,27 +44,29 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: \
  /usr/include/c++/16.1.1/ext/numeric_traits.h \
  /usr/include/c++/16.1.1/bits/stl_pair.h \
  /usr/include/c++/16.1.1/bits/move.h \
- /usr/include/c++/16.1.1/bits/utility.h \
+ /usr/include/c++/16.1.1/bits/utility.h /usr/include/c++/16.1.1/compare \
+ /usr/include/c++/16.1.1/concepts \
  /usr/include/c++/16.1.1/bits/stl_iterator_base_types.h \
+ /usr/include/c++/16.1.1/bits/iterator_concepts.h \
+ /usr/include/c++/16.1.1/bits/ptr_traits.h \
+ /usr/include/c++/16.1.1/bits/ranges_cmp.h \
  /usr/include/c++/16.1.1/bits/stl_iterator_base_funcs.h \
  /usr/include/c++/16.1.1/bits/concept_check.h \
  /usr/include/c++/16.1.1/debug/assertions.h \
- /usr/include/c++/16.1.1/bits/stl_iterator.h \
- /usr/include/c++/16.1.1/bits/ptr_traits.h \
+ /usr/include/c++/16.1.1/bits/stl_iterator.h /usr/include/c++/16.1.1/new \
+ /usr/include/c++/16.1.1/bits/exception.h \
+ /usr/include/c++/16.1.1/bits/new_except.h \
+ /usr/include/c++/16.1.1/bits/exception_defines.h \
+ /usr/include/c++/16.1.1/bits/stl_construct.h \
  /usr/include/c++/16.1.1/debug/debug.h \
  /usr/include/c++/16.1.1/bits/predefined_ops.h \
  /usr/include/c++/16.1.1/bits/stl_function.h \
  /usr/include/c++/16.1.1/backward/binders.h /usr/include/c++/16.1.1/bit \
- /usr/include/c++/16.1.1/concepts \
  /usr/include/c++/16.1.1/bits/allocator.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
- /usr/include/c++/16.1.1/bits/new_allocator.h /usr/include/c++/16.1.1/new \
- /usr/include/c++/16.1.1/bits/exception.h \
- /usr/include/c++/16.1.1/bits/new_except.h \
- /usr/include/c++/16.1.1/bits/exception_defines.h \
+ /usr/include/c++/16.1.1/bits/new_allocator.h \
  /usr/include/c++/16.1.1/bits/new_throw.h \
  /usr/include/c++/16.1.1/bits/memoryfwd.h \
- /usr/include/c++/16.1.1/bits/stl_construct.h \
  /usr/include/c++/16.1.1/bits/stl_uninitialized.h \
  /usr/include/c++/16.1.1/ext/alloc_traits.h \
  /usr/include/c++/16.1.1/bits/alloc_traits.h \
@@ -72,6 +74,9 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: \
  /usr/include/c++/16.1.1/bits/stdexcept_throw.h \
  /usr/include/c++/16.1.1/bits/stdexcept_throwfwd.h \
  /usr/include/c++/16.1.1/initializer_list \
+ /usr/include/c++/16.1.1/bits/ranges_base.h \
+ /usr/include/c++/16.1.1/bits/max_size_type.h \
+ /usr/include/c++/16.1.1/numbers /usr/include/c++/16.1.1/limits \
  /usr/include/c++/16.1.1/bits/stl_bvector.h \
  /usr/include/c++/16.1.1/bits/functional_hash.h \
  /usr/include/c++/16.1.1/bits/hash_bytes.h \
@@ -83,7 +88,7 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: \
  /usr/include/c++/16.1.1/bits/uses_allocator.h \
  /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
  /usr/include/c++/16.1.1/tuple /usr/include/c++/16.1.1/bits/invoke.h \
- /usr/include/c++/16.1.1/array /usr/include/c++/16.1.1/compare \
+ /usr/include/c++/16.1.1/bits/ranges_util.h /usr/include/c++/16.1.1/array \
  /home/ricky/coding/proyects/vulkancpp/src/render/GlobalUBO.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
  /usr/include/c++/16.1.1/cmath /usr/include/math.h \
@@ -111,7 +116,7 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: \
  /usr/include/bits/atomic_wide_counter.h /usr/include/bits/struct_mutex.h \
  /usr/include/bits/struct_rwlock.h /usr/include/alloca.h \
  /usr/include/bits/stdlib-float.h /usr/include/c++/16.1.1/bits/specfun.h \
- /usr/include/c++/16.1.1/limits /usr/include/c++/16.1.1/tr1/gamma.tcc \
+ /usr/include/c++/16.1.1/tr1/gamma.tcc \
  /usr/include/c++/16.1.1/tr1/special_function_util.h \
  /usr/include/c++/16.1.1/tr1/bessel_function.tcc \
  /usr/include/c++/16.1.1/tr1/beta_function.tcc \
@@ -167,6 +172,7 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: \
  /usr/include/c++/16.1.1/ext/aligned_buffer.h \
  /usr/include/c++/16.1.1/bits/enable_special_members.h \
  /usr/include/c++/16.1.1/bits/node_handle.h \
+ /usr/include/c++/16.1.1/bits/binders.h \
  /usr/include/glm/detail/_vectorize.hpp \
  /usr/include/glm/ext/vector_bool3_precision.hpp \
  /usr/include/glm/ext/vector_float3.hpp \

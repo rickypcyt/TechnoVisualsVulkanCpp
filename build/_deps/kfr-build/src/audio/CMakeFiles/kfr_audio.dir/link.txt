@@ -1,0 +1,2 @@
+/usr/bin/ar qc libkfr_audio.a CMakeFiles/kfr_audio.dir/aiff_coder.cpp.o CMakeFiles/kfr_audio.dir/caff_coder.cpp.o CMakeFiles/kfr_audio.dir/data.cpp.o CMakeFiles/kfr_audio.dir/decoder.cpp.o CMakeFiles/kfr_audio.dir/encoder.cpp.o CMakeFiles/kfr_audio.dir/flac_coder.cpp.o CMakeFiles/kfr_audio.dir/io.cpp.o CMakeFiles/kfr_audio.dir/mf_coder.cpp.o CMakeFiles/kfr_audio.dir/mp3_coder.cpp.o CMakeFiles/kfr_audio.dir/raw_coder.cpp.o CMakeFiles/kfr_audio.dir/version.cpp.o CMakeFiles/kfr_audio.dir/w64_coder.cpp.o CMakeFiles/kfr_audio.dir/wave_coder.cpp.o
+/usr/bin/ranlib libkfr_audio.a

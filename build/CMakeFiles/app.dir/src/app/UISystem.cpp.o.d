@@ -75,19 +75,24 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/ext/numeric_traits.h \
  /usr/include/c++/16.1.1/bits/stl_pair.h \
  /usr/include/c++/16.1.1/bits/move.h \
- /usr/include/c++/16.1.1/bits/utility.h \
+ /usr/include/c++/16.1.1/bits/utility.h /usr/include/c++/16.1.1/compare \
+ /usr/include/c++/16.1.1/concepts \
  /usr/include/c++/16.1.1/bits/stl_iterator_base_types.h \
+ /usr/include/c++/16.1.1/bits/iterator_concepts.h \
+ /usr/include/c++/16.1.1/bits/ptr_traits.h \
+ /usr/include/c++/16.1.1/bits/ranges_cmp.h \
  /usr/include/c++/16.1.1/bits/stl_iterator_base_funcs.h \
  /usr/include/c++/16.1.1/bits/concept_check.h \
  /usr/include/c++/16.1.1/debug/assertions.h \
- /usr/include/c++/16.1.1/bits/stl_iterator.h \
- /usr/include/c++/16.1.1/bits/ptr_traits.h \
+ /usr/include/c++/16.1.1/bits/stl_iterator.h /usr/include/c++/16.1.1/new \
+ /usr/include/c++/16.1.1/bits/exception.h \
+ /usr/include/c++/16.1.1/bits/new_except.h \
+ /usr/include/c++/16.1.1/bits/stl_construct.h \
  /usr/include/c++/16.1.1/debug/debug.h \
  /usr/include/c++/16.1.1/bits/predefined_ops.h \
  /usr/include/c++/16.1.1/bits/stl_function.h \
  /usr/include/c++/16.1.1/backward/binders.h /usr/include/c++/16.1.1/bit \
- /usr/include/c++/16.1.1/concepts /usr/include/c++/16.1.1/limits \
- /usr/include/c++/16.1.1/tr1/gamma.tcc \
+ /usr/include/c++/16.1.1/limits /usr/include/c++/16.1.1/tr1/gamma.tcc \
  /usr/include/c++/16.1.1/tr1/special_function_util.h \
  /usr/include/c++/16.1.1/tr1/bessel_function.tcc \
  /usr/include/c++/16.1.1/tr1/beta_function.tcc \
@@ -237,9 +242,7 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/postypes.h /usr/include/c++/16.1.1/cwchar \
  /usr/include/c++/16.1.1/bits/allocator.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
- /usr/include/c++/16.1.1/bits/new_allocator.h /usr/include/c++/16.1.1/new \
- /usr/include/c++/16.1.1/bits/exception.h \
- /usr/include/c++/16.1.1/bits/new_except.h \
+ /usr/include/c++/16.1.1/bits/new_allocator.h \
  /usr/include/c++/16.1.1/bits/new_throw.h \
  /usr/include/c++/16.1.1/bits/localefwd.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++locale.h \
@@ -254,10 +257,12 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/basic_string.h \
  /usr/include/c++/16.1.1/ext/alloc_traits.h \
  /usr/include/c++/16.1.1/bits/alloc_traits.h \
- /usr/include/c++/16.1.1/bits/stl_construct.h \
  /usr/include/c++/16.1.1/string_view \
  /usr/include/c++/16.1.1/bits/functional_hash.h \
  /usr/include/c++/16.1.1/bits/hash_bytes.h \
+ /usr/include/c++/16.1.1/bits/ranges_base.h \
+ /usr/include/c++/16.1.1/bits/max_size_type.h \
+ /usr/include/c++/16.1.1/numbers \
  /usr/include/c++/16.1.1/bits/string_view.tcc \
  /usr/include/c++/16.1.1/ext/string_conversions.h \
  /usr/include/c++/16.1.1/cstdio /usr/include/c++/16.1.1/cerrno \
@@ -272,6 +277,7 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/uses_allocator.h \
  /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
  /usr/include/c++/16.1.1/tuple /usr/include/c++/16.1.1/bits/invoke.h \
+ /usr/include/c++/16.1.1/bits/ranges_util.h \
  /usr/include/c++/16.1.1/functional \
  /usr/include/c++/16.1.1/bits/refwrap.h \
  /usr/include/c++/16.1.1/bits/std_function.h \
@@ -289,7 +295,7 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_vector.h \
  /usr/include/c++/16.1.1/bits/stl_bvector.h \
  /usr/include/c++/16.1.1/bits/vector.tcc /usr/include/c++/16.1.1/array \
- /usr/include/c++/16.1.1/compare /usr/include/c++/16.1.1/random \
+ /usr/include/c++/16.1.1/bits/binders.h /usr/include/c++/16.1.1/random \
  /usr/include/c++/16.1.1/cstdint /usr/include/c++/16.1.1/bits/random.h \
  /usr/include/c++/16.1.1/bits/ios_base.h \
  /usr/include/c++/16.1.1/ext/atomicity.h \
@@ -341,17 +347,34 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_tree.h \
  /usr/include/c++/16.1.1/bits/stl_map.h \
  /usr/include/c++/16.1.1/bits/stl_multimap.h \
- /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/bits/std_thread.h \
- /usr/include/c++/16.1.1/bits/unique_ptr.h \
- /usr/include/c++/16.1.1/bits/this_thread_sleep.h \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime \
- /usr/include/c++/16.1.1/bits/parse_numbers.h \
- /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
- /usr/include/c++/16.1.1/bits/unique_lock.h \
+ /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
  /usr/include/c++/16.1.1/atomic \
  /usr/include/c++/16.1.1/bits/atomic_base.h \
  /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/16.1.1/bits/atomic_wait.h \
+ /usr/include/c++/16.1.1/bits/std_thread.h \
+ /usr/include/c++/16.1.1/bits/unique_ptr.h \
+ /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
+ /usr/include/c++/16.1.1/streambuf \
+ /usr/include/c++/16.1.1/bits/streambuf.tcc \
+ /usr/include/c++/16.1.1/bits/basic_ios.h \
+ /usr/include/c++/16.1.1/bits/locale_facets.h \
+ /usr/include/c++/16.1.1/cwctype /usr/include/wctype.h \
+ /usr/include/bits/wctype-wchar.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
+ /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
+ /usr/include/c++/16.1.1/bits/locale_facets.tcc \
+ /usr/include/c++/16.1.1/bits/basic_ios.tcc \
+ /usr/include/c++/16.1.1/semaphore \
+ /usr/include/c++/16.1.1/bits/semaphore_base.h \
+ /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
+ /usr/include/c++/16.1.1/ctime \
+ /usr/include/c++/16.1.1/bits/parse_numbers.h \
+ /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
+ /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
+ /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
  /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
@@ -522,18 +545,6 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.h \
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src/RtMidi.h \
  /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
- /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
- /usr/include/c++/16.1.1/streambuf \
- /usr/include/c++/16.1.1/bits/streambuf.tcc \
- /usr/include/c++/16.1.1/bits/basic_ios.h \
- /usr/include/c++/16.1.1/bits/locale_facets.h \
- /usr/include/c++/16.1.1/cwctype /usr/include/wctype.h \
- /usr/include/bits/wctype-wchar.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
- /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
- /usr/include/c++/16.1.1/bits/locale_facets.tcc \
- /usr/include/c++/16.1.1/bits/basic_ios.tcc \
  /usr/include/c++/16.1.1/bits/ostream_print.h \
  /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
  /usr/include/c++/16.1.1/bits/istream.tcc \
@@ -587,23 +598,33 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/shared_ptr.h \
  /usr/include/c++/16.1.1/bits/shared_ptr_base.h \
  /usr/include/c++/16.1.1/bits/allocated_ptr.h \
+ /usr/include/c++/16.1.1/bits/align.h \
  /usr/include/c++/16.1.1/bits/fs_dir.h \
  /usr/include/c++/16.1.1/bits/fs_ops.h /usr/include/c++/16.1.1/algorithm \
  /usr/include/c++/16.1.1/bits/stl_algo.h \
  /usr/include/c++/16.1.1/bits/algorithmfwd.h \
  /usr/include/c++/16.1.1/bits/stl_heap.h \
  /usr/include/c++/16.1.1/bits/stl_tempbuf.h \
+ /usr/include/c++/16.1.1/bits/ranges_algo.h \
+ /usr/include/c++/16.1.1/bits/ranges_algobase.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
  /home/ricky/coding/proyects/vulkancpp/src/render/RenderJob.h \
  /usr/include/c++/16.1.1/memory \
  /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h \
- /usr/include/c++/16.1.1/bits/align.h \
  /usr/include/c++/16.1.1/bits/shared_ptr_atomic.h \
  /usr/include/c++/16.1.1/backward/auto_ptr.h \
+ /usr/include/c++/16.1.1/bits/ranges_uninitialized.h \
  /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
  /usr/include/c++/16.1.1/condition_variable \
- /usr/include/c++/16.1.1/chrono /usr/include/c++/16.1.1/queue \
- /usr/include/c++/16.1.1/deque /usr/include/c++/16.1.1/bits/stl_deque.h \
+ /usr/include/c++/16.1.1/chrono /usr/include/c++/16.1.1/bits/chrono_io.h \
+ /usr/include/c++/16.1.1/format /usr/include/c++/16.1.1/charconv \
+ /usr/include/c++/16.1.1/optional /usr/include/c++/16.1.1/span \
+ /usr/include/c++/16.1.1/bits/monostate.h \
+ /usr/include/c++/16.1.1/bits/formatfwd.h \
+ /usr/include/c++/16.1.1/bits/unicode.h \
+ /usr/include/c++/16.1.1/bits/unicode-data.h \
+ /usr/include/c++/16.1.1/queue /usr/include/c++/16.1.1/deque \
+ /usr/include/c++/16.1.1/bits/stl_deque.h \
  /usr/include/c++/16.1.1/bits/deque.tcc \
  /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/future \
  /usr/include/c++/16.1.1/bits/atomic_futex.h /usr/include/unistd.h \

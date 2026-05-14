@@ -65,21 +65,165 @@ CMAKE_BINARY_DIR = /home/ricky/coding/proyects/vulkancpp/build
 # The main recursive "all" target.
 all: CMakeFiles/app.dir/all
 all: _deps/rtmidi-build/all
+all: _deps/kfr-build/all
 .PHONY : all
 
 # The main recursive "codegen" target.
 codegen: CMakeFiles/app.dir/codegen
 codegen: _deps/rtmidi-build/codegen
+codegen: _deps/kfr-build/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
 preinstall: _deps/rtmidi-build/preinstall
+preinstall: _deps/kfr-build/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/app.dir/clean
 clean: _deps/rtmidi-build/clean
+clean: _deps/kfr-build/clean
 .PHONY : clean
+
+#=============================================================================
+# Directory level rules for directory _deps/boost_math-build
+
+# Recursive "all" directory target.
+_deps/boost_math-build/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+_deps/boost_math-build/all: _deps/boost_math-build/test/all
+.PHONY : _deps/boost_math-build/all
+
+# Recursive "codegen" directory target.
+_deps/boost_math-build/codegen: _deps/boost_math-build/CMakeFiles/boost_math.dir/codegen
+_deps/boost_math-build/codegen: _deps/boost_math-build/test/codegen
+.PHONY : _deps/boost_math-build/codegen
+
+# Recursive "preinstall" directory target.
+_deps/boost_math-build/preinstall: _deps/boost_math-build/test/preinstall
+.PHONY : _deps/boost_math-build/preinstall
+
+# Recursive "clean" directory target.
+_deps/boost_math-build/clean: _deps/boost_math-build/CMakeFiles/boost_math.dir/clean
+_deps/boost_math-build/clean: _deps/boost_math-build/test/clean
+.PHONY : _deps/boost_math-build/clean
+
+#=============================================================================
+# Directory level rules for directory _deps/boost_math-build/test
+
+# Recursive "all" directory target.
+_deps/boost_math-build/test/all:
+.PHONY : _deps/boost_math-build/test/all
+
+# Recursive "codegen" directory target.
+_deps/boost_math-build/test/codegen:
+.PHONY : _deps/boost_math-build/test/codegen
+
+# Recursive "preinstall" directory target.
+_deps/boost_math-build/test/preinstall:
+.PHONY : _deps/boost_math-build/test/preinstall
+
+# Recursive "clean" directory target.
+_deps/boost_math-build/test/clean:
+.PHONY : _deps/boost_math-build/test/clean
+
+#=============================================================================
+# Directory level rules for directory _deps/kfr-build
+
+# Recursive "all" directory target.
+_deps/kfr-build/all: _deps/kfr-build/src/dsp/all
+_deps/kfr-build/all: _deps/kfr-build/src/io/all
+_deps/kfr-build/all: _deps/kfr-build/src/audio/all
+.PHONY : _deps/kfr-build/all
+
+# Recursive "codegen" directory target.
+_deps/kfr-build/codegen: _deps/kfr-build/src/dsp/codegen
+_deps/kfr-build/codegen: _deps/kfr-build/src/io/codegen
+_deps/kfr-build/codegen: _deps/kfr-build/src/audio/codegen
+.PHONY : _deps/kfr-build/codegen
+
+# Recursive "preinstall" directory target.
+_deps/kfr-build/preinstall: _deps/kfr-build/src/dsp/preinstall
+_deps/kfr-build/preinstall: _deps/kfr-build/src/io/preinstall
+_deps/kfr-build/preinstall: _deps/kfr-build/src/audio/preinstall
+.PHONY : _deps/kfr-build/preinstall
+
+# Recursive "clean" directory target.
+_deps/kfr-build/clean: _deps/kfr-build/src/dsp/clean
+_deps/kfr-build/clean: _deps/kfr-build/src/io/clean
+_deps/kfr-build/clean: _deps/kfr-build/src/audio/clean
+.PHONY : _deps/kfr-build/clean
+
+#=============================================================================
+# Directory level rules for directory _deps/kfr-build/src/audio
+
+# Recursive "all" directory target.
+_deps/kfr-build/src/audio/all: _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all
+.PHONY : _deps/kfr-build/src/audio/all
+
+# Recursive "codegen" directory target.
+_deps/kfr-build/src/audio/codegen: _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen
+.PHONY : _deps/kfr-build/src/audio/codegen
+
+# Recursive "preinstall" directory target.
+_deps/kfr-build/src/audio/preinstall:
+.PHONY : _deps/kfr-build/src/audio/preinstall
+
+# Recursive "clean" directory target.
+_deps/kfr-build/src/audio/clean: _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/clean
+.PHONY : _deps/kfr-build/src/audio/clean
+
+#=============================================================================
+# Directory level rules for directory _deps/kfr-build/src/dsp
+
+# Recursive "all" directory target.
+_deps/kfr-build/src/dsp/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/all
+_deps/kfr-build/src/dsp/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/all
+_deps/kfr-build/src/dsp/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all
+_deps/kfr-build/src/dsp/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/all
+_deps/kfr-build/src/dsp/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/all
+_deps/kfr-build/src/dsp/all: _deps/boost_math-build/all
+.PHONY : _deps/kfr-build/src/dsp/all
+
+# Recursive "codegen" directory target.
+_deps/kfr-build/src/dsp/codegen: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/codegen
+_deps/kfr-build/src/dsp/codegen: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/codegen
+_deps/kfr-build/src/dsp/codegen: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen
+_deps/kfr-build/src/dsp/codegen: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/codegen
+_deps/kfr-build/src/dsp/codegen: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/codegen
+_deps/kfr-build/src/dsp/codegen: _deps/boost_math-build/codegen
+.PHONY : _deps/kfr-build/src/dsp/codegen
+
+# Recursive "preinstall" directory target.
+_deps/kfr-build/src/dsp/preinstall: _deps/boost_math-build/preinstall
+.PHONY : _deps/kfr-build/src/dsp/preinstall
+
+# Recursive "clean" directory target.
+_deps/kfr-build/src/dsp/clean: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/clean
+_deps/kfr-build/src/dsp/clean: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/clean
+_deps/kfr-build/src/dsp/clean: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/clean
+_deps/kfr-build/src/dsp/clean: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/clean
+_deps/kfr-build/src/dsp/clean: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/clean
+_deps/kfr-build/src/dsp/clean: _deps/boost_math-build/clean
+.PHONY : _deps/kfr-build/src/dsp/clean
+
+#=============================================================================
+# Directory level rules for directory _deps/kfr-build/src/io
+
+# Recursive "all" directory target.
+_deps/kfr-build/src/io/all: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
+.PHONY : _deps/kfr-build/src/io/all
+
+# Recursive "codegen" directory target.
+_deps/kfr-build/src/io/codegen: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen
+.PHONY : _deps/kfr-build/src/io/codegen
+
+# Recursive "preinstall" directory target.
+_deps/kfr-build/src/io/preinstall:
+.PHONY : _deps/kfr-build/src/io/preinstall
+
+# Recursive "clean" directory target.
+_deps/kfr-build/src/io/clean: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/clean
+.PHONY : _deps/kfr-build/src/io/clean
 
 #=============================================================================
 # Directory level rules for directory _deps/rtmidi-build
@@ -192,7 +336,7 @@ CMakeFiles/app.dir/clean:
 _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=41,42,43 "Built target rtmidi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=94,95,96 "Built target rtmidi"
 .PHONY : _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 
 # Build rule for subdir invocation for target.
@@ -209,7 +353,7 @@ rtmidi: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/rtmidi.dir/build.make _deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=41,42,43 "Finished codegen for target rtmidi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=94,95,96 "Finished codegen for target rtmidi"
 .PHONY : _deps/rtmidi-build/CMakeFiles/rtmidi.dir/codegen
 
 # clean rule for target.
@@ -1152,7 +1296,7 @@ _deps/rtmidi-build/CMakeFiles/cmidiin.dir/clean:
 _deps/rtmidi-build/CMakeFiles/midiclock.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=33,34 "Built target midiclock"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=86,87 "Built target midiclock"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1169,7 +1313,7 @@ midiclock: _deps/rtmidi-build/CMakeFiles/midiclock.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=33,34 "Finished codegen for target midiclock"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=86,87 "Finished codegen for target midiclock"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
 
 # clean rule for target.
@@ -1184,7 +1328,7 @@ _deps/rtmidi-build/CMakeFiles/midiclock.dir/clean:
 _deps/rtmidi-build/CMakeFiles/midiout.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=35,36 "Built target midiout"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=88,89 "Built target midiout"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiout.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1201,7 +1345,7 @@ midiout: _deps/rtmidi-build/CMakeFiles/midiout.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/midiout.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiout.dir/build.make _deps/rtmidi-build/CMakeFiles/midiout.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=35,36 "Finished codegen for target midiout"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=88,89 "Finished codegen for target midiout"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiout.dir/codegen
 
 # clean rule for target.
@@ -1216,7 +1360,7 @@ _deps/rtmidi-build/CMakeFiles/midiout.dir/clean:
 _deps/rtmidi-build/CMakeFiles/midiprobe.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=37,38 "Built target midiprobe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=90,91 "Built target midiprobe"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiprobe.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1233,7 +1377,7 @@ midiprobe: _deps/rtmidi-build/CMakeFiles/midiprobe.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiprobe.dir/build.make _deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=37,38 "Finished codegen for target midiprobe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=90,91 "Finished codegen for target midiprobe"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiprobe.dir/codegen
 
 # clean rule for target.
@@ -1248,7 +1392,7 @@ _deps/rtmidi-build/CMakeFiles/midiprobe.dir/clean:
 _deps/rtmidi-build/CMakeFiles/qmidiin.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=39,40 "Built target qmidiin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=92,93 "Built target qmidiin"
 .PHONY : _deps/rtmidi-build/CMakeFiles/qmidiin.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1265,7 +1409,7 @@ qmidiin: _deps/rtmidi-build/CMakeFiles/qmidiin.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/qmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=39,40 "Finished codegen for target qmidiin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=92,93 "Finished codegen for target qmidiin"
 .PHONY : _deps/rtmidi-build/CMakeFiles/qmidiin.dir/codegen
 
 # clean rule for target.
@@ -1280,7 +1424,7 @@ _deps/rtmidi-build/CMakeFiles/qmidiin.dir/clean:
 _deps/rtmidi-build/CMakeFiles/sysextest.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=44,45 "Built target sysextest"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=97,98 "Built target sysextest"
 .PHONY : _deps/rtmidi-build/CMakeFiles/sysextest.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1297,7 +1441,7 @@ sysextest: _deps/rtmidi-build/CMakeFiles/sysextest.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/sysextest.dir/build.make _deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=44,45 "Finished codegen for target sysextest"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=97,98 "Finished codegen for target sysextest"
 .PHONY : _deps/rtmidi-build/CMakeFiles/sysextest.dir/codegen
 
 # clean rule for target.
@@ -1344,7 +1488,7 @@ _deps/rtmidi-build/CMakeFiles/apinames.dir/clean:
 _deps/rtmidi-build/CMakeFiles/testcapi.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=46,47 "Built target testcapi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=99,100 "Built target testcapi"
 .PHONY : _deps/rtmidi-build/CMakeFiles/testcapi.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1361,7 +1505,7 @@ testcapi: _deps/rtmidi-build/CMakeFiles/testcapi.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/testcapi.dir/build.make _deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=46,47 "Finished codegen for target testcapi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=99,100 "Finished codegen for target testcapi"
 .PHONY : _deps/rtmidi-build/CMakeFiles/testcapi.dir/codegen
 
 # clean rule for target.
@@ -1400,6 +1544,268 @@ _deps/rtmidi-build/CMakeFiles/uninstall.dir/codegen:
 _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/uninstall.dir/build.make _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
 .PHONY : _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=68,69,70,71,72,73,74 "Built target kfr_dsp_sse2"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/rule
+
+# Convenience name for target.
+kfr_dsp_sse2: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/rule
+.PHONY : kfr_dsp_sse2
+
+# codegen rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=68,69,70,71,72,73,74 "Finished codegen for target kfr_dsp_sse2"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/clean
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=75,76,77,78,79,80,81 "Built target kfr_dsp_sse41"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/rule
+
+# Convenience name for target.
+kfr_dsp_sse41: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/rule
+.PHONY : kfr_dsp_sse41
+
+# codegen rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=75,76,77,78,79,80,81 "Finished codegen for target kfr_dsp_sse41"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/clean
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=47,48,49,50,51,52,53 "Built target kfr_dsp_avx"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/rule
+
+# Convenience name for target.
+kfr_dsp_avx: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/rule
+.PHONY : kfr_dsp_avx
+
+# codegen rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=47,48,49,50,51,52,53 "Finished codegen for target kfr_dsp_avx"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/clean
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=54,55,56,57,58,59,60 "Built target kfr_dsp_avx2"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/rule
+
+# Convenience name for target.
+kfr_dsp_avx2: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/rule
+.PHONY : kfr_dsp_avx2
+
+# codegen rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=54,55,56,57,58,59,60 "Finished codegen for target kfr_dsp_avx2"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/clean
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=61,62,63,64,65,66,67 "Built target kfr_dsp_avx512"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/rule
+
+# Convenience name for target.
+kfr_dsp_avx512: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/rule
+.PHONY : kfr_dsp_avx512
+
+# codegen rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=61,62,63,64,65,66,67 "Finished codegen for target kfr_dsp_avx512"
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/clean
+.PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/boost_math-build/CMakeFiles/boost_math.dir
+
+# All Build rule for target.
+_deps/boost_math-build/CMakeFiles/boost_math.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/boost_math-build/CMakeFiles/boost_math.dir/build.make _deps/boost_math-build/CMakeFiles/boost_math.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/boost_math-build/CMakeFiles/boost_math.dir/build.make _deps/boost_math-build/CMakeFiles/boost_math.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Built target boost_math"
+.PHONY : _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/boost_math-build/CMakeFiles/boost_math.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/boost_math-build/CMakeFiles/boost_math.dir/rule
+
+# Convenience name for target.
+boost_math: _deps/boost_math-build/CMakeFiles/boost_math.dir/rule
+.PHONY : boost_math
+
+# codegen rule for target.
+_deps/boost_math-build/CMakeFiles/boost_math.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/boost_math-build/CMakeFiles/boost_math.dir/build.make _deps/boost_math-build/CMakeFiles/boost_math.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num= "Finished codegen for target boost_math"
+.PHONY : _deps/boost_math-build/CMakeFiles/boost_math.dir/codegen
+
+# clean rule for target.
+_deps/boost_math-build/CMakeFiles/boost_math.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/boost_math-build/CMakeFiles/boost_math.dir/build.make _deps/boost_math-build/CMakeFiles/boost_math.dir/clean
+.PHONY : _deps/boost_math-build/CMakeFiles/boost_math.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=82,83,84,85 "Built target kfr_io"
+.PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/rule
+
+# Convenience name for target.
+kfr_io: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/rule
+.PHONY : kfr_io
+
+# codegen rule for target.
+_deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=82,83,84,85 "Finished codegen for target kfr_io"
+.PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/clean
+.PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/clean
+
+#=============================================================================
+# Target rules for target _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir
+
+# All Build rule for target.
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse2.dir/all
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/all
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx2.dir/all
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx512.dir/all
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/depend
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=33,34,35,36,37,38,39,40,41,42,43,44,45,46 "Built target kfr_audio"
+.PHONY : _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all
+
+# Build rule for subdir invocation for target.
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 53
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
+.PHONY : _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/rule
+
+# Convenience name for target.
+kfr_audio: _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/rule
+.PHONY : kfr_audio
+
+# codegen rule for target.
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=33,34,35,36,37,38,39,40,41,42,43,44,45,46 "Finished codegen for target kfr_audio"
+.PHONY : _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen
+
+# clean rule for target.
+_deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/clean:
+	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/clean
+.PHONY : _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

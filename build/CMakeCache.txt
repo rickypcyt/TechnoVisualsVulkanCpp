@@ -14,11 +14,20 @@
 # EXTERNAL cache entries
 ########################
 
+//Path to a file.
+ALAC_INCLUDE_DIRS:PATH=ALAC_INCLUDE_DIRS-NOTFOUND
+
+//Path to a library.
+ALAC_LIBRARY:FILEPATH=ALAC_LIBRARY-NOTFOUND
+
 //The ALSA (asound) include directory
 ALSA_INCLUDE_DIR:PATH=/usr/include
 
 //The ALSA (asound) library
 ALSA_LIBRARY:FILEPATH=/usr/lib/libasound.so
+
+//Use Boost.Math in standalone mode
+BOOST_MATH_STANDALONE:BOOL=TRUE
 
 //Build as shared library
 BUILD_SHARED_LIBS:BOOL=ON
@@ -326,6 +335,10 @@ FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
 FETCHCONTENT_QUIET:BOOL=ON
 
 //When not empty, overrides where to find pre-populated content
+// for boost_math
+FETCHCONTENT_SOURCE_DIR_BOOST_MATH:PATH=
+
+//When not empty, overrides where to find pre-populated content
 // for kfr
 FETCHCONTENT_SOURCE_DIR_KFR:PATH=
 
@@ -336,11 +349,17 @@ FETCHCONTENT_SOURCE_DIR_RTMIDI:PATH=
 //Enables UPDATE_DISCONNECTED behavior for all content population
 FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
 
+//Enables UPDATE_DISCONNECTED behavior just for population of boost_math
+FETCHCONTENT_UPDATES_DISCONNECTED_BOOST_MATH:BOOL=OFF
+
 //Enables UPDATE_DISCONNECTED behavior just for population of kfr
 FETCHCONTENT_UPDATES_DISCONNECTED_KFR:BOOL=OFF
 
 //Enables UPDATE_DISCONNECTED behavior just for population of rtmidi
 FETCHCONTENT_UPDATES_DISCONNECTED_RTMIDI:BOOL=OFF
+
+//The directory containing a CMake configuration file for FLAC.
+FLAC_DIR:PATH=/usr/lib/cmake/FLAC
 
 //Path to a program.
 GITCOMMAND:FILEPATH=/usr/bin/git
@@ -350,6 +369,8 @@ GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
 //Path to a library.
 JACK_LIB:FILEPATH=/usr/lib/libjack.so
+
+KFR_DEBUG_INSTALL_SUFFIX:STRING=/debug
 
 //Disable Clang vector extensions
 KFR_DISABLE_CLANG_EXTENSIONS:BOOL=OFF
@@ -377,6 +398,9 @@ KFR_ENABLE_MULTIARCH:BOOL=ON
 
 //Extended tests (up to hour)
 KFR_EXTENDED_TESTS:BOOL=OFF
+
+//Path to KFR CMake files
+KFR_INSTALL_CMAKEDIR:STRING=lib/cmake/kfr
 
 //Include headers in installation
 KFR_INSTALL_HEADERS:BOOL=ON
@@ -413,6 +437,9 @@ MEMORYCHECK_COMMAND:FILEPATH=/usr/bin/valgrind
 
 //File that contains suppressions for the memory checker
 MEMORYCHECK_SUPPRESSIONS_FILE:FILEPATH=
+
+//The directory containing a CMake configuration file for Ogg.
+Ogg_DIR:PATH=/usr/lib/cmake/Ogg
 
 //Arguments to supply to pkg-config
 PKG_CONFIG_ARGN:STRING=
@@ -473,6 +500,15 @@ Vulkan_INCLUDE_DIR:PATH=/usr/include
 
 //Path to a library.
 Vulkan_LIBRARY:FILEPATH=/usr/lib/libvulkan.so
+
+//Value Computed by CMake
+boost_math_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-build
+
+//Value Computed by CMake
+boost_math_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+boost_math_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-src
 
 //The directory containing a CMake configuration file for glm.
 glm_DIR:PATH=/usr/lib/cmake/glm
@@ -673,7 +709,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=2
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -719,7 +755,7 @@ CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
-COMPILE_RESULT:INTERNAL=FALSE
+COMPILE_RESULT:INTERNAL=TRUE
 //ADVANCED property for variable: COVERAGE_COMMAND
 COVERAGE_COMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: COVERAGE_EXTRA_FLAGS
@@ -800,6 +836,8 @@ GITCOMMAND-ADVANCED:INTERNAL=1
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //Have symbol jack_port_rename
 JACK_HAS_PORT_RENAME:INTERNAL=1
+//Detected CPU
+KFR_ARCH:INTERNAL=sse2
 //ADVANCED property for variable: KFR_DISABLE_CLANG_EXTENSIONS
 KFR_DISABLE_CLANG_EXTENSIONS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: KFR_ENABLE_ASMTEST
@@ -886,6 +924,8 @@ PORTAUDIO_portaudio-2.0_INCLUDEDIR:INTERNAL=
 PORTAUDIO_portaudio-2.0_LIBDIR:INTERNAL=
 PORTAUDIO_portaudio-2.0_PREFIX:INTERNAL=
 PORTAUDIO_portaudio-2.0_VERSION:INTERNAL=
+//Result of try_run()
+RUN_RESULT:INTERNAL=0
 //ADVANCED property for variable: SITE
 SITE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_GLSLANG_VALIDATOR_EXECUTABLE

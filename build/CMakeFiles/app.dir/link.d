@@ -48,6 +48,13 @@ app: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
   /usr/lib/libm.so.6 \
   /usr/lib/libmvec.so.1 \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libpthread.a \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
+  /usr/lib/libm.so.6 \
+  /usr/lib/libmvec.so.1 \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
@@ -348,6 +355,20 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/lib/libswresample.so:
 
 /usr/lib/libavutil.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so:
+
+/usr/lib/libm.so.6:
+
+/usr/lib/libmvec.so.1:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libpthread.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so:
 
