@@ -25,6 +25,11 @@ public:
     bool isRunning() const { return streamRunning.load(); }
     
     void listDevices();
+    
+    // Device selection
+    std::vector<std::string> getInputDeviceNames();
+    int getInputDeviceIndex() const { return inputDeviceIndex; }
+    bool setInputDevice(int deviceIndex);
 
     // FFT data access
     const std::vector<float>& getFFTMagnitudes() const { return fftMagnitudes; }

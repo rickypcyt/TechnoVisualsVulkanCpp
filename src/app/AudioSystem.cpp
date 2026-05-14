@@ -15,6 +15,9 @@ AudioSystem::~AudioSystem() {
 }
 
 bool AudioSystem::initialize() {
+    // Try to use PulseAudio backend first
+    const char* pulseHostApi = "PulseAudio";
+    
     PaError err = Pa_Initialize();
     if (err != paNoError) {
         std::cerr << "[AudioSystem] PortAudio error: " << Pa_GetErrorText(err) << std::endl;
@@ -22,17 +25,57 @@ bool AudioSystem::initialize() {
     }
 
     std::cout << "[AudioSystem] PortAudio initialized successfully" << std::endl;
+    std::cout << "[AudioSystem] Available Host APIs:" << std::endl;
+    
+    int numHostApis = Pa_GetHostApiCount();
+    for (int i = 0; i < numHostApis; i++) {
+        const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(i);
+        std::cout << "  " << i << ": " << hostApiInfo->name << std::endl;
+    }
+    
     listDevices();
 
-    // Try to find default input device
-    inputDeviceIndex = Pa_GetDefaultInputDevice();
-    if (inputDeviceIndex == paNoDevice) {
-        std::cerr << "[AudioSystem] No default input device found" << std::endl;
-        return false;
+    // Try to find PulseAudio input device
+    int pulseDeviceIndex = -1;
+    int numDevices = Pa_GetDeviceCount();
+    
+    for (int i = 0; i < numDevices; i++) {
+        const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
+        const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
+        
+        // Look for PulseAudio devices with input channels
+        if (deviceInfo->maxInputChannels > 0 && 
+            std::string(hostApiInfo->name) == pulseHostApi) {
+            pulseDeviceIndex = i;
+            std::cout << "[AudioSystem] Found PulseAudio device: " << deviceInfo->name << std::endl;
+            break;
+        }
+    }
+    
+    // Use PulseAudio device if found, otherwise fall back to default
+    if (pulseDeviceIndex != paNoDevice) {
+        inputDeviceIndex = pulseDeviceIndex;
+    } else {
+        std::cout << "[AudioSystem] WARNING: PulseAudio not found in PortAudio" << std::endl;
+        std::cout << "[AudioSystem] PortAudio may have been compiled without PulseAudio support" << std::endl;
+        std::cout << "[AudioSystem] Using default input device" << std::endl;
+        inputDeviceIndex = Pa_GetDefaultInputDevice();
+        if (inputDeviceIndex == paNoDevice) {
+            std::cerr << "[AudioSystem] No default input device found" << std::endl;
+            return false;
+        }
     }
 
     const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(inputDeviceIndex);
+    const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
     std::cout << "[AudioSystem] Using input device: " << deviceInfo->name << std::endl;
+    std::cout << "[AudioSystem] Backend: " << hostApiInfo->name << std::endl;
+    
+    if (std::string(hostApiInfo->name) != pulseHostApi) {
+        std::cout << "[AudioSystem] WARNING: Not using PulseAudio backend" << std::endl;
+        std::cout << "[AudioSystem] The application may not appear in pavucontrol" << std::endl;
+        std::cout << "[AudioSystem] To fix this, rebuild PortAudio with PulseAudio support" << std::endl;
+    }
 
     return true;
 }
@@ -52,19 +95,30 @@ bool AudioSystem::startStream() {
         return false;
     }
 
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(inputDeviceIndex);
+    const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
+    
+    std::cout << "[AudioSystem] Opening stream with device: " << deviceInfo->name << std::endl;
+    std::cout << "[AudioSystem] Backend: " << hostApiInfo->name << std::endl;
+
     PaStreamParameters inputParameters;
     std::memset(&inputParameters, 0, sizeof(inputParameters));
     inputParameters.device = inputDeviceIndex;
     inputParameters.channelCount = 1; // Mono input
     inputParameters.sampleFormat = paFloat32;
-    inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputDeviceIndex)->defaultLowInputLatency;
+    inputParameters.suggestedLatency = deviceInfo->defaultLowInputLatency;
     inputParameters.hostApiSpecificStreamInfo = nullptr;
+
+    // Use device's default sample rate instead of forcing 44100
+    // JACK typically uses 48000Hz, ALSA varies
+    double sampleRate = deviceInfo->defaultSampleRate;
+    std::cout << "[AudioSystem] Using sample rate: " << sampleRate << " Hz" << std::endl;
 
     PaError err = Pa_OpenStream(
         &stream,
         &inputParameters,
         nullptr, // No output
-        44100,   // Sample rate
+        sampleRate,
         512,     // Frames per buffer
         paClipOff, // No clipping
         audioCallback,
@@ -114,15 +168,75 @@ void AudioSystem::listDevices() {
         return;
     }
 
-    std::cout << "[AudioSystem] Found " << numDevices << " audio devices:" << std::endl;
+    std::cout << "[AudioSystem] Available audio devices:" << std::endl;
     
     for (int i = 0; i < numDevices; i++) {
         const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
         std::cout << "  Device " << i << ": " << deviceInfo->name << std::endl;
         std::cout << "    Input channels: " << deviceInfo->maxInputChannels << std::endl;
         std::cout << "    Output channels: " << deviceInfo->maxOutputChannels << std::endl;
-        std::cout << "    Default sample rate: " << deviceInfo->defaultSampleRate << std::endl;
     }
+}
+
+std::vector<std::string> AudioSystem::getInputDeviceNames() {
+    std::vector<std::string> deviceNames;
+    int numDevices = Pa_GetDeviceCount();
+    
+    for (int i = 0; i < numDevices; i++) {
+        const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
+        const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
+        
+        // Include all input devices, including monitor devices
+        if (deviceInfo->maxInputChannels > 0) {
+            std::string deviceName = deviceInfo->name;
+            // Add backend info for clarity
+            deviceName += " [";
+            deviceName += hostApiInfo->name;
+            deviceName += "]";
+            deviceNames.push_back(deviceName);
+        } else {
+            deviceNames.push_back(""); // No input channels
+        }
+    }
+    
+    return deviceNames;
+}
+
+bool AudioSystem::setInputDevice(int deviceIndex) {
+    int numDevices = Pa_GetDeviceCount();
+    if (deviceIndex < 0 || deviceIndex >= numDevices) {
+        std::cerr << "[AudioSystem] Invalid device index: " << deviceIndex << std::endl;
+        return false;
+    }
+    
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+    if (deviceInfo->maxInputChannels == 0) {
+        std::cerr << "[AudioSystem] Device has no input channels: " << deviceIndex << std::endl;
+        return false;
+    }
+    
+    // Stop and close current stream if running
+    if (stream) {
+        PaError err = Pa_StopStream(stream);
+        if (err != paNoError && err != paStreamIsNotStopped) {
+            std::cerr << "[AudioSystem] StopStream error: " << Pa_GetErrorText(err) << std::endl;
+        }
+        
+        err = Pa_CloseStream(stream);
+        if (err != paNoError) {
+            std::cerr << "[AudioSystem] CloseStream error: " << Pa_GetErrorText(err) << std::endl;
+        }
+        
+        stream = nullptr;
+        streamRunning = false;
+    }
+    
+    // Set new device
+    inputDeviceIndex = deviceIndex;
+    std::cout << "[AudioSystem] Input device changed to: " << deviceInfo->name << std::endl;
+    
+    // Always start the stream with the new device
+    return startStream();
 }
 
 int AudioSystem::audioCallback(const void* inputBuffer, void* outputBuffer,

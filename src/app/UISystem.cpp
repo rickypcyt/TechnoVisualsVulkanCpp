@@ -1596,6 +1596,37 @@ void UISystem::drawAudioDebug(AudioSystem& audioSystem) {
     ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.5f, 1.0f), "Audio Reactive Debug");
     ImGui::Separator();
     
+    // Device Selection
+    ImGui::Text("Input Device:");
+    std::vector<std::string> deviceNames = audioSystem.getInputDeviceNames();
+    int currentDeviceIndex = audioSystem.getInputDeviceIndex();
+    
+    // Create a filtered list of only devices with input channels
+    std::vector<int> validDeviceIndices;
+    std::vector<const char*> validDeviceNames;
+    for (size_t i = 0; i < deviceNames.size(); i++) {
+        if (!deviceNames[i].empty()) {
+            validDeviceIndices.push_back(i);
+            validDeviceNames.push_back(deviceNames[i].c_str());
+        }
+    }
+    
+    // Find current device index in the filtered list
+    int currentFilteredIndex = 0;
+    for (size_t i = 0; i < validDeviceIndices.size(); i++) {
+        if (validDeviceIndices[i] == currentDeviceIndex) {
+            currentFilteredIndex = i;
+            break;
+        }
+    }
+    
+    if (ImGui::Combo("##Device", &currentFilteredIndex, validDeviceNames.data(), validDeviceNames.size())) {
+        int newDeviceIndex = validDeviceIndices[currentFilteredIndex];
+        audioSystem.setInputDevice(newDeviceIndex);
+    }
+    
+    ImGui::Separator();
+    
     // Status
     ImGui::Text("Audio Stream: %s", audioSystem.isRunning() ? "Running" : "Stopped");
     
