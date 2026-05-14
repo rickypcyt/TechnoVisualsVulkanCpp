@@ -20,6 +20,7 @@
 #include "../app/VisualControls.h"
 #include "../app/ControlState.h"
 #include "../app/MidiSystem.h"
+#include "../app/OscSystem.h"
 #include "../app/PlaybackClock.h"
 #include "../app/ProjectState.h"
 #include "../app/Timeline.h"
@@ -86,6 +87,7 @@ private:
     VisualControls visualControls;
     VideoRandomizerState videoRandomizer;
     MidiSystem midiSystem;
+    OscSystem oscSystem;
     std::string controlStatePath = "controls_state.cfg";
     bool controlsDirty = false;
     bool allowDimensionChangeRecreation = false;
@@ -129,6 +131,7 @@ private:
     void initNLE();
     void initMultiPassPipeline();
     void initMidi();
+    void initOsc();
 
     // Main loop
     void mainLoop();

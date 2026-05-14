@@ -11,6 +11,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/ricky/coding/proyects/vulkancpp/src/app/Application.cpp" "CMakeFiles/app.dir/src/app/Application.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/Application.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/ControlState.cpp" "CMakeFiles/app.dir/src/app/ControlState.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/ControlState.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.cpp" "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.cpp" "CMakeFiles/app.dir/src/app/OscSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/OscSystem.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/UISystem.cpp" "CMakeFiles/app.dir/src/app/UISystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/UISystem.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/core/VulkanContext.cpp" "CMakeFiles/app.dir/src/core/VulkanContext.cpp.o" "gcc" "CMakeFiles/app.dir/src/core/VulkanContext.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/core/Window.cpp" "CMakeFiles/app.dir/src/core/Window.cpp.o" "gcc" "CMakeFiles/app.dir/src/core/Window.cpp.o.d"

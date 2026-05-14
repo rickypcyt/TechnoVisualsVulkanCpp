@@ -597,5 +597,17 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/ControlState.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/MidiSystem.h \
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src/RtMidi.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/OscSystem.h \
+ /usr/include/lo/lo.h /usr/include/lo/lo_endian.h \
+ /usr/include/netinet/in.h /usr/include/sys/socket.h \
+ /usr/include/bits/types/struct_iovec.h /usr/include/bits/socket.h \
+ /usr/include/bits/socket_type.h /usr/include/bits/sockaddr.h \
+ /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
+ /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
+ /usr/include/bits/types/struct_osockaddr.h /usr/include/bits/in.h \
+ /usr/include/lo/lo_types.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
+ /usr/include/bits/netdb.h /usr/include/lo/lo_osc_types.h \
+ /usr/include/lo/lo_errors.h /usr/include/lo/lo_lowlevel.h \
+ /usr/include/lo/lo_serverthread.h /usr/include/lo/lo_macros.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/PlaybackClock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h

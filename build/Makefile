@@ -740,6 +740,30 @@ src/app/MidiSystem.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/MidiSystem.cpp.s
 .PHONY : src/app/MidiSystem.cpp.s
 
+src/app/OscSystem.o: src/app/OscSystem.cpp.o
+.PHONY : src/app/OscSystem.o
+
+# target to build an object file
+src/app/OscSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/OscSystem.cpp.o
+.PHONY : src/app/OscSystem.cpp.o
+
+src/app/OscSystem.i: src/app/OscSystem.cpp.i
+.PHONY : src/app/OscSystem.i
+
+# target to preprocess a source file
+src/app/OscSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/OscSystem.cpp.i
+.PHONY : src/app/OscSystem.cpp.i
+
+src/app/OscSystem.s: src/app/OscSystem.cpp.s
+.PHONY : src/app/OscSystem.s
+
+# target to generate assembly for a file
+src/app/OscSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/OscSystem.cpp.s
+.PHONY : src/app/OscSystem.cpp.s
+
 src/app/UISystem.o: src/app/UISystem.cpp.o
 .PHONY : src/app/UISystem.o
 
@@ -1352,6 +1376,9 @@ help:
 	@echo "... src/app/MidiSystem.o"
 	@echo "... src/app/MidiSystem.i"
 	@echo "... src/app/MidiSystem.s"
+	@echo "... src/app/OscSystem.o"
+	@echo "... src/app/OscSystem.i"
+	@echo "... src/app/OscSystem.s"
 	@echo "... src/app/UISystem.o"
 	@echo "... src/app/UISystem.i"
 	@echo "... src/app/UISystem.s"

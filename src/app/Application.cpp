@@ -64,6 +64,9 @@ void Application::run() {
     // Initialize MIDI
     initMidi();
 
+    // Initialize OSC
+    initOsc();
+
     // Initialize command buffers
     initCommandBuffers();
 
@@ -400,6 +403,25 @@ void Application::initMidi() {
     }
 }
 
+void Application::initOsc() {
+    if (!oscSystem.initialize(9000)) {
+        std::cerr << "[Application] Failed to initialize OSC system" << std::endl;
+        return;
+    }
+
+    // Set up OSC event callback to apply to visual controls
+    oscSystem.setEventCallback([this](const OscMessage& msg) {
+        oscSystem.applyToVisualControls(msg, visualControls);
+    });
+
+    // Start OSC listener
+    if (oscSystem.start()) {
+        std::cout << "[Application] OSC system started on port 9000" << std::endl;
+    } else {
+        std::cerr << "[Application] Failed to start OSC listener" << std::endl;
+    }
+}
+
 void Application::initMultiPassPipeline() {
     if (!videoSubsystemInitialized) {
         std::cout << "[Application] Skipping MultiPassPipeline - video not initialized" << std::endl;
@@ -693,6 +715,9 @@ void Application::mainLoop() {
         // Update MIDI system
         midiSystem.update();
 
+        // Update OSC system
+        oscSystem.update();
+
         // Update uniform buffer
         updateUniformBuffer(frame.frameIndex);
 
@@ -872,7 +897,7 @@ void Application::mainLoop() {
         
         uiSystem.render(visualControls, videoRandomizer, videoPlayer, videoRegistry,
                        selectedVideoAsset, transitionDuration, allowDimensionChangeRecreation,
-                       controlsDirty, rng, diag, callbacks, midiSystem);
+                       controlsDirty, rng, diag, callbacks, midiSystem, oscSystem);
         
         // Record command buffer
         recordCommandBuffer(commandBuffers[frame.frameIndex], frame);

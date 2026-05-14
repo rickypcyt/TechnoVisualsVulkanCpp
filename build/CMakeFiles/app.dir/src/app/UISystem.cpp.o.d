@@ -324,17 +324,42 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_numeric.h \
  /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
  /usr/include/c++/16.1.1/pstl/execution_defs.h \
- /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.h \
- /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imconfig.h \
- /usr/include/assert.h \
- /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h \
- /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.h \
+ /usr/include/lo/lo.h /usr/include/lo/lo_endian.h \
+ /usr/include/netinet/in.h /usr/include/sys/socket.h \
+ /usr/include/bits/types/struct_iovec.h /usr/include/bits/socket.h \
+ /usr/include/bits/socket_type.h /usr/include/bits/sockaddr.h \
+ /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
+ /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
+ /usr/include/bits/types/struct_osockaddr.h /usr/include/bits/in.h \
+ /usr/include/lo/lo_types.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
+ /usr/include/bits/types/sigevent_t.h \
+ /usr/include/bits/types/__sigval_t.h /usr/include/bits/netdb.h \
+ /usr/include/lo/lo_osc_types.h /usr/include/lo/lo_errors.h \
+ /usr/include/lo/lo_lowlevel.h /usr/include/lo/lo_serverthread.h \
+ /usr/include/lo/lo_macros.h /usr/include/c++/16.1.1/map \
+ /usr/include/c++/16.1.1/bits/stl_tree.h \
+ /usr/include/c++/16.1.1/bits/stl_map.h \
+ /usr/include/c++/16.1.1/bits/stl_multimap.h \
+ /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/bits/std_thread.h \
+ /usr/include/c++/16.1.1/bits/unique_ptr.h \
+ /usr/include/c++/16.1.1/bits/this_thread_sleep.h \
+ /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
+ /usr/include/c++/16.1.1/ctime \
+ /usr/include/c++/16.1.1/bits/parse_numbers.h \
+ /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
+ /usr/include/c++/16.1.1/atomic \
+ /usr/include/c++/16.1.1/bits/atomic_base.h \
+ /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
  /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
- /usr/include/glm/simd/platform.h /usr/include/c++/16.1.1/climits \
- /usr/include/c++/16.1.1/cfloat /usr/include/glm/fwd.hpp \
- /usr/include/glm/detail/qualifier.hpp /usr/include/glm/detail/setup.hpp \
- /usr/include/glm/vec2.hpp /usr/include/glm/ext/vector_bool2.hpp \
+ /usr/include/assert.h /usr/include/glm/simd/platform.h \
+ /usr/include/c++/16.1.1/climits /usr/include/c++/16.1.1/cfloat \
+ /usr/include/glm/fwd.hpp /usr/include/glm/detail/qualifier.hpp \
+ /usr/include/glm/detail/setup.hpp /usr/include/glm/vec2.hpp \
+ /usr/include/glm/ext/vector_bool2.hpp \
  /usr/include/glm/detail/type_vec2.hpp \
  /usr/include/glm/detail/type_vec2.inl \
  /usr/include/glm/detail/compute_vector_relational.hpp \
@@ -445,6 +470,10 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
  /usr/include/glm/detail/func_integer.inl \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.h \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imconfig.h \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h \
+ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.h \
  /usr/include/glm/gtc/type_ptr.hpp /usr/include/glm/gtc/quaternion.hpp \
  /usr/include/glm/gtc/constants.hpp \
  /usr/include/glm/ext/scalar_constants.hpp \
@@ -490,7 +519,6 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/glm/ext/vector_uint1.hpp \
  /usr/include/glm/ext/vector_uint1_sized.hpp \
  /usr/include/c++/16.1.1/cstring /usr/include/glm/gtc/type_ptr.inl \
- /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.h \
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src/RtMidi.h \
  /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
@@ -508,15 +536,9 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/basic_ios.tcc \
  /usr/include/c++/16.1.1/bits/ostream_print.h \
  /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/bits/istream.tcc /usr/include/c++/16.1.1/map \
- /usr/include/c++/16.1.1/bits/stl_tree.h \
- /usr/include/c++/16.1.1/bits/stl_map.h \
- /usr/include/c++/16.1.1/bits/stl_multimap.h \
+ /usr/include/c++/16.1.1/bits/istream.tcc \
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h \
  /home/ricky/coding/proyects/vulkancpp/src/video/../app/ProjectState.h \
- /usr/include/c++/16.1.1/atomic \
- /usr/include/c++/16.1.1/bits/atomic_base.h \
- /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
  /usr/include/libavcodec/avcodec.h /usr/include/libavutil/samplefmt.h \
  /usr/include/libavutil/attributes.h /usr/include/libavutil/avutil.h \
  /usr/include/libavutil/common.h /usr/include/libavutil/attributes.h \
@@ -550,9 +572,6 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/libavutil/pixdesc.h \
  /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.h \
  /usr/include/c++/16.1.1/filesystem /usr/include/c++/16.1.1/bits/fs_fwd.h \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime \
- /usr/include/c++/16.1.1/bits/parse_numbers.h \
  /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/locale \
  /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
@@ -568,7 +587,6 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/shared_ptr.h \
  /usr/include/c++/16.1.1/bits/shared_ptr_base.h \
  /usr/include/c++/16.1.1/bits/allocated_ptr.h \
- /usr/include/c++/16.1.1/bits/unique_ptr.h \
  /usr/include/c++/16.1.1/bits/fs_dir.h \
  /usr/include/c++/16.1.1/bits/fs_ops.h /usr/include/c++/16.1.1/algorithm \
  /usr/include/c++/16.1.1/bits/stl_algo.h \
@@ -583,10 +601,6 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/shared_ptr_atomic.h \
  /usr/include/c++/16.1.1/backward/auto_ptr.h \
  /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
- /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
- /usr/include/c++/16.1.1/bits/unique_lock.h \
- /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/bits/std_thread.h \
- /usr/include/c++/16.1.1/bits/this_thread_sleep.h \
  /usr/include/c++/16.1.1/condition_variable \
  /usr/include/c++/16.1.1/chrono /usr/include/c++/16.1.1/queue \
  /usr/include/c++/16.1.1/deque /usr/include/c++/16.1.1/bits/stl_deque.h \
@@ -599,13 +613,13 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: \
  /usr/include/linux/close_range.h /usr/include/sys/wait.h \
  /usr/include/signal.h /usr/include/bits/signum-generic.h \
  /usr/include/bits/signum-arch.h /usr/include/bits/types/sig_atomic_t.h \
- /usr/include/bits/types/siginfo_t.h /usr/include/bits/types/__sigval_t.h \
- /usr/include/bits/siginfo-arch.h /usr/include/bits/siginfo-consts.h \
+ /usr/include/bits/types/siginfo_t.h /usr/include/bits/siginfo-arch.h \
+ /usr/include/bits/siginfo-consts.h \
  /usr/include/bits/siginfo-consts-arch.h \
- /usr/include/bits/types/sigval_t.h /usr/include/bits/types/sigevent_t.h \
- /usr/include/bits/sigevent-consts.h /usr/include/bits/sigaction.h \
- /usr/include/bits/sigcontext.h /usr/include/bits/types/stack_t.h \
- /usr/include/sys/ucontext.h /usr/include/bits/sigstack.h \
- /usr/include/bits/sigstksz.h /usr/include/bits/ss_flags.h \
- /usr/include/bits/types/struct_sigstack.h /usr/include/bits/sigthread.h \
- /usr/include/bits/signal_ext.h /usr/include/bits/types/idtype_t.h
+ /usr/include/bits/types/sigval_t.h /usr/include/bits/sigevent-consts.h \
+ /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h \
+ /usr/include/bits/types/stack_t.h /usr/include/sys/ucontext.h \
+ /usr/include/bits/sigstack.h /usr/include/bits/sigstksz.h \
+ /usr/include/bits/ss_flags.h /usr/include/bits/types/struct_sigstack.h \
+ /usr/include/bits/sigthread.h /usr/include/bits/signal_ext.h \
+ /usr/include/bits/types/idtype_t.h

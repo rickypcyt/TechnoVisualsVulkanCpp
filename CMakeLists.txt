@@ -19,6 +19,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(rtmidi)
 
+# liblo for OSC support
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBLO REQUIRED liblo)
+
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 
@@ -28,6 +32,7 @@ add_executable(app
     src/app/UISystem.cpp
     src/app/ControlState.cpp
     src/app/MidiSystem.cpp
+    src/app/OscSystem.cpp
     src/core/Window.cpp
     src/core/VulkanContext.cpp
     src/video/VideoStaging.cpp
@@ -53,7 +58,7 @@ add_executable(app
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
 )
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR})
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS})
 
 target_link_libraries(app
     Vulkan::Vulkan
@@ -61,4 +66,5 @@ target_link_libraries(app
     glm::glm
     PkgConfig::FFMPEG
     rtmidi
+    ${LIBLO_LIBRARIES}
 )

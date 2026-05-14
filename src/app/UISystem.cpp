@@ -1,4 +1,5 @@
 #include "UISystem.h"
+#include "OscSystem.h"
 
 // ImGui
 #include "imgui.h"
@@ -118,8 +119,9 @@ void UISystem::render(
     std::mt19937&         rng,
     const UIDiagnostics&  diag,
     const UICallbacks&    callbacks,
-    MidiSystem&           midiSystem)
-{
+    MidiSystem&           midiSystem,
+    OscSystem&            oscSystem
+) {
     if (!initialized || !renderer) return;
 
     beginFrame();
@@ -142,6 +144,10 @@ void UISystem::render(
 
     if (showMidiWindow) {
         drawMidiControls(midiSystem);
+    }
+
+    if (showOscWindow) {
+        drawOscControls(oscSystem);
     }
 
     if (showDemoWindow) {
@@ -1283,6 +1289,121 @@ void UISystem::drawMidiControls(MidiSystem& midiSystem) {
     ImGui::Text("Note 64: Toggle glitch");
     ImGui::Text("Note 65: Toggle bend");
     ImGui::Text("Note 67: Toggle feedback");
+
+    ImGui::End();
+}
+
+void UISystem::drawOscControls(OscSystem& oscSystem) {
+    ImGui::Begin("OSC Controls", &showOscWindow);
+
+    // Enable/Disable OSC
+    bool enabled = oscSystem.isEnabled();
+    if (ImGui::Checkbox("Enable OSC", &enabled)) {
+        oscSystem.setEnabled(enabled);
+    }
+
+    ImGui::Separator();
+
+    // Port display
+    ImGui::Text("OSC Port: %d", oscSystem.getPort());
+    ImGui::Text("Listening for OSC messages on UDP port");
+
+    ImGui::Separator();
+
+    // OSC Learn Wizard
+    ImGui::Text("OSC Learn Wizard");
+    bool learnMode = oscSystem.isLearnMode();
+    if (ImGui::Checkbox("Learn Mode", &learnMode)) {
+        oscSystem.setLearnMode(learnMode);
+    }
+
+    if (oscSystem.isLearnMode()) {
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Send an OSC message to learn its address...");
+    }
+
+    if (oscSystem.hasLearnedMessage()) {
+        OscMessage msg = oscSystem.getLastLearnedMessage();
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Detected OSC Message:");
+        ImGui::Text("Address: %s", msg.address.c_str());
+
+        if (msg.type == OscMessageType::FLOAT) {
+            ImGui::Text("Type: Float");
+            ImGui::Text("Value: %.4f", msg.floatValue);
+        } else if (msg.type == OscMessageType::INT) {
+            ImGui::Text("Type: Int");
+            ImGui::Text("Value: %d", msg.intValue);
+        } else if (msg.type == OscMessageType::STRING) {
+            ImGui::Text("Type: String");
+            ImGui::Text("Value: %s", msg.stringValue.c_str());
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Assign to Parameter:");
+
+        // Simplified parameter list for OSC
+        static const char* parameters[] = {
+            "animationSpeed", "tempo", "energy", "bass", "mid", "high",
+            "colorBlend", "uvWarpStrength", "rippleStrength", "swirlStrength",
+            "bloomIntensity", "bloomThreshold", "aberrationAmount", "grainStrength",
+            "feedbackAmount", "trailStrength", "glitchAmount", "glitchRGBSplit",
+            "videoPlaybackRate", "gradeBrightness", "gradeContrast", "gradeSaturation"
+        };
+        static int selectedParamIndex = 0;
+        ImGui::Combo("Parameter", &selectedParamIndex, parameters, IM_ARRAYSIZE(parameters));
+
+        static float minVal = 0.0f;
+        static float maxVal = 1.0f;
+        ImGui::DragFloat("Min", &minVal, 0.01f);
+        ImGui::DragFloat("Max", &maxVal, 0.01f);
+
+        static bool invert = false;
+        ImGui::Checkbox("Invert", &invert);
+
+        if (ImGui::Button("Assign Mapping")) {
+            oscSystem.addMapping(msg.address, parameters[selectedParamIndex], minVal, maxVal, invert);
+            std::cout << "[UI] Assigned OSC address " << msg.address << " to " << parameters[selectedParamIndex] << std::endl;
+            oscSystem.clearLearnedMessage();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            oscSystem.clearLearnedMessage();
+        }
+    }
+
+    ImGui::Separator();
+
+    // OSC mappings display
+    ImGui::Text("Current Mappings:");
+    const auto& mappings = oscSystem.getMappings();
+    if (ImGui::BeginTable("OscMappings", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Address");
+        ImGui::TableSetupColumn("Parameter");
+        ImGui::TableSetupColumn("Min");
+        ImGui::TableSetupColumn("Max");
+        ImGui::TableHeadersRow();
+
+        for (const auto& [addr, mapping] : mappings) {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%s", addr.c_str());
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", mapping.parameterName.c_str());
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%.2f", mapping.minValue);
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("%.2f", mapping.maxValue);
+        }
+        ImGui::EndTable();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("OSC Address Examples:");
+    ImGui::Text("/vjay/animationSpeed");
+    ImGui::Text("/vjay/bloomIntensity");
+    ImGui::Text("/vjay/feedbackAmount");
+    ImGui::Text("Send float values 0.0-1.0 for normalized control");
 
     ImGui::End();
 }

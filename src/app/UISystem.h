@@ -12,6 +12,7 @@ struct VideoRandomizerState;
 class VideoPlayer;
 class VideoRegistry;
 class MidiSystem;
+class OscSystem;
 
 // Agregamos solo lo imprescindible de imgui aqui.
 // El .cpp incluye los headers completos de imgui.
@@ -101,7 +102,8 @@ public:
         std::mt19937&         rng,
         const UIDiagnostics&  diag,
         const UICallbacks&    callbacks,
-        MidiSystem&           midiSystem
+        MidiSystem&           midiSystem,
+        OscSystem&            oscSystem
     );
 
 private:
@@ -126,6 +128,7 @@ private:
     bool showDemoWindow  = false;
     bool showNLEWindow   = true;
     bool showMidiWindow  = true;
+    bool showOscWindow   = true;
 
 private:
     void beginFrame();
@@ -168,6 +171,7 @@ private:
     );
 
     void drawMidiControls(MidiSystem& midiSystem);
+    void drawOscControls(OscSystem& oscSystem);
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;
