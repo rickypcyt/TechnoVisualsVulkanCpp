@@ -905,6 +905,11 @@ void Application::mainLoop() {
                     newIndex = dist(rng);
                 } while (newIndex == selectedVideoAsset);
                 
+                // Validate index
+                if (newIndex < 0 || newIndex >= static_cast<int>(assets.size())) {
+                    newIndex = 0;
+                }
+                
                 selectedVideoAsset = newIndex;
                 videoSourcePath = assets[newIndex].metadata.path;
                 
