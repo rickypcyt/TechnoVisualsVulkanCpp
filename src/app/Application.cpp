@@ -1100,6 +1100,13 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.fxaaQualityEdgeThreshold = visualControls.fxaaQualityEdgeThreshold;
     ubo.fxaaQualityEdgeThresholdMin = visualControls.fxaaQualityEdgeThresholdMin;
 
+    // Grid / Mirroring
+    ubo.enableGrid = visualControls.enableGrid ? 1 : 0;
+    ubo.gridMode = visualControls.gridMode;
+    ubo.gridCount = visualControls.gridCount;
+    ubo.gridRows = visualControls.gridRows;
+    ubo.gridColumns = visualControls.gridColumns;
+
     uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }
 

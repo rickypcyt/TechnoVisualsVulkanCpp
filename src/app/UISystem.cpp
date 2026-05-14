@@ -803,6 +803,24 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     changed |= ImGui::SliderFloat("Edge Threshold Min",  &c.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f, "%.4f");
     ImGui::EndDisabled();
 
+    // Grid / Mirroring - Show video in multiple positions
+    ImGui::Spacing(); ImGui::Text("7. Grid / Mirroring"); ImGui::SameLine();
+    changed |= ImGui::Checkbox("On##Grid", &c.enableGrid);
+    ImGui::Separator();
+    ImGui::BeginDisabled(!c.enableGrid);
+    static const char* gridModeLabels[] = {"Vertical (side by side)", "Horizontal (stacked)", "Matrix (grid 2D)"};
+    changed |= ImGui::Combo("Mode", &c.gridMode, gridModeLabels, 3);
+
+    if (c.gridMode == 2) {
+        // Matrix mode: show rows and columns
+        changed |= ImGui::SliderInt("Rows", &c.gridRows, 1, 8);
+        changed |= ImGui::SliderInt("Columns", &c.gridColumns, 1, 8);
+    } else {
+        // Vertical or Horizontal mode: show count
+        changed |= ImGui::SliderInt("Count", &c.gridCount, 2, 8);
+    }
+    ImGui::EndDisabled();
+
     ImGui::End();
     if (changed) controlsDirty = true;
 }

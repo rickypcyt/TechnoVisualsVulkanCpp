@@ -168,4 +168,10 @@ struct VisualControls {
     float fxaaQualitySubpix      = 0.75f;
     float fxaaQualityEdgeThreshold = 0.125f;
     float fxaaQualityEdgeThresholdMin = 0.0625f;
+    // Grid / Mirroring
+    bool  enableGrid             = false;
+    int   gridMode              = 0;  // 0 = vertical, 1 = horizontal, 2 = matrix
+    int   gridCount             = 2;  // Number of grid cells (for vertical/horizontal)
+    int   gridRows              = 2;  // Number of rows (for matrix mode)
+    int   gridColumns           = 2;  // Number of columns (for matrix mode)
 };

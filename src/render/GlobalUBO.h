@@ -381,6 +381,13 @@ struct GlobalParamsUBO {
     alignas(4) float fxaaQualitySubpix;
     alignas(4) float fxaaQualityEdgeThreshold;
     alignas(4) float fxaaQualityEdgeThresholdMin;
+
+    // GridPassUBO: Grid / Mirroring
+    alignas(4) int enableGrid;
+    alignas(4) int gridMode;
+    alignas(4) int gridCount;
+    alignas(4) int gridRows;
+    alignas(4) int gridColumns;
 };
 
 // ============================================================================
@@ -573,4 +580,11 @@ struct GlobalUBO {
     alignas(4) float posterizeLevels;
     alignas(4) float zoomPulseAmount;
     alignas(4) float rgbShiftAmount;
+
+    // --- Grid / Mirroring ---
+    alignas(4) int enableGrid;
+    alignas(4) int gridMode;
+    alignas(4) int gridCount;
+    alignas(4) int gridRows;
+    alignas(4) int gridColumns;
 };
