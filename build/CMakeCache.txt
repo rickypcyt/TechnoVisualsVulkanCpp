@@ -216,6 +216,21 @@ CMAKE_PROJECT_NAME:STATIC=VulkanApp
 //Value Computed by CMake
 CMAKE_PROJECT_SPDX_LICENSE:STATIC=
 
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION:STATIC=7.0.1
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_MAJOR:STATIC=7
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_MINOR:STATIC=0
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_PATCH:STATIC=1
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_TWEAK:STATIC=
+
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
 
@@ -297,6 +312,9 @@ CTEST_SUBMIT_RETRY_DELAY:STRING=5
 //Maximum time allowed before CTest will kill the test.
 DART_TESTING_TIMEOUT:STRING=1500
 
+//Enable KFR tests
+ENABLE_TESTS:BOOL=OFF
+
 //Directory under which to collect all populated content
 FETCHCONTENT_BASE_DIR:PATH=/home/ricky/coding/proyects/vulkancpp/build/_deps
 
@@ -308,8 +326,8 @@ FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
 FETCHCONTENT_QUIET:BOOL=ON
 
 //When not empty, overrides where to find pre-populated content
-// for oscpack
-FETCHCONTENT_SOURCE_DIR_OSCPACK:PATH=
+// for kfr
+FETCHCONTENT_SOURCE_DIR_KFR:PATH=
 
 //When not empty, overrides where to find pre-populated content
 // for rtmidi
@@ -318,8 +336,8 @@ FETCHCONTENT_SOURCE_DIR_RTMIDI:PATH=
 //Enables UPDATE_DISCONNECTED behavior for all content population
 FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
 
-//Enables UPDATE_DISCONNECTED behavior just for population of oscpack
-FETCHCONTENT_UPDATES_DISCONNECTED_OSCPACK:BOOL=OFF
+//Enables UPDATE_DISCONNECTED behavior just for population of kfr
+FETCHCONTENT_UPDATES_DISCONNECTED_KFR:BOOL=OFF
 
 //Enables UPDATE_DISCONNECTED behavior just for population of rtmidi
 FETCHCONTENT_UPDATES_DISCONNECTED_RTMIDI:BOOL=OFF
@@ -332,6 +350,60 @@ GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
 //Path to a library.
 JACK_LIB:FILEPATH=/usr/lib/libjack.so
+
+//Disable Clang vector extensions
+KFR_DISABLE_CLANG_EXTENSIONS:BOOL=OFF
+
+//Enable writing disassembly
+KFR_ENABLE_ASMTEST:BOOL=OFF
+
+//Enable Audio classes
+KFR_ENABLE_AUDIO:BOOL=ON
+
+//Enable KFR C API building
+KFR_ENABLE_CAPI_BUILD:BOOL=OFF
+
+//Enable DFT and related algorithms.
+KFR_ENABLE_DFT:BOOL=OFF
+
+//Enable DSP module
+KFR_ENABLE_DSP:BOOL=ON
+
+//Enable IO classes
+KFR_ENABLE_IO:BOOL=ON
+
+//Multiple architectures will be built with runtime dispatch
+KFR_ENABLE_MULTIARCH:BOOL=ON
+
+//Extended tests (up to hour)
+KFR_EXTENDED_TESTS:BOOL=OFF
+
+//Include headers in installation
+KFR_INSTALL_HEADERS:BOOL=ON
+
+//Include libraries in installation
+KFR_INSTALL_LIBRARIES:BOOL=ON
+
+KFR_IO:BOOL=OFF
+
+//Use KFR managed memory (copy-free aligned reallocation, ref counting)
+KFR_MANAGED_ALLOCATION:BOOL=OFF
+
+//Regenerate auto tests
+KFR_REGENERATE_TESTS:BOOL=OFF
+
+//Build tests but don't run tests
+KFR_SKIP_TESTS:BOOL=OFF
+
+//Use Boost to support Elliptic filters. Enable this only if you're
+// already using Boost
+KFR_USE_BOOST:BOOL=OFF
+
+//Use Boost.Math (standalone) to support Elliptic filters
+KFR_USE_BOOST_MATH:BOOL=ON
+
+//Use std::filesystem for path arguments
+KFR_USE_STD_FILESYSTEM:BOOL=OFF
 
 //Command to build the project
 MAKECOMMAND:STRING=/usr/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
@@ -405,6 +477,15 @@ Vulkan_LIBRARY:FILEPATH=/usr/lib/libvulkan.so
 //The directory containing a CMake configuration file for glm.
 glm_DIR:PATH=/usr/lib/cmake/glm
 
+//Value Computed by CMake
+kfr_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build
+
+//Value Computed by CMake
+kfr_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+kfr_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src
+
 //Path to a library.
 pkgcfg_lib_FFMPEG_avcodec:FILEPATH=/usr/lib/libavcodec.so
 
@@ -422,6 +503,18 @@ pkgcfg_lib_FFMPEG_swscale:FILEPATH=/usr/lib/libswscale.so
 
 //Path to a library.
 pkgcfg_lib_LIBLO_lo:FILEPATH=/usr/lib/liblo.so
+
+//Path to a library.
+pkgcfg_lib_PORTAUDIO_asound:FILEPATH=/usr/lib/libasound.so
+
+//Path to a library.
+pkgcfg_lib_PORTAUDIO_m:FILEPATH=/usr/lib/libm.so
+
+//Path to a library.
+pkgcfg_lib_PORTAUDIO_portaudio:FILEPATH=/usr/lib/libportaudio.so
+
+//Path to a library.
+pkgcfg_lib_PORTAUDIO_pthread:FILEPATH=/usr/lib/libpthread.a
 
 //Path to a library.
 pkgcfg_lib_jack_jack:FILEPATH=/usr/lib/libjack.so
@@ -625,6 +718,8 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Result of TRY_COMPILE
+COMPILE_RESULT:INTERNAL=FALSE
 //ADVANCED property for variable: COVERAGE_COMMAND
 COVERAGE_COMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: COVERAGE_EXTRA_FLAGS
@@ -705,6 +800,12 @@ GITCOMMAND-ADVANCED:INTERNAL=1
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //Have symbol jack_port_rename
 JACK_HAS_PORT_RENAME:INTERNAL=1
+//ADVANCED property for variable: KFR_DISABLE_CLANG_EXTENSIONS
+KFR_DISABLE_CLANG_EXTENSIONS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: KFR_ENABLE_ASMTEST
+KFR_ENABLE_ASMTEST-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: KFR_REGENERATE_TESTS
+KFR_REGENERATE_TESTS-ADVANCED:INTERNAL=1
 LIBLO_CFLAGS:INTERNAL=-I/usr/include
 LIBLO_CFLAGS_I:INTERNAL=
 LIBLO_CFLAGS_OTHER:INTERNAL=
@@ -750,6 +851,41 @@ MEMORYCHECK_SUPPRESSIONS_FILE-ADVANCED:INTERNAL=1
 PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
 PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
+PORTAUDIO_CFLAGS:INTERNAL=-I/usr/include;-pthread
+PORTAUDIO_CFLAGS_I:INTERNAL=
+PORTAUDIO_CFLAGS_OTHER:INTERNAL=-pthread
+PORTAUDIO_FOUND:INTERNAL=1
+PORTAUDIO_INCLUDEDIR:INTERNAL=/usr/include
+PORTAUDIO_INCLUDE_DIRS:INTERNAL=/usr/include
+PORTAUDIO_LDFLAGS:INTERNAL=-L/usr/lib;-lportaudio;-lasound;-lm;-lpthread
+PORTAUDIO_LDFLAGS_OTHER:INTERNAL=
+PORTAUDIO_LIBDIR:INTERNAL=/usr/lib
+PORTAUDIO_LIBRARIES:INTERNAL=portaudio;asound;m;pthread
+PORTAUDIO_LIBRARY_DIRS:INTERNAL=/usr/lib
+PORTAUDIO_LIBS:INTERNAL=
+PORTAUDIO_LIBS_L:INTERNAL=
+PORTAUDIO_LIBS_OTHER:INTERNAL=
+PORTAUDIO_LIBS_PATHS:INTERNAL=
+PORTAUDIO_MODULE_NAME:INTERNAL=portaudio-2.0
+PORTAUDIO_PREFIX:INTERNAL=/usr
+PORTAUDIO_STATIC_CFLAGS:INTERNAL=-I/usr/include;-pthread
+PORTAUDIO_STATIC_CFLAGS_I:INTERNAL=
+PORTAUDIO_STATIC_CFLAGS_OTHER:INTERNAL=-pthread
+PORTAUDIO_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
+PORTAUDIO_STATIC_LDFLAGS:INTERNAL=-L/usr/lib;-lportaudio;-lasound;-lm;-lpthread
+PORTAUDIO_STATIC_LDFLAGS_OTHER:INTERNAL=
+PORTAUDIO_STATIC_LIBDIR:INTERNAL=
+PORTAUDIO_STATIC_LIBRARIES:INTERNAL=portaudio;asound;m;pthread
+PORTAUDIO_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib
+PORTAUDIO_STATIC_LIBS:INTERNAL=
+PORTAUDIO_STATIC_LIBS_L:INTERNAL=
+PORTAUDIO_STATIC_LIBS_OTHER:INTERNAL=
+PORTAUDIO_STATIC_LIBS_PATHS:INTERNAL=
+PORTAUDIO_VERSION:INTERNAL=19
+PORTAUDIO_portaudio-2.0_INCLUDEDIR:INTERNAL=
+PORTAUDIO_portaudio-2.0_LIBDIR:INTERNAL=
+PORTAUDIO_portaudio-2.0_PREFIX:INTERNAL=
+PORTAUDIO_portaudio-2.0_VERSION:INTERNAL=
 //ADVANCED property for variable: SITE
 SITE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_GLSLANG_VALIDATOR_EXECUTABLE
@@ -764,9 +900,11 @@ Vulkan_LIBRARY-ADVANCED:INTERNAL=1
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 __pkg_config_arguments_FFMPEG:INTERNAL=REQUIRED;IMPORTED_TARGET;libavformat;libavcodec;libavutil;libswscale;libswresample
 __pkg_config_arguments_LIBLO:INTERNAL=REQUIRED;liblo
+__pkg_config_arguments_PORTAUDIO:INTERNAL=REQUIRED;portaudio-2.0
 __pkg_config_arguments_jack:INTERNAL=jack
 __pkg_config_checked_FFMPEG:INTERNAL=1
 __pkg_config_checked_LIBLO:INTERNAL=1
+__pkg_config_checked_PORTAUDIO:INTERNAL=1
 __pkg_config_checked_jack:INTERNAL=1
 jack_CFLAGS:INTERNAL=-I/usr/include;-D_REENTRANT
 jack_CFLAGS_I:INTERNAL=
@@ -815,6 +953,14 @@ pkgcfg_lib_FFMPEG_swresample-ADVANCED:INTERNAL=1
 pkgcfg_lib_FFMPEG_swscale-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_LIBLO_lo
 pkgcfg_lib_LIBLO_lo-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_PORTAUDIO_asound
+pkgcfg_lib_PORTAUDIO_asound-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_PORTAUDIO_m
+pkgcfg_lib_PORTAUDIO_m-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_PORTAUDIO_portaudio
+pkgcfg_lib_PORTAUDIO_portaudio-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_PORTAUDIO_pthread
+pkgcfg_lib_PORTAUDIO_pthread-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_jack_jack
 pkgcfg_lib_jack_jack-ADVANCED:INTERNAL=1
 prefix_result:INTERNAL=/usr/lib

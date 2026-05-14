@@ -1,0 +1,3 @@
+/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles/kfr-populate.dir
+/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles/edit_cache.dir
+/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles/rebuild_cache.dir

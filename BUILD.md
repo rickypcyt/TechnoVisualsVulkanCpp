@@ -3,7 +3,7 @@
 1. Instala las dependencias necesarias en Arch:
 
 ```bash
-sudo pacman -Syu vulkan-icd-loader vulkan-validation-layers sdl2
+sudo pacman -Syu vulkan-icd-loader vulkan-validation-layers sdl2 portaudio
 ```
 
 2. Crea el directorio de compilación y configura con CMake (el script también lo hace por ti):

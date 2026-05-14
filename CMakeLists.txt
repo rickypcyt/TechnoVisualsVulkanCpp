@@ -23,6 +23,9 @@ FetchContent_MakeAvailable(rtmidi)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBLO REQUIRED liblo)
 
+# PortAudio for audio I/O
+pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
+
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 
@@ -58,7 +61,7 @@ add_executable(app
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
 )
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS})
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS})
 
 target_link_libraries(app
     Vulkan::Vulkan
@@ -67,4 +70,5 @@ target_link_libraries(app
     PkgConfig::FFMPEG
     rtmidi
     ${LIBLO_LIBRARIES}
+    ${PORTAUDIO_LIBRARIES}
 )

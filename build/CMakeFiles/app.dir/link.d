@@ -34,6 +34,9 @@ app: \
   /usr/lib/libglm.a \
   _deps/rtmidi-build/librtmidi.so.6.0.0 \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/liblo.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libportaudio.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasound.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libpthread.a \
   /usr/lib/libavformat.so \
   /usr/lib/libavcodec.so \
   /usr/lib/libswscale.so \
@@ -70,8 +73,7 @@ app: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtendS.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crtn.o \
   /usr/lib/libjack.so.0 \
-  /usr/lib32/libasound.so.2 \
-  /usr/lib/libasound.so.2 \
+  /usr/lib/ld-linux-x86-64.so.2 \
   /usr/lib32/libxml2.so.16 \
   /usr/lib/libxml2.so.16 \
   /usr/lib32/libbz2.so.1.0 \
@@ -149,7 +151,6 @@ app: \
   /usr/lib32/libdrm.so.2 \
   /usr/lib/libdrm.so.2 \
   /usr/lib/libOpenCL.so.1 \
-  /usr/lib/ld-linux-x86-64.so.2 \
   /usr/lib32/libpipewire-0.3.so.0 \
   /usr/lib/libpipewire-0.3.so.0 \
   /usr/lib32/libicuuc.so.78 \
@@ -332,6 +333,12 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/liblo.so:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libportaudio.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libasound.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libpthread.a:
+
 /usr/lib/libavformat.so:
 
 /usr/lib/libavcodec.so:
@@ -404,9 +411,7 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/lib/libjack.so.0:
 
-/usr/lib32/libasound.so.2:
-
-/usr/lib/libasound.so.2:
+/usr/lib/ld-linux-x86-64.so.2:
 
 /usr/lib32/libxml2.so.16:
 
@@ -561,8 +566,6 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/lib/libdrm.so.2:
 
 /usr/lib/libOpenCL.so.1:
-
-/usr/lib/ld-linux-x86-64.so.2:
 
 /usr/lib32/libpipewire-0.3.so.0:
 
