@@ -269,12 +269,12 @@ int AudioSystem::audioCallback(const void* inputBuffer, void* outputBuffer,
     static int frameCount = 0;
     if (++frameCount % 100 == 0) {
         std::cout << "[AudioSystem] RMS: " << rms 
+                  << " SubBass: " << audioSystem->subBassLevel.load()
+                  << " Kick: " << audioSystem->kickLevel.load()
                   << " Bass: " << audioSystem->bassLevel.load()
                   << " Mid: " << audioSystem->midLevel.load()
                   << " High: " << audioSystem->highLevel.load()
-                  << " | Smoothed Bass: " << audioSystem->smoothedBass.load()
-                  << " Mid: " << audioSystem->smoothedMid.load()
-                  << " High: " << audioSystem->smoothedHigh.load() << std::endl;
+                  << " | Smoothed Kick: " << audioSystem->smoothedKick.load() << std::endl;
     }
 
     return paContinue;
@@ -339,20 +339,31 @@ void AudioSystem::performFFT(std::vector<std::complex<float>>& data) {
 }
 
 void AudioSystem::calculateBands() {
+    float subBassSum = 0.0f;
+    float kickSum = 0.0f;
     float bassSum = 0.0f;
     float midSum = 0.0f;
     float highSum = 0.0f;
     
     // Frequency bins: sampleRate / FFT_SIZE = 44100 / 512 ≈ 86 Hz per bin
-    // Bass: 20-150 Hz → bins 0-2
-    // Mid: 150-2000 Hz → bins 2-24
-    // High: 2000+ Hz → bins 24+
+    // Optimized for techno (Oscar Mulero style):
+    // SubBass: 30-60 Hz → bin 0 (0-86 Hz) - sub-bass rumble
+    // Kick: 60-150 Hz → bin 1 (86-172 Hz) - kick drum fundamental
+    // Bass: 150-300 Hz → bins 2-3 (172-344 Hz) - bass body
+    // Mid: 300-4000 Hz → bins 4-46 (344-4000 Hz) - percussion/mids
+    // High: 4000+ Hz → bins 47+ (4000+ Hz) - hi-hats/snares
     
-    int bassEnd = 2;
-    int midEnd = 24;
+    int subBassEnd = 1;
+    int kickEnd = 2;
+    int bassEnd = 4;
+    int midEnd = 47;
     
     for (int i = 0; i < FFT_SIZE / 2; i++) {
-        if (i < bassEnd) {
+        if (i < subBassEnd) {
+            subBassSum += fftMagnitudes[i];
+        } else if (i < kickEnd) {
+            kickSum += fftMagnitudes[i];
+        } else if (i < bassEnd) {
             bassSum += fftMagnitudes[i];
         } else if (i < midEnd) {
             midSum += fftMagnitudes[i];
@@ -362,23 +373,33 @@ void AudioSystem::calculateBands() {
     }
     
     // Normalize bands
-    float currentBass = bassSum / bassEnd;
+    float currentSubBass = subBassSum / subBassEnd;
+    float currentKick = kickSum / (kickEnd - subBassEnd);
+    float currentBass = bassSum / (bassEnd - kickEnd);
     float currentMid = midSum / (midEnd - bassEnd);
     float currentHigh = highSum / ((FFT_SIZE / 2) - midEnd);
     
+    subBassLevel.store(currentSubBass);
+    kickLevel.store(currentKick);
     bassLevel.store(currentBass);
     midLevel.store(currentMid);
     highLevel.store(currentHigh);
     
-    // Apply exponential smoothing
+    // Apply exponential smoothing (faster for techno transients)
+    float prevSmoothedSubBass = smoothedSubBass.load();
+    float prevSmoothedKick = smoothedKick.load();
     float prevSmoothedBass = smoothedBass.load();
     float prevSmoothedMid = smoothedMid.load();
     float prevSmoothedHigh = smoothedHigh.load();
     
+    float newSmoothedSubBass = prevSmoothedSubBass * SMOOTHING_FACTOR + currentSubBass * (1.0f - SMOOTHING_FACTOR);
+    float newSmoothedKick = prevSmoothedKick * SMOOTHING_FACTOR + currentKick * (1.0f - SMOOTHING_FACTOR);
     float newSmoothedBass = prevSmoothedBass * SMOOTHING_FACTOR + currentBass * (1.0f - SMOOTHING_FACTOR);
     float newSmoothedMid = prevSmoothedMid * SMOOTHING_FACTOR + currentMid * (1.0f - SMOOTHING_FACTOR);
     float newSmoothedHigh = prevSmoothedHigh * SMOOTHING_FACTOR + currentHigh * (1.0f - SMOOTHING_FACTOR);
     
+    smoothedSubBass.store(newSmoothedSubBass);
+    smoothedKick.store(newSmoothedKick);
     smoothedBass.store(newSmoothedBass);
     smoothedMid.store(newSmoothedMid);
     smoothedHigh.store(newSmoothedHigh);

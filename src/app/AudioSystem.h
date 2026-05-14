@@ -33,11 +33,15 @@ public:
 
     // FFT data access
     const std::vector<float>& getFFTMagnitudes() const { return fftMagnitudes; }
+    float getSubBass() const { return subBassLevel.load(); }
+    float getKick() const { return kickLevel.load(); }
     float getBass() const { return bassLevel.load(); }
     float getMid() const { return midLevel.load(); }
     float getHigh() const { return highLevel.load(); }
     
     // Smoothed band levels (for visuals)
+    float getSmoothedSubBass() const { return smoothedSubBass.load(); }
+    float getSmoothedKick() const { return smoothedKick.load(); }
     float getSmoothedBass() const { return smoothedBass.load(); }
     float getSmoothedMid() const { return smoothedMid.load(); }
     float getSmoothedHigh() const { return smoothedHigh.load(); }
@@ -63,18 +67,22 @@ private:
     std::vector<float> fftMagnitudes;
     std::vector<std::complex<float>> fftComplex;
     
-    // Band levels
-    std::atomic<float> bassLevel{0.0f};
-    std::atomic<float> midLevel{0.0f};
-    std::atomic<float> highLevel{0.0f};
+    // Band levels (optimized for techno)
+    std::atomic<float> subBassLevel{0.0f};  // 30-60 Hz (sub-bass rumble)
+    std::atomic<float> kickLevel{0.0f};     // 60-150 Hz (kick drum)
+    std::atomic<float> bassLevel{0.0f};     // 150-300 Hz (bass body)
+    std::atomic<float> midLevel{0.0f};      // 300-4000 Hz (percussion/mids)
+    std::atomic<float> highLevel{0.0f};     // 4000+ Hz (hi-hats/snares)
     
     // Smoothed band levels (exponential smoothing)
+    std::atomic<float> smoothedSubBass{0.0f};
+    std::atomic<float> smoothedKick{0.0f};
     std::atomic<float> smoothedBass{0.0f};
     std::atomic<float> smoothedMid{0.0f};
     std::atomic<float> smoothedHigh{0.0f};
     
-    // Smoothing factor (0.0-1.0, higher = more smoothing)
-    static constexpr float SMOOTHING_FACTOR = 0.9f;
+    // Smoothing factor (0.0-1.0, lower = faster reaction for techno transients)
+    static constexpr float SMOOTHING_FACTOR = 0.75f;
 };
 
 #endif // AUDIOSYSTEM_H

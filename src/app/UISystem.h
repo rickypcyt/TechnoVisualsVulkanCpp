@@ -133,6 +133,9 @@ private:
     bool showOscWindow   = true;
     bool showAudioWindow = true;
     bool showParameterIndex = true;
+    
+    // Navbar tab selection
+    int selectedTab = 0;
 
 private:
     void beginFrame();
@@ -178,6 +181,66 @@ private:
     void drawOscControls(OscSystem& oscSystem);
     void drawAudioDebug(AudioSystem& audioSystem);
     void drawParameterIndex();
+    
+    void drawMainNavbar(
+        VisualControls&       controls,
+        VideoRandomizerState& randomizer,
+        VideoPlayer&          player,
+        VideoRegistry&        registry,
+        int&                  selectedVideoAsset,
+        float&                transitionDuration,
+        bool&                 allowDimensionChangeRecreation,
+        bool&                 controlsDirty,
+        std::mt19937&         rng,
+        const UIDiagnostics&  diag,
+        const UICallbacks&    callbacks,
+        MidiSystem&           midiSystem,
+        OscSystem&            oscSystem,
+        AudioSystem&          audioSystem
+    );
+    
+    // Content functions for tabs (extracted from window functions)
+    void drawProceduralControlsContent(
+        VisualControls&       controls,
+        VideoRandomizerState& randomizer,
+        VideoPlayer&          player,
+        VideoRegistry&        registry,
+        int&                  selectedVideoAsset,
+        float&                transitionDuration,
+        bool&                 allowDimensionChangeRecreation,
+        bool&                 controlsDirty,
+        std::mt19937&         rng,
+        const UIDiagnostics&  diag,
+        const UICallbacks&    callbacks
+    );
+    
+    void drawVJayBasicsContent(
+        VisualControls& controls,
+        bool&           controlsDirty,
+        std::mt19937&   rng
+    );
+    
+    void drawVJayExtraContent(
+        VisualControls& controls,
+        bool&           controlsDirty,
+        std::mt19937&   rng
+    );
+    
+    void drawNLEEditorContent(const UICallbacks& callbacks);
+    
+    void drawDiagnosticsContent(
+        const UIDiagnostics& diag,
+        VideoPlayer&         player,
+        VideoRegistry&       registry,
+        int&                 selectedAsset,
+        VisualControls&      controls,
+        const UICallbacks&   callbacks
+    );
+    
+    void drawMidiControlsContent(MidiSystem& midiSystem);
+    void drawOscControlsContent(OscSystem& oscSystem);
+    void drawAudioDebugContent(AudioSystem& audioSystem);
+    void drawParameterIndexContent();
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;
