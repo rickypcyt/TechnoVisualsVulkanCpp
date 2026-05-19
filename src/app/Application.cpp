@@ -1394,5 +1394,8 @@ void Application::cleanup() {
         resourceSystem.destroy(vertexBufferHandle);
     }
 
-    // VulkanContext and ResourceSystem will clean up their own resources in their destructors
+    // Cleanup resource system (frees MemoryAllocator blocks)
+    resourceSystem.cleanup();
+
+    // VulkanContext will clean up its own resources in its destructor
 }
