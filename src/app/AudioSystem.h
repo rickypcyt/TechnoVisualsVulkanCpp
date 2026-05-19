@@ -53,6 +53,9 @@ private:
                            PaStreamCallbackFlags statusFlags,
                            void* userData);
 
+    bool tryOpenStream(PaStreamParameters& inputParams, double sampleRate,
+                       unsigned long framesPerBuffer);
+
     void processFFT(const float* samples, size_t count);
     void calculateBands();
     void performFFT(std::vector<std::complex<float>>& data);

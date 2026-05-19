@@ -17,16 +17,13 @@ struct StagingSlot {
 class StagingRing {
 public:
     static constexpr int FRAMES_IN_FLIGHT = 2;
-    static constexpr size_t MAX_WIDTH = 1920;
-    static constexpr size_t MAX_HEIGHT = 1080;
-    static constexpr size_t MAX_FRAME_SIZE = MAX_WIDTH * MAX_HEIGHT * 4;
 
     StagingRing() = default;
 
-    void create(ResourceSystem& resourceSystem, VkDevice device) {
+    void create(ResourceSystem& resourceSystem, VkDevice device, size_t frameSize) {
         for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i) {
             auto bufferHandle = resourceSystem.createBuffer(
-                static_cast<VkDeviceSize>(MAX_FRAME_SIZE),
+                static_cast<VkDeviceSize>(frameSize),
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -38,7 +35,7 @@ public:
 
             slots[i].buffer = std::move(bufferHandle);
             slots[i].mapped = mapped;
-            slots[i].capacity = MAX_FRAME_SIZE;
+            slots[i].capacity = frameSize;
         }
     }
 
@@ -73,7 +70,7 @@ public:
         std::memcpy(slot.mapped, src, size);
     }
 
-    size_t getCapacity() const { return MAX_FRAME_SIZE; }
+    size_t getCapacity() const { return slots[0].capacity; }
 
 private:
     std::array<StagingSlot, FRAMES_IN_FLIGHT> slots{};

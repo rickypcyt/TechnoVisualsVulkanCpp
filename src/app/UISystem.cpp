@@ -87,7 +87,13 @@ bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren) {
 void UISystem::shutdown() {
     if (!initialized) return;
 
-    ImGui::SaveIniSettingsToDisk("imgui.ini");
+    ImGui::SetCurrentContext(context);
+    ImGuiIO& io = ImGui::GetIO();
+    const char* iniFile = io.IniFilename ? io.IniFilename : "imgui.ini";
+    std::cout << "[UISystem] Saving ImGui settings to: " << iniFile << std::endl;
+    ImGui::SaveIniSettingsToDisk(iniFile);
+    std::cout << "[UISystem] ImGui settings saved." << std::endl;
+
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
 
@@ -2594,8 +2600,23 @@ void UISystem::drawVJayExtraContent(
         changed |= ImGui::SliderInt("Rows", &controls.gridRows, 1, 8);
         changed |= ImGui::SliderInt("Columns", &controls.gridColumns, 1, 8);
     } else {
-        changed |= ImGui::SliderInt("Count", &controls.gridCount, 2, 8);
+        changed |= ImGui::SliderInt("Grid count", &controls.gridCount, 1, 8);
     }
+    changed |= ImGui::Checkbox("Mirror cells", &controls.gridMirrorCells);
+    if (controls.gridMirrorCells) {
+        ImGui::TextDisabled("Alternate cells mirrored for seamless edges");
+    }
+    ImGui::EndDisabled();
+
+    ImGui::Separator();
+
+    // Camera Movement
+    changed |= ImGui::Checkbox("Camera movement", &controls.enableCameraMovement);
+    ImGui::BeginDisabled(!controls.enableCameraMovement);
+    changed |= ImGui::SliderFloat("Camera zoom", &controls.cameraZoom, 0.5f, 2.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Camera pan X", &controls.cameraPanX, -1.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Camera pan Y", &controls.cameraPanY, -1.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Camera rotation", &controls.cameraRotation, -3.14159f, 3.14159f, "%.2f rad");
     ImGui::EndDisabled();
 
     if (changed) controlsDirty = true;

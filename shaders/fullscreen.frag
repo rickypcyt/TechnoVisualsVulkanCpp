@@ -176,6 +176,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int gridCount;
     int gridRows;
     int gridColumns;
+    int gridMirrorCells;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTexture;
@@ -188,18 +189,32 @@ void main() {
         if (ubo.gridMode == 0) {
             // Vertical grid: split horizontally (side by side)
             if (ubo.gridCount > 1) {
-                sampleUV.x = fract(uv.x * float(ubo.gridCount));
+                float cellX = uv.x * float(ubo.gridCount);
+                sampleUV.x = fract(cellX);
+                if (ubo.gridMirrorCells == 1 && (int(cellX) % 2) != 0) {
+                    sampleUV.x = 1.0 - sampleUV.x;
+                }
             }
         } else if (ubo.gridMode == 1) {
             // Horizontal grid: split vertically (stacked)
             if (ubo.gridCount > 1) {
-                sampleUV.y = fract(uv.y * float(ubo.gridCount));
+                float cellY = uv.y * float(ubo.gridCount);
+                sampleUV.y = fract(cellY);
+                if (ubo.gridMirrorCells == 1 && (int(cellY) % 2) != 0) {
+                    sampleUV.y = 1.0 - sampleUV.y;
+                }
             }
         } else if (ubo.gridMode == 2) {
             // Matrix grid: 2D grid with rows and columns
             if (ubo.gridRows > 0 && ubo.gridColumns > 0) {
-                sampleUV.x = fract(uv.x * float(ubo.gridColumns));
-                sampleUV.y = fract(uv.y * float(ubo.gridRows));
+                float cellX = uv.x * float(ubo.gridColumns);
+                float cellY = uv.y * float(ubo.gridRows);
+                sampleUV.x = fract(cellX);
+                sampleUV.y = fract(cellY);
+                if (ubo.gridMirrorCells == 1) {
+                    if ((int(cellX) % 2) != 0) sampleUV.x = 1.0 - sampleUV.x;
+                    if ((int(cellY) % 2) != 0) sampleUV.y = 1.0 - sampleUV.y;
+                }
             }
         }
     }

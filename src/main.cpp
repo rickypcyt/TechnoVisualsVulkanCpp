@@ -4,6 +4,7 @@
 
 #ifdef __linux__
 #include <execinfo.h>
+#include <unistd.h>
 #endif
 
 #include "app/Application.h"
@@ -22,7 +23,7 @@ void crash_handler(int sig) {
     std::cerr << "\n[CRASH] Signal " << sig << " caught!" << std::endl;
 #endif
 
-    exit(1);
+    _exit(1);
 }
 
 int main() {

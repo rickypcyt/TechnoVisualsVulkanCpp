@@ -174,6 +174,13 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float fxaaQualitySubpix;
     float fxaaQualityEdgeThreshold;
     float fxaaQualityEdgeThresholdMin;
+
+    // CameraMovementPassUBO
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+    float cameraRotation;
+    int enableCameraMovement;
 } ubo;
 
 layout(set = 1, binding = 0) uniform sampler2D inputTex;

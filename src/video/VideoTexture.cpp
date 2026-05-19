@@ -36,9 +36,9 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     this->stride = width * 4;  // GPU expects compact layout
     frameSize = requiredSize;
 
-    // Create staging ring buffer ONCE (fixed MAX capacity)
+    // Create staging ring buffer (dynamic capacity based on current video size)
     if (!stagingRing.getSlot(0).mapped) {
-        stagingRing.create(resourceSystem, device);
+        stagingRing.create(resourceSystem, device, requiredSize);
         std::cout << "[VideoTexture] Staging ring created with capacity: " << stagingRing.getCapacity() << " bytes" << std::endl;
     }
 

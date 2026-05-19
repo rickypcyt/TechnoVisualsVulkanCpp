@@ -89,6 +89,21 @@ void AudioSystem::shutdown() {
     }
 }
 
+bool AudioSystem::tryOpenStream(PaStreamParameters& inputParams, double sampleRate,
+                                 unsigned long framesPerBuffer) {
+    PaError err = Pa_OpenStream(
+        &stream,
+        &inputParams,
+        nullptr, // No output
+        sampleRate,
+        framesPerBuffer,
+        paClipOff,
+        audioCallback,
+        this
+    );
+    return err == paNoError;
+}
+
 bool AudioSystem::startStream() {
     if (inputDeviceIndex == paNoDevice) {
         std::cerr << "[AudioSystem] No input device selected" << std::endl;
@@ -97,50 +112,73 @@ bool AudioSystem::startStream() {
 
     const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(inputDeviceIndex);
     const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
-    
+
     std::cout << "[AudioSystem] Opening stream with device: " << deviceInfo->name << std::endl;
     std::cout << "[AudioSystem] Backend: " << hostApiInfo->name << std::endl;
 
-    PaStreamParameters inputParameters;
-    std::memset(&inputParameters, 0, sizeof(inputParameters));
-    inputParameters.device = inputDeviceIndex;
-    inputParameters.channelCount = 1; // Mono input
-    inputParameters.sampleFormat = paFloat32;
-    inputParameters.suggestedLatency = deviceInfo->defaultLowInputLatency;
-    inputParameters.hostApiSpecificStreamInfo = nullptr;
+    // Build a list of fallback configurations to try
+    struct AttemptConfig {
+        int channelCount;
+        PaSampleFormat sampleFormat;
+        double latency;
+        double sampleRate;
+        unsigned long framesPerBuffer;
+        const char* description;
+    };
 
-    // Use device's default sample rate instead of forcing 44100
-    // JACK typically uses 48000Hz, ALSA varies
-    double sampleRate = deviceInfo->defaultSampleRate;
-    std::cout << "[AudioSystem] Using sample rate: " << sampleRate << " Hz" << std::endl;
+    std::vector<AttemptConfig> attempts;
 
-    PaError err = Pa_OpenStream(
-        &stream,
-        &inputParameters,
-        nullptr, // No output
-        sampleRate,
-        512,     // Frames per buffer
-        paClipOff, // No clipping
-        audioCallback,
-        this
-    );
+    double defaultRate = deviceInfo->defaultSampleRate;
+    double lowLatency  = deviceInfo->defaultLowInputLatency;
+    double highLatency = deviceInfo->defaultHighInputLatency;
 
-    if (err != paNoError) {
-        std::cerr << "[AudioSystem] OpenStream error: " << Pa_GetErrorText(err) << std::endl;
-        return false;
+    // Primary attempt: default sample rate, float32, mono, low latency
+    attempts.push_back({1, paFloat32, lowLatency,  defaultRate, 512, "default rate / float32 / low latency"});
+    // Fallback 1: higher latency (helps when device is busy)
+    attempts.push_back({1, paFloat32, highLatency, defaultRate, 512, "default rate / float32 / high latency"});
+    // Fallback 2: larger buffer
+    attempts.push_back({1, paFloat32, highLatency, defaultRate, 1024, "default rate / float32 / 1024 frames"});
+    // Fallback 3: standard sample rates if default isn't 44100/48000
+    if (std::abs(defaultRate - 44100.0) > 1.0) {
+        attempts.push_back({1, paFloat32, highLatency, 44100.0, 512, "44100 Hz / float32 / high latency"});
+        attempts.push_back({1, paFloat32, highLatency, 44100.0, 1024, "44100 Hz / float32 / 1024 frames"});
+    }
+    if (std::abs(defaultRate - 48000.0) > 1.0) {
+        attempts.push_back({1, paFloat32, highLatency, 48000.0, 512, "48000 Hz / float32 / high latency"});
+        attempts.push_back({1, paFloat32, highLatency, 48000.0, 1024, "48000 Hz / float32 / 1024 frames"});
     }
 
-    err = Pa_StartStream(stream);
-    if (err != paNoError) {
-        std::cerr << "[AudioSystem] StartStream error: " << Pa_GetErrorText(err) << std::endl;
-        Pa_CloseStream(stream);
-        stream = nullptr;
-        return false;
+    for (const auto& cfg : attempts) {
+        PaStreamParameters inputParameters{};
+        inputParameters.device = inputDeviceIndex;
+        inputParameters.channelCount = cfg.channelCount;
+        inputParameters.sampleFormat = cfg.sampleFormat;
+        inputParameters.suggestedLatency = cfg.latency;
+        inputParameters.hostApiSpecificStreamInfo = nullptr;
+
+        std::cout << "[AudioSystem] Trying config: " << cfg.description
+                  << " (rate=" << cfg.sampleRate << ", latency=" << cfg.latency << ")" << std::endl;
+
+        if (tryOpenStream(inputParameters, cfg.sampleRate, cfg.framesPerBuffer)) {
+            std::cout << "[AudioSystem] OpenStream succeeded with: " << cfg.description << std::endl;
+
+            PaError err = Pa_StartStream(stream);
+            if (err != paNoError) {
+                std::cerr << "[AudioSystem] StartStream error: " << Pa_GetErrorText(err) << std::endl;
+                Pa_CloseStream(stream);
+                stream = nullptr;
+                return false;
+            }
+
+            streamRunning = true;
+            std::cout << "[AudioSystem] Stream started successfully" << std::endl;
+            return true;
+        }
     }
 
-    streamRunning = true;
-    std::cout << "[AudioSystem] Stream started successfully" << std::endl;
-    return true;
+    std::cerr << "[AudioSystem] OpenStream error: Device unavailable (all fallback configurations failed)" << std::endl;
+    std::cerr << "[AudioSystem] Tip: If using PipeWire/PulseAudio, ensure PortAudio was built with PulseAudio support." << std::endl;
+    return false;
 }
 
 void AudioSystem::stopStream() {

@@ -168,6 +168,13 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float nleBrightness;
     float nleContrast;
     float nleSaturation;
+
+    // CameraMovementPassUBO
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+    float cameraRotation;
+    int enableCameraMovement;
 } ubo;
 
 layout(set = 1, binding = 0) uniform sampler2D videoTex;
@@ -279,29 +286,63 @@ vec4 renderMode0(vec2 st) {
     return mix(ubo.primaryColor, ubo.secondaryColor, ubo.colorBlend);
 }
 
-vec4 renderMode1(vec2 st) {
-    float baseTime = ubo.time;
-    float fastPhase = baseTime * 6.2831853;          // wrap roughly every second (since CPU already wraps time)
-    float microPhase = fract(baseTime * 0.125) * 6.2831853;
-    float uvPhase = dot(st, vec2(11.37, 17.91));
+vec2 applyCamera(vec2 uv) {
+    if (ubo.enableCameraMovement == 0) return uv;
+    vec2 centered = uv - 0.5;
+    float angle = ubo.cameraRotation;
+    float c = cos(angle);
+    float s = sin(angle);
+    vec2 rotated = vec2(c * centered.x - s * centered.y,
+                        s * centered.x + c * centered.y);
+    rotated /= ubo.cameraZoom;
+    rotated += vec2(ubo.cameraPanX, ubo.cameraPanY);
+    return rotated + 0.5;
+}
 
+vec4 renderMode1(vec2 st) {
     vec2 centered = st - 0.5;
     float radius = length(centered);
-    float angle = atan(centered.y, centered.x) + fastPhase * 0.08;
+    float angle = atan(centered.y, centered.x);
 
-    // Flowing UV space
-    vec2 flow = centered;
-    flow += 0.12 * vec2(sin(fastPhase + st.y * 18.0), cos(fastPhase + st.x * 18.0));
-    flow += 0.05 * vec2(cos(microPhase + uvPhase * 6.0), sin(microPhase - uvPhase * 5.0));
+    // Audio-reactive rotation: spins faster with bass
+    float spinSpeed = 1.0 + ubo.bass * 4.0 + ubo.energy * 2.0;
+    float rotation = ubo.time * spinSpeed;
 
-    float spiral = 0.5 + 0.5 * sin(angle * 10.0 + radius * 30.0 + fastPhase * 0.4);
-    float rings = 0.5 + 0.5 * cos((flow.x + flow.y) * 20.0 - fastPhase * 0.6);
-    float twirl = 0.5 + 0.5 * sin(radius * 55.0 - microPhase * 5.0 + uvPhase * 10.0);
+    // Spiral arms react to mid frequencies
+    float arms = 3.0 + floor(ubo.mid * 6.0);
+    float spiralPhase = angle * arms + radius * 25.0 - rotation * 3.0;
 
-    vec3 color = vec3(spiral, rings, twirl);
-    color *= 1.0 - smoothstep(0.48, 0.75, radius);
+    // Thickness pulses with energy
+    float thickness = 0.15 + ubo.energy * 0.25;
+    float spiralLine = smoothstep(thickness, 0.0, abs(sin(spiralPhase)));
 
-    return vec4(color, 1.0);
+    // Secondary ripple ring that expands with bass
+    float ring = smoothstep(0.05, 0.0, abs(radius - (0.2 + ubo.bass * 0.3) - fract(ubo.time * 0.5) * 0.4));
+
+    // Colors: spiral uses primary/secondary mix, ring uses secondary
+    vec3 spiralColor = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb,
+                           0.5 + 0.5 * sin(ubo.time * 2.0 + radius * 15.0));
+    spiralColor += vec3(0.3, 0.1, 0.4) * ubo.bass;
+
+    vec3 ringColor = ubo.secondaryColor.rgb * (0.5 + ubo.high * 0.8);
+
+    // Black background
+    vec3 color = vec3(0.0);
+
+    // Add ring behind spiral
+    color = mix(color, ringColor, ring * 0.6);
+
+    // Add spiral lines
+    color = mix(color, spiralColor, spiralLine);
+
+    // Central glow pulses with bass
+    float glow = exp(-radius * 8.0) * (0.4 + ubo.bass * 0.6);
+    color += ubo.primaryColor.rgb * glow;
+
+    // Vignette crop
+    color *= 1.0 - smoothstep(0.48, 0.7, radius);
+
+    return vec4(clamp(color, 0.0, 1.0), 1.0);
 }
 
 // Anaglyph Assembly - Mode 2
@@ -441,12 +482,8 @@ vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
         }
     }
 
-    float assemblyFactor = anaglyphAssemblyFactor();
-    float horizon = clamp(anchor.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 bg = mix(ubo.primaryColor.rgb * 0.1, ubo.secondaryColor.rgb * 0.25, horizon);
-    bg += vec3(0.05, 0.08, 0.12) * (0.8 - clamp(length(anchor), 0.0, 1.2)) * (0.3 + assemblyFactor * 0.5);
-
-    return vec4(clamp(bg, 0.0, 1.0), 0.15 + assemblyFactor * 0.2);
+    // Background: pure black
+    return vec4(vec3(0.0), 0.0);
 }
 
 vec4 renderMode2(vec2 st) {
@@ -481,11 +518,14 @@ vec4 dispatchMode(int m, vec2 st) {
 }
 
 void main() {
-    // Sample video texture
+    // Sample video texture (always screen-space, never camera-transformed)
     vec4 videoColor = vec4(texture(videoTex, uv).rgb, 1.0);
 
+    // Apply camera movement to procedural UVs only
+    vec2 procUV = applyCamera(uv);
+
     // Get procedural rendering
-    vec4 proceduralColor = dispatchMode(ubo.mode, uv);
+    vec4 proceduralColor = dispatchMode(ubo.mode, procUV);
 
     // Mix video and procedural based on videoMix parameter
     // videoMix = 0.0: only procedural, videoMix = 1.0: only video

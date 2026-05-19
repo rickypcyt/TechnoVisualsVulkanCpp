@@ -1264,6 +1264,62 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.gridCount = visualControls.gridCount;
     ubo.gridRows = visualControls.gridRows;
     ubo.gridColumns = visualControls.gridColumns;
+    ubo.gridMirrorCells = visualControls.gridMirrorCells ? 1 : 0;
+
+    // Camera movement
+    ubo.cameraZoom = visualControls.cameraZoom;
+    ubo.cameraPanX = visualControls.cameraPanX;
+    ubo.cameraPanY = visualControls.cameraPanY;
+    ubo.cameraRotation = visualControls.cameraRotation;
+    ubo.enableCameraMovement = visualControls.enableCameraMovement ? 1 : 0;
+
+    // ------------------------------------------------------------------
+    // AUDIO REACTIVITY AUTO-MODULATION
+    // When enabled, audio levels automatically drive effect intensities
+    // so the layers animate without manual slider tweaking.
+    // ------------------------------------------------------------------
+    if (visualControls.enableAudioReactive) {
+        float env   = std::clamp(visualControls.energy, 0.0f, 1.0f);
+        float bass  = std::clamp(visualControls.bass,   0.0f, 1.0f);
+        float mid   = std::clamp(visualControls.mid,    0.0f, 1.0f);
+        float high  = std::clamp(visualControls.high,   0.0f, 1.0f);
+
+        // Spatial distortion (Pass B)
+        ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    env  * 0.15f);
+        ubo.rippleStrength    = std::max(ubo.rippleStrength,    bass * 0.30f);
+        ubo.swirlStrength     = std::max(ubo.swirlStrength,     bass * 0.20f);
+        ubo.displacementAmount= std::max(ubo.displacementAmount,env  * 0.12f);
+        ubo.bendAmount        = std::max(ubo.bendAmount,        env  * 0.10f);
+
+        // Temporal / feedback (Pass D)
+        ubo.feedbackAmount    = std::max(ubo.feedbackAmount,    env  * 0.25f);
+        ubo.trailStrength     = std::max(ubo.trailStrength,     bass * 0.20f);
+
+        // Degradation / glitch (Pass E)
+        ubo.glitchJitter      = std::max(ubo.glitchJitter,      env  * 0.15f);
+        ubo.glitchRGBSplit    = std::max(ubo.glitchRGBSplit,    bass * 0.10f);
+        ubo.glitchTearing     = std::max(ubo.glitchTearing,     mid  * 0.08f);
+        ubo.grainStrength     = std::max(ubo.grainStrength,     env  * 0.20f);
+
+        // Output extras (Pass G)
+        ubo.zoomPulseAmount   = std::max(ubo.zoomPulseAmount,   env  * 0.25f);
+        ubo.strobeSpeed       = std::max(ubo.strobeSpeed,       bass * 3.0f);
+        ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    high * 0.03f);
+
+        // Camera movement (2D layer camera)
+        if (visualControls.enableCameraMovement) {
+            // Very subtle zoom pulse driven by bass (max 6% closer)
+            float zoomPulse = 1.0f + bass * 0.06f + env * 0.02f;
+            ubo.cameraZoom = std::max(ubo.cameraZoom, zoomPulse);
+
+            // Slow orbit rotation driven by energy
+            ubo.cameraRotation += env * 0.3f * globalDeltaTime;
+
+            // Gentle pan driven by mid/high (Lissajous-like motion)
+            ubo.cameraPanX = std::max(ubo.cameraPanX, mid  * 0.05f * std::sin(ubo.time * 1.5f));
+            ubo.cameraPanY = std::max(ubo.cameraPanY, high * 0.04f * std::cos(ubo.time * 1.2f));
+        }
+    }
 
     uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }

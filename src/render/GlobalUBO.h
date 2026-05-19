@@ -388,6 +388,14 @@ struct GlobalParamsUBO {
     alignas(4) int gridCount;
     alignas(4) int gridRows;
     alignas(4) int gridColumns;
+    alignas(4) int gridMirrorCells;
+
+    // CameraMovementPassUBO
+    alignas(4) float cameraZoom;
+    alignas(4) float cameraPanX;
+    alignas(4) float cameraPanY;
+    alignas(4) float cameraRotation;
+    alignas(4) int enableCameraMovement;
 };
 
 // ============================================================================
@@ -587,4 +595,12 @@ struct GlobalUBO {
     alignas(4) int gridCount;
     alignas(4) int gridRows;
     alignas(4) int gridColumns;
+    alignas(4) int gridMirrorCells;
+
+    // --- Camera movement ---
+    alignas(4) float cameraZoom;
+    alignas(4) float cameraPanX;
+    alignas(4) float cameraPanY;
+    alignas(4) float cameraRotation;
+    alignas(4) int enableCameraMovement;
 };

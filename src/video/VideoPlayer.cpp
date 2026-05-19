@@ -31,12 +31,14 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
 
     if (avformat_find_stream_info(formatCtx, nullptr) < 0) {
         std::cerr << "[Video] Failed to read stream info" << std::endl;
+        shutdown();
         return false;
     }
 
     videoStreamIndex = av_find_best_stream(formatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (videoStreamIndex < 0) {
         std::cerr << "[Video] No video stream found" << std::endl;
+        shutdown();
         return false;
     }
 
@@ -44,22 +46,26 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     const AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
     if (!codec) {
         std::cerr << "[Video] Unsupported codec" << std::endl;
+        shutdown();
         return false;
     }
 
     codecCtx = avcodec_alloc_context3(codec);
     if (!codecCtx) {
         std::cerr << "[Video] Failed to allocate codec context" << std::endl;
+        shutdown();
         return false;
     }
 
     if (avcodec_parameters_to_context(codecCtx, stream->codecpar) < 0) {
         std::cerr << "[Video] Failed to copy codec parameters" << std::endl;
+        shutdown();
         return false;
     }
 
     if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
         std::cerr << "[Video] Failed to open codec" << std::endl;
+        shutdown();
         return false;
     }
 
@@ -67,6 +73,7 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     frame = av_frame_alloc();
     if (!packet || !frame) {
         std::cerr << "[Video] Failed to allocate packet/frame" << std::endl;
+        shutdown();
         return false;
     }
 

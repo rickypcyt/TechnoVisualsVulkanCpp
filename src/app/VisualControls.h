@@ -174,4 +174,12 @@ struct VisualControls {
     int   gridCount             = 2;  // Number of grid cells (for vertical/horizontal)
     int   gridRows              = 2;  // Number of rows (for matrix mode)
     int   gridColumns           = 2;  // Number of columns (for matrix mode)
+    bool  gridMirrorCells       = false; // Mirror alternate cells so edges line up seamlessly
+
+    // Camera movement (2D layer camera)
+    float cameraZoom            = 1.0f;   // 1.0 = no zoom, >1 = zoom in, <1 = zoom out
+    float cameraPanX            = 0.0f;   // Horizontal offset (-1 to 1)
+    float cameraPanY            = 0.0f;   // Vertical offset (-1 to 1)
+    float cameraRotation        = 0.0f;   // Rotation in radians
+    bool  enableCameraMovement  = true;   // Master toggle
 };
