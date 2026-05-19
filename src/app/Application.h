@@ -109,13 +109,11 @@ private:
     std::chrono::steady_clock::time_point startTime;
     std::chrono::steady_clock::time_point lastFrameTimestamp;
     std::chrono::steady_clock::time_point lastRandomJumpTime;
+    std::chrono::high_resolution_clock::time_point lastGlobalTime;
+    float accumulatedTime = 0.0f;
     float debugAnimationTime = 0.0f;
     float debugAnimationDelta = 0.0f;
-    float debugAnimationModulo = 0.0f;
-    float debugAnimationRelativeSpeed = 1.0f;
-    float debugAnimationSecondsPerUnit = 1.0f;
     float debugAnimationElapsedSeconds = 0.0f;
-    float previousAnimationTime = 0.0f;
     bool animationTimeInitialized = false;
     
     // Command buffers

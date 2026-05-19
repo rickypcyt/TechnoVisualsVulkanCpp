@@ -180,10 +180,10 @@ app: \
   /usr/lib/libunistring.so.5 \
   /usr/lib32/libtasn1.so.6 \
   /usr/lib/libtasn1.so.6 \
-  /usr/lib32/libhogweed.so.6 \
-  /usr/lib/libhogweed.so.6 \
-  /usr/lib32/libnettle.so.8 \
-  /usr/lib/libnettle.so.8 \
+  /usr/lib32/libhogweed.so.7 \
+  /usr/lib/libhogweed.so.7 \
+  /usr/lib32/libnettle.so.9 \
+  /usr/lib/libnettle.so.9 \
   /usr/lib32/libcrypto.so.3 \
   /usr/lib/libcrypto.so.3 \
   /usr/lib/libsodium.so.26 \
@@ -633,13 +633,13 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/lib/libtasn1.so.6:
 
-/usr/lib32/libhogweed.so.6:
+/usr/lib32/libhogweed.so.7:
 
-/usr/lib/libhogweed.so.6:
+/usr/lib/libhogweed.so.7:
 
-/usr/lib32/libnettle.so.8:
+/usr/lib32/libnettle.so.9:
 
-/usr/lib/libnettle.so.8:
+/usr/lib/libnettle.so.9:
 
 /usr/lib32/libcrypto.so.3:
 

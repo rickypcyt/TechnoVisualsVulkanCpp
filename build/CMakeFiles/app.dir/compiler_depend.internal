@@ -10403,7 +10403,7 @@ app
  /usr/lib/libgraphite2.so.3
  /usr/lib/libgsm.so.1
  /usr/lib/libharfbuzz.so.0
- /usr/lib/libhogweed.so.6
+ /usr/lib/libhogweed.so.7
  /usr/lib/libhwy.so.1
  /usr/lib/libicudata.so.78
  /usr/lib/libicuuc.so.78
@@ -10421,7 +10421,7 @@ app
  /usr/lib/libmp3lame.so.0
  /usr/lib/libmpg123.so.0
  /usr/lib/libmvec.so.1
- /usr/lib/libnettle.so.8
+ /usr/lib/libnettle.so.9
  /usr/lib/libogg.so.0
  /usr/lib/libopencore-amrnb.so.0
  /usr/lib/libopencore-amrwb.so.0
@@ -10510,7 +10510,7 @@ app
  /usr/lib32/libgobject-2.0.so.0
  /usr/lib32/libgomp.so.1
  /usr/lib32/libharfbuzz.so.0
- /usr/lib32/libhogweed.so.6
+ /usr/lib32/libhogweed.so.7
  /usr/lib32/libicudata.so.78
  /usr/lib32/libicuuc.so.78
  /usr/lib32/libidn2.so.0
@@ -10518,7 +10518,7 @@ app
  /usr/lib32/libmodplug.so.1
  /usr/lib32/libmount.so.1
  /usr/lib32/libmpg123.so.0
- /usr/lib32/libnettle.so.8
+ /usr/lib32/libnettle.so.9
  /usr/lib32/libogg.so.0
  /usr/lib32/libopus.so.0
  /usr/lib32/libp11-kit.so.0

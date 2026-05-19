@@ -10374,7 +10374,7 @@ app: /usr/lib/Scrt1.o \
   /usr/lib/libgraphite2.so.3 \
   /usr/lib/libgsm.so.1 \
   /usr/lib/libharfbuzz.so.0 \
-  /usr/lib/libhogweed.so.6 \
+  /usr/lib/libhogweed.so.7 \
   /usr/lib/libhwy.so.1 \
   /usr/lib/libicudata.so.78 \
   /usr/lib/libicuuc.so.78 \
@@ -10392,7 +10392,7 @@ app: /usr/lib/Scrt1.o \
   /usr/lib/libmp3lame.so.0 \
   /usr/lib/libmpg123.so.0 \
   /usr/lib/libmvec.so.1 \
-  /usr/lib/libnettle.so.8 \
+  /usr/lib/libnettle.so.9 \
   /usr/lib/libogg.so.0 \
   /usr/lib/libopencore-amrnb.so.0 \
   /usr/lib/libopencore-amrwb.so.0 \
@@ -10481,7 +10481,7 @@ app: /usr/lib/Scrt1.o \
   /usr/lib32/libgobject-2.0.so.0 \
   /usr/lib32/libgomp.so.1 \
   /usr/lib32/libharfbuzz.so.0 \
-  /usr/lib32/libhogweed.so.6 \
+  /usr/lib32/libhogweed.so.7 \
   /usr/lib32/libicudata.so.78 \
   /usr/lib32/libicuuc.so.78 \
   /usr/lib32/libidn2.so.0 \
@@ -10489,7 +10489,7 @@ app: /usr/lib/Scrt1.o \
   /usr/lib32/libmodplug.so.1 \
   /usr/lib32/libmount.so.1 \
   /usr/lib32/libmpg123.so.0 \
-  /usr/lib32/libnettle.so.8 \
+  /usr/lib32/libnettle.so.9 \
   /usr/lib32/libogg.so.0 \
   /usr/lib32/libopus.so.0 \
   /usr/lib32/libp11-kit.so.0 \
@@ -10825,6 +10825,8 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/avx512vbmi2intrin.h:
 
+/usr/lib/libhogweed.so.7:
+
 /usr/include/c++/16.1.1/cwctype:
 
 /usr/include/c++/16.1.1/bits/align.h:
@@ -11013,6 +11015,8 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/glm/ext/vector_uint2_sized.hpp:
 
+/usr/include/c++/16.1.1/bits/refwrap.h:
+
 /usr/include/glm/ext/matrix_double4x2_precision.hpp:
 
 /usr/include/glm/detail/type_mat3x3.hpp:
@@ -11106,10 +11110,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/include/glm/detail/func_exponential.inl:
 
 /usr/include/glm/detail/type_mat4x3.inl:
-
-/usr/include/c++/16.1.1/bits/refwrap.h:
-
-/usr/lib/libnettle.so.8:
 
 /usr/include/c++/16.1.1/bits/stringfwd.h:
 
@@ -12055,8 +12055,6 @@ CMakeFiles/app.dir/src/main.cpp.o:
 
 /usr/include/glm/ext/vector_int1.hpp:
 
-/usr/lib32/libnettle.so.8:
-
 /usr/include/glm/ext/vector_int2.hpp:
 
 /usr/lib32/libzstd.so.1:
@@ -12184,6 +12182,8 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/include/c++/16.1.1/iomanip:
 
 /usr/include/libavformat/version.h:
+
+/usr/lib/libnettle.so.9:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/mmintrin.h:
 
@@ -12519,8 +12519,6 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/xtestintrin.h:
 
-/usr/lib/libhogweed.so.6:
-
 /usr/lib32/libgobject-2.0.so.0:
 
 /home/ricky/coding/proyects/vulkancpp/src/app/ControlState.cpp:
@@ -12839,11 +12837,13 @@ _deps/rtmidi-src/RtMidi.h:
 
 /usr/lib32/libglib-2.0.so.0:
 
-/usr/lib32/libhogweed.so.6:
+/usr/lib32/libhogweed.so.7:
 
 /usr/include/c++/16.1.1/bits/stl_function.h:
 
 /usr/lib32/libmpg123.so.0:
+
+/usr/lib32/libnettle.so.9:
 
 /usr/lib32/libogg.so.0:
 

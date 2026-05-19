@@ -857,9 +857,6 @@ void Application::mainLoop() {
         diag.videoHeight = videoTexture.getHeight();
         diag.animationTime = debugAnimationTime;
         diag.animationDelta = debugAnimationDelta;
-        diag.animationModulo = debugAnimationModulo;
-        diag.animationRelativeSpeed = debugAnimationRelativeSpeed;
-        diag.animationSecondsPerUnit = debugAnimationSecondsPerUnit;
         diag.animationElapsedSeconds = debugAnimationElapsedSeconds;
         
         UICallbacks callbacks;
@@ -1061,36 +1058,32 @@ void Application::mainLoop() {
 
 void Application::updateUniformBuffer(uint32_t frameIndex) {
     GlobalParamsUBO ubo{};
-    auto currentTime = std::chrono::steady_clock::now();
-    const double elapsedSeconds = std::chrono::duration<double>(currentTime - startTime).count();
 
-    const double baseSpeed = static_cast<double>(visualControls.animationSpeed);
-    const double relativeSpeed = std::max(0.01, baseSpeed);
-    const double scaledTime = elapsedSeconds * relativeSpeed;
-    const double TIME_WRAP = 60000.0; // keep precision for long sessions (~16 hours)
-    double wrappedTime = std::fmod(scaledTime, TIME_WRAP);
-    if (wrappedTime < 0.0) {
-        wrappedTime += TIME_WRAP;
-    }
-    float time = static_cast<float>(wrappedTime);
-
-    debugAnimationElapsedSeconds = static_cast<float>(elapsedSeconds);
-    debugAnimationTime = time;
-    debugAnimationRelativeSpeed = static_cast<float>(relativeSpeed);
-    debugAnimationSecondsPerUnit = relativeSpeed > 0.0 ? static_cast<float>(1.0 / relativeSpeed) : 0.0f;
-    debugAnimationModulo = static_cast<float>(TIME_WRAP);
-    if (animationTimeInitialized) {
-        float delta = time - previousAnimationTime;
-        if (delta < 0.0f) {
-            delta += debugAnimationModulo;
-        }
-        debugAnimationDelta = delta;
-    } else {
-        debugAnimationDelta = 0.0f;
+    // Calculate time delta and accumulate (similar to your system)
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    if (!animationTimeInitialized) {
+        lastGlobalTime = currentTime;
+        accumulatedTime = 0.0f;
         animationTimeInitialized = true;
     }
-    previousAnimationTime = time;
-    
+
+    float globalDeltaTime = std::chrono::duration<float>(currentTime - lastGlobalTime).count();
+    lastGlobalTime = currentTime;
+
+    // Apply animation speed to delta
+    float speed = std::max(0.01f, visualControls.animationSpeed);
+    accumulatedTime += globalDeltaTime * speed;
+
+    debugAnimationElapsedSeconds = accumulatedTime;
+    debugAnimationDelta = globalDeltaTime;
+    float time = accumulatedTime;
+
+    // Update audio values from AudioSystem
+    visualControls.bass = audioSystem.getBass();
+    visualControls.mid = audioSystem.getMid();
+    visualControls.high = audioSystem.getHigh();
+    visualControls.energy = audioSystem.getRMS();
+
     // Set basic UBO values
     ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 2.5f), glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
@@ -1106,7 +1099,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.mode = visualControls.activeMode;
     ubo.videoMix = visualControls.videoMix;
     ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.isReady()) ? 1.0f : 0.0f;
-    
+
     // Set visual control values
     ubo.primaryColor = visualControls.primaryColor;
     ubo.secondaryColor = visualControls.secondaryColor;

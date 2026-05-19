@@ -98,7 +98,7 @@ void DescriptorSetManager::updateSet(VkDevice device, uint32_t frameIndex,
     VkDescriptorBufferInfo bufferInfo{};
     bufferInfo.buffer = uniformBuffer;
     bufferInfo.offset = 0;
-    bufferInfo.range = sizeof(GlobalUBO);
+    bufferInfo.range = sizeof(GlobalParamsUBO);
 
     std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 

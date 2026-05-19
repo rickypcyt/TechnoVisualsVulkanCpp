@@ -198,7 +198,7 @@ void UISystem::drawProceduralControls(
 
     ImGui::Separator();
     ImGui::Text("Layers");
-    changed |= ImGui::Combo("Active Layer", &controls.activeMode, "Layer 0\0Layer 1\0");
+    changed |= ImGui::Combo("Active Layer", &controls.activeMode, "Layer 0\0Layer 1\0Anaglyph 3D\0");
 
     ImGui::Separator();
     ImGui::Text("Color Palette");
@@ -1937,7 +1937,7 @@ void UISystem::drawProceduralControlsContent(
 
     ImGui::Separator();
     ImGui::Text("Layers");
-    changed |= ImGui::Combo("Active Layer", &controls.activeMode, "Layer 0\0Layer 1\0");
+    changed |= ImGui::Combo("Active Layer", &controls.activeMode, "Layer 0\0Layer 1\0Anaglyph 3D\0");
 
     ImGui::Separator();
     ImGui::Text("Color Palette");
