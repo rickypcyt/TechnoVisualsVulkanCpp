@@ -71,6 +71,9 @@ private:
     std::string videoSourcePath = "media/sample.mp4";
     int selectedVideoAsset = -1;
     bool videoSubsystemInitialized = false;
+    bool isReloadingVideo = false;
+    std::chrono::steady_clock::time_point lastVideoChangeTime = std::chrono::steady_clock::now();
+    const std::chrono::milliseconds videoChangeCooldown{500};
 
     // Rendering systems
     UniformBufferManager uniformBufferManager;
@@ -136,6 +139,14 @@ private:
 
     // OSC trigger action handlers
     void handleOscTrigger(const std::string& action);
+    bool canChangeVideo() {
+        if (isReloadingVideo) return false;
+        auto now = std::chrono::steady_clock::now();
+        if (now - lastVideoChangeTime < videoChangeCooldown) return false;
+        isReloadingVideo = true;
+        lastVideoChangeTime = now;
+        return true;
+    }
 
     // Main loop
     void mainLoop();

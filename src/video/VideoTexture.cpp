@@ -34,11 +34,13 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     this->width = width;
     this->height = height;
     this->stride = width * 4;  // GPU expects compact layout
-    frameSize = requiredSize;
+    // Add 64 bytes of padding for SIMD alignment safety (sws_scale may
+    // write slightly past the end of each line for SSE/AVX alignment)
+    frameSize = requiredSize + 64;
 
     // Create staging ring buffer (dynamic capacity based on current video size)
     if (!stagingRing.getSlot(0).mapped) {
-        stagingRing.create(resourceSystem, device, requiredSize);
+        stagingRing.create(resourceSystem, device, frameSize);
         std::cout << "[VideoTexture] Staging ring created with capacity: " << stagingRing.getCapacity() << " bytes" << std::endl;
     }
 
@@ -159,7 +161,11 @@ void VideoTexture::destroy(ResourceSystem& resourceSystem, VkDevice device) {
     pendingUploads.fill(false);
     pendingUploadsPrev.fill(false);
     previousFrameData.clear();
-    
+    frameSize = 0;
+    width = 0;
+    height = 0;
+    stride = 0;
+
     std::cout << "[VideoTexture] Destroy completed" << std::endl;
 }
 

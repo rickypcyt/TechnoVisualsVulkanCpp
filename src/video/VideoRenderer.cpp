@@ -32,7 +32,8 @@ void VideoRenderer::update(float deltaTime, uint32_t frameIndex) {
         videoTexture.getPreviousFrameData() = cpuFrame.data;
         
         // Upload to staging buffer with safety check
-        videoTexture.uploadFrame(frameIndex, cpuFrame.data.data(), cpuFrame.size);
+        size_t pixelDataSize = static_cast<size_t>(cpuFrame.stride) * cpuFrame.height;
+        videoTexture.uploadFrame(frameIndex, cpuFrame.data.data(), pixelDataSize);
         
         // Mark previous frame for upload
         videoTexture.getPendingUploadsPrev()[frameIndex] = true;

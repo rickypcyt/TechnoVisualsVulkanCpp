@@ -157,7 +157,12 @@ void OscSystem::update() {
     // Process queued messages (thread-safe)
     std::lock_guard<std::mutex> lock(queueMutex);
     for (const auto& msg : messageQueue) {
-        if (eventCallback) {
+        if (msg.type == OscMessageType::TRIGGER && triggerCallback) {
+            auto it = triggerMappings.find(msg.address);
+            if (it != triggerMappings.end()) {
+                triggerCallback(it->second.actionName);
+            }
+        } else if (eventCallback) {
             eventCallback(msg);
         }
     }
@@ -263,10 +268,11 @@ int OscSystem::oscHandler(const char* path, const char* types, lo_arg** argv, in
 
         // Check if this is a trigger (no arguments)
         if (oscMsg.type == OscMessageType::TRIGGER && oscSystem->triggerCallback) {
-            // Call trigger callback directly for immediate response
+            // Queue trigger for processing in main thread (thread-safe)
             auto it = oscSystem->triggerMappings.find(oscMsg.address);
             if (it != oscSystem->triggerMappings.end()) {
-                oscSystem->triggerCallback(it->second.actionName);
+                std::lock_guard<std::mutex> lock(oscSystem->queueMutex);
+                oscSystem->messageQueue.push_back(oscMsg);
             }
             return 1;
         }

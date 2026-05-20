@@ -33,7 +33,9 @@ public:
             stride = w * 4;
         }
 
-        size_t newSize = static_cast<size_t>(stride) * h;
+        // Add 64 bytes of padding for SIMD alignment safety (sws_scale may
+        // write slightly past the end of each line for SSE/AVX alignment)
+        size_t newSize = static_cast<size_t>(stride) * h + 64;
 
         for (auto& f : frames) {
             f.width = w;

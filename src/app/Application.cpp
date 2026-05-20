@@ -446,6 +446,7 @@ void Application::initAudio() {
 
 void Application::handleOscTrigger(const std::string& action) {
     if (action == "randomizeVideo") {
+        if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
         if (assets.size() > 1) {
             std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
@@ -455,6 +456,7 @@ void Application::handleOscTrigger(const std::string& action) {
             } while (newIndex == selectedVideoAsset);
             selectedVideoAsset = newIndex;
             videoSourcePath = assets[newIndex].metadata.path;
+            videoRenderer.reset();
             videoPlayer.shutdown();
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
@@ -491,6 +493,7 @@ void Application::handleOscTrigger(const std::string& action) {
                 videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
             }
         }
+        isReloadingVideo = false;
     } else if (action == "jumpRandom") {
         if (videoSubsystemInitialized) {
             double duration = videoPlayer.durationSeconds();
@@ -500,11 +503,13 @@ void Application::handleOscTrigger(const std::string& action) {
             }
         }
     } else if (action == "folderChanged") {
+        if (!canChangeVideo()) return;
         videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
         if (!assets.empty()) {
             selectedVideoAsset = 0;
             videoSourcePath = assets[0].metadata.path;
+            videoRenderer.reset();
             videoPlayer.shutdown();
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
@@ -530,6 +535,7 @@ void Application::handleOscTrigger(const std::string& action) {
                 );
             }
         }
+        isReloadingVideo = false;
     } else if (action == "applyChanges") {
         // Visual controls are applied through uniform buffer updates
         controlsDirty = true;
@@ -736,6 +742,10 @@ void Application::mainLoop() {
                 : videoRandomizer.intervalSeconds;
 
             if (videoRandomizer.elapsedSeconds >= targetInterval) {
+                if (!canChangeVideo()) {
+                    videoRandomizer.elapsedSeconds = 0.0f;
+                    continue;
+                }
                 // Trigger random video change
                 const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
                 if (assets.size() > 1) {
@@ -768,6 +778,7 @@ void Application::mainLoop() {
                     selectedVideoAsset = newIndex;
                     videoSourcePath = assets[newIndex].metadata.path;
 
+                    videoRenderer.reset();
                     videoPlayer.shutdown();
                     int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                     int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
@@ -809,6 +820,7 @@ void Application::mainLoop() {
                         videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
                     }
                 }
+                isReloadingVideo = false;
             }
         }
 
@@ -862,11 +874,13 @@ void Application::mainLoop() {
         UICallbacks callbacks;
         callbacks.onControlsChanged = [this]() { controlsDirty = true; };
         callbacks.onFolderChanged = [this]() {
+            if (!canChangeVideo()) return;
             videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
             const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
             if (!assets.empty()) {
                 selectedVideoAsset = 0;
                 videoSourcePath = assets[0].metadata.path;
+                videoRenderer.reset();
                 videoPlayer.shutdown();
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
@@ -891,8 +905,10 @@ void Application::mainLoop() {
                         videoTexture.getSampler());
                 }
             }
+            isReloadingVideo = false;
         };
         callbacks.onRandomizeVideo = [this]() {
+            if (!canChangeVideo()) return;
             const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
             if (assets.size() > 1) {
                 // Select a random video different from current
@@ -901,16 +917,17 @@ void Application::mainLoop() {
                 do {
                     newIndex = dist(rng);
                 } while (newIndex == selectedVideoAsset);
-                
+
                 // Validate index
                 if (newIndex < 0 || newIndex >= static_cast<int>(assets.size())) {
                     newIndex = 0;
                 }
-                
+
                 selectedVideoAsset = newIndex;
                 videoSourcePath = assets[newIndex].metadata.path;
-                
+
                 // Reload video
+                videoRenderer.reset();
                 videoPlayer.shutdown();
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
@@ -929,7 +946,7 @@ void Application::mainLoop() {
                     cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
                                        static_cast<uint32_t>(videoPlayer.height()),
                                        static_cast<uint32_t>(videoPlayer.width()) * 4);
-                    
+
                     // Update descriptor sets with new textures
                     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
                         descriptorSetManager.updateSet(
@@ -952,9 +969,12 @@ void Application::mainLoop() {
                     videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
                 }
             }
+            isReloadingVideo = false;
         };
         callbacks.onReloadVideo = [this](const std::string& path) {
+            if (!canChangeVideo()) return;
             videoSourcePath = path;
+            videoRenderer.reset();
             videoPlayer.shutdown();
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
@@ -973,7 +993,7 @@ void Application::mainLoop() {
                 cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
                                    static_cast<uint32_t>(videoPlayer.height()),
                                    static_cast<uint32_t>(videoPlayer.width()) * 4);
-                
+
                 // Update descriptor sets with new textures
                 for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
                     descriptorSetManager.updateSet(
@@ -997,6 +1017,7 @@ void Application::mainLoop() {
                 videoRandomizer.elapsedSeconds = 0.0f;
                 videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
             }
+            isReloadingVideo = false;
         };
 
         uiSystem.render(visualControls, videoRandomizer, videoPlayer, videoRegistry,

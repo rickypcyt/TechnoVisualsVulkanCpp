@@ -243,7 +243,10 @@ bool VideoPlayer::grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidt
                 return false;
             }
 
-            const size_t needed = static_cast<size_t>(videoWidth) * videoHeight * 4;
+            // sws_scale may write up to 16 bytes past the end of each line
+            // for SIMD alignment, so use av_image_get_buffer_size with align=16
+            const size_t needed = static_cast<size_t>(av_image_get_buffer_size(
+                AV_PIX_FMT_RGBA, videoWidth, videoHeight, 16));
             if (needed > destCapacity) {
                 outWidth = videoWidth;
                 outHeight = videoHeight;
