@@ -9,6 +9,7 @@
 struct ImGuiContext;
 struct VisualControls;
 struct VideoRandomizerState;
+struct VideoRandomizerState2;
 class VideoPlayer;
 class VideoRegistry;
 class MidiSystem;
@@ -97,11 +98,13 @@ public:
     void render(
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
+        VideoRandomizerState2& randomizer2,
         VideoPlayer&          player,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
         float&                transitionDuration,
+        float&                transitionDuration2,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
         std::mt19937&         rng,
@@ -178,11 +181,13 @@ private:
     void drawMainNavbar(
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
+        VideoRandomizerState2& randomizer2,
         VideoPlayer&          player,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
         float&                transitionDuration,
+        float&                transitionDuration2,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
         std::mt19937&         rng,
@@ -214,6 +219,27 @@ private:
         bool&           controlsDirty,
         std::mt19937&   rng
     );
+
+    void drawPostFxContent(
+        VisualControls& controls,
+        bool&           controlsDirty,
+        std::mt19937&   rng
+    );
+    
+    void drawVideoContent(
+        VisualControls&       controls,
+        VideoRandomizerState& randomizer,
+        VideoRandomizerState2& randomizer2,
+        VideoRegistry&        registry,
+        int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
+        float&                transitionDuration,
+        float&                transitionDuration2,
+        bool&                 allowDimensionChangeRecreation,
+        bool&                 controlsDirty,
+        const UIDiagnostics&  diag,
+        const UICallbacks&    callbacks
+    );
     
     void drawVJayExtraContent(
         VisualControls& controls,
@@ -234,7 +260,7 @@ private:
     
     void drawMidiControlsContent(MidiSystem& midiSystem);
     void drawOscControlsContent(OscSystem& oscSystem);
-    void drawAudioDebugContent(AudioSystem& audioSystem);
+    void drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& controls);
     void drawParameterIndexContent();
 
     SDL_Window*   window   = nullptr;

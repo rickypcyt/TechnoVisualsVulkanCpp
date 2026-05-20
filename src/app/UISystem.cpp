@@ -33,6 +33,18 @@ struct VideoRandomizerState {
     int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
+// VideoRandomizerState2 definition
+struct VideoRandomizerState2 {
+    bool autoRandomize = false;
+    bool useVideoDuration = false;
+    float intervalSeconds = 30.0f;
+    float elapsedSeconds = 0.0f;
+    float currentVideoDuration = 0.0f;
+    bool useShuffleMode = true;
+    std::vector<int> shuffleQueue;
+    int currentShuffleIndex = 0;
+};
+
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
@@ -117,11 +129,13 @@ void UISystem::processEvent(const SDL_Event& event) {
 void UISystem::render(
     VisualControls&       controls,
     VideoRandomizerState& randomizer,
+    VideoRandomizerState2& randomizer2,
     VideoPlayer&          player,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
     int&                  selectedVideoAsset2,
     float&                transitionDuration,
+    float&                transitionDuration2,
     bool&                 allowDimensionChangeRecreation,
     bool&                 controlsDirty,
     std::mt19937&         rng,
@@ -136,8 +150,8 @@ void UISystem::render(
     beginFrame();
 
     // Draw main navbar window with tabs
-    drawMainNavbar(controls, randomizer, player, registry,
-                   selectedVideoAsset, selectedVideoAsset2, transitionDuration,
+    drawMainNavbar(controls, randomizer, randomizer2, player, registry,
+                   selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2,
                    allowDimensionChangeRecreation, controlsDirty,
                    rng, diag, callbacks, midiSystem, oscSystem, audioSystem);
 
@@ -272,16 +286,6 @@ void UISystem::drawProceduralControls(
     changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
 
-    ImGui::Separator();
-    ImGui::Text("Dual Video Source");
-    changed |= ImGui::Checkbox("Enable dual video", &controls.enableDualVideo);
-    if (controls.enableDualVideo) {
-        changed |= ImGui::SliderFloat("Video 2 Mix", &controls.video2Mix, 0.0f, 1.0f);
-        static const char* blendLabels = "Mix\0Add\0Multiply\0Screen\0Difference\0";
-        changed |= ImGui::Combo("Blend Mode", &controls.video2BlendMode, blendLabels, 5);
-        changed |= ImGui::SliderFloat("Video 2 speed", &controls.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
-    }
-
     if (ImGui::SliderFloat("Decode oversample", &controls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
         controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
         changed = true;
@@ -319,107 +323,6 @@ void UISystem::drawProceduralControls(
     ImGui::Unindent();
 
     changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
-
-    // --- Post FX ---
-    ImGui::Separator();
-    ImGui::Text("Post FX");
-
-    auto setPostFxEnabled = [&](bool enabled) {
-        controls.enablePostCrtCurvature  = enabled;
-        controls.enablePostScanMask      = enabled;
-        controls.enablePostVignette      = enabled;
-        controls.enablePostFishEye       = enabled;
-        controls.enablePostBloom         = enabled;
-        controls.enablePostAberration    = enabled;
-        controls.enablePostGrain         = enabled;
-        controls.enablePostBend          = enabled;
-        controls.enablePostGlitch        = enabled;
-        controls.enablePostColorBalance  = enabled;
-    };
-
-    if (ImGui::Button("Randomize Post FX")) {
-        std::uniform_real_distribution<float> u01(0.0f, 1.0f);
-        auto rr = [&](float lo, float hi) {
-            return std::uniform_real_distribution<float>(lo, hi)(rng);
-        };
-        if (controls.enablePostCrtCurvature)  { controls.crtCurvature = rr(0,0.6f); controls.crtHorizontalCurvature = rr(0,0.6f); }
-        if (controls.enablePostScanMask)       { controls.crtScanlineIntensity = u01(rng); controls.crtMaskIntensity = u01(rng); }
-        if (controls.enablePostVignette)       { controls.crtVignette = u01(rng); }
-        if (controls.enablePostFishEye)        { controls.crtFishEye = rr(-3,3); }
-        if (controls.enablePostBloom)          { controls.bloomIntensity = rr(0,2); controls.bloomThreshold = u01(rng); }
-        if (controls.enablePostAberration)     { controls.aberrationAmount = rr(-0.05f,0.05f); }
-        if (controls.enablePostGrain)          { controls.grainStrength = rr(0,0.5f); }
-        if (controls.enablePostBend)           { controls.bendAmount = u01(rng); }
-        if (controls.enablePostGlitch)         { controls.glitchAmount = u01(rng); }
-        if (controls.enablePostColorBalance)   { controls.colorBalance = glm::vec3(rr(0,2), rr(0,2), rr(0,2)); }
-        controlsDirty = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Reset Post FX")) {
-        setPostFxEnabled(false);
-        controls.crtCurvature           = 0.15f;
-        controls.crtHorizontalCurvature = 0.15f;
-        controls.crtScanlineIntensity   = 0.35f;
-        controls.crtMaskIntensity       = 0.35f;
-        controls.crtVignette            = 0.55f;
-        controls.crtFishEye             = 0.0f;
-        controls.bloomIntensity         = 0.45f;
-        controls.bloomThreshold         = 0.7f;
-        controls.aberrationAmount       = 0.02f;
-        controls.grainStrength          = 0.15f;
-        controls.bendAmount             = 0.0f;
-        controls.glitchAmount           = 0.0f;
-        controls.colorBalance           = glm::vec3(1.0f);
-        changed = true; controlsDirty = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Enable All"))  { setPostFxEnabled(true);  changed = true; controlsDirty = true; }
-    ImGui::SameLine();
-    if (ImGui::Button("Disable All")) { setPostFxEnabled(false); changed = true; controlsDirty = true; }
-
-    ImGui::Separator();
-
-    // Macros para no repetir el patron checkbox+slider
-#define POST_FX_SECTION(label, toggleField, ...) \
-    changed |= ImGui::Checkbox(label, &controls.toggleField); \
-    ImGui::BeginDisabled(!controls.toggleField); \
-    __VA_ARGS__ \
-    ImGui::EndDisabled();
-
-    POST_FX_SECTION("CRT Curvature", enablePostCrtCurvature,
-        changed |= ImGui::SliderFloat("CRT Curvature V", &controls.crtCurvature, 0.0f, 0.6f, "%.2f");
-        changed |= ImGui::SliderFloat("CRT Curvature H", &controls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
-    )
-    POST_FX_SECTION("Scanlines / Mask", enablePostScanMask,
-        changed |= ImGui::SliderFloat("CRT Scanlines", &controls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
-        changed |= ImGui::SliderFloat("CRT Mask",      &controls.crtMaskIntensity,     0.0f, 1.0f, "%.2f");
-    )
-    POST_FX_SECTION("Vignette", enablePostVignette,
-        changed |= ImGui::SliderFloat("CRT Black Bars", &controls.crtVignette, 0.0f, 1.0f, "%.2f");
-    )
-    POST_FX_SECTION("Fish-eye", enablePostFishEye,
-        changed |= ImGui::SliderFloat("CRT Fish-eye", &controls.crtFishEye, -3.0f, 3.0f, "%.2f");
-    )
-    POST_FX_SECTION("Bloom", enablePostBloom,
-        changed |= ImGui::SliderFloat("Bloom Intensity", &controls.bloomIntensity, 0.0f, 2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Bloom Threshold", &controls.bloomThreshold, 0.0f, 1.0f, "%.2f");
-    )
-    POST_FX_SECTION("Aberration##Toggle", enablePostAberration,
-        changed |= ImGui::SliderFloat("Aberration", &controls.aberrationAmount, -0.05f, 0.05f, "%.3f");
-    )
-    POST_FX_SECTION("Film Grain##Toggle", enablePostGrain,
-        changed |= ImGui::SliderFloat("Film Grain", &controls.grainStrength, 0.0f, 0.5f, "%.2f");
-    )
-    POST_FX_SECTION("Screen Bend", enablePostBend,
-        changed |= ImGui::SliderFloat("Bend Amount", &controls.bendAmount, 0.0f, 1.0f, "%.2f");
-    )
-    POST_FX_SECTION("Glitch wrapper", enablePostGlitch,
-        changed |= ImGui::SliderFloat("Glitch Intensity", &controls.glitchAmount, 0.0f, 1.0f, "%.2f");
-    )
-    POST_FX_SECTION("RGB Mix##Toggle", enablePostColorBalance,
-        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.colorBalance), 0.0f, 2.0f);
-    )
-#undef POST_FX_SECTION
 
     // --- Video asset selector ---
     ImGui::TextWrapped("Video %s", diag.videoReady ? "online" : "unavailable");
@@ -503,66 +406,6 @@ void UISystem::drawProceduralControls(
             ImGui::EndCombo();
         }
         ImGui::Text("Videos in folder: %zu", assets.size());
-    }
-
-    // --- Video 2 Asset selector ---
-    ImGui::Separator();
-    ImGui::Text("Video 2 Source");
-
-    int currentFolder2Index = 0;
-    if (!controls.selectedVideo2Folder.empty()) {
-        for (size_t i = 0; i < availableFolders.size(); ++i) {
-            if (availableFolders[i] == controls.selectedVideo2Folder) {
-                currentFolder2Index = static_cast<int>(i);
-                break;
-            }
-        }
-    }
-
-    if (ImGui::Combo("Load Folder##V2", &currentFolder2Index, folderItems.data(), static_cast<int>(folderItems.size()))) {
-        std::string newFolder = (currentFolder2Index == 0) ? "" : availableFolders[currentFolder2Index];
-        if (controls.selectedVideo2Folder != newFolder) {
-            controls.selectedVideo2Folder = newFolder;
-            if (callbacks.onFolderChanged2) {
-                callbacks.onFolderChanged2();
-            }
-        }
-    }
-
-    if (controls.selectedVideo2Folder.empty()) {
-        ImGui::Text("Current loaded folder: All Folders");
-    } else {
-        ImGui::Text("Current loaded folder: %s", controls.selectedVideo2Folder.c_str());
-    }
-
-    const auto& assets2 = registry.getFilteredAssets(controls.selectedVideo2Folder);
-    if (assets2.empty()) {
-        ImGui::TextDisabled("No videos found in this folder");
-    } else {
-        if (selectedAsset2 < 0 || selectedAsset2 >= static_cast<int>(assets2.size()))
-            selectedAsset2 = 0;
-
-        const std::string& currentLabel2 = assets2[selectedAsset2].metadata.filename;
-        if (ImGui::BeginCombo("Video Asset##V2", currentLabel2.c_str())) {
-            for (int i = 0; i < static_cast<int>(assets2.size()); ++i) {
-                bool isSelected = (i == selectedAsset2);
-                std::string label = assets2[i].metadata.filename;
-                if (ImGui::Selectable(label.c_str(), isSelected)) {
-                    if (selectedAsset2 != i) {
-                        selectedAsset2 = i;
-                        if (callbacks.onReloadVideo2)
-                            callbacks.onReloadVideo2(assets2[i].metadata.path);
-                    }
-                }
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::Text("Videos in folder: %zu", assets2.size());
-        if (assets2.size() > 1 && ImGui::Button("Randomize video 2 online") && callbacks.onRandomizeVideo2) {
-            callbacks.onRandomizeVideo2();
-            changed = true;
-        }
     }
 
     // --- Randomizer ---
@@ -1900,11 +1743,13 @@ void UISystem::drawParameterIndex() {
 void UISystem::drawMainNavbar(
     VisualControls&       controls,
     VideoRandomizerState& randomizer,
+    VideoRandomizerState2& randomizer2,
     VideoPlayer&          player,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
     int&                  selectedVideoAsset2,
     float&                transitionDuration,
+    float&                transitionDuration2,
     bool&                 allowDimensionChangeRecreation,
     bool&                 controlsDirty,
     std::mt19937&         rng,
@@ -1940,50 +1785,65 @@ void UISystem::drawMainNavbar(
                                          rng, diag, callbacks);
             ImGui::EndTabItem();
         }
-        
-        // Tab 2: VJAY Basics
+
+        // Tab 2: Video
+        if (ImGui::BeginTabItem("Video")) {
+            drawVideoContent(controls, randomizer, randomizer2, registry,
+                            selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2,
+                            allowDimensionChangeRecreation, controlsDirty,
+                            diag, callbacks);
+            ImGui::EndTabItem();
+        }
+
+        // Tab 3: Post FX
+        if (ImGui::BeginTabItem("Post FX")) {
+            drawPostFxContent(controls, controlsDirty, rng);
+            ImGui::EndTabItem();
+        }
+
+        // Tab 4: VJAY Basics
         if (ImGui::BeginTabItem("VJAY Basics")) {
             drawVJayBasicsContent(controls, controlsDirty, rng);
             ImGui::EndTabItem();
         }
         
-        // Tab 3: VJAY Extra
+        // Tab 5: VJAY Extra
         if (ImGui::BeginTabItem("VJAY Extra")) {
             drawVJayExtraContent(controls, controlsDirty, rng);
             ImGui::EndTabItem();
         }
         
-        // Tab 4: NLE Editor
+        // Tab 6: NLE Editor
         if (ImGui::BeginTabItem("NLE Editor")) {
             drawNLEEditorContent(callbacks);
             ImGui::EndTabItem();
         }
         
-        // Tab 5: Diagnostics
+        // Tab 7: Diagnostics
         if (ImGui::BeginTabItem("Diagnostics")) {
             drawDiagnosticsContent(diag, player, registry, selectedVideoAsset, controls, callbacks);
             ImGui::EndTabItem();
         }
         
-        // Tab 6: MIDI
+        // Tab 8: MIDI
         if (ImGui::BeginTabItem("MIDI")) {
             drawMidiControlsContent(midiSystem);
             ImGui::EndTabItem();
         }
         
-        // Tab 7: OSC
+        // Tab 9: OSC
         if (ImGui::BeginTabItem("OSC")) {
             drawOscControlsContent(oscSystem);
             ImGui::EndTabItem();
         }
         
-        // Tab 8: Audio
+        // Tab 10: Audio
         if (ImGui::BeginTabItem("Audio")) {
-            drawAudioDebugContent(audioSystem);
+            drawAudioDebugContent(audioSystem, controls);
             ImGui::EndTabItem();
         }
         
-        // Tab 9: Parameters
+        // Tab 11: Parameters
         if (ImGui::BeginTabItem("Parameters")) {
             drawParameterIndexContent();
             ImGui::EndTabItem();
@@ -2077,35 +1937,38 @@ void UISystem::drawProceduralControlsContent(
         changed |= ImGui::SliderFloat("Interval (s)", &controls.colorRandomizeInterval, 0.1f, 5.0f, "%.1fs");
     }
 
-    ImGui::Separator();
-    ImGui::Text("Audio-inspired inputs");
-    changed |= ImGui::SliderFloat("Tempo",  &controls.tempo,  0.25f, 4.0f);
-    changed |= ImGui::SliderFloat("Energy", &controls.energy, 0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("High",   &controls.high,   0.0f, 1.0f);
+    if (changed && callbacks.onControlsChanged) callbacks.onControlsChanged();
+}
+
+void UISystem::drawVideoContent(
+    VisualControls&       controls,
+    VideoRandomizerState& randomizer,
+    VideoRandomizerState2& randomizer2,
+    VideoRegistry&        registry,
+    int&                  selectedVideoAsset,
+    int&                  selectedVideoAsset2,
+    float&                transitionDuration,
+    float&                transitionDuration2,
+    bool&                 allowDimensionChangeRecreation,
+    bool&                 controlsDirty,
+    const UIDiagnostics&  diag,
+    const UICallbacks&    callbacks
+) {
+    bool changed = false;
 
     ImGui::Separator();
-    ImGui::Text("Video");
-    changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
-
+    ImGui::Text("Video Tweaks (Global)");
     ImGui::Separator();
-    ImGui::Text("Dual Video Source");
     changed |= ImGui::Checkbox("Enable dual video", &controls.enableDualVideo);
-    if (controls.enableDualVideo) {
-        changed |= ImGui::SliderFloat("Video 2 Mix", &controls.video2Mix, 0.0f, 1.0f);
-        static const char* blendLabels = "Mix\0Add\0Multiply\0Screen\0Difference\0";
-        changed |= ImGui::Combo("Blend Mode", &controls.video2BlendMode, blendLabels, 5);
-        changed |= ImGui::SliderFloat("Video 2 speed", &controls.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
-    }
-
+    changed |= ImGui::SliderFloat("Grayscale", &controls.grayscaleAmount, 0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Sharpen",   &controls.sharpenAmount,   0.0f, 1.0f);
+    changed |= ImGui::Checkbox("Bicubic Upscale", &controls.upscaleEnabled);
+    changed |= ImGui::Checkbox("Auto Scale Video", &controls.autoScaleVideo);
+    
     if (ImGui::SliderFloat("Decode oversample", &controls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
         controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
         changed = true;
     }
-
-    changed |= ImGui::Checkbox("Auto Scale Video", &controls.autoScaleVideo);
 
     static const char* forceFpsLabels[] = {"Off", "15 fps", "24 fps", "30 fps", "60 fps"};
     int forceIdx = std::clamp(controls.forcedFpsIndex, 0,
@@ -2116,12 +1979,12 @@ void UISystem::drawProceduralControlsContent(
         changed = true;
     }
 
-    changed |= ImGui::SliderFloat("Grayscale", &controls.grayscaleAmount, 0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Sharpen",   &controls.sharpenAmount,   0.0f, 1.0f);
-    changed |= ImGui::Checkbox("Bicubic Upscale", &controls.upscaleEnabled);
-    ImGui::SameLine();
-    changed |= ImGui::Checkbox("Random start", &controls.randomVideoStart);
+    changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
+    changed |= ImGui::Checkbox("Allow dimension change recreation", &allowDimensionChangeRecreation);
 
+    ImGui::Separator();
+    ImGui::Text("Video 1 Randomization");
+    changed |= ImGui::Checkbox("Random start", &controls.randomVideoStart);
     if (controls.randomVideoStart) {
         ImGui::SameLine();
         if (ImGui::Button("Jump Random") && callbacks.onJumpRandom) {
@@ -2136,7 +1999,278 @@ void UISystem::drawProceduralControlsContent(
     }
     ImGui::Unindent();
 
-    changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
+    ImGui::Separator();
+    ImGui::Text("Video 1");
+    ImGui::Separator();
+    ImGui::Text("Playback");
+    changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+
+    ImGui::Separator();
+    ImGui::Text("Selection");
+    ImGui::TextWrapped("Video %s", diag.videoReady ? "online" : "unavailable");
+
+    static std::vector<std::string> availableFolders;
+    static bool foldersScanned = false;
+    if (!foldersScanned) {
+        availableFolders.clear();
+        availableFolders.push_back("All Folders");
+        try {
+            fs::path mp4sPath("mp4s");
+            if (fs::exists(mp4sPath) && fs::is_directory(mp4sPath)) {
+                for (const auto& entry : fs::directory_iterator(mp4sPath)) {
+                    if (entry.is_directory()) {
+                        availableFolders.push_back(entry.path().filename().string());
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[UISystem] Error scanning mp4s folder: " << e.what() << std::endl;
+        }
+        foldersScanned = true;
+    }
+
+    static std::vector<const char*> folderItems;
+    folderItems.clear();
+    for (auto& folder : availableFolders) {
+        folderItems.push_back(folder.c_str());
+    }
+
+    int currentFolderIndex = 0;
+    if (!controls.selectedVideoFolder.empty()) {
+        for (size_t i = 0; i < availableFolders.size(); ++i) {
+            if (availableFolders[i] == controls.selectedVideoFolder) {
+                currentFolderIndex = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    if (ImGui::Combo("Load Folder##V1", &currentFolderIndex, folderItems.data(), static_cast<int>(folderItems.size()))) {
+        std::string newFolder = (currentFolderIndex == 0) ? "" : availableFolders[currentFolderIndex];
+        if (controls.selectedVideoFolder != newFolder) {
+            controls.selectedVideoFolder = newFolder;
+            if (callbacks.onFolderChanged) {
+                callbacks.onFolderChanged();
+            }
+        }
+    }
+
+    if (controls.selectedVideoFolder.empty()) {
+        ImGui::Text("Current loaded folder: All Folders");
+    } else {
+        ImGui::Text("Current loaded folder: %s", controls.selectedVideoFolder.c_str());
+    }
+
+    const auto& assets = registry.getFilteredAssets(controls.selectedVideoFolder);
+    if (assets.empty()) {
+        ImGui::TextDisabled("No videos found in this folder");
+    } else {
+        if (selectedVideoAsset < 0 || selectedVideoAsset >= static_cast<int>(assets.size()))
+            selectedVideoAsset = 0;
+
+        const std::string& currentLabel = assets[selectedVideoAsset].metadata.filename;
+        if (ImGui::BeginCombo("Video Asset##V1", currentLabel.c_str())) {
+            for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
+                bool isSelected = (i == selectedVideoAsset);
+                std::string label = assets[i].metadata.filename;
+                if (ImGui::Selectable(label.c_str(), isSelected)) {
+                    if (selectedVideoAsset != i) {
+                        selectedVideoAsset = i;
+                        if (callbacks.onReloadVideo)
+                            callbacks.onReloadVideo(assets[i].metadata.path);
+                    }
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::Text("Videos in folder: %zu", assets.size());
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Video Randomizer (Auto-shuffle)");
+    const bool hasRandomChoices = assets.size() > 1;
+    ImGui::BeginDisabled(randomizer.useVideoDuration);
+    if (ImGui::SliderFloat("Random interval (s)", &randomizer.intervalSeconds, 1.0f, 300.0f, "%.0f s")) {
+        randomizer.intervalSeconds = std::clamp(randomizer.intervalSeconds, 1.0f, 600.0f);
+        randomizer.elapsedSeconds  = 0.0f;
+        changed = true;
+    }
+    ImGui::EndDisabled();
+
+    bool syncToggle = ImGui::Checkbox("Sync shuffle to clip duration", &randomizer.useVideoDuration);
+    if (syncToggle) randomizer.elapsedSeconds = 0.0f;
+    changed |= syncToggle;
+
+    if (randomizer.useVideoDuration)
+        ImGui::Text("Current clip: %.1f s", std::max(0.0f, randomizer.currentVideoDuration));
+
+    changed |= ImGui::SliderFloat("Transition duration (s)", &transitionDuration, 0.1f, 2.0f, "%.2f s");
+
+    ImGui::BeginDisabled(!hasRandomChoices);
+    if (ImGui::Button("Randomize video online") && callbacks.onRandomizeVideo) {
+        callbacks.onRandomizeVideo();
+        changed = true;
+    }
+    ImGui::SameLine();
+    changed |= ImGui::Checkbox("Auto randomize", &randomizer.autoRandomize);
+    if (!hasRandomChoices) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("Need at least 2 videos");
+    } else if (randomizer.autoRandomize) {
+        float target = (randomizer.useVideoDuration && randomizer.currentVideoDuration > 0.0f)
+                           ? randomizer.currentVideoDuration
+                           : randomizer.intervalSeconds;
+        ImGui::Text("Next shuffle in %.1f s", std::max(0.0f, target - randomizer.elapsedSeconds));
+    }
+
+    ImGui::Indent();
+    changed |= ImGui::Checkbox("Shuffle all videos", &randomizer.useShuffleMode);
+    if (randomizer.useShuffleMode && !randomizer.shuffleQueue.empty()) {
+        ImGui::Text("Playing %d/%d", randomizer.currentShuffleIndex + 1, static_cast<int>(randomizer.shuffleQueue.size()));
+    }
+    ImGui::Unindent();
+    ImGui::EndDisabled();
+
+    ImGui::Separator();
+    ImGui::Text("Video 2");
+    ImGui::Separator();
+    ImGui::Text("Playback");
+    if (controls.enableDualVideo) {
+        changed |= ImGui::SliderFloat("Video 2 Mix", &controls.video2Mix, 0.0f, 1.0f);
+        static const char* blendLabels = "Mix\0Add\0Multiply\0Screen\0Difference\0";
+        changed |= ImGui::Combo("Blend Mode", &controls.video2BlendMode, blendLabels, 5);
+        changed |= ImGui::SliderFloat("Video 2 speed", &controls.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Randomization");
+    changed |= ImGui::Checkbox("Random start", &controls.randomVideo2Start);
+    if (controls.randomVideo2Start) {
+        ImGui::SameLine();
+        if (ImGui::Button("Jump Random##V2") && callbacks.onJumpRandom) {
+            callbacks.onJumpRandom();
+        }
+    }
+
+    ImGui::Indent();
+    changed |= ImGui::Checkbox("Auto jump interval", &controls.enableRandomJumpInterval2);
+    if (controls.enableRandomJumpInterval2) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval2, 1.0f, 60.0f, "%.1f s");
+    }
+    ImGui::Unindent();
+
+    ImGui::Separator();
+    ImGui::Text("Selection");
+
+    int currentFolder2Index = 0;
+    if (!controls.selectedVideo2Folder.empty()) {
+        for (size_t i = 0; i < availableFolders.size(); ++i) {
+            if (availableFolders[i] == controls.selectedVideo2Folder) {
+                currentFolder2Index = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    if (ImGui::Combo("Load Folder##V2", &currentFolder2Index, folderItems.data(), static_cast<int>(folderItems.size()))) {
+        std::string newFolder = (currentFolder2Index == 0) ? "" : availableFolders[currentFolder2Index];
+        if (controls.selectedVideo2Folder != newFolder) {
+            controls.selectedVideo2Folder = newFolder;
+            if (callbacks.onFolderChanged2) {
+                callbacks.onFolderChanged2();
+            }
+        }
+    }
+
+    if (controls.selectedVideo2Folder.empty()) {
+        ImGui::Text("Current loaded folder: All Folders");
+    } else {
+        ImGui::Text("Current loaded folder: %s", controls.selectedVideo2Folder.c_str());
+    }
+
+    const auto& assets2 = registry.getFilteredAssets(controls.selectedVideo2Folder);
+    if (assets2.empty()) {
+        ImGui::TextDisabled("No videos found in this folder");
+    } else {
+        if (selectedVideoAsset2 < 0 || selectedVideoAsset2 >= static_cast<int>(assets2.size()))
+            selectedVideoAsset2 = 0;
+
+        const std::string& currentLabel2 = assets2[selectedVideoAsset2].metadata.filename;
+        if (ImGui::BeginCombo("Video Asset##V2", currentLabel2.c_str())) {
+            for (int i = 0; i < static_cast<int>(assets2.size()); ++i) {
+                bool isSelected = (i == selectedVideoAsset2);
+                std::string label = assets2[i].metadata.filename;
+                if (ImGui::Selectable(label.c_str(), isSelected)) {
+                    if (selectedVideoAsset2 != i) {
+                        selectedVideoAsset2 = i;
+                        if (callbacks.onReloadVideo2)
+                            callbacks.onReloadVideo2(assets2[i].metadata.path);
+                    }
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::Text("Videos in folder: %zu", assets2.size());
+        if (assets2.size() > 1 && ImGui::Button("Randomize video 2 online##Selection") && callbacks.onRandomizeVideo2) {
+            callbacks.onRandomizeVideo2();
+            changed = true;
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Video 2 Randomizer (Auto-shuffle)");
+    const bool hasRandomChoices2 = assets2.size() > 1;
+    ImGui::BeginDisabled(randomizer2.useVideoDuration);
+    if (ImGui::SliderFloat("Random interval (s)##V2", &randomizer2.intervalSeconds, 1.0f, 300.0f, "%.0f s")) {
+        randomizer2.intervalSeconds = std::clamp(randomizer2.intervalSeconds, 1.0f, 600.0f);
+        randomizer2.elapsedSeconds = 0.0f;
+        changed = true;
+    }
+    ImGui::EndDisabled();
+
+    bool syncToggle2 = ImGui::Checkbox("Sync shuffle to clip duration##V2", &randomizer2.useVideoDuration);
+    if (syncToggle2) randomizer2.elapsedSeconds = 0.0f;
+    changed |= syncToggle2;
+
+    if (randomizer2.useVideoDuration)
+        ImGui::Text("Current clip: %.1f s", std::max(0.0f, randomizer2.currentVideoDuration));
+
+    changed |= ImGui::SliderFloat("Transition duration (s)##V2", &transitionDuration2, 0.1f, 2.0f, "%.2f s");
+
+    ImGui::BeginDisabled(!hasRandomChoices2);
+    if (ImGui::Button("Randomize video 2 online##Randomizer") && callbacks.onRandomizeVideo2) {
+        callbacks.onRandomizeVideo2();
+        changed = true;
+    }
+    ImGui::SameLine();
+    changed |= ImGui::Checkbox("Auto randomize##V2", &randomizer2.autoRandomize);
+    if (!hasRandomChoices2) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("Need at least 2 videos");
+    } else if (randomizer2.autoRandomize) {
+        float target = (randomizer2.useVideoDuration && randomizer2.currentVideoDuration > 0.0f)
+                           ? randomizer2.currentVideoDuration
+                           : randomizer2.intervalSeconds;
+        ImGui::Text("Next shuffle in %.1f s", std::max(0.0f, target - randomizer2.elapsedSeconds));
+    }
+
+    ImGui::Indent();
+    changed |= ImGui::Checkbox("Shuffle all videos##V2", &randomizer2.useShuffleMode);
+    ImGui::Unindent();
+    ImGui::EndDisabled();
+
+    if (changed && callbacks.onControlsChanged) callbacks.onControlsChanged();
+}
+
+void UISystem::drawPostFxContent(
+    VisualControls& controls,
+    bool&           controlsDirty,
+    std::mt19937&   rng
+) {
+    bool changed = false;
 
     ImGui::Separator();
     ImGui::Text("Post FX");
@@ -2196,244 +2330,51 @@ void UISystem::drawProceduralControlsContent(
 
     ImGui::Separator();
 
-    changed |= ImGui::Checkbox("CRT Curvature", &controls.enablePostCrtCurvature);
-    ImGui::BeginDisabled(!controls.enablePostCrtCurvature);
-    changed |= ImGui::SliderFloat("CRT Curvature V", &controls.crtCurvature, 0.0f, 0.6f, "%.2f");
-    changed |= ImGui::SliderFloat("CRT Curvature H", &controls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
+    // Macros para no repetir el patron checkbox+slider
+#define POST_FX_SECTION(label, toggleField, ...) \
+    changed |= ImGui::Checkbox(label, &controls.toggleField); \
+    ImGui::BeginDisabled(!controls.toggleField); \
+    __VA_ARGS__ \
     ImGui::EndDisabled();
 
-    changed |= ImGui::Checkbox("Scanlines / Mask", &controls.enablePostScanMask);
-    ImGui::BeginDisabled(!controls.enablePostScanMask);
-    changed |= ImGui::SliderFloat("CRT Scanlines", &controls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
-    changed |= ImGui::SliderFloat("CRT Mask",      &controls.crtMaskIntensity,     0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
+    POST_FX_SECTION("CRT Curvature", enablePostCrtCurvature,
+        changed |= ImGui::SliderFloat("CRT Curvature V", &controls.crtCurvature, 0.0f, 0.6f, "%.2f");
+        changed |= ImGui::SliderFloat("CRT Curvature H", &controls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
+    )
+    POST_FX_SECTION("Scanlines / Mask", enablePostScanMask,
+        changed |= ImGui::SliderFloat("CRT Scanlines", &controls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
+        changed |= ImGui::SliderFloat("CRT Mask",      &controls.crtMaskIntensity,     0.0f, 1.0f, "%.2f");
+    )
+    POST_FX_SECTION("Vignette", enablePostVignette,
+        changed |= ImGui::SliderFloat("CRT Black Bars", &controls.crtVignette, 0.0f, 1.0f, "%.2f");
+    )
+    POST_FX_SECTION("Fish-eye", enablePostFishEye,
+        changed |= ImGui::SliderFloat("CRT Fish-eye", &controls.crtFishEye, -3.0f, 3.0f, "%.2f");
+    )
+    POST_FX_SECTION("Bloom", enablePostBloom,
+        changed |= ImGui::SliderFloat("Bloom Intensity", &controls.bloomIntensity, 0.0f, 2.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Bloom Threshold", &controls.bloomThreshold, 0.0f, 1.0f, "%.2f");
+    )
+    POST_FX_SECTION("Aberration##Toggle", enablePostAberration,
+        changed |= ImGui::SliderFloat("Aberration", &controls.aberrationAmount, -0.05f, 0.05f, "%.3f");
+    )
+    POST_FX_SECTION("Film Grain##Toggle", enablePostGrain,
+        changed |= ImGui::SliderFloat("Film Grain", &controls.grainStrength, 0.0f, 0.5f, "%.2f");
+    )
+    POST_FX_SECTION("Screen Bend", enablePostBend,
+        changed |= ImGui::SliderFloat("Bend Amount", &controls.bendAmount, 0.0f, 1.0f, "%.2f");
+    )
+    POST_FX_SECTION("Glitch wrapper", enablePostGlitch,
+        changed |= ImGui::SliderFloat("Glitch Intensity", &controls.glitchAmount, 0.0f, 1.0f, "%.2f");
+    )
+    POST_FX_SECTION("RGB Mix##Toggle", enablePostColorBalance,
+        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.colorBalance), 0.0f, 2.0f);
+    )
+#undef POST_FX_SECTION
 
-    changed |= ImGui::Checkbox("Vignette", &controls.enablePostVignette);
-    ImGui::BeginDisabled(!controls.enablePostVignette);
-    changed |= ImGui::SliderFloat("CRT Black Bars", &controls.crtVignette, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Fish-eye", &controls.enablePostFishEye);
-    ImGui::BeginDisabled(!controls.enablePostFishEye);
-    changed |= ImGui::SliderFloat("CRT Fish-eye", &controls.crtFishEye, -3.0f, 3.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Bloom", &controls.enablePostBloom);
-    ImGui::BeginDisabled(!controls.enablePostBloom);
-    changed |= ImGui::SliderFloat("Bloom Intensity", &controls.bloomIntensity, 0.0f, 2.0f, "%.2f");
-    changed |= ImGui::SliderFloat("Bloom Threshold", &controls.bloomThreshold, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Aberration##Toggle", &controls.enablePostAberration);
-    ImGui::BeginDisabled(!controls.enablePostAberration);
-    changed |= ImGui::SliderFloat("Aberration", &controls.aberrationAmount, -0.05f, 0.05f, "%.3f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Film Grain##Toggle", &controls.enablePostGrain);
-    ImGui::BeginDisabled(!controls.enablePostGrain);
-    changed |= ImGui::SliderFloat("Film Grain", &controls.grainStrength, 0.0f, 0.5f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Screen Bend", &controls.enablePostBend);
-    ImGui::BeginDisabled(!controls.enablePostBend);
-    changed |= ImGui::SliderFloat("Bend Amount", &controls.bendAmount, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Glitch wrapper", &controls.enablePostGlitch);
-    ImGui::BeginDisabled(!controls.enablePostGlitch);
-    changed |= ImGui::SliderFloat("Glitch Intensity", &controls.glitchAmount, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("RGB Mix##Toggle", &controls.enablePostColorBalance);
-    ImGui::BeginDisabled(!controls.enablePostColorBalance);
-    changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.colorBalance), 0.0f, 2.0f);
-    ImGui::EndDisabled();
-
-    ImGui::TextWrapped("Video %s", diag.videoReady ? "online" : "unavailable");
-
-    static std::vector<std::string> availableFolders;
-    static bool foldersScanned = false;
-    if (!foldersScanned) {
-        availableFolders.clear();
-        availableFolders.push_back("All Folders");
-        try {
-            fs::path mp4sPath("mp4s");
-            if (fs::exists(mp4sPath) && fs::is_directory(mp4sPath)) {
-                for (const auto& entry : fs::directory_iterator(mp4sPath)) {
-                    if (entry.is_directory()) {
-                        availableFolders.push_back(entry.path().filename().string());
-                    }
-                }
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "[UISystem] Error scanning mp4s folder: " << e.what() << std::endl;
-        }
-        foldersScanned = true;
+    if (changed) {
+        controlsDirty = true;
     }
-
-    static std::vector<const char*> folderItems;
-    folderItems.clear();
-    for (auto& folder : availableFolders) {
-        folderItems.push_back(folder.c_str());
-    }
-
-    int currentFolderIndex = 0;
-    if (!controls.selectedVideoFolder.empty()) {
-        for (size_t i = 0; i < availableFolders.size(); ++i) {
-            if (availableFolders[i] == controls.selectedVideoFolder) {
-                currentFolderIndex = static_cast<int>(i);
-                break;
-            }
-        }
-    }
-
-    if (ImGui::Combo("Load Folder", &currentFolderIndex, folderItems.data(), static_cast<int>(folderItems.size()))) {
-        std::string newFolder = (currentFolderIndex == 0) ? "" : availableFolders[currentFolderIndex];
-        if (controls.selectedVideoFolder != newFolder) {
-            controls.selectedVideoFolder = newFolder;
-            if (callbacks.onFolderChanged) {
-                callbacks.onFolderChanged();
-            }
-        }
-    }
-
-    if (controls.selectedVideoFolder.empty()) {
-        ImGui::Text("Current loaded folder: All Folders");
-    } else {
-        ImGui::Text("Current loaded folder: %s", controls.selectedVideoFolder.c_str());
-    }
-
-    const auto& assets = registry.getFilteredAssets(controls.selectedVideoFolder);
-    if (assets.empty()) {
-        ImGui::TextDisabled("No videos found in this folder");
-    } else {
-        if (selectedVideoAsset < 0 || selectedVideoAsset >= static_cast<int>(assets.size()))
-            selectedVideoAsset = 0;
-
-        const std::string& currentLabel = assets[selectedVideoAsset].metadata.filename;
-        if (ImGui::BeginCombo("Video Asset", currentLabel.c_str())) {
-            for (int i = 0; i < static_cast<int>(assets.size()); ++i) {
-                bool isSelected = (i == selectedVideoAsset);
-                std::string label = assets[i].metadata.filename;
-                if (ImGui::Selectable(label.c_str(), isSelected)) {
-                    if (selectedVideoAsset != i) {
-                        selectedVideoAsset = i;
-                        if (callbacks.onReloadVideo)
-                            callbacks.onReloadVideo(assets[i].metadata.path);
-                    }
-                }
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::Text("Videos in folder: %zu", assets.size());
-    }
-
-    // --- Video 2 Asset selector ---
-    ImGui::Separator();
-    ImGui::Text("Video 2 Source");
-
-    int currentFolder2Index = 0;
-    if (!controls.selectedVideo2Folder.empty()) {
-        for (size_t i = 0; i < availableFolders.size(); ++i) {
-            if (availableFolders[i] == controls.selectedVideo2Folder) {
-                currentFolder2Index = static_cast<int>(i);
-                break;
-            }
-        }
-    }
-
-    if (ImGui::Combo("Load Folder##V2", &currentFolder2Index, folderItems.data(), static_cast<int>(folderItems.size()))) {
-        std::string newFolder = (currentFolder2Index == 0) ? "" : availableFolders[currentFolder2Index];
-        if (controls.selectedVideo2Folder != newFolder) {
-            controls.selectedVideo2Folder = newFolder;
-            if (callbacks.onFolderChanged2) {
-                callbacks.onFolderChanged2();
-            }
-        }
-    }
-
-    if (controls.selectedVideo2Folder.empty()) {
-        ImGui::Text("Current loaded folder: All Folders");
-    } else {
-        ImGui::Text("Current loaded folder: %s", controls.selectedVideo2Folder.c_str());
-    }
-
-    const auto& assets2 = registry.getFilteredAssets(controls.selectedVideo2Folder);
-    if (assets2.empty()) {
-        ImGui::TextDisabled("No videos found in this folder");
-    } else {
-        if (selectedVideoAsset2 < 0 || selectedVideoAsset2 >= static_cast<int>(assets2.size()))
-            selectedVideoAsset2 = 0;
-
-        const std::string& currentLabel2 = assets2[selectedVideoAsset2].metadata.filename;
-        if (ImGui::BeginCombo("Video Asset##V2", currentLabel2.c_str())) {
-            for (int i = 0; i < static_cast<int>(assets2.size()); ++i) {
-                bool isSelected = (i == selectedVideoAsset2);
-                std::string label = assets2[i].metadata.filename;
-                if (ImGui::Selectable(label.c_str(), isSelected)) {
-                    if (selectedVideoAsset2 != i) {
-                        selectedVideoAsset2 = i;
-                        if (callbacks.onReloadVideo2)
-                            callbacks.onReloadVideo2(assets2[i].metadata.path);
-                    }
-                }
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::Text("Videos in folder: %zu", assets2.size());
-        if (assets2.size() > 1 && ImGui::Button("Randomize video 2 online") && callbacks.onRandomizeVideo2) {
-            callbacks.onRandomizeVideo2();
-            changed = true;
-        }
-    }
-
-    const bool hasRandomChoices = assets.size() > 1;
-    ImGui::BeginDisabled(randomizer.useVideoDuration);
-    if (ImGui::SliderFloat("Random interval (s)", &randomizer.intervalSeconds, 1.0f, 300.0f, "%.0f s")) {
-        randomizer.intervalSeconds = std::clamp(randomizer.intervalSeconds, 1.0f, 600.0f);
-        randomizer.elapsedSeconds  = 0.0f;
-        changed = true;
-    }
-    ImGui::EndDisabled();
-
-    bool syncToggle = ImGui::Checkbox("Sync shuffle to clip duration", &randomizer.useVideoDuration);
-    if (syncToggle) randomizer.elapsedSeconds = 0.0f;
-    changed |= syncToggle;
-
-    if (randomizer.useVideoDuration)
-        ImGui::Text("Current clip: %.1f s", std::max(0.0f, randomizer.currentVideoDuration));
-
-    changed |= ImGui::SliderFloat("Transition duration (s)", &transitionDuration, 0.1f, 2.0f, "%.2f s");
-    changed |= ImGui::Checkbox("Allow dimension change recreation", &allowDimensionChangeRecreation);
-
-    ImGui::BeginDisabled(!hasRandomChoices);
-    if (ImGui::Button("Randomize video online") && callbacks.onRandomizeVideo) {
-        callbacks.onRandomizeVideo();
-        changed = true;
-    }
-    ImGui::SameLine();
-    changed |= ImGui::Checkbox("Auto randomize", &randomizer.autoRandomize);
-    if (!hasRandomChoices) {
-        ImGui::SameLine();
-        ImGui::TextDisabled("Need at least 2 videos");
-    } else if (randomizer.autoRandomize) {
-        float target = (randomizer.useVideoDuration && randomizer.currentVideoDuration > 0.0f)
-                           ? randomizer.currentVideoDuration
-                           : randomizer.intervalSeconds;
-        ImGui::Text("Next shuffle in %.1f s", std::max(0.0f, target - randomizer.elapsedSeconds));
-    }
-
-    ImGui::Indent();
-    changed |= ImGui::Checkbox("Shuffle all videos", &randomizer.useShuffleMode);
-    if (randomizer.useShuffleMode && !randomizer.shuffleQueue.empty()) {
-        ImGui::Text("Playing %d/%d", randomizer.currentShuffleIndex + 1, static_cast<int>(randomizer.shuffleQueue.size()));
-    }
-    ImGui::Unindent();
-    ImGui::EndDisabled();
-
-    if (changed && callbacks.onControlsChanged) callbacks.onControlsChanged();
 }
 
 void UISystem::drawVJayBasicsContent(
@@ -3300,8 +3241,17 @@ void UISystem::drawOscControlsContent(OscSystem& oscSystem) {
     ImGui::Text("Send messages without arguments for triggers");
 }
 
-void UISystem::drawAudioDebugContent(AudioSystem& audioSystem) {
+void UISystem::drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& controls) {
     ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.5f, 1.0f), "Audio Reactive Debug");
+    ImGui::Separator();
+    
+    ImGui::Text("Audio-inspired inputs");
+    ImGui::SliderFloat("Tempo",  &controls.tempo,  0.25f, 4.0f);
+    ImGui::SliderFloat("Energy", &controls.energy, 0.0f, 1.0f);
+    ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
+    ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
+    ImGui::SliderFloat("High",   &controls.high,   0.0f, 1.0f);
+    
     ImGui::Separator();
     
     // Device Selection

@@ -33,6 +33,11 @@ struct VisualControls {
     int selectedVideo2Asset = 0;
     std::string selectedVideo2Folder = "";
     float video2PlaybackRate = 1.0f;
+    
+    // Video 2 randomization controls
+    bool randomVideo2Start = false;
+    float randomJumpInterval2 = 5.0f;
+    bool enableRandomJumpInterval2 = false;
     std::string selectedVideoFolder = "";
     float grayscaleAmount = 0.0f;
     float sharpenAmount = 0.35f;

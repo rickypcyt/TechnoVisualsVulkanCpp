@@ -85,7 +85,7 @@ void Application::run() {
     initializationComplete = true;
     
     // Load control state
-    ControlState::load(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem, oscSystem);
+    ControlState::load(controlStatePath, visualControls, videoRandomizer, videoRandomizer2, allowDimensionChangeRecreation, midiSystem, oscSystem);
     
     // Run main loop
     mainLoop();
@@ -654,6 +654,32 @@ int Application::pickNextVideoIndex(const std::vector<VideoAsset>& assets) {
     }
 }
 
+int Application::pickNextVideoIndex2(const std::vector<VideoAsset>& assets) {
+    if (assets.size() <= 1) return 0;
+
+    if (videoRandomizer2.useShuffleMode) {
+        if (videoRandomizer2.shuffleQueue.empty() ||
+            videoRandomizer2.currentShuffleIndex >= static_cast<int>(videoRandomizer2.shuffleQueue.size())) {
+            videoRandomizer2.shuffleQueue.clear();
+            for (size_t i = 0; i < assets.size(); ++i) {
+                videoRandomizer2.shuffleQueue.push_back(static_cast<int>(i));
+            }
+            std::shuffle(videoRandomizer2.shuffleQueue.begin(), videoRandomizer2.shuffleQueue.end(), rng);
+            videoRandomizer2.currentShuffleIndex = 0;
+        }
+        int newIndex = videoRandomizer2.shuffleQueue[videoRandomizer2.currentShuffleIndex];
+        videoRandomizer2.currentShuffleIndex++;
+        return newIndex;
+    } else {
+        std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+        int newIndex;
+        do {
+            newIndex = dist(rng);
+        } while (newIndex == selectedVideoAsset2);
+        return newIndex;
+    }
+}
+
 bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets) {
     selectedVideoAsset = newIndex;
     videoSourcePath = assets[newIndex].metadata.path;
@@ -692,15 +718,69 @@ bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>
             videoTexture.getPrevImageView(),
             videoTexture.getSampler(),
             videoTexture.getSampler(),
-            videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-            videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler()
+            videoTexture2.getImageView(),
+            videoTexture2.getSampler()
         );
 
         videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
         videoRandomizer.elapsedSeconds = 0.0f;
         videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
+        isReloadingVideo = false;
         return true;
     }
+    isReloadingVideo = false;
+    return false;
+}
+
+bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset>& assets) {
+    selectedVideoAsset2 = newIndex;
+    videoSourcePath2 = assets[newIndex].metadata.path;
+
+    videoRenderer2.reset();
+    videoPlayer2.shutdown();
+    int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+    int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+    if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
+        videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+        vkDeviceWaitIdle(vulkanContext.getDevice());
+        videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
+        videoTexture2.cleanup(resourceSystem);
+        videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+                                     vulkanContext.getCommandPool(),
+                                     vulkanContext.getGraphicsQueue(),
+                                     static_cast<uint32_t>(videoPlayer2.width()),
+                                     static_cast<uint32_t>(videoPlayer2.height()));
+
+        cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
+                           static_cast<uint32_t>(videoPlayer2.height()),
+                           static_cast<uint32_t>(videoPlayer2.width()) * 4);
+
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            descriptorSetManager.updateSet(
+                vulkanContext.getDevice(), i,
+                uniformBufferManager.getBuffers()[i],
+                const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+                const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+            );
+        }
+
+        multiPassPipeline.updateDescriptorSets(
+            uniformBufferManager.getBuffers(),
+            videoTexture.getImageView(),
+            videoTexture.getPrevImageView(),
+            videoTexture.getSampler(),
+            videoTexture.getSampler(),
+            videoTexture2.getImageView(),
+            videoTexture2.getSampler()
+        );
+
+        videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+        videoRandomizer2.elapsedSeconds = 0.0f;
+        videoRandomizer2.currentVideoDuration = videoPlayer2.durationSeconds();
+        isReloadingVideo = false;
+        return true;
+    }
+    isReloadingVideo = false;
     return false;
 }
 
@@ -878,15 +958,37 @@ void Application::mainLoop() {
             if (videoRandomizer.elapsedSeconds >= targetInterval) {
                 if (!canChangeVideo()) {
                     videoRandomizer.elapsedSeconds = 0.0f;
-                    continue;
+                } else {
+                    // Trigger random video change
+                    const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+                    if (assets.size() > 1) {
+                        int newIndex = pickNextVideoIndex(assets);
+                        reloadVideoAtIndex(newIndex, assets);
+                    }
+                    isReloadingVideo = false;
                 }
-                // Trigger random video change
-                const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
-                if (assets.size() > 1) {
-                    int newIndex = pickNextVideoIndex(assets);
-                    reloadVideoAtIndex(newIndex, assets);
+            }
+        }
+
+        // Update auto-randomize for Video 2
+        if (videoRandomizer2.autoRandomize && videoSubsystemInitialized && visualControls.enableDualVideo) {
+            videoRandomizer2.elapsedSeconds += deltaTime;
+            float targetInterval = (videoRandomizer2.useVideoDuration && videoRandomizer2.currentVideoDuration > 0.0f)
+                ? videoRandomizer2.currentVideoDuration
+                : videoRandomizer2.intervalSeconds;
+
+            if (videoRandomizer2.elapsedSeconds >= targetInterval) {
+                if (!canChangeVideo()) {
+                    videoRandomizer2.elapsedSeconds = 0.0f;
+                } else {
+                    // Trigger random video change for Video 2
+                    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+                    if (assets2.size() > 1) {
+                        int newIndex = pickNextVideoIndex2(assets2);
+                        reloadVideoAtIndex2(newIndex, assets2);
+                    }
+                    isReloadingVideo = false;
                 }
-                isReloadingVideo = false;
             }
         }
 
@@ -1156,8 +1258,8 @@ void Application::mainLoop() {
             isReloadingVideo = false;
         };
 
-        uiSystem.render(visualControls, videoRandomizer, videoPlayer, videoRegistry,
-                       selectedVideoAsset, selectedVideoAsset2, transitionDuration, allowDimensionChangeRecreation,
+        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoPlayer, videoRegistry,
+                       selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2, allowDimensionChangeRecreation,
                        controlsDirty, rng, diag, callbacks, midiSystem, oscSystem, audioSystem);
         
         // Record command buffer
@@ -1563,7 +1665,7 @@ void Application::cleanup() {
     vkDeviceWaitIdle(vulkanContext.getDevice());
 
     // Save control state
-    ControlState::save(controlStatePath, visualControls, videoRandomizer, allowDimensionChangeRecreation, midiSystem, oscSystem);
+    ControlState::save(controlStatePath, visualControls, videoRandomizer, videoRandomizer2, allowDimensionChangeRecreation, midiSystem, oscSystem);
 
     // Shutdown UI
     uiSystem.shutdown();

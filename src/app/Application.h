@@ -43,6 +43,18 @@ struct VideoRandomizerState {
     int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
+// VideoRandomizerState for Video 2
+struct VideoRandomizerState2 {
+    bool autoRandomize = false;
+    bool useVideoDuration = false;
+    float intervalSeconds = 30.0f;
+    float elapsedSeconds = 0.0f;
+    float currentVideoDuration = 0.0f;
+    bool useShuffleMode = true;
+    std::vector<int> shuffleQueue;
+    int currentShuffleIndex = 0;
+};
+
 class Application {
 public:
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
@@ -101,6 +113,7 @@ private:
     UISystem uiSystem;
     VisualControls visualControls;
     VideoRandomizerState videoRandomizer;
+    VideoRandomizerState2 videoRandomizer2;
     MidiSystem midiSystem;
     OscSystem oscSystem;
     AudioSystem audioSystem;
@@ -108,6 +121,7 @@ private:
     bool controlsDirty = false;
     bool allowDimensionChangeRecreation = false;
     float transitionDuration = 1.0f;
+    float transitionDuration2 = 0.5f;
     std::chrono::steady_clock::time_point lastControlSaveTime;
     std::mt19937 rng{std::random_device{}()};
 
@@ -161,6 +175,9 @@ private:
 
     int pickNextVideoIndex(const std::vector<VideoAsset>& assets);
     bool reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets);
+    
+    int pickNextVideoIndex2(const std::vector<VideoAsset>& assets);
+    bool reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset>& assets);
 
     // Main loop
     void mainLoop();

@@ -27,6 +27,18 @@ struct VideoRandomizerState {
     int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
+// VideoRandomizerState2 definition
+struct VideoRandomizerState2 {
+    bool autoRandomize = false;
+    bool useVideoDuration = false;
+    float intervalSeconds = 30.0f;
+    float elapsedSeconds = 0.0f;
+    float currentVideoDuration = 0.0f;
+    bool useShuffleMode = true;
+    std::vector<int> shuffleQueue;
+    int currentShuffleIndex = 0;
+};
+
 // -----------------------------------------------------------------------
 // Helpers internos (solo visibles en este .cpp)
 // -----------------------------------------------------------------------
@@ -95,6 +107,7 @@ void ControlState::load(
     const std::string&    path,
     VisualControls&       c,
     VideoRandomizerState& r,
+    VideoRandomizerState2& r2,
     bool&                 allowDimensionChangeRecreation,
     MidiSystem&           midiSystem,
     OscSystem&            oscSystem)
@@ -347,6 +360,13 @@ void ControlState::load(
     rLoaded.intervalSeconds  = readFloat(kv, "intervalSeconds",  rLoaded.intervalSeconds);
     rLoaded.useVideoDuration = readBool (kv, "useVideoDuration", rLoaded.useVideoDuration);
     rLoaded.useShuffleMode   = readBool (kv, "useShuffleMode",   rLoaded.useShuffleMode);
+    
+    // Video 2 randomizer
+    VideoRandomizerState2 r2Loaded = r2;
+    r2Loaded.autoRandomize    = readBool (kv, "autoRandomize2",    r2Loaded.autoRandomize);
+    r2Loaded.intervalSeconds  = readFloat(kv, "intervalSeconds2",  r2Loaded.intervalSeconds);
+    r2Loaded.useVideoDuration = readBool (kv, "useVideoDuration2", r2Loaded.useVideoDuration);
+    r2Loaded.useShuffleMode   = readBool (kv, "useShuffleMode2",   r2Loaded.useShuffleMode);
 
     allowDimensionChangeRecreation =
         readBool(kv, "allowDimensionChangeRecreation", allowDimensionChangeRecreation);
@@ -354,6 +374,7 @@ void ControlState::load(
     // Commit: solo si todo fue bien
     c = loaded;
     r = rLoaded;
+    r2 = r2Loaded;
     r.currentVideoDuration = 0.0f;
     r.recentHistory.clear();
     r.elapsedSeconds = 0.0f;
@@ -366,6 +387,7 @@ void ControlState::save(
     const std::string&        path,
     const VisualControls&     c,
     const VideoRandomizerState& r,
+    const VideoRandomizerState2& r2,
     bool                      allowDimensionChangeRecreation,
     const MidiSystem&         midiSystem,
     const OscSystem&          oscSystem)
@@ -579,5 +601,12 @@ void ControlState::save(
     wf("intervalSeconds",              r.intervalSeconds);
     wb("useVideoDuration",             r.useVideoDuration);
     wb("useShuffleMode",               r.useShuffleMode);
+    
+    // Video 2 randomizer
+    wb("autoRandomize2",               r2.autoRandomize);
+    wf("intervalSeconds2",             r2.intervalSeconds);
+    wb("useVideoDuration2",            r2.useVideoDuration);
+    wb("useShuffleMode2",              r2.useShuffleMode);
+    
     wb("allowDimensionChangeRecreation", allowDimensionChangeRecreation);
 }
