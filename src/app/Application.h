@@ -148,6 +148,9 @@ private:
         return true;
     }
 
+    int pickNextVideoIndex(const std::vector<VideoAsset>& assets);
+    bool reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets);
+
     // Main loop
     void mainLoop();
     void updateUniformBuffer(uint32_t frameIndex);
