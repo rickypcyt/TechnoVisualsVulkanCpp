@@ -1,15 +1,9 @@
 #version 450
 
-// PASS F — VJAY BASICS LAYER: Color VJAY
-// Responsibilities: brightness, contrast, saturation, hue shift, gamma, LUT (Filmic, Neon, Noir, Heatmap, Analog CRT), split tone (shadows/highlights)
-// CAPA 2 - VJAY BASICS (medio): Efectos VJAY sobre BASE
-
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
-// Unified UBO - all parameters in single binding
 layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
-    // FrameUBO
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -22,7 +16,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float mid;
     float high;
 
-    // ColorPassUBO
     vec4 primaryColor;
     vec4 secondaryColor;
     float colorBlend;
@@ -39,7 +32,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     vec3 splitToneHighlights;
     float grayscaleAmount;
 
-    // CRTPassUBO
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -53,7 +45,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostVignette;
     int enablePostFishEye;
 
-    // GlitchPassUBO
     float glitchAmount;
     float glitchDatamosh;
     float glitchRGBSplit;
@@ -66,7 +57,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostGlitch;
     int enablePostAberration;
 
-    // TemporalPassUBO
     float feedbackAmount;
     float trailStrength;
     float temporalAccumulation;
@@ -78,12 +68,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableFeedback;
     int enableTemporal;
 
-    // BloomPassUBO
     float bloomIntensity;
     float bloomThreshold;
     int enablePostBloom;
 
-    // DistortionPassUBO
     float uvWarpStrength;
     float rippleStrength;
     float rippleFrequency;
@@ -96,7 +84,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableDistortion;
     int enablePostBend;
 
-    // BlurPassUBO
     float gaussianBlur;
     float directionalBlur;
     float directionalBlurAngle;
@@ -105,38 +92,32 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float temporalBlur;
     int enableBlurMotion;
 
-    // SharpenPassUBO
     float unsharpMask;
     float casAmount;
     float localContrast;
     float sharpenAmount;
     int enableSharpen;
 
-    // VideoPassUBO
     float videoMix;
     float videoAvailable;
     int blendModeVideo;
     float blendVideoMix;
 
-    // BlendingPassUBO
     int blendModeProcedural;
     int blendModeFeedback;
     float blendProceduralMix;
     float blendFeedbackMix;
     int enableBlending;
 
-    // GrainPassUBO
     float grainStrength;
     int enablePostGrain;
 
-    // PostFXPassUBO
     float upscaleEnabled;
     int enablePostColorBalance;
     int enableColorGrading;
     int enableAnalog;
     int enableAudioReactive;
 
-    // ExtraEffectsPassUBO
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
@@ -161,7 +142,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float zoomPulseAmount;
     float rgbShiftAmount;
 
-    // NLEExportPassUBO
     int nleOutputWidth;
     int nleOutputHeight;
     float nleGrayscale;
@@ -172,46 +152,37 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
 
 layout(set = 1, binding = 0) uniform sampler2D inputTex;
 
-const float PI = 3.1415926535;
-
 vec3 rgb2yiq(vec3 c) {
-    mat3 m = mat3(
+    return mat3(
         0.299,     0.587,      0.114,
         0.595716, -0.274453, -0.321263,
         0.211456, -0.522591,  0.311135
-    );
-    return m * c;
+    ) * c;
 }
 
 vec3 yiq2rgb(vec3 c) {
-    mat3 m = mat3(
+    return mat3(
         1.0,  0.9563,  0.6210,
         1.0, -0.2721, -0.6474,
         1.0, -1.1070,  1.7046
-    );
-    return m * c;
+    ) * c;
 }
 
 vec3 hueShift(vec3 color, float degrees) {
-    if (abs(degrees) <= 0.0001) {
-        return color;
-    }
+    if (abs(degrees) <= 0.0001) return color;
     vec3 yiq = rgb2yiq(color);
-    float angle = radians(degrees);
-    float cosA = cos(angle);
-    float sinA = sin(angle);
-    mat3 rot = mat3(
-        1.0, 0.0, 0.0,
-        0.0, cosA, -sinA,
-        0.0, sinA,  cosA
-    );
-    yiq = rot * yiq;
+    float a = radians(degrees);
+    float c = cos(a);
+    float s = sin(a);
+    vec2 iq = yiq.yz;
+    yiq.y = iq.x * c - iq.y * s;
+    yiq.z = iq.x * s + iq.y * c;
     return clamp(yiq2rgb(yiq), 0.0, 2.0);
 }
 
 vec3 applyLUT(vec3 color, int index) {
     if (index == 1) {
-        color = pow(color, vec3(0.85, 0.95, 1.05));
+        color = pow(max(color, vec3(0.0)), vec3(0.85, 0.95, 1.05));
     } else if (index == 2) {
         color = vec3(color.r * 1.2, color.g * 0.6, color.b * 1.4);
     } else if (index == 3) {
@@ -227,72 +198,44 @@ vec3 applyLUT(vec3 color, int index) {
 
 vec3 applySplitTone(vec3 color) {
     float balance = clamp(ubo.splitToneBalance, 0.0, 1.0);
-    if (balance <= 0.0001) {
-        return color;
-    }
+    if (balance <= 0.0001) return color;
     float lum = dot(color, vec3(0.299, 0.587, 0.114));
-    vec3 tone = mix(ubo.splitToneShadows, ubo.splitToneHighlights, smoothstep(0.0, 1.0, lum));
-    return mix(color, tone * color, balance);
+    vec3 tone = mix(ubo.splitToneShadows, ubo.splitToneHighlights, smoothstep(0.15, 0.85, lum));
+    return mix(color, color * tone, balance);
 }
 
 void main() {
     vec3 color = texture(inputTex, uv).rgb;
 
-    // Grayscale (apply first)
     if (ubo.grayscaleAmount > 0.0001) {
         float gray = dot(color, vec3(0.299, 0.587, 0.114));
-        color = mix(color, vec3(gray), ubo.grayscaleAmount);
+        color = mix(color, vec3(gray), clamp(ubo.grayscaleAmount, 0.0, 1.0));
     }
 
-    bool shouldProcessColorGrade = false;
     if (ubo.enableColorGrading == 1) {
-        bool hasBrightness = abs(ubo.gradeBrightness) > 0.0001;
-        bool hasContrast = abs(ubo.gradeContrast - 1.0) > 0.0001;
-        bool hasSaturation = abs(ubo.gradeSaturation - 1.0) > 0.0001;
-        bool hasHue = abs(ubo.gradeHueShift) > 0.0001;
-        bool hasGamma = abs(ubo.gradeGamma - 1.0) > 0.0001;
-        bool hasLUT = ubo.colorLUTIndex > 0;
-        bool hasSplitTone = ubo.splitToneBalance > 0.0001;
+        color += ubo.gradeBrightness;
+        color = (color - 0.5) * ubo.gradeContrast + 0.5;
 
-        shouldProcessColorGrade = hasBrightness || hasContrast || hasSaturation || hasHue || hasGamma || hasLUT || hasSplitTone;
+        float lum = dot(color, vec3(0.299, 0.587, 0.114));
+        color = mix(vec3(lum), color, ubo.gradeSaturation);
 
-        if (shouldProcessColorGrade) {
-            // Brightness
-            color += ubo.gradeBrightness;
+        float audioResponse = clamp(ubo.energy * 0.3, 0.0, 1.0);
+        color = hueShift(color, ubo.gradeHueShift + audioResponse * 45.0);
 
-            // Contrast
-            color = (color - 0.5) * ubo.gradeContrast + 0.5;
-
-            // Saturation
-            float lum = dot(color, vec3(0.299, 0.587, 0.114));
-            color = mix(vec3(lum), color, ubo.gradeSaturation);
-
-            // Hue shift with audio response
-            float audioResponse = clamp(ubo.energy * 0.3, 0.0, 1.0);
-            color = hueShift(color, ubo.gradeHueShift + audioResponse * 45.0);
-
-            // Gamma
-            color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));
-
-            // LUT
-            color = applyLUT(color, ubo.colorLUTIndex);
-
-            // Split tone
-            color = applySplitTone(color);
-
-            color = clamp(color, 0.0, 2.0);
-        }
+        color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));
+        color = applyLUT(color, ubo.colorLUTIndex);
+        color = applySplitTone(color);
     }
 
-    // Threshold effect (black & white threshold) - independent effect
     if (ubo.enableThreshold == 1 && ubo.thresholdLevel > 0.0001) {
         float lum = dot(color, vec3(0.299, 0.587, 0.114));
-        float threshold = clamp(ubo.thresholdLevel, 0.0, 1.0);
-        color = mix(vec3(lum), vec3(step(threshold, lum)), 0.8);
+        float t = clamp(ubo.thresholdLevel, 0.0, 1.0);
+        color = mix(vec3(lum), vec3(step(t, lum)), 0.8);
     }
 
-    // RGB Mix (color balance) - applied after threshold
-    color *= ubo.colorBalance;
+    if (ubo.enablePostColorBalance == 1) {
+        color *= ubo.colorBalance;
+    }
 
-    outColor = vec4(color, 1.0);
+    outColor = vec4(clamp(color, 0.0, 2.0), 1.0);
 }

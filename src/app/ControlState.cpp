@@ -298,6 +298,45 @@ void ControlState::load(
     loaded.slowMotionFactor        = readFloat(kv, "slowMotionFactor",        loaded.slowMotionFactor);
     loaded.frameAccumulation       = readFloat(kv, "frameAccumulation",       loaded.frameAccumulation);
 
+    loaded.enablePixelate           = readBool (kv, "enablePixelate",           loaded.enablePixelate);
+    loaded.enableStrobe             = readBool (kv, "enableStrobe",             loaded.enableStrobe);
+    loaded.enableThreshold          = readBool (kv, "enableThreshold",          loaded.enableThreshold);
+    loaded.enableSlowZoom           = readBool (kv, "enableSlowZoom",           loaded.enableSlowZoom);
+    loaded.enableMirror             = readBool (kv, "enableMirror",             loaded.enableMirror);
+    loaded.enableInvert             = readBool (kv, "enableInvert",             loaded.enableInvert);
+    loaded.enablePosterize          = readBool (kv, "enablePosterize",          loaded.enablePosterize);
+    loaded.enableInfrared           = readBool (kv, "enableInfrared",           loaded.enableInfrared);
+    loaded.enableZoomPulse          = readBool (kv, "enableZoomPulse",          loaded.enableZoomPulse);
+    loaded.enableRGBShift           = readBool (kv, "enableRGBShift",           loaded.enableRGBShift);
+    loaded.enableFXAA               = readBool (kv, "enableFXAA",               loaded.enableFXAA);
+    loaded.enableGrid               = readBool (kv, "enableGrid",               loaded.enableGrid);
+    loaded.enableEdgeDetect         = readBool (kv, "enableEdgeDetect",         loaded.enableEdgeDetect);
+    loaded.enableCameraMovement     = readBool (kv, "enableCameraMovement",     loaded.enableCameraMovement);
+    loaded.gridMirrorCells          = readBool (kv, "gridMirrorCells",          loaded.gridMirrorCells);
+    loaded.pixelateAmount           = readFloat(kv, "pixelateAmount",           loaded.pixelateAmount);
+    loaded.strobeSpeed              = readFloat(kv, "strobeSpeed",              loaded.strobeSpeed);
+    loaded.thresholdLevel           = readFloat(kv, "thresholdLevel",           loaded.thresholdLevel);
+    loaded.slowZoomAmount           = readFloat(kv, "slowZoomAmount",           loaded.slowZoomAmount);
+    loaded.mirrorAmount             = readFloat(kv, "mirrorAmount",             loaded.mirrorAmount);
+    loaded.posterizeLevels          = readFloat(kv, "posterizeLevels",          loaded.posterizeLevels);
+    loaded.zoomPulseAmount          = readFloat(kv, "zoomPulseAmount",          loaded.zoomPulseAmount);
+    loaded.rgbShiftAmount           = readFloat(kv, "rgbShiftAmount",           loaded.rgbShiftAmount);
+    loaded.fxaaQualitySubpix        = readFloat(kv, "fxaaQualitySubpix",        loaded.fxaaQualitySubpix);
+    loaded.fxaaQualityEdgeThreshold = readFloat(kv, "fxaaQualityEdgeThreshold", loaded.fxaaQualityEdgeThreshold);
+    loaded.fxaaQualityEdgeThresholdMin = readFloat(kv, "fxaaQualityEdgeThresholdMin", loaded.fxaaQualityEdgeThresholdMin);
+    loaded.gridMode                 = readInt  (kv, "gridMode",                 loaded.gridMode);
+    loaded.gridCount                = readInt  (kv, "gridCount",                loaded.gridCount);
+    loaded.gridRows                 = readInt  (kv, "gridRows",                 loaded.gridRows);
+    loaded.gridColumns              = readInt  (kv, "gridColumns",              loaded.gridColumns);
+    loaded.edgeStrength             = readFloat(kv, "edgeStrength",             loaded.edgeStrength);
+    loaded.edgeThreshold            = readFloat(kv, "edgeThreshold",            loaded.edgeThreshold);
+    loaded.edgeBlend                = readFloat(kv, "edgeBlend",                loaded.edgeBlend);
+    loaded.edgeColor                = readVec3 (kv, "edgeColor",                loaded.edgeColor);
+    loaded.cameraZoom               = readFloat(kv, "cameraZoom",               loaded.cameraZoom);
+    loaded.cameraPanX               = readFloat(kv, "cameraPanX",               loaded.cameraPanX);
+    loaded.cameraPanY               = readFloat(kv, "cameraPanY",               loaded.cameraPanY);
+    loaded.cameraRotation           = readFloat(kv, "cameraRotation",           loaded.cameraRotation);
+
     // Randomizer
     VideoRandomizerState rLoaded = r;
     rLoaded.autoRandomize    = readBool (kv, "autoRandomize",    rLoaded.autoRandomize);
@@ -486,6 +525,46 @@ void ControlState::save(
     wf("temporalBlendStrength",   c.temporalBlendStrength);
     wf("slowMotionFactor",        c.slowMotionFactor);
     wf("frameAccumulation",       c.frameAccumulation);
+
+    // VJAY EXTRA
+    wb("enablePixelate",           c.enablePixelate);
+    wb("enableStrobe",             c.enableStrobe);
+    wb("enableThreshold",          c.enableThreshold);
+    wb("enableSlowZoom",           c.enableSlowZoom);
+    wb("enableMirror",             c.enableMirror);
+    wb("enableInvert",             c.enableInvert);
+    wb("enablePosterize",          c.enablePosterize);
+    wb("enableInfrared",           c.enableInfrared);
+    wb("enableZoomPulse",          c.enableZoomPulse);
+    wb("enableRGBShift",           c.enableRGBShift);
+    wb("enableFXAA",               c.enableFXAA);
+    wb("enableGrid",               c.enableGrid);
+    wb("enableEdgeDetect",         c.enableEdgeDetect);
+    wb("enableCameraMovement",     c.enableCameraMovement);
+    wb("gridMirrorCells",          c.gridMirrorCells);
+    wf("pixelateAmount",           c.pixelateAmount);
+    wf("strobeSpeed",              c.strobeSpeed);
+    wf("thresholdLevel",           c.thresholdLevel);
+    wf("slowZoomAmount",           c.slowZoomAmount);
+    wf("mirrorAmount",             c.mirrorAmount);
+    wf("posterizeLevels",          c.posterizeLevels);
+    wf("zoomPulseAmount",          c.zoomPulseAmount);
+    wf("rgbShiftAmount",           c.rgbShiftAmount);
+    wf("fxaaQualitySubpix",        c.fxaaQualitySubpix);
+    wf("fxaaQualityEdgeThreshold", c.fxaaQualityEdgeThreshold);
+    wf("fxaaQualityEdgeThresholdMin", c.fxaaQualityEdgeThresholdMin);
+    wi("gridMode",                 c.gridMode);
+    wi("gridCount",                c.gridCount);
+    wi("gridRows",                 c.gridRows);
+    wi("gridColumns",              c.gridColumns);
+    wf("edgeStrength",             c.edgeStrength);
+    wf("edgeThreshold",            c.edgeThreshold);
+    wf("edgeBlend",                c.edgeBlend);
+    wv3("edgeColor",               c.edgeColor);
+    wf("cameraZoom",               c.cameraZoom);
+    wf("cameraPanX",               c.cameraPanX);
+    wf("cameraPanY",               c.cameraPanY);
+    wf("cameraRotation",           c.cameraRotation);
 
     // Randomizer
     wb("autoRandomize",                r.autoRandomize);

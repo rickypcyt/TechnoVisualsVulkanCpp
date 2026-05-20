@@ -1,15 +1,9 @@
 #version 450
 
-// PASS E — VJAY BASICS LAYER: Temporal VJAY
-// Responsibilities: feedback, trails, temporal accumulation, feedback decay, recursive blend, frame accumulation, slow motion, temporal interpolation
-// CAPA 2 - VJAY BASICS (medio): Efectos VJAY sobre BASE
-
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
-// Unified UBO - all parameters in single binding
 layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
-    // FrameUBO
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -22,7 +16,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float mid;
     float high;
 
-    // ColorPassUBO
     vec4 primaryColor;
     vec4 secondaryColor;
     float colorBlend;
@@ -39,7 +32,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     vec3 splitToneHighlights;
     float grayscaleAmount;
 
-    // CRTPassUBO
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -53,7 +45,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostVignette;
     int enablePostFishEye;
 
-    // GlitchPassUBO
     float glitchAmount;
     float glitchDatamosh;
     float glitchRGBSplit;
@@ -66,7 +57,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostGlitch;
     int enablePostAberration;
 
-    // TemporalPassUBO
     float feedbackAmount;
     float trailStrength;
     float temporalAccumulation;
@@ -78,12 +68,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableFeedback;
     int enableTemporal;
 
-    // BloomPassUBO
     float bloomIntensity;
     float bloomThreshold;
     int enablePostBloom;
 
-    // DistortionPassUBO
     float uvWarpStrength;
     float rippleStrength;
     float rippleFrequency;
@@ -96,7 +84,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableDistortion;
     int enablePostBend;
 
-    // BlurPassUBO
     float gaussianBlur;
     float directionalBlur;
     float directionalBlurAngle;
@@ -105,38 +92,32 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float temporalBlur;
     int enableBlurMotion;
 
-    // SharpenPassUBO
     float unsharpMask;
     float casAmount;
     float localContrast;
     float sharpenAmount;
     int enableSharpen;
 
-    // VideoPassUBO
     float videoMix;
     float videoAvailable;
     int blendModeVideo;
     float blendVideoMix;
 
-    // BlendingPassUBO
     int blendModeProcedural;
     int blendModeFeedback;
     float blendProceduralMix;
     float blendFeedbackMix;
     int enableBlending;
 
-    // GrainPassUBO
     float grainStrength;
     int enablePostGrain;
 
-    // PostFXPassUBO
     float upscaleEnabled;
     int enablePostColorBalance;
     int enableColorGrading;
     int enableAnalog;
     int enableAudioReactive;
 
-    // ExtraEffectsPassUBO
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
@@ -161,7 +142,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float zoomPulseAmount;
     float rgbShiftAmount;
 
-    // NLEExportPassUBO
     int nleOutputWidth;
     int nleOutputHeight;
     float nleGrayscale;
@@ -172,128 +152,106 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
 
 layout(set = 1, binding = 0) uniform sampler2D inputTex;
 
-const float PI = 3.1415926535;
-
 float hash21(vec2 p) {
     p = fract(p * vec2(443.897, 441.423));
     p += dot(p, p.yx + 19.19);
     return fract(p.x * p.y);
 }
 
-vec3 sortComponents(vec3 v) {
-    vec3 s = v;
-    if (s.x > s.y) {
-        s.xy = s.yx;
-    }
-    if (s.y > s.z) {
-        s.yz = s.zy;
-    }
-    if (s.x > s.y) {
-        s.xy = s.yx;
-    }
-    return s;
+vec3 rgbSortApprox(vec3 v) {
+    if (v.x > v.y) v.xy = v.yx;
+    if (v.y > v.z) v.yz = v.zy;
+    if (v.x > v.y) v.xy = v.yx;
+    return v;
+}
+
+vec3 applyAberration(vec2 uv, vec3 color, float amt) {
+    vec2 c = uv * 2.0 - 1.0;
+    float r2 = dot(c, c);
+    vec2 off = c * r2 * amt * 0.01;
+    float rr = texture(inputTex, clamp(uv + off, 0.0, 1.0)).r;
+    float gg = texture(inputTex, clamp(uv, 0.0, 1.0)).g;
+    float bb = texture(inputTex, clamp(uv - off, 0.0, 1.0)).b;
+    return vec3(rr, gg, bb);
 }
 
 void main() {
     float timeScale = max(ubo.slowMotionFactor, 0.1);
-    float effectTime = ubo.time / timeScale;
+    float t = ubo.time / timeScale;
+    vec2 c = uv * 2.0 - 1.0;
 
-    vec2 centered = uv * 2.0 - 1.0;
-    vec2 uvOut = uv;
-    vec3 color = texture(inputTex, uv).rgb;
-
-    // Check if any degradation effect is active
-    bool hasGlitch = ubo.glitchDatamosh > 0.0001 ||
-                     ubo.glitchJitter > 0.0001 ||
-                     ubo.glitchRGBSplit > 0.0001 ||
-                     ubo.glitchScanlineBreak > 0.0001 ||
-                     ubo.glitchTearing > 0.0001 ||
-                     ubo.glitchPixelSort > 0.0001 ||
-                     ubo.glitchBufferCorruption > 0.0001 ||
-                     ubo.grainStrength > 0.0001;
-
-    bool hasAberration = ubo.aberrationAmount > 0.0001;
-
-    if (!hasGlitch && !hasAberration) {
-        outColor = vec4(color, 1.0);
+    vec3 base = texture(inputTex, uv).rgb;
+    if (ubo.enablePostGlitch == 0 && ubo.enablePostAberration == 0) {
+        outColor = vec4(base, 1.0);
         return;
     }
 
-    // Only apply glitch effects if enabled
-    if (ubo.enablePostGlitch == 1) {
-        // Glitch datamosh
-        if (ubo.glitchDatamosh > 0.0) {
-            uvOut.x += sin(centered.y * 80.0 + effectTime * 10.0) * ubo.glitchDatamosh * 0.02;
+    float glitchWeight = clamp(
+        ubo.glitchAmount +
+        ubo.glitchDatamosh * 0.5 +
+        ubo.glitchJitter * 0.5 +
+        ubo.glitchRGBSplit * 0.4 +
+        ubo.glitchScanlineBreak * 0.3 +
+        ubo.glitchTearing * 0.4 +
+        ubo.glitchPixelSort * 0.5 +
+        ubo.glitchBufferCorruption * 0.4 +
+        ubo.grainStrength * 0.15,
+        0.0, 1.0
+    );
+
+    vec3 color = base;
+
+    if (ubo.enablePostGlitch == 1 && glitchWeight > 0.0001) {
+        vec2 p = uv;
+
+        if (ubo.glitchDatamosh > 0.0001) {
+            p.x += sin(c.y * 80.0 + t * 10.0) * ubo.glitchDatamosh * 0.02;
         }
 
-        // Glitch jitter
-        if (ubo.glitchJitter > 0.0) {
-            uvOut += (hash21(uv * 400.0 + effectTime) - 0.5) * ubo.glitchJitter * 0.02;
+        if (ubo.glitchJitter > 0.0001) {
+            p += (hash21(uv * 400.0 + t) - 0.5) * ubo.glitchJitter * 0.02;
         }
 
-        uvOut = clamp(uvOut, 0.0, 1.0);
+        vec3 g = texture(inputTex, clamp(p, 0.0, 1.0)).rgb;
 
-        // Sample with glitched UVs
-        vec3 glitched = texture(inputTex, uvOut).rgb;
-
-        // RGB split (glitch version) - smooth progressive
-        if (ubo.glitchRGBSplit > 0.0) {
-            // Smooth oscillation for progressive RGB shift
-            float smoothOscillation = sin(effectTime * 2.0) * 0.5 + 0.5; // 0 to 1 smooth
-            float smoothAmount = ubo.glitchRGBSplit * smoothOscillation;
-
-            vec2 texel = smoothAmount * 0.008 / ubo.resolution;
-            glitched.r = texture(inputTex, clamp(uvOut + texel, 0.0, 1.0)).r;
-            glitched.b = texture(inputTex, clamp(uvOut - texel, 0.0, 1.0)).b;
+        if (ubo.glitchRGBSplit > 0.0001) {
+            float osc = sin(t * 2.0) * 0.5 + 0.5;
+            vec2 off = (ubo.glitchRGBSplit * osc * 0.008) * c / max(ubo.resolution, vec2(1.0));
+            g.r = texture(inputTex, clamp(p + off, 0.0, 1.0)).r;
+            g.b = texture(inputTex, clamp(p - off, 0.0, 1.0)).b;
         }
 
-        // Scanline break
-        if (ubo.glitchScanlineBreak > 0.0) {
-            float line = step(0.95, fract(uv.y * 200.0 + effectTime * 5.0));
-            glitched *= 1.0 - line * ubo.glitchScanlineBreak;
+        if (ubo.glitchScanlineBreak > 0.0001) {
+            float line = step(0.95, fract(uv.y * 200.0 + t * 5.0));
+            g *= 1.0 - line * ubo.glitchScanlineBreak;
         }
 
-        // Tearing
-        if (ubo.glitchTearing > 0.0) {
-            float tear = step(0.7, hash21(vec2(uv.y * 10.0, effectTime)));
-            glitched = mix(glitched, color, 1.0 - tear * ubo.glitchTearing);
+        if (ubo.glitchTearing > 0.0001) {
+            float tear = step(0.7, hash21(vec2(uv.y * 10.0, t)));
+            g = mix(g, base, 1.0 - tear * ubo.glitchTearing);
         }
 
-        // Pixel sort
-        if (ubo.glitchPixelSort > 0.0) {
-            glitched = mix(glitched, sortComponents(glitched), ubo.glitchPixelSort * 0.5);
+        if (ubo.glitchPixelSort > 0.0001) {
+            g = mix(g, rgbSortApprox(g), ubo.glitchPixelSort * 0.5);
         }
 
-        // Buffer corruption
-        if (ubo.glitchBufferCorruption > 0.0) {
-            float rnd = hash21(uv * 600.0 + effectTime * 20.0);
-            glitched = mix(glitched, vec3(rnd), ubo.glitchBufferCorruption * 0.3);
+        if (ubo.glitchBufferCorruption > 0.0001) {
+            float rnd = hash21(uv * 600.0 + t * 20.0);
+            g = mix(g, vec3(rnd), ubo.glitchBufferCorruption * 0.3);
         }
 
-        // Analog noise
         if (ubo.grainStrength > 0.0001) {
-            float n = hash21(uv * 800.0 + effectTime * 60.0) - 0.5;
-            glitched += n * ubo.grainStrength * 0.15;
+            float n = hash21(uv * 800.0 + t * 60.0) - 0.5;
+            g += n * ubo.grainStrength * 0.15;
         }
 
-        // Apply audio modulation to glitch intensity
-        float intensity = clamp(ubo.glitchAmount + ubo.energy * 0.3, 0.0, 1.0);
-        color = mix(color, glitched, intensity);
-    } else {
-        // If glitch is disabled, just sample normally
-        color = texture(inputTex, uv).rgb;
+        color = mix(base, g, glitchWeight);
     }
 
-    // Chromatic aberration (main) - smooth progressive
     if (ubo.enablePostAberration == 1 && ubo.aberrationAmount > 0.0001) {
-        // Smooth oscillation for progressive RGB shift
-        float smoothOscillation = sin(effectTime * 0.5) * 0.5 + 0.5; // 0 to 1 smooth
-        float smoothAmount = ubo.aberrationAmount * smoothOscillation;
-
-        vec2 texel = smoothAmount * centered * 0.01;
-        color.r = texture(inputTex, clamp(uv + texel, 0.0, 1.0)).r;
-        color.b = texture(inputTex, clamp(uv - texel, 0.0, 1.0)).b;
+        float osc = sin(t * 0.5) * 0.5 + 0.5;
+        color = applyAberration(uv, color, ubo.aberrationAmount * osc);
     }
-    
-    outColor = vec4(color, 1.0);
+
+    outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }

@@ -4,7 +4,6 @@ layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 fragColor;
 
 layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
-    // FrameUBO
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -17,7 +16,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float mid;
     float high;
 
-    // ColorPassUBO
     vec4 primaryColor;
     vec4 secondaryColor;
     float colorBlend;
@@ -34,7 +32,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     vec3 splitToneHighlights;
     float grayscaleAmount;
 
-    // CRTPassUBO
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -48,7 +45,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostVignette;
     int enablePostFishEye;
 
-    // GlitchPassUBO
     float glitchAmount;
     float glitchDatamosh;
     float glitchRGBSplit;
@@ -61,7 +57,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostGlitch;
     int enablePostAberration;
 
-    // TemporalPassUBO
     float feedbackAmount;
     float trailStrength;
     float temporalAccumulation;
@@ -73,12 +68,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableFeedback;
     int enableTemporal;
 
-    // BloomPassUBO
     float bloomIntensity;
     float bloomThreshold;
     int enablePostBloom;
 
-    // DistortionPassUBO
     float uvWarpStrength;
     float rippleStrength;
     float rippleFrequency;
@@ -91,7 +84,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableDistortion;
     int enablePostBend;
 
-    // BlurPassUBO
     float gaussianBlur;
     float directionalBlur;
     float directionalBlurAngle;
@@ -100,38 +92,32 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float temporalBlur;
     int enableBlurMotion;
 
-    // SharpenPassUBO
     float unsharpMask;
     float casAmount;
     float localContrast;
     float sharpenAmount;
     int enableSharpen;
 
-    // VideoPassUBO
     float videoMix;
     float videoAvailable;
     int blendModeVideo;
     float blendVideoMix;
 
-    // BlendingPassUBO
     int blendModeProcedural;
     int blendModeFeedback;
     float blendProceduralMix;
     float blendFeedbackMix;
     int enableBlending;
 
-    // GrainPassUBO
     float grainStrength;
     int enablePostGrain;
 
-    // PostFXPassUBO
     float upscaleEnabled;
     int enablePostColorBalance;
     int enableColorGrading;
     int enableAnalog;
     int enableAudioReactive;
 
-    // ExtraEffectsPassUBO
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
@@ -156,7 +142,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float zoomPulseAmount;
     float rgbShiftAmount;
 
-    // NLEExportPassUBO
     int nleOutputWidth;
     int nleOutputHeight;
     float nleGrayscale;
@@ -164,13 +149,11 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float nleContrast;
     float nleSaturation;
 
-    // FXAAPassUBO
     int enableFXAA;
     float fxaaQualitySubpix;
     float fxaaQualityEdgeThreshold;
     float fxaaQualityEdgeThresholdMin;
 
-    // GridPassUBO: Grid / Mirroring
     int enableGrid;
     int gridMode;
     int gridCount;
@@ -181,43 +164,54 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
 
 layout(set = 0, binding = 1) uniform sampler2D inputTexture;
 
+vec2 mirrorCell(vec2 p, vec2 gridSize, int mirrorCells) {
+    vec2 cell = floor(p * gridSize);
+    vec2 f = fract(p * gridSize);
+
+    if (mirrorCells == 1) {
+        if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
+        if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
+    }
+
+    return f;
+}
+
 void main() {
     vec2 sampleUV = uv;
 
-    // Apply grid/mirroring if enabled
     if (ubo.enableGrid == 1) {
-        if (ubo.gridMode == 0) {
-            // Vertical grid: split horizontally (side by side)
-            if (ubo.gridCount > 1) {
-                float cellX = uv.x * float(ubo.gridCount);
-                sampleUV.x = fract(cellX);
-                if (ubo.gridMirrorCells == 1 && (int(cellX) % 2) != 0) {
-                    sampleUV.x = 1.0 - sampleUV.x;
-                }
+        if (ubo.gridMode == 0 && ubo.gridCount > 1) {
+            vec2 p = uv;
+            float x = p.x * float(ubo.gridCount);
+            p.x = fract(x);
+            if (ubo.gridMirrorCells == 1 && int(floor(x)) % 2 != 0) {
+                p.x = 1.0 - p.x;
             }
-        } else if (ubo.gridMode == 1) {
-            // Horizontal grid: split vertically (stacked)
-            if (ubo.gridCount > 1) {
-                float cellY = uv.y * float(ubo.gridCount);
-                sampleUV.y = fract(cellY);
-                if (ubo.gridMirrorCells == 1 && (int(cellY) % 2) != 0) {
-                    sampleUV.y = 1.0 - sampleUV.y;
-                }
+            sampleUV = p;
+        }
+        else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
+            vec2 p = uv;
+            float y = p.y * float(ubo.gridCount);
+            p.y = fract(y);
+            if (ubo.gridMirrorCells == 1 && int(floor(y)) % 2 != 0) {
+                p.y = 1.0 - p.y;
             }
-        } else if (ubo.gridMode == 2) {
-            // Matrix grid: 2D grid with rows and columns
-            if (ubo.gridRows > 0 && ubo.gridColumns > 0) {
-                float cellX = uv.x * float(ubo.gridColumns);
-                float cellY = uv.y * float(ubo.gridRows);
-                sampleUV.x = fract(cellX);
-                sampleUV.y = fract(cellY);
-                if (ubo.gridMirrorCells == 1) {
-                    if ((int(cellX) % 2) != 0) sampleUV.x = 1.0 - sampleUV.x;
-                    if ((int(cellY) % 2) != 0) sampleUV.y = 1.0 - sampleUV.y;
-                }
+            sampleUV = p;
+        }
+        else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
+            vec2 gridSize = vec2(float(ubo.gridColumns), float(ubo.gridRows));
+            vec2 scaled = uv * gridSize;
+            vec2 cell = floor(scaled);
+            vec2 f = fract(scaled);
+
+            if (ubo.gridMirrorCells == 1) {
+                if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
+                if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
             }
+
+            sampleUV = f;
         }
     }
 
-    fragColor = texture(inputTexture, sampleUV);
+    fragColor = texture(inputTexture, clamp(sampleUV, 0.0, 1.0));
 }

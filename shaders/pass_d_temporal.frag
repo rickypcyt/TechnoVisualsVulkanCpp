@@ -1,15 +1,9 @@
 #version 450
 
-// PASS D — VJAY BASICS LAYER: Spatial VJAY (sin UV warp)
-// Responsibilities: ripple, swirl, displacement, kaleidoscope, tunnel (depth/curvature)
-// CAPA 2 - VJAY BASICS (medio): Efectos VJAY sobre BASE
-
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
-// Unified UBO - all parameters in single binding
 layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
-    // FrameUBO
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -22,7 +16,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float mid;
     float high;
 
-    // ColorPassUBO
     vec4 primaryColor;
     vec4 secondaryColor;
     float colorBlend;
@@ -39,7 +32,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     vec3 splitToneHighlights;
     float grayscaleAmount;
 
-    // CRTPassUBO
     float crtCurvature;
     float crtHorizontalCurvature;
     float crtScanlineIntensity;
@@ -53,7 +45,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostVignette;
     int enablePostFishEye;
 
-    // GlitchPassUBO
     float glitchAmount;
     float glitchDatamosh;
     float glitchRGBSplit;
@@ -66,7 +57,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enablePostGlitch;
     int enablePostAberration;
 
-    // TemporalPassUBO
     float feedbackAmount;
     float trailStrength;
     float temporalAccumulation;
@@ -78,12 +68,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableFeedback;
     int enableTemporal;
 
-    // BloomPassUBO
     float bloomIntensity;
     float bloomThreshold;
     int enablePostBloom;
 
-    // DistortionPassUBO
     float uvWarpStrength;
     float rippleStrength;
     float rippleFrequency;
@@ -96,7 +84,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableDistortion;
     int enablePostBend;
 
-    // BlurPassUBO
     float gaussianBlur;
     float directionalBlur;
     float directionalBlurAngle;
@@ -105,38 +92,32 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float temporalBlur;
     int enableBlurMotion;
 
-    // SharpenPassUBO
     float unsharpMask;
     float casAmount;
     float localContrast;
     float sharpenAmount;
     int enableSharpen;
 
-    // VideoPassUBO
     float videoMix;
     float videoAvailable;
     int blendModeVideo;
     float blendVideoMix;
 
-    // BlendingPassUBO
     int blendModeProcedural;
     int blendModeFeedback;
     float blendProceduralMix;
     float blendFeedbackMix;
     int enableBlending;
 
-    // GrainPassUBO
     float grainStrength;
     int enablePostGrain;
 
-    // PostFXPassUBO
     float upscaleEnabled;
     int enablePostColorBalance;
     int enableColorGrading;
     int enableAnalog;
     int enableAudioReactive;
 
-    // ExtraEffectsPassUBO
     float pixelateAmount;
     float strobeSpeed;
     float thresholdLevel;
@@ -161,7 +142,6 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float zoomPulseAmount;
     float rgbShiftAmount;
 
-    // NLEExportPassUBO
     int nleOutputWidth;
     int nleOutputHeight;
     float nleGrayscale;
@@ -173,62 +153,65 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
 layout(set = 1, binding = 0) uniform sampler2D inputTex;
 layout(set = 1, binding = 1) uniform sampler2D prevFrameTex;
 
+float hash21(vec2 p) {
+    p = fract(p * vec2(443.897, 441.423));
+    p += dot(p, p.yx + 19.19);
+    return fract(p.x * p.y);
+}
+
+float edgeFade(vec2 p) {
+    vec2 e = smoothstep(vec2(0.02), vec2(0.10), p) * smoothstep(vec2(0.02), vec2(0.10), 1.0 - p);
+    return e.x * e.y;
+}
+
 void main() {
     vec2 centered = uv * 2.0 - 1.0;
-    vec3 color = texture(inputTex, uv).rgb;
+    vec3 base = texture(inputTex, uv).rgb;
 
-    // Only apply temporal effects if enabled
     if (ubo.enableFeedback == 0 && ubo.enableTemporal == 0) {
-        outColor = vec4(color, 1.0);
+        outColor = vec4(base, 1.0);
         return;
     }
 
-    float amount = clamp(ubo.feedbackAmount * (1.0 + ubo.energy * 0.5), 0.0, 1.0);
+    vec3 accum = base;
+    vec2 texel = 1.0 / max(ubo.resolution, vec2(1.0));
 
-    if (amount <= 0.0001 && ubo.trailStrength <= 0.0001 && ubo.temporalAccumulation <= 0.0001) {
-        outColor = vec4(color, 1.0);
-        return;
-    }
-
-    vec3 accum = color;
+    float feedbackMix = clamp(ubo.feedbackAmount, 0.0, 1.0);
+    float trailMix = clamp(ubo.trailStrength, 0.0, 1.0);
+    float temporalMix = clamp(ubo.temporalAccumulation, 0.0, 1.0);
+    float recursiveMix = clamp(ubo.recursiveBlend, 0.0, 1.0);
+    float frameMix = clamp(ubo.frameAccumulation, 0.0, 1.0);
     float decay = clamp(1.0 - ubo.feedbackDecay, 0.0, 1.0);
 
-    // Spatial feedback with trails
-    if (ubo.enableFeedback == 1 && (ubo.trailStrength > 0.0001 || ubo.temporalAccumulation > 0.0001)) {
+    float edge = edgeFade(uv);
+    float audio = clamp(ubo.energy, 0.0, 1.0);
+
+    if (ubo.enableFeedback == 1 && (trailMix > 0.0001 || feedbackMix > 0.0001)) {
         for (int i = 1; i <= 3; ++i) {
             float t = float(i) / 3.0;
+            vec2 off = vec2(0.0);
 
-            vec2 offset = vec2(0.0);
-            if (ubo.trailStrength > 0.0001) {
-                offset += centered * t * ubo.trailStrength * 0.15;
-            }
-            if (ubo.temporalAccumulation > 0.0001) {
-                offset += vec2(0.0, t * 0.03 * ubo.temporalAccumulation);
-            }
+            off += centered * t * trailMix * 0.10;
+            off += vec2(0.0, t * 0.02 * temporalMix);
 
-            if (length(offset) < 0.0001) {
-                continue;
-            }
+            vec2 sampleUV = clamp(uv - off * texel * 20.0, 0.0, 1.0);
+            vec3 s = texture(inputTex, sampleUV).rgb;
 
-            vec2 offsetUV = clamp(uv - offset, 0.0, 1.0);
-            vec3 sampleColor = texture(inputTex, offsetUV).rgb;
-
-            float mixStrength = amount * (1.0 - t * 0.5) * decay;
-            accum = mix(accum, sampleColor, mixStrength);
+            float w = feedbackMix * decay * (1.0 - t * 0.35) * edge;
+            accum = mix(accum, s, w);
         }
     }
 
-    // Recursive blend
-    if (ubo.enableFeedback == 1 && ubo.recursiveBlend > 0.0001) {
-        vec3 prevColor = texture(prevFrameTex, uv).rgb;
-        accum = mix(accum, prevColor, ubo.recursiveBlend * 0.3);
+    if (ubo.enableFeedback == 1 && recursiveMix > 0.0001) {
+        vec3 prev = texture(prevFrameTex, uv).rgb;
+        accum = mix(accum, prev, recursiveMix * decay * edge);
     }
 
-    // Frame accumulation (for long-exposure effects)
-    if (ubo.enableTemporal == 1 && ubo.frameAccumulation > 0.0001) {
-        vec3 prevColor = texture(prevFrameTex, uv).rgb;
-        accum = mix(accum, prevColor, ubo.frameAccumulation * 0.5);
+    if (ubo.enableTemporal == 1 && frameMix > 0.0001) {
+        vec3 prev = texture(prevFrameTex, uv).rgb;
+        float temporalWeight = frameMix * (0.5 + audio * 0.25);
+        accum = mix(accum, prev, temporalWeight * edge);
     }
 
-    outColor = vec4(accum, 1.0);
+    outColor = vec4(clamp(accum, 0.0, 1.0), 1.0);
 }

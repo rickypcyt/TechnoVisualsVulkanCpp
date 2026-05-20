@@ -759,6 +759,13 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
 
     auto rr = [&](float lo, float hi) { return std::uniform_real_distribution<float>(lo,hi)(rng); };
 
+    auto setAllExtraToggles = [&](bool v) {
+        c.enablePixelate = v; c.enableStrobe = v; c.enableThreshold = v; c.enableSlowZoom = v;
+        c.enableMirror = v; c.enableInvert = v; c.enablePosterize = v; c.enableInfrared = v;
+        c.enableZoomPulse = v; c.enableRGBShift = v; c.enableFXAA = v; c.enableGrid = v;
+        c.enableEdgeDetect = v; c.enableCameraMovement = v;
+    };
+
     if (ImGui::Button("Randomize VJAY extra")) {
         c.pixelateAmount  = rr(0,1); c.strobeSpeed    = rr(0,10);
         c.thresholdLevel  = rr(0,1); c.slowZoomAmount = rr(0,1);
@@ -774,6 +781,10 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
         c.fxaaQualityEdgeThresholdMin = 0.0625f;
         changed = true; controlsDirty = true;
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Turn all ON"))  { setAllExtraToggles(true);  changed = true; controlsDirty = true; }
+    ImGui::SameLine();
+    if (ImGui::Button("Turn all OFF")) { setAllExtraToggles(false); changed = true; controlsDirty = true; }
 
 #define EXTRA_SECTION(num, label, toggleField, slider) \
     ImGui::Spacing(); ImGui::Text(num ". " label); ImGui::SameLine(); \
@@ -2522,6 +2533,13 @@ void UISystem::drawVJayExtraContent(
     bool changed = false;
     auto rr = [&](float lo, float hi) { return std::uniform_real_distribution<float>(lo,hi)(rng); };
 
+    auto setAllExtraToggles = [&](bool v) {
+        controls.enablePixelate = v; controls.enableStrobe = v; controls.enableThreshold = v; controls.enableSlowZoom = v;
+        controls.enableMirror = v; controls.enableInvert = v; controls.enablePosterize = v; controls.enableInfrared = v;
+        controls.enableZoomPulse = v; controls.enableRGBShift = v; controls.enableFXAA = v; controls.enableGrid = v;
+        controls.enableEdgeDetect = v; controls.enableCameraMovement = v;
+    };
+
     if (ImGui::Button("Randomize VJAY extra")) {
         controls.pixelateAmount  = rr(0,1); controls.strobeSpeed    = rr(0,10);
         controls.thresholdLevel  = rr(0,1); controls.slowZoomAmount = rr(0,1);
@@ -2537,6 +2555,10 @@ void UISystem::drawVJayExtraContent(
         controls.fxaaQualityEdgeThresholdMin = 0.0625f;
         changed = true; controlsDirty = true;
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Turn all ON"))  { setAllExtraToggles(true);  changed = true; controlsDirty = true; }
+    ImGui::SameLine();
+    if (ImGui::Button("Turn all OFF")) { setAllExtraToggles(false); changed = true; controlsDirty = true; }
 
     ImGui::Separator();
 
