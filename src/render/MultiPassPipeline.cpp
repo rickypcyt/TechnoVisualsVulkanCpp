@@ -273,6 +273,7 @@ bool MultiPassPipeline::createPipelines() {
 
     // For each pass, create a pipeline
     for (int i = 0; i < NUM_PASSES; ++i) {
+        std::cout << "[MultiPass] Creating pipeline for pass " << i << " (" << PASS_SHADERS[i][0] << ", " << PASS_SHADERS[i][1] << ")" << std::endl;
         auto vertShaderCode = readFile(PASS_SHADERS[i][0]);
         auto fragShaderCode = readFile(PASS_SHADERS[i][1]);
 
@@ -958,6 +959,7 @@ void MultiPassPipeline::cleanupFullscreenQuad() {
 }
 
 std::vector<char> MultiPassPipeline::readFile(const std::string& filename) {
+    std::cout << "[MultiPass] Reading shader file: " << filename << std::endl;
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "[MultiPass] Failed to open file: " << filename << std::endl;
@@ -970,10 +972,12 @@ std::vector<char> MultiPassPipeline::readFile(const std::string& filename) {
     file.read(buffer.data(), fileSize);
     file.close();
 
+    std::cout << "[MultiPass] Read " << buffer.size() << " bytes from " << filename << std::endl;
     return buffer;
 }
 
 VkShaderModule MultiPassPipeline::createShaderModule(const std::vector<char>& code) {
+    std::cout << "[MultiPass] Creating shader module (" << code.size() << " bytes)..." << std::endl;
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
@@ -981,8 +985,10 @@ VkShaderModule MultiPassPipeline::createShaderModule(const std::vector<char>& co
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create shader module" << std::endl;
         return VK_NULL_HANDLE;
     }
+    std::cout << "[MultiPass] Shader module created successfully" << std::endl;
     return shaderModule;
 }
 

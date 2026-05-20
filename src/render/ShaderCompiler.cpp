@@ -1,10 +1,13 @@
 #include "ShaderCompiler.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
 std::vector<char> ShaderCompiler::readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    std::cout << "[ShaderCompiler] Reading file: " << filename << std::endl;
 
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file: " + filename);
@@ -47,9 +50,12 @@ std::string ShaderCompiler::resolveIncludes(const std::string& source, const std
 }
 
 std::vector<char> ShaderCompiler::loadFromFile(const std::string& path) {
+    std::cout << "[ShaderCompiler] Loading shader: " << path << std::endl;
     // Check if it's a compiled SPIR-V file (.spv extension)
     if (path.find(".spv") != std::string::npos) {
-        return readFile(path);
+        auto code = readFile(path);
+        std::cout << "[ShaderCompiler] Loaded SPIR-V shader: " << path << " (" << code.size() << " bytes)" << std::endl;
+        return code;
     }
     
     // Otherwise treat as text shader with includes
@@ -61,10 +67,13 @@ std::vector<char> ShaderCompiler::loadFromFile(const std::string& path) {
         basePath = path.substr(0, slash);
     }
     std::string resolved = resolveIncludes(source, basePath);
-    return std::vector<char>(resolved.begin(), resolved.end());
+    auto result = std::vector<char>(resolved.begin(), resolved.end());
+    std::cout << "[ShaderCompiler] Resolved includes for: " << path << " (" << result.size() << " bytes)" << std::endl;
+    return result;
 }
 
 VkShaderModule ShaderCompiler::createModule(VkDevice device, const std::vector<char>& code) {
+    std::cout << "[ShaderCompiler] Creating shader module (" << code.size() << " bytes)..." << std::endl;
     if (code.empty()) {
         throw std::runtime_error("shader code is empty");
     }
@@ -79,5 +88,6 @@ VkShaderModule ShaderCompiler::createModule(VkDevice device, const std::vector<c
         throw std::runtime_error("failed to create shader module");
     }
 
+    std::cout << "[ShaderCompiler] Shader module created successfully" << std::endl;
     return shaderModule;
 }

@@ -187,5 +187,6 @@ CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o: \
  /usr/include/c++/16.1.1/bits/codecvt.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
- /usr/include/c++/16.1.1/bits/fstream.tcc /usr/include/c++/16.1.1/sstream \
+ /usr/include/c++/16.1.1/bits/fstream.tcc \
+ /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/sstream \
  /usr/include/c++/16.1.1/bits/sstream.tcc
