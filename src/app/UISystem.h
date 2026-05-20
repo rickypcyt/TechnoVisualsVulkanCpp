@@ -46,12 +46,15 @@ struct UIDiagnostics {
 struct UICallbacks {
     // Pide recargar un video por path
     std::function<void(const std::string& path)> onReloadVideo;
+    std::function<void(const std::string& path)> onReloadVideo2;
 
     // Pide randomizar el video actual
     std::function<void()> onRandomizeVideo;
+    std::function<void()> onRandomizeVideo2;
 
     // Pide recargar videos cuando cambia la carpeta seleccionada
     std::function<void()> onFolderChanged;
+    std::function<void()> onFolderChanged2;
 
     // Pide un jump aleatorio dentro del clip actual
     std::function<void()> onJumpRandom;
@@ -97,6 +100,7 @@ public:
         VideoPlayer&          player,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
         float&                transitionDuration,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
@@ -115,6 +119,7 @@ private:
         VideoPlayer&          player,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
         float&                transitionDuration,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
@@ -141,18 +146,6 @@ private:
     void beginFrame();
     void endFrame();
 
-    void drawProceduralControls(
-        VisualControls&       controls,
-        VideoRandomizerState& randomizer,
-        VideoPlayer&          player,
-        VideoRegistry&        registry,
-        int&                  selectedAsset,
-        float&                transitionDuration,
-        bool&                 allowDimensionChange,
-        bool&                 controlsDirty,
-        std::mt19937&         rng,
-        const UICallbacks&    callbacks
-    );
 
     void drawVJayBasics(
         VisualControls& controls,
@@ -188,6 +181,7 @@ private:
         VideoPlayer&          player,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
         float&                transitionDuration,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
@@ -206,6 +200,7 @@ private:
         VideoPlayer&          player,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
         float&                transitionDuration,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,

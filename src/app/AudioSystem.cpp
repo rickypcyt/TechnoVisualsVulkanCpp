@@ -303,17 +303,17 @@ int AudioSystem::audioCallback(const void* inputBuffer, void* outputBuffer,
     // Process FFT
     audioSystem->processFFT(in, framesPerBuffer);
     
-    // Print debug info periodically
-    static int frameCount = 0;
-    if (++frameCount % 100 == 0) {
-        std::cout << "[AudioSystem] RMS: " << rms 
-                  << " SubBass: " << audioSystem->subBassLevel.load()
-                  << " Kick: " << audioSystem->kickLevel.load()
-                  << " Bass: " << audioSystem->bassLevel.load()
-                  << " Mid: " << audioSystem->midLevel.load()
-                  << " High: " << audioSystem->highLevel.load()
-                  << " | Smoothed Kick: " << audioSystem->smoothedKick.load() << std::endl;
-    }
+    // Print debug info periodically (disabled)
+    // static int frameCount = 0;
+    // if (++frameCount % 100 == 0) {
+    //     std::cout << "[AudioSystem] RMS: " << rms 
+    //               << " SubBass: " << audioSystem->subBassLevel.load()
+    //               << " Kick: " << audioSystem->kickLevel.load()
+    //               << " Bass: " << audioSystem->bassLevel.load()
+    //               << " Mid: " << audioSystem->midLevel.load()
+    //               << " High: " << audioSystem->highLevel.load()
+    //               << " | Smoothed Kick: " << audioSystem->smoothedKick.load() << std::endl;
+    // }
 
     return paContinue;
 }

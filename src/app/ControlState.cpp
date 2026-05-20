@@ -197,6 +197,10 @@ void ControlState::load(
     loaded.videoDecodeOversample   = readFloat(kv, "videoDecodeOversample",   loaded.videoDecodeOversample);
     loaded.autoScaleVideo          = readBool (kv, "autoScaleVideo",          loaded.autoScaleVideo);
     loaded.selectedVideoFolder     = readString(kv, "selectedVideoFolder", loaded.selectedVideoFolder);
+    loaded.enableDualVideo         = readBool (kv, "enableDualVideo",         loaded.enableDualVideo);
+    loaded.video2Mix               = readFloat(kv, "video2Mix",               loaded.video2Mix);
+    loaded.video2BlendMode         = std::clamp(readInt(kv, "video2BlendMode", loaded.video2BlendMode), 0, 4);
+    loaded.video2PlaybackRate      = readFloat(kv, "video2PlaybackRate",      loaded.video2PlaybackRate);
     loaded.forcedFpsIndex          = std::clamp(readInt(kv, "forcedFpsIndex", loaded.forcedFpsIndex), 0, 4);
     loaded.loopBlendSeconds        = std::clamp(readFloat(kv, "loopBlendSeconds", loaded.loopBlendSeconds), 0.0f, 5.0f);
     loaded.grayscaleAmount         = readFloat(kv, "grayscaleAmount",         loaded.grayscaleAmount);
@@ -425,6 +429,10 @@ void ControlState::save(
     wf("videoDecodeOversample",   c.videoDecodeOversample);
     wb("autoScaleVideo",          c.autoScaleVideo);
     ws("selectedVideoFolder",     c.selectedVideoFolder);
+    wb("enableDualVideo",         c.enableDualVideo);
+    wf("video2Mix",               c.video2Mix);
+    wi("video2BlendMode",         c.video2BlendMode);
+    wf("video2PlaybackRate",      c.video2PlaybackRate);
     wi("forcedFpsIndex",          c.forcedFpsIndex);
     wf("loopBlendSeconds",        c.loopBlendSeconds);
     wf("grayscaleAmount",         c.grayscaleAmount);

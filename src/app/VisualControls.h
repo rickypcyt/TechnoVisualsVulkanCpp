@@ -25,6 +25,14 @@ struct VisualControls {
     float videoPlaybackRate = 1.0f;
     float videoDecodeOversample = 1.0f;
     bool autoScaleVideo = true;
+
+    // Dual video source controls
+    bool enableDualVideo = false;
+    float video2Mix = 0.0f;
+    int video2BlendMode = 0;  // 0 = mix, 1 = add, 2 = multiply, 3 = screen, 4 = difference
+    int selectedVideo2Asset = 0;
+    std::string selectedVideo2Folder = "";
+    float video2PlaybackRate = 1.0f;
     std::string selectedVideoFolder = "";
     float grayscaleAmount = 0.0f;
     float sharpenAmount = 0.35f;

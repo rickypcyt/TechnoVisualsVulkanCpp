@@ -29,15 +29,8 @@ void VideoRegistry::scan(const std::string& rootPath, const std::string& subfold
         return;
     }
 
-    fs::path scanPath = root;
-    if (!subfolderFilter.empty()) {
-        scanPath = root / subfolderFilter;
-        if (!fs::exists(scanPath) || !fs::is_directory(scanPath)) {
-            return;
-        }
-    }
-
-    for (const auto& entry : fs::recursive_directory_iterator(scanPath)) {
+    // Scan the entire rootPath so that getFilteredAssets works for any subfolder
+    for (const auto& entry : fs::recursive_directory_iterator(root)) {
         if (!entry.is_regular_file()) {
             continue;
         }

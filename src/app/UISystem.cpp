@@ -120,6 +120,7 @@ void UISystem::render(
     VideoPlayer&          player,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
+    int&                  selectedVideoAsset2,
     float&                transitionDuration,
     bool&                 allowDimensionChangeRecreation,
     bool&                 controlsDirty,
@@ -136,7 +137,7 @@ void UISystem::render(
 
     // Draw main navbar window with tabs
     drawMainNavbar(controls, randomizer, player, registry,
-                   selectedVideoAsset, transitionDuration,
+                   selectedVideoAsset, selectedVideoAsset2, transitionDuration,
                    allowDimensionChangeRecreation, controlsDirty,
                    rng, diag, callbacks, midiSystem, oscSystem, audioSystem);
 
@@ -180,13 +181,14 @@ void UISystem::drawProceduralControls(
     VideoPlayer&          player,
     VideoRegistry&        registry,
     int&                  selectedAsset,
+    int&                  selectedAsset2,
     float&                transitionDuration,
     bool&                 allowDimensionChange,
     bool&                 controlsDirty,
     std::mt19937&         rng,
     const UIDiagnostics&  diag,
-    const UICallbacks&    callbacks)
-{
+    const UICallbacks&    callbacks
+) {
     bool changed = false;
 
     ImGui::SetNextWindowSize(ImVec2(360.0f, 260.0f), ImGuiCond_FirstUseEver);
@@ -270,6 +272,16 @@ void UISystem::drawProceduralControls(
     changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
 
+    ImGui::Separator();
+    ImGui::Text("Dual Video Source");
+    changed |= ImGui::Checkbox("Enable dual video", &controls.enableDualVideo);
+    if (controls.enableDualVideo) {
+        changed |= ImGui::SliderFloat("Video 2 Mix", &controls.video2Mix, 0.0f, 1.0f);
+        static const char* blendLabels = "Mix\0Add\0Multiply\0Screen\0Difference\0";
+        changed |= ImGui::Combo("Blend Mode", &controls.video2BlendMode, blendLabels, 5);
+        changed |= ImGui::SliderFloat("Video 2 speed", &controls.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
+    }
+
     if (ImGui::SliderFloat("Decode oversample", &controls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
         controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
         changed = true;
@@ -302,7 +314,7 @@ void UISystem::drawProceduralControls(
     ImGui::Indent();
     changed |= ImGui::Checkbox("Auto jump interval", &controls.enableRandomJumpInterval);
     if (controls.enableRandomJumpInterval) {
-        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval, 1.0f, 60.0f, "%.1f s");
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval, 1.0f, 60.0f, "%1f s");
     }
     ImGui::Unindent();
 
@@ -493,6 +505,66 @@ void UISystem::drawProceduralControls(
         ImGui::Text("Videos in folder: %zu", assets.size());
     }
 
+    // --- Video 2 Asset selector ---
+    ImGui::Separator();
+    ImGui::Text("Video 2 Source");
+
+    int currentFolder2Index = 0;
+    if (!controls.selectedVideo2Folder.empty()) {
+        for (size_t i = 0; i < availableFolders.size(); ++i) {
+            if (availableFolders[i] == controls.selectedVideo2Folder) {
+                currentFolder2Index = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    if (ImGui::Combo("Load Folder##V2", &currentFolder2Index, folderItems.data(), static_cast<int>(folderItems.size()))) {
+        std::string newFolder = (currentFolder2Index == 0) ? "" : availableFolders[currentFolder2Index];
+        if (controls.selectedVideo2Folder != newFolder) {
+            controls.selectedVideo2Folder = newFolder;
+            if (callbacks.onFolderChanged2) {
+                callbacks.onFolderChanged2();
+            }
+        }
+    }
+
+    if (controls.selectedVideo2Folder.empty()) {
+        ImGui::Text("Current loaded folder: All Folders");
+    } else {
+        ImGui::Text("Current loaded folder: %s", controls.selectedVideo2Folder.c_str());
+    }
+
+    const auto& assets2 = registry.getFilteredAssets(controls.selectedVideo2Folder);
+    if (assets2.empty()) {
+        ImGui::TextDisabled("No videos found in this folder");
+    } else {
+        if (selectedAsset2 < 0 || selectedAsset2 >= static_cast<int>(assets2.size()))
+            selectedAsset2 = 0;
+
+        const std::string& currentLabel2 = assets2[selectedAsset2].metadata.filename;
+        if (ImGui::BeginCombo("Video Asset##V2", currentLabel2.c_str())) {
+            for (int i = 0; i < static_cast<int>(assets2.size()); ++i) {
+                bool isSelected = (i == selectedAsset2);
+                std::string label = assets2[i].metadata.filename;
+                if (ImGui::Selectable(label.c_str(), isSelected)) {
+                    if (selectedAsset2 != i) {
+                        selectedAsset2 = i;
+                        if (callbacks.onReloadVideo2)
+                            callbacks.onReloadVideo2(assets2[i].metadata.path);
+                    }
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::Text("Videos in folder: %zu", assets2.size());
+        if (assets2.size() > 1 && ImGui::Button("Randomize video 2 online") && callbacks.onRandomizeVideo2) {
+            callbacks.onRandomizeVideo2();
+            changed = true;
+        }
+    }
+
     // --- Randomizer ---
     const bool hasRandomChoices = assets.size() > 1;
     ImGui::BeginDisabled(randomizer.useVideoDuration);
@@ -543,9 +615,8 @@ void UISystem::drawProceduralControls(
     ImGui::Checkbox("Show ImGui demo",         &showDemoWindow);
     ImGui::Checkbox("Show NLE Editor",         &showNLEWindow);
 
-    ImGui::End();
-
     if (changed && callbacks.onControlsChanged) callbacks.onControlsChanged();
+    ImGui::End();
 }
 
 // ============================================================
@@ -1832,6 +1903,7 @@ void UISystem::drawMainNavbar(
     VideoPlayer&          player,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
+    int&                  selectedVideoAsset2,
     float&                transitionDuration,
     bool&                 allowDimensionChangeRecreation,
     bool&                 controlsDirty,
@@ -1863,7 +1935,7 @@ void UISystem::drawMainNavbar(
         // Tab 1: Procedural
         if (ImGui::BeginTabItem("Procedural")) {
             drawProceduralControlsContent(controls, randomizer, player, registry,
-                                         selectedVideoAsset, transitionDuration,
+                                         selectedVideoAsset, selectedVideoAsset2, transitionDuration,
                                          allowDimensionChangeRecreation, controlsDirty,
                                          rng, diag, callbacks);
             ImGui::EndTabItem();
@@ -1933,6 +2005,7 @@ void UISystem::drawProceduralControlsContent(
     VideoPlayer&          player,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
+    int&                  selectedVideoAsset2,
     float&                transitionDuration,
     bool&                 allowDimensionChangeRecreation,
     bool&                 controlsDirty,
@@ -2016,6 +2089,16 @@ void UISystem::drawProceduralControlsContent(
     ImGui::Text("Video");
     changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+
+    ImGui::Separator();
+    ImGui::Text("Dual Video Source");
+    changed |= ImGui::Checkbox("Enable dual video", &controls.enableDualVideo);
+    if (controls.enableDualVideo) {
+        changed |= ImGui::SliderFloat("Video 2 Mix", &controls.video2Mix, 0.0f, 1.0f);
+        static const char* blendLabels = "Mix\0Add\0Multiply\0Screen\0Difference\0";
+        changed |= ImGui::Combo("Blend Mode", &controls.video2BlendMode, blendLabels, 5);
+        changed |= ImGui::SliderFloat("Video 2 speed", &controls.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
+    }
 
     if (ImGui::SliderFloat("Decode oversample", &controls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
         controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
@@ -2244,6 +2327,66 @@ void UISystem::drawProceduralControlsContent(
             ImGui::EndCombo();
         }
         ImGui::Text("Videos in folder: %zu", assets.size());
+    }
+
+    // --- Video 2 Asset selector ---
+    ImGui::Separator();
+    ImGui::Text("Video 2 Source");
+
+    int currentFolder2Index = 0;
+    if (!controls.selectedVideo2Folder.empty()) {
+        for (size_t i = 0; i < availableFolders.size(); ++i) {
+            if (availableFolders[i] == controls.selectedVideo2Folder) {
+                currentFolder2Index = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    if (ImGui::Combo("Load Folder##V2", &currentFolder2Index, folderItems.data(), static_cast<int>(folderItems.size()))) {
+        std::string newFolder = (currentFolder2Index == 0) ? "" : availableFolders[currentFolder2Index];
+        if (controls.selectedVideo2Folder != newFolder) {
+            controls.selectedVideo2Folder = newFolder;
+            if (callbacks.onFolderChanged2) {
+                callbacks.onFolderChanged2();
+            }
+        }
+    }
+
+    if (controls.selectedVideo2Folder.empty()) {
+        ImGui::Text("Current loaded folder: All Folders");
+    } else {
+        ImGui::Text("Current loaded folder: %s", controls.selectedVideo2Folder.c_str());
+    }
+
+    const auto& assets2 = registry.getFilteredAssets(controls.selectedVideo2Folder);
+    if (assets2.empty()) {
+        ImGui::TextDisabled("No videos found in this folder");
+    } else {
+        if (selectedVideoAsset2 < 0 || selectedVideoAsset2 >= static_cast<int>(assets2.size()))
+            selectedVideoAsset2 = 0;
+
+        const std::string& currentLabel2 = assets2[selectedVideoAsset2].metadata.filename;
+        if (ImGui::BeginCombo("Video Asset##V2", currentLabel2.c_str())) {
+            for (int i = 0; i < static_cast<int>(assets2.size()); ++i) {
+                bool isSelected = (i == selectedVideoAsset2);
+                std::string label = assets2[i].metadata.filename;
+                if (ImGui::Selectable(label.c_str(), isSelected)) {
+                    if (selectedVideoAsset2 != i) {
+                        selectedVideoAsset2 = i;
+                        if (callbacks.onReloadVideo2)
+                            callbacks.onReloadVideo2(assets2[i].metadata.path);
+                    }
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::Text("Videos in folder: %zu", assets2.size());
+        if (assets2.size() > 1 && ImGui::Button("Randomize video 2 online") && callbacks.onRandomizeVideo2) {
+            callbacks.onRandomizeVideo2();
+            changed = true;
+        }
     }
 
     const bool hasRandomChoices = assets.size() > 1;

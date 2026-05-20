@@ -75,6 +75,17 @@ private:
     std::chrono::steady_clock::time_point lastVideoChangeTime = std::chrono::steady_clock::now();
     const std::chrono::milliseconds videoChangeCooldown{500};
 
+    // Video 2 systems (dual source)
+    VideoTexture videoTexture2;
+    VideoPlayer videoPlayer2;
+    CpuFramePool cpuFramePool2;
+    std::unique_ptr<VideoRenderer> videoRenderer2;
+    std::string videoSourcePath2 = "media/sample.mp4";
+    int selectedVideoAsset2 = -1;
+    bool videoSubsystemInitialized2 = false;
+    bool isReloadingVideo2 = false;
+    std::chrono::steady_clock::time_point lastVideoChangeTime2 = std::chrono::steady_clock::now();
+
     // Rendering systems
     UniformBufferManager uniformBufferManager;
     DescriptorSetManager descriptorSetManager;

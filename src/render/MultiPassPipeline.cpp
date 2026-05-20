@@ -23,6 +23,8 @@ bool MultiPassPipeline::initialize(
     VkSampler videoSamplerPrev,
     VkImageView videoImageView,
     VkImageView videoPrevImageView,
+    VkSampler video2Sampler,
+    VkImageView video2ImageView,
     const std::vector<VkBuffer>& uniformBuffers,
     size_t uniformBufferSize
 ) {
@@ -36,6 +38,8 @@ bool MultiPassPipeline::initialize(
     this->videoSamplerPrev = videoSamplerPrev;
     this->videoImageView = videoImageView;
     this->videoPrevImageView = videoPrevImageView;
+    this->video2Sampler = video2Sampler;
+    this->video2ImageView = video2ImageView;
     this->uniformBuffers = uniformBuffers;
     this->uniformBufferSize = uniformBufferSize;
 
@@ -71,7 +75,9 @@ bool MultiPassPipeline::initialize(
         videoImageView,
         videoPrevImageView,
         videoSampler,
-        videoSamplerPrev
+        videoSamplerPrev,
+        video2ImageView,
+        video2Sampler
     );
 
     std::cout << "[MultiPass] Initialized successfully with " << NUM_PASSES << " passes" << std::endl;
@@ -374,7 +380,7 @@ bool MultiPassPipeline::createPipelines() {
         // Create descriptor set layout for set 1 (textures) - pass-specific texture bindings
         std::vector<VkDescriptorSetLayoutBinding> textureBindings;
 
-        // Pass A needs video textures at bindings 0 and 1
+        // Pass A needs video textures at bindings 0, 1 and video2 at binding 2
         if (i == 0) {
             VkDescriptorSetLayoutBinding videoTexBinding{};
             videoTexBinding.binding = 0;
@@ -389,6 +395,13 @@ bool MultiPassPipeline::createPipelines() {
             videoTexPrevBinding.descriptorCount = 1;
             videoTexPrevBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             textureBindings.push_back(videoTexPrevBinding);
+
+            VkDescriptorSetLayoutBinding video2TexBinding{};
+            video2TexBinding.binding = 2;
+            video2TexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            video2TexBinding.descriptorCount = 1;
+            video2TexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(video2TexBinding);
         }
         // Pass D needs inputTex and prevFrameTex
         else if (i == 3) {
@@ -718,7 +731,9 @@ void MultiPassPipeline::updateDescriptorSets(
     VkImageView videoImageView,
     VkImageView videoPrevImageView,
     VkSampler videoSampler,
-    VkSampler videoSamplerPrev
+    VkSampler videoSamplerPrev,
+    VkImageView video2ImageView,
+    VkSampler video2Sampler
 ) {
     // CRITICAL: Validate input handles before proceeding
     printf("[MultiPass] updateDescriptorSets - videoImageView=%p, videoPrevImageView=%p, videoSampler=%p\n",
@@ -738,6 +753,10 @@ void MultiPassPipeline::updateDescriptorSets(
     this->videoPrevImageView = videoPrevImageView;
     this->videoSampler = videoSampler;
     this->videoSamplerPrev = videoSamplerPrev;
+    this->video2ImageView = video2ImageView;
+    this->video2Sampler = video2Sampler;
+
+    printf("[MultiPass] video2ImageView=%p, video2Sampler=%p\n", (void*)video2ImageView, (void*)video2Sampler);
 
     // Update descriptor sets for each pass and frame
     // Note: Set 0 (UBOs) is already updated in createDescriptorSets, so we only update set 1 (textures) here
@@ -745,117 +764,54 @@ void MultiPassPipeline::updateDescriptorSets(
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
         // printf("[MultiPass] Processing pass=%d\n", pass);
         for (size_t frame = 0; frame < uniformBuffers.size(); ++frame) {
-            // printf("[MultiPass] Processing pass=%d frame=%zu\n", pass, frame);
             std::vector<VkWriteDescriptorSet> textureWrites;
+            textureWrites.reserve(3);
+            std::vector<VkDescriptorImageInfo> imageInfos;
+            imageInfos.reserve(3);
+
+            auto addTextureWrite = [&](uint32_t binding, VkImageView view, VkSampler sampler) {
+                if (view == VK_NULL_HANDLE || sampler == VK_NULL_HANDLE) {
+                    return;
+                }
+
+                VkDescriptorImageInfo& imageInfo = imageInfos.emplace_back();
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = view;
+                imageInfo.sampler = sampler;
+
+                VkWriteDescriptorSet write{};
+                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write.dstSet = passes[pass].descriptorSets[1][frame];
+                write.dstBinding = binding;
+                write.dstArrayElement = 0;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write.descriptorCount = 1;
+                write.pImageInfo = &imageInfos.back();
+
+                textureWrites.push_back(write);
+            };
 
             // Pass-specific texture bindings for set 1
-            if (pass == 0) {  // Pass A needs video textures at bindings 0 and 1
-                VkDescriptorImageInfo videoTexInfo{};
-                videoTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                videoTexInfo.imageView = videoImageView;
-                videoTexInfo.sampler = videoSampler;
+            if (pass == 0) {  // Pass A needs video textures at bindings 0,1 (and optional video2 at 2)
+                addTextureWrite(0, videoImageView, videoSampler);
+                addTextureWrite(1, videoPrevImageView, videoSamplerPrev);
 
-                VkWriteDescriptorSet videoTexWrite{};
-                videoTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                videoTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
-                videoTexWrite.dstBinding = 0;  // Set 1, binding 0
-                videoTexWrite.dstArrayElement = 0;
-                videoTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                videoTexWrite.descriptorCount = 1;
-                videoTexWrite.pImageInfo = &videoTexInfo;
-
-                textureWrites.push_back(videoTexWrite);
-
-                VkDescriptorImageInfo videoTexPrevInfo{};
-                videoTexPrevInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                videoTexPrevInfo.imageView = videoPrevImageView;
-                videoTexPrevInfo.sampler = videoSamplerPrev;
-
-                VkWriteDescriptorSet videoTexPrevWrite{};
-                videoTexPrevWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                videoTexPrevWrite.dstSet = passes[pass].descriptorSets[1][frame];
-                videoTexPrevWrite.dstBinding = 1;  // Set 1, binding 1
-                videoTexPrevWrite.dstArrayElement = 0;
-                videoTexPrevWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                videoTexPrevWrite.descriptorCount = 1;
-                videoTexPrevWrite.pImageInfo = &videoTexPrevInfo;
-
-                textureWrites.push_back(videoTexPrevWrite);
+                if (video2ImageView != VK_NULL_HANDLE && video2Sampler != VK_NULL_HANDLE) {
+                    addTextureWrite(2, video2ImageView, video2Sampler);
+                }
             } else if (pass >= 1 && pass <= 5) {  // Passes B-F need input texture at binding 0
-                // Use intermediate texture from previous pass as input
                 int prevBuffer = 1 - currentBuffer;
+                addTextureWrite(0, intermediate[prevBuffer].imageView, videoSampler);
 
-                VkDescriptorImageInfo inputTexInfo{};
-                inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                inputTexInfo.imageView = intermediate[prevBuffer].imageView;
-                inputTexInfo.sampler = videoSampler;
-
-                VkWriteDescriptorSet inputTexWrite{};
-                inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                inputTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
-                inputTexWrite.dstBinding = 0;  // Set 1, binding 0
-                inputTexWrite.dstArrayElement = 0;
-                inputTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                inputTexWrite.descriptorCount = 1;
-                inputTexWrite.pImageInfo = &inputTexInfo;
-
-                textureWrites.push_back(inputTexWrite);
-
-                // Pass D (pass 3) also needs prevFrameTex at binding 1
                 if (pass == 3) {
-                    VkDescriptorImageInfo prevFrameTexInfo{};
-                    prevFrameTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    prevFrameTexInfo.imageView = intermediate[prevBuffer].imageView;
-                    prevFrameTexInfo.sampler = videoSampler;
-
-                    VkWriteDescriptorSet prevFrameTexWrite{};
-                    prevFrameTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                    prevFrameTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
-                    prevFrameTexWrite.dstBinding = 1;  // Set 1, binding 1
-                    prevFrameTexWrite.dstArrayElement = 0;
-                    prevFrameTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                    prevFrameTexWrite.descriptorCount = 1;
-                    prevFrameTexWrite.pImageInfo = &prevFrameTexInfo;
-
-                    textureWrites.push_back(prevFrameTexWrite);
+                    addTextureWrite(1, intermediate[prevBuffer].imageView, videoSampler);
                 }
             }
             // Pass G (pass 6) needs input texture and procedural texture
-            else if (pass == 6) {  // Pass G needs inputTex + proceduralTex
+            else if (pass == 6) {
                 int prevBuffer = 1 - currentBuffer;
-
-                VkDescriptorImageInfo inputTexInfo{};
-                inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                inputTexInfo.imageView = intermediate[prevBuffer].imageView;
-                inputTexInfo.sampler = videoSampler;
-
-                VkWriteDescriptorSet inputTexWrite{};
-                inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                inputTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
-                inputTexWrite.dstBinding = 0;  // Set 1, binding 0
-                inputTexWrite.dstArrayElement = 0;
-                inputTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                inputTexWrite.descriptorCount = 1;
-                inputTexWrite.pImageInfo = &inputTexInfo;
-
-                textureWrites.push_back(inputTexWrite);
-
-                // For now, use the same input texture as procedural texture (fallback)
-                VkDescriptorImageInfo proceduralTexInfo{};
-                proceduralTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                proceduralTexInfo.imageView = intermediate[prevBuffer].imageView;
-                proceduralTexInfo.sampler = videoSampler;
-
-                VkWriteDescriptorSet proceduralTexWrite{};
-                proceduralTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                proceduralTexWrite.dstSet = passes[pass].descriptorSets[1][frame];
-                proceduralTexWrite.dstBinding = 1;  // Set 1, binding 1
-                proceduralTexWrite.dstArrayElement = 0;
-                proceduralTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                proceduralTexWrite.descriptorCount = 1;
-                proceduralTexWrite.pImageInfo = &proceduralTexInfo;
-
-                textureWrites.push_back(proceduralTexWrite);
+                addTextureWrite(0, intermediate[prevBuffer].imageView, videoSampler);
+                addTextureWrite(1, intermediate[prevBuffer].imageView, videoSampler);
             }
 
             if (!textureWrites.empty()) {
@@ -888,7 +844,9 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
         videoImageView,
         videoPrevImageView,
         videoSampler,
-        videoSamplerPrev
+        videoSamplerPrev,
+        video2ImageView,
+        video2Sampler
     );
 }
 

@@ -50,6 +50,8 @@ public:
         VkSampler videoSamplerPrev,
         VkImageView videoImageView,
         VkImageView videoPrevImageView,
+        VkSampler video2Sampler,
+        VkImageView video2ImageView,
         const std::vector<VkBuffer>& uniformBuffers,
         size_t uniformBufferSize
     );
@@ -72,7 +74,9 @@ public:
         VkImageView videoImageView,
         VkImageView videoPrevImageView,
         VkSampler videoSampler,
-        VkSampler videoSamplerPrev
+        VkSampler videoSamplerPrev,
+        VkImageView video2ImageView = VK_NULL_HANDLE,
+        VkSampler video2Sampler = VK_NULL_HANDLE
     );
 
     // Update intermediate texture descriptors for passes B-F (called each frame)
@@ -97,6 +101,8 @@ private:
     VkSampler videoSamplerPrev = VK_NULL_HANDLE;
     VkImageView videoImageView = VK_NULL_HANDLE;
     VkImageView videoPrevImageView = VK_NULL_HANDLE;
+    VkSampler video2Sampler = VK_NULL_HANDLE;
+    VkImageView video2ImageView = VK_NULL_HANDLE;
     std::vector<VkBuffer> uniformBuffers;
     size_t uniformBufferSize = 0;
 

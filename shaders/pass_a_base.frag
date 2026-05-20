@@ -102,6 +102,9 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float videoAvailable;
     int blendModeVideo;
     float blendVideoMix;
+    float video2Mix;
+    float video2Available;
+    int video2BlendMode;
 
     int blendModeProcedural;
     int blendModeFeedback;
@@ -158,6 +161,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
 
 layout(set = 1, binding = 0) uniform sampler2D videoTex;
 layout(set = 1, binding = 1) uniform sampler2D videoTexPrev;
+layout(set = 1, binding = 2) uniform sampler2D video2Tex;
 
 const float PI = 3.1415926535;
 
@@ -180,8 +184,33 @@ vec3 sampleVideo(vec2 p) {
     return texture(videoTex, clamp(p, 0.0, 1.0)).rgb;
 }
 
+vec3 sampleVideo2(vec2 p) {
+    return texture(video2Tex, clamp(p, 0.0, 1.0)).rgb;
+}
+
 vec3 sampleBilinear(vec2 p) {
     return sampleVideo(p);
+}
+
+vec3 blendTwoVideos(vec3 a, vec3 b, int mode, float t) {
+    t = clamp(t, 0.0, 1.0);
+    if (mode == 0) {
+        // Mix / crossfade
+        return mix(a, b, t);
+    } else if (mode == 1) {
+        // Add
+        return clamp(a + b * t, 0.0, 1.0);
+    } else if (mode == 2) {
+        // Multiply
+        return mix(a, a * b, t);
+    } else if (mode == 3) {
+        // Screen
+        return mix(a, 1.0 - (1.0 - a) * (1.0 - b), t);
+    } else if (mode == 4) {
+        // Difference
+        return mix(a, abs(a - b), t);
+    }
+    return mix(a, b, t);
 }
 
 vec3 sharpen3x3(vec2 p, float amount) {
@@ -235,7 +264,12 @@ vec4 dispatchMode(int m, vec2 st) {
 
 void main() {
     vec2 procUV = applyCamera(uv);
-    vec3 videoColor = sampleVideo(uv);
+    vec3 video1Color = sampleVideo(uv);
+    vec3 video2Color = sampleVideo2(uv);
+
+    float v2Mix = clamp(ubo.video2Mix * ubo.video2Available, 0.0, 1.0);
+    vec3 videoColor = blendTwoVideos(video1Color, video2Color, ubo.video2BlendMode, v2Mix);
+
     vec4 procColor = dispatchMode(ubo.mode, procUV);
 
     vec3 color = mix(procColor.rgb, videoColor, clamp(ubo.videoMix * ubo.videoAvailable, 0.0, 1.0));
