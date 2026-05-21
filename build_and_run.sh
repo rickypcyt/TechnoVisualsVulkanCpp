@@ -39,5 +39,5 @@ echo "[build_and_run] Compiling pass_g_output.frag..."
 glslc "$shaders_dir/pass_g_output.frag" -o "$shaders_dir/pass_g_output.frag.spv"
 echo "[build_and_run] All shaders compiled successfully."
 cmake -S "$SCRIPT_DIR" -B "$SCRIPT_DIR/build"
-cmake --build "$SCRIPT_DIR/build"
+cmake --build "$SCRIPT_DIR/build" -j$(nproc)
 SDL_VIDEODRIVER=wayland "$SCRIPT_DIR/build/app"

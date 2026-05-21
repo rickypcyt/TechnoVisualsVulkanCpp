@@ -544,6 +544,10 @@ void Application::handleOscTrigger(const std::string& action) {
         if (!canChangeVideo()) return;
         videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+        videoRandomizer.shuffleQueue.clear();
+        videoRandomizer.currentShuffleIndex = 0;
+        videoRandomizer2.shuffleQueue.clear();
+        videoRandomizer2.currentShuffleIndex = 0;
         if (!assets.empty()) {
             selectedVideoAsset = 0;
             videoSourcePath = assets[0].metadata.path;
@@ -806,6 +810,11 @@ void Application::mainLoop() {
                     running = false;
                     break;
                 }
+                if (sourceWindow == window.getUiWindow() &&
+                    event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                    running = false;
+                    break;
+                }
                 if (sourceWindow == window.getMainWindow() &&
                     (event.window.event == SDL_WINDOWEVENT_RESIZED ||
                      event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
@@ -1051,6 +1060,10 @@ void Application::mainLoop() {
             if (!canChangeVideo()) return;
             videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
             const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+            videoRandomizer.shuffleQueue.clear();
+            videoRandomizer.currentShuffleIndex = 0;
+            videoRandomizer2.shuffleQueue.clear();
+            videoRandomizer2.currentShuffleIndex = 0;
             if (!assets.empty()) {
                 selectedVideoAsset = 0;
                 videoSourcePath = assets[0].metadata.path;
@@ -1188,6 +1201,10 @@ void Application::mainLoop() {
             if (!canChangeVideo()) return;
             videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideo2Folder);
             const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+            videoRandomizer.shuffleQueue.clear();
+            videoRandomizer.currentShuffleIndex = 0;
+            videoRandomizer2.shuffleQueue.clear();
+            videoRandomizer2.currentShuffleIndex = 0;
             if (!assets.empty()) {
                 selectedVideoAsset2 = 0;
                 videoSourcePath2 = assets[0].metadata.path;

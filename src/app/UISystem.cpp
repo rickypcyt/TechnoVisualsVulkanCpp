@@ -48,11 +48,181 @@ struct VideoRandomizerState2 {
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
+#include <random>
 
 namespace fs = std::filesystem;
 
 // Constantes copiadas del main (muevelas a un Config.h cuando quieras)
 static const std::array<int, 5> FORCED_FPS_OPTIONS_UI = {0, 15, 24, 30, 60};
+
+namespace {
+float randFloat(std::mt19937& rng, float lo, float hi) {
+    return std::uniform_real_distribution<float>(lo, hi)(rng);
+}
+
+int randInt(std::mt19937& rng, int lo, int hi) {
+    return std::uniform_int_distribution<int>(lo, hi)(rng);
+}
+
+bool randBool(std::mt19937& rng) {
+    return randInt(rng, 0, 1) == 1;
+}
+
+void randomizeVJayExtraControls(VisualControls& controls, std::mt19937& rng) {
+    if (controls.enablePixelate) {
+        controls.pixelateAmount = randFloat(rng, 0.0f, 1.0f);
+    }
+
+    if (controls.enableStrobe) {
+        controls.strobeSpeed = randFloat(rng, 0.0f, 20.0f);
+    }
+
+    if (controls.enableThreshold) {
+        controls.thresholdLevel = randFloat(rng, 0.0f, 1.0f);
+    }
+
+    if (controls.enableSlowZoom) {
+        controls.slowZoomAmount = randFloat(rng, 0.0f, 1.0f);
+    }
+
+    if (controls.enableEdgeDetect) {
+        controls.edgeStrength = randFloat(rng, 0.1f, 5.0f);
+        controls.edgeThreshold = randFloat(rng, 0.0f, 1.0f);
+        controls.edgeBlend = randFloat(rng, 0.0f, 1.0f);
+        controls.edgeColor = glm::vec3(randFloat(rng, 0.0f, 1.0f),
+                                       randFloat(rng, 0.0f, 1.0f),
+                                       randFloat(rng, 0.0f, 1.0f));
+    }
+
+    if (controls.enableFXAA) {
+        controls.fxaaQualitySubpix = randFloat(rng, 0.0f, 1.0f);
+        controls.fxaaQualityEdgeThreshold = randFloat(rng, 0.0f, 0.5f);
+        controls.fxaaQualityEdgeThresholdMin = randFloat(rng, 0.0f, 0.2f);
+    }
+
+    if (controls.enableMirror) {
+        controls.mirrorAmount = randFloat(rng, 0.0f, 1.0f);
+    }
+
+    if (controls.enablePosterize) {
+        controls.posterizeLevels = randFloat(rng, 2.0f, 16.0f);
+    }
+
+    if (controls.enableZoomPulse) {
+        controls.zoomPulseAmount = randFloat(rng, 0.0f, 1.0f);
+    }
+
+    if (controls.enableRGBShift) {
+        controls.rgbShiftAmount = randFloat(rng, 0.0f, 0.1f);
+    }
+
+    if (controls.enableGrid) {
+        controls.gridMode = randInt(rng, 0, 2);
+        if (controls.gridMode == 2) {
+            controls.gridRows = randInt(rng, 1, 8);
+            controls.gridColumns = randInt(rng, 1, 8);
+            controls.gridCount = std::max(2, controls.gridColumns);
+        } else {
+            controls.gridCount = randInt(rng, 2, 8);
+        }
+        controls.gridMirrorCells = randBool(rng);
+    }
+
+    if (controls.enableCameraMovement) {
+        controls.cameraZoom = randFloat(rng, 0.5f, 2.0f);
+        controls.cameraPanX = randFloat(rng, -1.0f, 1.0f);
+        controls.cameraPanY = randFloat(rng, -1.0f, 1.0f);
+        controls.cameraRotation = randFloat(rng, -3.14159f, 3.14159f);
+    }
+}
+
+void randomizeVJayBasicsControls(VisualControls& controls, std::mt19937& rng) {
+    auto rr  = [&](float lo, float hi) { return randFloat(rng, lo, hi); };
+    auto ri  = [&](int lo, int hi) { return randInt(rng, lo, hi); };
+    auto u01 = [&]() { return randFloat(rng, 0.0f, 1.0f); };
+
+    controls.enableColorGrading = true;
+    controls.gradeBrightness = rr(-0.2f, 0.2f);
+    controls.gradeContrast = rr(0.8f, 1.4f);
+    controls.gradeSaturation = rr(0.6f, 1.6f);
+    controls.gradeHueShift = rr(-90.0f, 90.0f);
+    controls.gradeGamma = rr(0.8f, 1.4f);
+    controls.colorLUTIndex = ri(0, 5);
+    controls.splitToneBalance = u01() * 0.5f;
+    controls.splitToneShadows = glm::vec3(u01(), u01(), u01());
+    controls.splitToneHighlights = glm::vec3(u01(), u01(), u01());
+
+    controls.enableFeedback = true;
+    controls.feedbackAmount = u01();
+    controls.trailStrength = u01();
+    controls.temporalAccumulation = u01();
+    controls.feedbackDecay = u01();
+    controls.recursiveBlend = u01();
+
+    controls.enableDistortion = true;
+    controls.uvWarpStrength = rr(0.0f, 0.5f);
+    controls.rippleStrength = rr(0.0f, 0.5f);
+    controls.rippleFrequency = rr(0.5f, 6.0f);
+    controls.swirlStrength = rr(-0.5f, 0.5f);
+    controls.displacementAmount = rr(0.0f, 0.5f);
+    controls.kaleidoSegments = rr(3.0f, 12.0f);
+    controls.tunnelDepth = rr(0.0f, 0.5f);
+    controls.tunnelCurvature = rr(-0.5f, 0.5f);
+
+    controls.enableBlurMotion = true;
+    controls.gaussianBlur = u01();
+    controls.directionalBlur = u01();
+    controls.directionalBlurAngle = rr(0.0f, 360.0f);
+    controls.zoomBlur = u01();
+    controls.motionBlur = u01();
+    controls.temporalBlur = u01();
+
+    controls.enableSharpen = true;
+    controls.unsharpMask = u01();
+    controls.casAmount = u01();
+    controls.localContrast = u01();
+
+    controls.enableGlitch = true;
+    controls.glitchDatamosh = u01();
+    controls.glitchRGBSplit = u01();
+    controls.glitchScanlineBreak = u01();
+    controls.glitchJitter = u01();
+    controls.glitchTearing = u01();
+    controls.glitchPixelSort = u01();
+    controls.glitchBufferCorruption = u01();
+
+    controls.enableBlending = true;
+    controls.blendModeProcedural = ri(0, 5);
+    controls.blendModeVideo = ri(0, 5);
+    controls.blendModeFeedback = ri(0, 5);
+    controls.blendProceduralMix = rr(0.0f, 2.0f);
+    controls.blendVideoMix = rr(0.0f, 2.0f);
+    controls.blendFeedbackMix = rr(0.0f, 2.0f);
+
+    controls.enableAnalog = true;
+    controls.analogScanlineFocus = u01();
+    controls.analogMaskBalance = u01();
+    controls.analogNoise = u01();
+    controls.analogBloom = rr(0.0f, 2.0f);
+    controls.vhsDistortion = u01();
+    controls.analogChromaticAberration = rr(0.0f, 0.25f);
+
+    controls.enableAudioReactive = true;
+    controls.audioWarpResponse = rr(0.0f, 2.0f);
+    controls.audioFeedbackResponse = rr(0.0f, 2.0f);
+    controls.audioBlurResponse = rr(0.0f, 2.0f);
+    controls.audioColorResponse = rr(0.0f, 2.0f);
+    controls.audioGlitchResponse = rr(0.0f, 2.0f);
+    controls.audioBeatSync = rr(0.0f, 4.0f);
+    controls.audioLfoRate = rr(0.05f, 4.0f);
+
+    controls.enableTemporal = true;
+    controls.temporalInterpolation = u01();
+    controls.temporalBlendStrength = u01();
+    controls.slowMotionFactor = rr(0.1f, 4.0f);
+    controls.frameAccumulation = u01();
+}
+} // namespace
 
 // ============================================================
 // Lifecycle
@@ -475,10 +645,6 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
     ImGui::SetNextWindowSize(ImVec2(430.0f, 640.0f), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("VJAY BASICS")) { ImGui::End(); return; }
 
-    auto rr  = [&](float lo, float hi) { return std::uniform_real_distribution<float>(lo,hi)(rng); };
-    auto ri  = [&](int lo, int hi)     { return std::uniform_int_distribution<int>(lo,hi)(rng); };
-    auto u01 = [&]()                   { return std::uniform_real_distribution<float>(0,1)(rng); };
-
     auto setAllToggles = [&](bool v) {
         c.enableColorGrading  = v; c.enableFeedback    = v; c.enableDistortion = v;
         c.enableBlurMotion    = v; c.enableSharpen     = v; c.enableGlitch     = v;
@@ -487,50 +653,7 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
     };
 
     if (ImGui::Button("Randomize VJAY basics")) {
-        if (c.enableColorGrading) {
-            c.gradeBrightness = rr(-0.2f,0.2f); c.gradeContrast  = rr(0.8f,1.4f);
-            c.gradeSaturation = rr(0.6f,1.6f);  c.gradeHueShift  = rr(-90,90);
-            c.gradeGamma      = rr(0.8f,1.4f);  c.colorLUTIndex  = ri(0,5);
-            c.splitToneBalance = u01() * 0.5f;
-            c.splitToneShadows    = glm::vec3(u01(), u01(), u01());
-            c.splitToneHighlights = glm::vec3(u01(), u01(), u01());
-        }
-        if (c.enableFeedback) {
-            c.feedbackAmount = u01(); c.trailStrength = u01();
-            c.temporalAccumulation = u01(); c.feedbackDecay = u01(); c.recursiveBlend = u01();
-        }
-        if (c.enableDistortion) {
-            c.uvWarpStrength = rr(0,0.5f); c.rippleStrength = rr(0,0.5f); c.rippleFrequency = rr(0.5f,6);
-            c.swirlStrength = rr(-0.5f,0.5f); c.displacementAmount = rr(0,0.5f);
-            c.kaleidoSegments = rr(3,12); c.tunnelDepth = rr(0,0.5f); c.tunnelCurvature = rr(-0.5f,0.5f);
-        }
-        if (c.enableBlurMotion) {
-            c.gaussianBlur = u01(); c.directionalBlur = u01(); c.directionalBlurAngle = rr(0,360);
-            c.zoomBlur = u01(); c.motionBlur = u01(); c.temporalBlur = u01();
-        }
-        if (c.enableSharpen)  { c.unsharpMask = u01(); c.casAmount = u01(); c.localContrast = u01(); }
-        if (c.enableGlitch) {
-            c.glitchDatamosh = u01(); c.glitchRGBSplit = u01(); c.glitchScanlineBreak = u01();
-            c.glitchJitter = u01(); c.glitchTearing = u01(); c.glitchPixelSort = u01();
-            c.glitchBufferCorruption = u01();
-        }
-        if (c.enableBlending) {
-            c.blendModeProcedural = ri(0,5); c.blendModeVideo = ri(0,5); c.blendModeFeedback = ri(0,5);
-            c.blendProceduralMix = rr(0,2); c.blendVideoMix = rr(0,2); c.blendFeedbackMix = rr(0,2);
-        }
-        if (c.enableAnalog) {
-            c.analogScanlineFocus = u01(); c.analogMaskBalance = u01(); c.analogNoise = u01();
-            c.analogBloom = rr(0,2); c.vhsDistortion = u01(); c.analogChromaticAberration = rr(0,0.25f);
-        }
-        if (c.enableAudioReactive) {
-            c.audioWarpResponse = rr(0,2); c.audioFeedbackResponse = rr(0,2);
-            c.audioBlurResponse = rr(0,2); c.audioColorResponse = rr(0,2);
-            c.audioGlitchResponse = rr(0,2); c.audioBeatSync = rr(0,4); c.audioLfoRate = rr(0.05f,4);
-        }
-        if (c.enableTemporal) {
-            c.temporalInterpolation = u01(); c.temporalBlendStrength = u01();
-            c.slowMotionFactor = rr(0.1f,4); c.frameAccumulation = u01();
-        }
+        randomizeVJayBasicsControls(c, rng);
         changed = true; controlsDirty = true;
     }
 
@@ -671,8 +794,6 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     ImGui::SetNextWindowSize(ImVec2(350.0f, 400.0f), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("VJAY EXTRA")) { ImGui::End(); return; }
 
-    auto rr = [&](float lo, float hi) { return std::uniform_real_distribution<float>(lo,hi)(rng); };
-
     auto setAllExtraToggles = [&](bool v) {
         c.enablePixelate = v; c.enableStrobe = v; c.enableThreshold = v; c.enableSlowZoom = v;
         c.enableMirror = v; c.enableInvert = v; c.enablePosterize = v; c.enableInfrared = v;
@@ -681,8 +802,7 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     };
 
     if (ImGui::Button("Randomize VJAY extra")) {
-        c.pixelateAmount  = rr(0,1); c.strobeSpeed    = rr(0,10);
-        c.thresholdLevel  = rr(0,1); c.slowZoomAmount = rr(0,1);
+        randomizeVJayExtraControls(c, rng);
         changed = true; controlsDirty = true;
     }
     ImGui::SameLine();
@@ -2386,10 +2506,6 @@ void UISystem::drawVJayBasicsContent(
     static const char* LUT_ITEMS   = "Off\0Filmic\0Neon\0Noir\0Heatmap\0Analog CRT\0";
     static const char* BLEND_ITEMS = "Add\0Screen\0Multiply\0Overlay\0Difference\0Soft Light\0";
 
-    auto rr  = [&](float lo, float hi) { return std::uniform_real_distribution<float>(lo,hi)(rng); };
-    auto ri  = [&](int lo, int hi)     { return std::uniform_int_distribution<int>(lo,hi)(rng); };
-    auto u01 = [&]()                   { return std::uniform_real_distribution<float>(0,1)(rng); };
-
     auto setAllToggles = [&](bool v) {
         controls.enableColorGrading  = v; controls.enableFeedback    = v; controls.enableDistortion = v;
         controls.enableBlurMotion    = v; controls.enableSharpen     = v; controls.enableGlitch     = v;
@@ -2398,50 +2514,7 @@ void UISystem::drawVJayBasicsContent(
     };
 
     if (ImGui::Button("Randomize VJAY basics")) {
-        if (controls.enableColorGrading) {
-            controls.gradeBrightness = rr(-0.2f,0.2f); controls.gradeContrast  = rr(0.8f,1.4f);
-            controls.gradeSaturation = rr(0.6f,1.6f);  controls.gradeHueShift  = rr(-90,90);
-            controls.gradeGamma      = rr(0.8f,1.4f);  controls.colorLUTIndex  = ri(0,5);
-            controls.splitToneBalance = u01() * 0.5f;
-            controls.splitToneShadows    = glm::vec3(u01(), u01(), u01());
-            controls.splitToneHighlights = glm::vec3(u01(), u01(), u01());
-        }
-        if (controls.enableFeedback) {
-            controls.feedbackAmount = u01(); controls.trailStrength = u01();
-            controls.temporalAccumulation = u01(); controls.feedbackDecay = u01(); controls.recursiveBlend = u01();
-        }
-        if (controls.enableDistortion) {
-            controls.uvWarpStrength = rr(0,0.5f); controls.rippleStrength = rr(0,0.5f); controls.rippleFrequency = rr(0.5f,6);
-            controls.swirlStrength = rr(-0.5f,0.5f); controls.displacementAmount = rr(0,0.5f);
-            controls.kaleidoSegments = rr(3,12); controls.tunnelDepth = rr(0,0.5f); controls.tunnelCurvature = rr(-0.5f,0.5f);
-        }
-        if (controls.enableBlurMotion) {
-            controls.gaussianBlur = u01(); controls.directionalBlur = u01(); controls.directionalBlurAngle = rr(0,360);
-            controls.zoomBlur = u01(); controls.motionBlur = u01(); controls.temporalBlur = u01();
-        }
-        if (controls.enableSharpen)  { controls.unsharpMask = u01(); controls.casAmount = u01(); controls.localContrast = u01(); }
-        if (controls.enableGlitch) {
-            controls.glitchDatamosh = u01(); controls.glitchRGBSplit = u01(); controls.glitchScanlineBreak = u01();
-            controls.glitchJitter = u01(); controls.glitchTearing = u01(); controls.glitchPixelSort = u01();
-            controls.glitchBufferCorruption = u01();
-        }
-        if (controls.enableBlending) {
-            controls.blendModeProcedural = ri(0,5); controls.blendModeVideo = ri(0,5); controls.blendModeFeedback = ri(0,5);
-            controls.blendProceduralMix = rr(0,2); controls.blendVideoMix = rr(0,2); controls.blendFeedbackMix = rr(0,2);
-        }
-        if (controls.enableAnalog) {
-            controls.analogScanlineFocus = u01(); controls.analogMaskBalance = u01(); controls.analogNoise = u01();
-            controls.analogBloom = rr(0,2); controls.vhsDistortion = u01(); controls.analogChromaticAberration = rr(0,0.25f);
-        }
-        if (controls.enableAudioReactive) {
-            controls.audioWarpResponse = rr(0,2); controls.audioFeedbackResponse = rr(0,2);
-            controls.audioBlurResponse = rr(0,2); controls.audioColorResponse = rr(0,2);
-            controls.audioGlitchResponse = rr(0,2); controls.audioBeatSync = rr(0,4); controls.audioLfoRate = rr(0.05f,4);
-        }
-        if (controls.enableTemporal) {
-            controls.temporalInterpolation = u01(); controls.temporalBlendStrength = u01();
-            controls.slowMotionFactor = rr(0.1f,4); controls.frameAccumulation = u01();
-        }
+        randomizeVJayBasicsControls(controls, rng);
         changed = true; controlsDirty = true;
     }
 
@@ -2615,8 +2688,6 @@ void UISystem::drawVJayExtraContent(
     std::mt19937&   rng
 ) {
     bool changed = false;
-    auto rr = [&](float lo, float hi) { return std::uniform_real_distribution<float>(lo,hi)(rng); };
-
     auto setAllExtraToggles = [&](bool v) {
         controls.enablePixelate = v; controls.enableStrobe = v; controls.enableThreshold = v; controls.enableSlowZoom = v;
         controls.enableMirror = v; controls.enableInvert = v; controls.enablePosterize = v; controls.enableInfrared = v;
@@ -2625,8 +2696,7 @@ void UISystem::drawVJayExtraContent(
     };
 
     if (ImGui::Button("Randomize VJAY extra")) {
-        controls.pixelateAmount  = rr(0,1); controls.strobeSpeed    = rr(0,10);
-        controls.thresholdLevel  = rr(0,1); controls.slowZoomAmount = rr(0,1);
+        randomizeVJayExtraControls(controls, rng);
         changed = true; controlsDirty = true;
     }
     ImGui::SameLine();
