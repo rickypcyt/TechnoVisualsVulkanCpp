@@ -326,16 +326,25 @@ private:
 
         if (pid == 0) {
             // Child process: execute FFmpeg using execlp for safer execution
-            // Parse command into arguments
+            // Parse command into arguments with proper quote handling
             std::vector<char*> args;
-            std::istringstream iss(cmd);
             std::string token;
+            bool in_quotes = false;
 
-            while (iss >> token) {
-                // Handle quoted strings
-                if (token.front() == '"' && token.back() == '"') {
-                    token = token.substr(1, token.length() - 2);
+            for (char c : cmd) {
+                if (c == '"') {
+                    in_quotes = !in_quotes;
+                } else if (c == ' ' && !in_quotes) {
+                    if (!token.empty()) {
+                        char* arg = strdup(token.c_str());
+                        args.push_back(arg);
+                        token.clear();
+                    }
+                } else {
+                    token += c;
                 }
+            }
+            if (!token.empty()) {
                 char* arg = strdup(token.c_str());
                 args.push_back(arg);
             }
@@ -411,7 +420,14 @@ private:
     }
     
     std::string build_ffmpeg_command(std::shared_ptr<RenderJob> job) {
-        std::string cmd = "ffmpeg -y -i \"" + job->active_file + "\"";
+        // Escape double quotes in file path
+        std::string escaped_file = job->active_file;
+        size_t pos = 0;
+        while ((pos = escaped_file.find("\"", pos)) != std::string::npos) {
+            escaped_file.replace(pos, 1, "\\\"");
+            pos += 2;
+        }
+        std::string cmd = "ffmpeg -y -i \"" + escaped_file + "\"";
 
         // Agregar efectos del job
         std::string filter = build_filter_from_job(job);

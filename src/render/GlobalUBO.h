@@ -399,6 +399,10 @@ struct GlobalParamsUBO {
     alignas(4) float cameraPanY;
     alignas(4) float cameraRotation;
     alignas(4) int enableCameraMovement;
+
+    // Final RGB overlay
+    alignas(16) glm::vec3 rgbOverlay;
+    alignas(4) int enableRgbOverlay;
 };
 
 // ============================================================================
@@ -423,6 +427,16 @@ struct GlobalUBO {
     alignas(4) float bass;
     alignas(4) float mid;
     alignas(4) float high;
+    
+    // --- Audio reactivity parameters ---
+    alignas(4) float audioWarpResponse;
+    alignas(4) float audioFeedbackResponse;
+    alignas(4) float audioBlurResponse;
+    alignas(4) float audioColorResponse;
+    alignas(4) float audioGlitchResponse;
+    alignas(4) float audioBeatSync;
+    alignas(4) float audioLfoRate;
+    alignas(4) int   enableAudioReactive;
 
     // --- Colores procedurales ---
     alignas(16) glm::vec4 primaryColor;
@@ -606,4 +620,8 @@ struct GlobalUBO {
     alignas(4) float cameraPanY;
     alignas(4) float cameraRotation;
     alignas(4) int enableCameraMovement;
+
+    // --- Final RGB overlay ---
+    alignas(16) glm::vec3 rgbOverlay;
+    alignas(4) int enableRgbOverlay;
 };

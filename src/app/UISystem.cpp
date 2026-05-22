@@ -141,86 +141,96 @@ void randomizeVJayBasicsControls(VisualControls& controls, std::mt19937& rng) {
     auto ri  = [&](int lo, int hi) { return randInt(rng, lo, hi); };
     auto u01 = [&]() { return randFloat(rng, 0.0f, 1.0f); };
 
-    controls.enableColorGrading = true;
-    controls.gradeBrightness = rr(-0.2f, 0.2f);
-    controls.gradeContrast = rr(0.8f, 1.4f);
-    controls.gradeSaturation = rr(0.6f, 1.6f);
-    controls.gradeHueShift = rr(-90.0f, 90.0f);
-    controls.gradeGamma = rr(0.8f, 1.4f);
-    controls.colorLUTIndex = ri(0, 5);
-    controls.splitToneBalance = u01() * 0.5f;
-    controls.splitToneShadows = glm::vec3(u01(), u01(), u01());
-    controls.splitToneHighlights = glm::vec3(u01(), u01(), u01());
+    if (controls.enableColorGrading) {
+        controls.gradeBrightness = rr(-0.2f, 0.2f);
+        controls.gradeContrast = rr(0.8f, 1.4f);
+        controls.gradeSaturation = rr(0.6f, 1.6f);
+        controls.gradeHueShift = rr(-90.0f, 90.0f);
+        controls.gradeGamma = rr(0.8f, 1.4f);
+        controls.colorLUTIndex = ri(0, 5);
+        controls.splitToneBalance = u01() * 0.5f;
+        controls.splitToneShadows = glm::vec3(u01(), u01(), u01());
+        controls.splitToneHighlights = glm::vec3(u01(), u01(), u01());
+    }
 
-    controls.enableFeedback = true;
-    controls.feedbackAmount = u01();
-    controls.trailStrength = u01();
-    controls.temporalAccumulation = u01();
-    controls.feedbackDecay = u01();
-    controls.recursiveBlend = u01();
+    if (controls.enableFeedback) {
+        controls.feedbackAmount = u01();
+        controls.trailStrength = u01();
+        controls.temporalAccumulation = u01();
+        controls.feedbackDecay = u01();
+        controls.recursiveBlend = u01();
+    }
 
-    controls.enableDistortion = true;
-    controls.uvWarpStrength = rr(0.0f, 0.5f);
-    controls.rippleStrength = rr(0.0f, 0.5f);
-    controls.rippleFrequency = rr(0.5f, 6.0f);
-    controls.swirlStrength = rr(-0.5f, 0.5f);
-    controls.displacementAmount = rr(0.0f, 0.5f);
-    controls.kaleidoSegments = rr(3.0f, 12.0f);
-    controls.tunnelDepth = rr(0.0f, 0.5f);
-    controls.tunnelCurvature = rr(-0.5f, 0.5f);
+    if (controls.enableDistortion) {
+        controls.uvWarpStrength = rr(0.0f, 0.5f);
+        controls.rippleStrength = rr(0.0f, 0.5f);
+        controls.rippleFrequency = rr(0.5f, 6.0f);
+        controls.swirlStrength = rr(-0.5f, 0.5f);
+        controls.displacementAmount = rr(0.0f, 0.5f);
+        controls.kaleidoSegments = rr(3.0f, 12.0f);
+        controls.tunnelDepth = rr(0.0f, 0.5f);
+        controls.tunnelCurvature = rr(-0.5f, 0.5f);
+    }
 
-    controls.enableBlurMotion = true;
-    controls.gaussianBlur = u01();
-    controls.directionalBlur = u01();
-    controls.directionalBlurAngle = rr(0.0f, 360.0f);
-    controls.zoomBlur = u01();
-    controls.motionBlur = u01();
-    controls.temporalBlur = u01();
+    if (controls.enableBlurMotion) {
+        controls.gaussianBlur = u01();
+        controls.directionalBlur = u01();
+        controls.directionalBlurAngle = rr(0.0f, 360.0f);
+        controls.zoomBlur = u01();
+        controls.motionBlur = u01();
+        controls.temporalBlur = u01();
+    }
 
-    controls.enableSharpen = true;
-    controls.unsharpMask = u01();
-    controls.casAmount = u01();
-    controls.localContrast = u01();
+    if (controls.enableSharpen) {
+        controls.unsharpMask = u01();
+        controls.casAmount = u01();
+        controls.localContrast = u01();
+    }
 
-    controls.enableGlitch = true;
-    controls.glitchDatamosh = u01();
-    controls.glitchRGBSplit = u01();
-    controls.glitchScanlineBreak = u01();
-    controls.glitchJitter = u01();
-    controls.glitchTearing = u01();
-    controls.glitchPixelSort = u01();
-    controls.glitchBufferCorruption = u01();
+    if (controls.enableGlitch) {
+        controls.glitchDatamosh = u01();
+        controls.glitchRGBSplit = u01();
+        controls.glitchScanlineBreak = u01();
+        controls.glitchJitter = u01();
+        controls.glitchTearing = u01();
+        controls.glitchPixelSort = u01();
+        controls.glitchBufferCorruption = u01();
+    }
 
-    controls.enableBlending = true;
-    controls.blendModeProcedural = ri(0, 5);
-    controls.blendModeVideo = ri(0, 5);
-    controls.blendModeFeedback = ri(0, 5);
-    controls.blendProceduralMix = rr(0.0f, 2.0f);
-    controls.blendVideoMix = rr(0.0f, 2.0f);
-    controls.blendFeedbackMix = rr(0.0f, 2.0f);
+    if (controls.enableBlending) {
+        controls.blendModeProcedural = ri(0, 5);
+        controls.blendModeVideo = ri(0, 5);
+        controls.blendModeFeedback = ri(0, 5);
+        controls.blendProceduralMix = rr(0.0f, 2.0f);
+        controls.blendVideoMix = rr(0.0f, 2.0f);
+        controls.blendFeedbackMix = rr(0.0f, 2.0f);
+    }
 
-    controls.enableAnalog = true;
-    controls.analogScanlineFocus = u01();
-    controls.analogMaskBalance = u01();
-    controls.analogNoise = u01();
-    controls.analogBloom = rr(0.0f, 2.0f);
-    controls.vhsDistortion = u01();
-    controls.analogChromaticAberration = rr(0.0f, 0.25f);
+    if (controls.enableAnalog) {
+        controls.analogScanlineFocus = u01();
+        controls.analogMaskBalance = u01();
+        controls.analogNoise = u01();
+        controls.analogBloom = rr(0.0f, 2.0f);
+        controls.vhsDistortion = u01();
+        controls.analogChromaticAberration = rr(0.0f, 0.25f);
+    }
 
-    controls.enableAudioReactive = true;
-    controls.audioWarpResponse = rr(0.0f, 2.0f);
-    controls.audioFeedbackResponse = rr(0.0f, 2.0f);
-    controls.audioBlurResponse = rr(0.0f, 2.0f);
-    controls.audioColorResponse = rr(0.0f, 2.0f);
-    controls.audioGlitchResponse = rr(0.0f, 2.0f);
-    controls.audioBeatSync = rr(0.0f, 4.0f);
-    controls.audioLfoRate = rr(0.05f, 4.0f);
+    if (controls.enableAudioReactive) {
+        controls.audioWarpResponse = rr(0.0f, 2.0f);
+        controls.audioFeedbackResponse = rr(0.0f, 2.0f);
+        controls.audioBlurResponse = rr(0.0f, 2.0f);
+        controls.audioColorResponse = rr(0.0f, 2.0f);
+        controls.audioGlitchResponse = rr(0.0f, 2.0f);
+        controls.audioBeatSync = rr(0.0f, 4.0f);
+        controls.audioLfoRate = rr(0.05f, 4.0f);
+    }
 
-    controls.enableTemporal = true;
-    controls.temporalInterpolation = u01();
-    controls.temporalBlendStrength = u01();
-    controls.slowMotionFactor = rr(0.1f, 4.0f);
-    controls.frameAccumulation = u01();
+    if (controls.enableTemporal) {
+        controls.temporalInterpolation = u01();
+        controls.temporalBlendStrength = u01();
+        controls.slowMotionFactor = rr(0.1f, 4.0f);
+        controls.frameAccumulation = u01();
+    }
 }
 } // namespace
 
@@ -313,7 +323,9 @@ void UISystem::render(
     const UICallbacks&    callbacks,
     MidiSystem&           midiSystem,
     OscSystem&            oscSystem,
-    AudioSystem&          audioSystem
+    AudioSystem&          audioSystem,
+    const std::string&    video1Path,
+    const std::string&    video2Path
 ) {
     if (!initialized || !renderer) return;
 
@@ -323,7 +335,7 @@ void UISystem::render(
     drawMainNavbar(controls, randomizer, randomizer2, player, registry,
                    selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2,
                    allowDimensionChangeRecreation, controlsDirty,
-                   rng, diag, callbacks, midiSystem, oscSystem, audioSystem);
+                   rng, diag, callbacks, midiSystem, oscSystem, audioSystem, video1Path, video2Path);
 
     if (showDemoWindow) {
         ImGui::ShowDemoWindow(&showDemoWindow);
@@ -475,22 +487,6 @@ void UISystem::drawProceduralControls(
     changed |= ImGui::SliderFloat("Grayscale", &controls.grayscaleAmount, 0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Sharpen",   &controls.sharpenAmount,   0.0f, 1.0f);
     changed |= ImGui::Checkbox("Bicubic Upscale", &controls.upscaleEnabled);
-    ImGui::SameLine();
-    changed |= ImGui::Checkbox("Random start", &controls.randomVideoStart);
-
-    if (controls.randomVideoStart) {
-        ImGui::SameLine();
-        if (ImGui::Button("Jump Random") && callbacks.onJumpRandom) {
-            callbacks.onJumpRandom();
-        }
-    }
-
-    ImGui::Indent();
-    changed |= ImGui::Checkbox("Auto jump interval", &controls.enableRandomJumpInterval);
-    if (controls.enableRandomJumpInterval) {
-        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval, 1.0f, 60.0f, "%1f s");
-    }
-    ImGui::Unindent();
 
     changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
 
@@ -876,12 +872,33 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
 // Ventana "NLE Editor"
 // ============================================================
 
-void UISystem::drawNLEEditor(const UICallbacks& callbacks) {
+void UISystem::drawNLEEditor(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path) {
     ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("NLE Editor", &showNLEWindow)) { ImGui::End(); return; }
 
     ImGui::Text("NLE Effects (for rendering/exporting only)");
     ImGui::TextDisabled("These effects are applied when rendering to a new file");
+    ImGui::Separator();
+
+    ImGui::Text("Video Source:");
+    ImGui::SameLine();
+    static int videoSource = static_cast<int>(g_project_state.nleVideoSource);
+    if (ImGui::RadioButton("Video 1", &videoSource, 0)) {
+        g_project_state.nleVideoSource = NLEVideoSource::VIDEO_1;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Video 2", &videoSource, 1)) {
+        g_project_state.nleVideoSource = NLEVideoSource::VIDEO_2;
+    }
+
+    // Update active_file based on selection (store full path for rendering)
+    const std::string& currentPath = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? video1Path : video2Path;
+    if (!currentPath.empty()) {
+        g_project_state.active_file = currentPath;
+    } else {
+        g_project_state.active_file = "(no video loaded)";
+    }
+
     ImGui::Separator();
     ImGui::Text("Quality Presets:");
 
@@ -927,8 +944,13 @@ void UISystem::drawNLEEditor(const UICallbacks& callbacks) {
     g_project_state.output_file = output_file_buf;
     ImGui::Separator();
 
-    if (ImGui::Button("Render/Export")) {
-        g_project_state.do_swap = false;
+    bool canRender = (g_project_state.active_file != "(no video loaded)");
+    if (!canRender) {
+        ImGui::BeginDisabled(true);
+        ImGui::Button("Render/Export (No video loaded)");
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Render/Export")) {
+        g_project_state.do_swap = true;
         g_project_state.increment_version();
     }
     ImGui::SameLine();
@@ -951,8 +973,10 @@ void UISystem::drawNLEEditor(const UICallbacks& callbacks) {
 void UISystem::drawDiagnostics(
     const UIDiagnostics& diag,
     VideoPlayer&         player,
+    VideoPlayer&         player2,
     VideoRegistry&       registry,
     int&                 selectedAsset,
+    int&                 selectedAsset2,
     VisualControls&      controls,
     const UICallbacks&   callbacks)
 {
@@ -1594,6 +1618,7 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
 
     static const char* actions[] = {
         "randomizeVideo",
+        "randomizeVideo2",
         "jumpRandom",
         "folderChanged",
         "applyChanges"
@@ -1609,6 +1634,7 @@ void UISystem::drawOscControls(OscSystem& oscSystem) {
     ImGui::Separator();
     ImGui::Text("Trigger Examples:");
     ImGui::Text("/vjay/randomize (no arguments)");
+    ImGui::Text("/vjay/randomize2 (no arguments)");
     ImGui::Text("/vjay/jump (no arguments)");
     ImGui::Text("Send messages without arguments for triggers");
 
@@ -1877,7 +1903,9 @@ void UISystem::drawMainNavbar(
     const UICallbacks&    callbacks,
     MidiSystem&           midiSystem,
     OscSystem&            oscSystem,
-    AudioSystem&          audioSystem
+    AudioSystem&          audioSystem,
+    const std::string&    video1Path,
+    const std::string&    video2Path
 ) {
     // Main window with navbar tabs - fullscreen responsive
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -1935,13 +1963,13 @@ void UISystem::drawMainNavbar(
         
         // Tab 6: NLE Editor
         if (ImGui::BeginTabItem("NLE Editor")) {
-            drawNLEEditorContent(callbacks);
+            drawNLEEditorContent(callbacks, video1Path, video2Path);
             ImGui::EndTabItem();
         }
         
         // Tab 7: Diagnostics
         if (ImGui::BeginTabItem("Diagnostics")) {
-            drawDiagnosticsContent(diag, player, registry, selectedVideoAsset, controls, callbacks);
+            drawDiagnosticsContent(diag, player, player2, registry, selectedVideoAsset, selectedVideoAsset2, controls, callbacks);
             ImGui::EndTabItem();
         }
         
@@ -2104,7 +2132,7 @@ void UISystem::drawVideoContent(
 
     ImGui::Separator();
     ImGui::Text("Video 1 Randomization");
-    changed |= ImGui::Checkbox("Random start", &controls.randomVideoStart);
+    changed |= ImGui::Checkbox("Random Start Video 1", &controls.randomVideoStart);
     if (controls.randomVideoStart) {
         ImGui::SameLine();
         if (ImGui::Button("Jump Random") && callbacks.onJumpRandom) {
@@ -2266,7 +2294,7 @@ void UISystem::drawVideoContent(
 
     ImGui::Separator();
     ImGui::Text("Randomization");
-    changed |= ImGui::Checkbox("Random start", &controls.randomVideo2Start);
+    changed |= ImGui::Checkbox("Random Start Video 2", &controls.randomVideo2Start);
     if (controls.randomVideo2Start) {
         ImGui::SameLine();
         if (ImGui::Button("Jump Random##V2") && callbacks.onJumpRandom) {
@@ -2379,6 +2407,10 @@ void UISystem::drawVideoContent(
 
     ImGui::Indent();
     changed |= ImGui::Checkbox("Shuffle all videos##V2", &randomizer2.useShuffleMode);
+    if (randomizer2.useShuffleMode && !randomizer2.shuffleQueue.empty()) {
+        ImGui::Text("Playing %d/%d", randomizer2.currentShuffleIndex + 1,
+                    static_cast<int>(randomizer2.shuffleQueue.size()));
+    }
     ImGui::Unindent();
     ImGui::EndDisabled();
 
@@ -2795,12 +2827,41 @@ void UISystem::drawVJayExtraContent(
     changed |= ImGui::SliderFloat("Camera rotation", &controls.cameraRotation, -3.14159f, 3.14159f, "%.2f rad");
     ImGui::EndDisabled();
 
+    ImGui::Separator();
+
+    // Final RGB overlay
+    changed |= ImGui::Checkbox("RGB Overlay", &controls.enableRgbOverlay);
+    ImGui::BeginDisabled(!controls.enableRgbOverlay);
+    changed |= ImGui::ColorEdit3("Overlay color", &controls.rgbOverlay[0]);
+    ImGui::EndDisabled();
+
     if (changed) controlsDirty = true;
 }
 
-void UISystem::drawNLEEditorContent(const UICallbacks& callbacks) {
+void UISystem::drawNLEEditorContent(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path) {
     ImGui::Text("NLE Effects (for rendering/exporting only)");
     ImGui::TextDisabled("These effects are applied when rendering to a new file");
+    ImGui::Separator();
+
+    ImGui::Text("Video Source:");
+    ImGui::SameLine();
+    static int videoSource = static_cast<int>(g_project_state.nleVideoSource);
+    if (ImGui::RadioButton("Video 1", &videoSource, 0)) {
+        g_project_state.nleVideoSource = NLEVideoSource::VIDEO_1;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Video 2", &videoSource, 1)) {
+        g_project_state.nleVideoSource = NLEVideoSource::VIDEO_2;
+    }
+
+    // Update active_file based on selection (store full path for rendering)
+    const std::string& currentPath = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? video1Path : video2Path;
+    if (!currentPath.empty()) {
+        g_project_state.active_file = currentPath;
+    } else {
+        g_project_state.active_file = "(no video loaded)";
+    }
+
     ImGui::Separator();
     ImGui::Text("Quality Presets:");
 
@@ -2844,8 +2905,13 @@ void UISystem::drawNLEEditorContent(const UICallbacks& callbacks) {
     g_project_state.output_file = output_file_buf;
     ImGui::Separator();
 
-    if (ImGui::Button("Render/Export")) {
-        g_project_state.do_swap = false;
+    bool canRender = (g_project_state.active_file != "(no video loaded)");
+    if (!canRender) {
+        ImGui::BeginDisabled(true);
+        ImGui::Button("Render/Export (No video loaded)");
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Render/Export")) {
+        g_project_state.do_swap = true;
         g_project_state.increment_version();
     }
     ImGui::SameLine();
@@ -2862,8 +2928,10 @@ void UISystem::drawNLEEditorContent(const UICallbacks& callbacks) {
 void UISystem::drawDiagnosticsContent(
     const UIDiagnostics& diag,
     VideoPlayer&         player,
+    VideoPlayer&         player2,
     VideoRegistry&       registry,
     int&                 selectedAsset,
+    int&                 selectedAsset2,
     VisualControls&      controls,
     const UICallbacks&   callbacks
 ) {
@@ -2872,6 +2940,8 @@ void UISystem::drawDiagnosticsContent(
     ImGui::Text("Current mode: %d",    diag.currentMode);
     ImGui::Text("FPS: %.1f",           ImGui::GetIO().Framerate);
 
+    ImGui::Separator();
+    ImGui::Text("Video 1:");
     if (diag.videoReady) {
         ImGui::Text("Video: %ux%u", diag.videoWidth, diag.videoHeight);
         if (player.isReady()) {
@@ -2892,6 +2962,17 @@ void UISystem::drawDiagnosticsContent(
             if (controls.forcedFpsIndex > 0)
                 ImGui::Text("Forced FPS: %d", FORCED_FPS_OPTIONS_UI[controls.forcedFpsIndex]);
         }
+    } else {
+        ImGui::Text("Video offline");
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Video 2:");
+    if (player2.isReady()) {
+        ImGui::Text("Video: %ux%u", player2.width(), player2.height());
+        double fd  = std::max(1e-6, player2.frameDuration());
+        double fps = 1.0 / fd;
+        ImGui::Text("Clip FPS: %.2f", fps);
     } else {
         ImGui::Text("Video offline");
     }
@@ -3292,6 +3373,7 @@ void UISystem::drawOscControlsContent(OscSystem& oscSystem) {
 
     static const char* actions[] = {
         "randomizeVideo",
+        "randomizeVideo2",
         "jumpRandom",
         "folderChanged",
         "applyChanges"
@@ -3307,6 +3389,7 @@ void UISystem::drawOscControlsContent(OscSystem& oscSystem) {
     ImGui::Separator();
     ImGui::Text("Trigger Examples:");
     ImGui::Text("/vjay/randomize (no arguments)");
+    ImGui::Text("/vjay/randomize2 (no arguments)");
     ImGui::Text("/vjay/jump (no arguments)");
     ImGui::Text("Send messages without arguments for triggers");
 }

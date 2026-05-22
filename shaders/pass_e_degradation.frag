@@ -202,6 +202,10 @@ void main() {
         ubo.grainStrength * 0.15,
         0.0, 1.0
     );
+    
+    if (ubo.enableAudioReactive == 1) {
+        glitchWeight *= (1.0 + ubo.energy * ubo.audioGlitchResponse);
+    }
 
     vec3 color = base;
 

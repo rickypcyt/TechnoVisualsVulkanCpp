@@ -8,6 +8,12 @@ enum class RenderMode {
     EXPORT      // Full quality: minterpolate, slow preset
 };
 
+// Video source for NLE editor
+enum class NLEVideoSource {
+    VIDEO_1,    // Use video 1 (videoSourcePath)
+    VIDEO_2     // Use video 2 (videoSourcePath2)
+};
+
 // ProjectState - centro de verdad del sistema
 struct ProjectState {
     float speed = 1.0f;
@@ -25,7 +31,10 @@ struct ProjectState {
     
     // Output file
     std::string output_file = "output.mp4";
-    
+
+    // Video source for NLE
+    NLEVideoSource nleVideoSource = NLEVideoSource::VIDEO_1;
+
     // Render mode
     RenderMode render_mode = RenderMode::PREVIEW;
     

@@ -5,6 +5,7 @@
 #include <mutex>
 #include <cmath>
 #include <cstring>
+#include <thread>
 
 namespace {
     void ensureFFmpegInitialized() {
@@ -62,6 +63,14 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
         shutdown();
         return false;
     }
+
+    // Enable multi-threaded decoding (essential for 4K performance)
+    int hwThreads = static_cast<int>(std::thread::hardware_concurrency());
+    codecCtx->thread_count = (hwThreads > 0) ? hwThreads : 4;
+    codecCtx->thread_type  = FF_THREAD_FRAME | FF_THREAD_SLICE;
+
+    // Skip loop filter for faster decoding (~20-30% speedup, minor quality loss)
+    codecCtx->skip_loop_filter = AVDISCARD_ALL;
 
     if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
         std::cerr << "[Video] Failed to open codec" << std::endl;

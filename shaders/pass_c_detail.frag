@@ -261,8 +261,12 @@ void main() {
                    ubo.temporalBlur > 0.0001;
 
     if (ubo.enableBlurMotion == 1 && hasBlur) {
-        if (ubo.gaussianBlur > 0.0001) {
-            color = mix(color, blurCross5(uv0), clamp(ubo.gaussianBlur, 0.0, 1.0));
+        float blurAmount = ubo.gaussianBlur;
+        if (ubo.enableAudioReactive == 1) {
+            blurAmount *= (1.0 + ubo.energy * ubo.audioBlurResponse);
+        }
+        if (blurAmount > 0.0001) {
+            color = mix(color, blurCross5(uv0), clamp(blurAmount, 0.0, 1.0));
         }
         if (ubo.directionalBlur > 0.0001) {
             color = mix(color, blurDirectional(uv0, radians(ubo.directionalBlurAngle)), clamp(ubo.directionalBlur, 0.0, 1.0));

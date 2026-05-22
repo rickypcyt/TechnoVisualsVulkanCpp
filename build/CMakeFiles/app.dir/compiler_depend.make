@@ -7125,6 +7125,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/c++/16.1.1/bits/allocator.h \
   /usr/include/c++/16.1.1/bits/atomic_base.h \
   /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
+  /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
   /usr/include/c++/16.1.1/bits/atomic_wait.h \
   /usr/include/c++/16.1.1/bits/basic_ios.h \
   /usr/include/c++/16.1.1/bits/basic_ios.tcc \
@@ -7175,10 +7176,13 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/c++/16.1.1/bits/ranges_base.h \
   /usr/include/c++/16.1.1/bits/ranges_cmp.h \
   /usr/include/c++/16.1.1/bits/ranges_util.h \
+  /usr/include/c++/16.1.1/bits/refwrap.h \
   /usr/include/c++/16.1.1/bits/requires_hosted.h \
+  /usr/include/c++/16.1.1/bits/semaphore_base.h \
   /usr/include/c++/16.1.1/bits/specfun.h \
   /usr/include/c++/16.1.1/bits/std_abs.h \
   /usr/include/c++/16.1.1/bits/std_mutex.h \
+  /usr/include/c++/16.1.1/bits/std_thread.h \
   /usr/include/c++/16.1.1/bits/stdexcept_except.h \
   /usr/include/c++/16.1.1/bits/stdexcept_throw.h \
   /usr/include/c++/16.1.1/bits/stdexcept_throwfwd.h \
@@ -7199,8 +7203,10 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
   /usr/include/c++/16.1.1/bits/string_view.tcc \
   /usr/include/c++/16.1.1/bits/stringfwd.h \
+  /usr/include/c++/16.1.1/bits/this_thread_sleep.h \
   /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
   /usr/include/c++/16.1.1/bits/unique_lock.h \
+  /usr/include/c++/16.1.1/bits/unique_ptr.h \
   /usr/include/c++/16.1.1/bits/uses_allocator.h \
   /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
   /usr/include/c++/16.1.1/bits/utility.h \
@@ -7244,12 +7250,15 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
   /usr/include/c++/16.1.1/pstl/pstl_config.h \
   /usr/include/c++/16.1.1/ratio \
+  /usr/include/c++/16.1.1/semaphore \
   /usr/include/c++/16.1.1/stdexcept \
   /usr/include/c++/16.1.1/stdlib.h \
+  /usr/include/c++/16.1.1/stop_token \
   /usr/include/c++/16.1.1/streambuf \
   /usr/include/c++/16.1.1/string \
   /usr/include/c++/16.1.1/string_view \
   /usr/include/c++/16.1.1/system_error \
+  /usr/include/c++/16.1.1/thread \
   /usr/include/c++/16.1.1/tr1/bessel_function.tcc \
   /usr/include/c++/16.1.1/tr1/beta_function.tcc \
   /usr/include/c++/16.1.1/tr1/ell_integral.tcc \
@@ -7342,6 +7351,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulk
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
+  /usr/include/sys/time.h \
   /usr/include/sys/types.h \
   /usr/include/time.h \
   /usr/include/wchar.h \

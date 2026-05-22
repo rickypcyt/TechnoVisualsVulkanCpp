@@ -223,7 +223,10 @@ void main() {
         float lum = dot(color, vec3(0.299, 0.587, 0.114));
         color = mix(vec3(lum), color, ubo.gradeSaturation);
 
-        float audioResponse = clamp(ubo.energy * 0.3, 0.0, 1.0);
+        float audioResponse = 0.0;
+        if (ubo.enableAudioReactive == 1) {
+            audioResponse = clamp(ubo.energy * ubo.audioColorResponse, 0.0, 1.0);
+        }
         color = hueShift(color, ubo.gradeHueShift + audioResponse * 45.0);
 
         color = pow(max(color, vec3(0.0)), vec3(1.0 / max(ubo.gradeGamma, 0.05)));

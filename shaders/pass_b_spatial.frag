@@ -222,7 +222,11 @@ void main() {
         float warpMask = clamp(ubo.uvWarpStrength, 0.0, 1.0);
         if (warpMask > 0.0001) {
             vec2 w = sin((p.yx + t) * 8.0) * warpMask * 0.01;
-            p += w * (1.0 + ubo.energy * 0.5);
+            float audioMod = 1.0;
+            if (ubo.enableAudioReactive == 1) {
+                audioMod = 1.0 + ubo.energy * ubo.audioWarpResponse;
+            }
+            p += w * audioMod;
         }
 
         if (ubo.rippleStrength > 0.0001) {

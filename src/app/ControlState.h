@@ -24,7 +24,9 @@ void load(
     VideoRandomizerState2& randomizer2,
     bool&               allowDimensionChangeRecreation,
     MidiSystem&         midiSystem,
-    OscSystem&          oscSystem
+    OscSystem&          oscSystem,
+    int&                selectedVideoAsset,
+    int&                selectedVideoAsset2
 );
 
 void save(
@@ -34,7 +36,9 @@ void save(
     const VideoRandomizerState2& randomizer2,
     bool                      allowDimensionChangeRecreation,
     const MidiSystem&         midiSystem,
-    const OscSystem&          oscSystem
+    const OscSystem&          oscSystem,
+    int                       selectedVideoAsset,
+    int                       selectedVideoAsset2
 );
 
 } // namespace ControlState

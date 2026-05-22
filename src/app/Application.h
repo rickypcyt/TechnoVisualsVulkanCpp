@@ -84,6 +84,7 @@ private:
     int selectedVideoAsset = -1;
     bool videoSubsystemInitialized = false;
     bool isReloadingVideo = false;
+    bool pendingNLEReload = false;
     std::chrono::steady_clock::time_point lastVideoChangeTime = std::chrono::steady_clock::now();
     const std::chrono::milliseconds videoChangeCooldown{500};
 
@@ -122,6 +123,10 @@ private:
     bool allowDimensionChangeRecreation = false;
     float transitionDuration = 1.0f;
     float transitionDuration2 = 0.5f;
+    float transitionProgress = 0.0f;  // 0.0 to 1.0, current transition progress
+    bool transitionActive = false;    // whether a transition is in progress
+    bool transitionFromV1toV2 = true; // transition direction
+    std::chrono::steady_clock::time_point transitionStartTime;
     std::chrono::steady_clock::time_point lastControlSaveTime;
     std::mt19937 rng{std::random_device{}()};
 

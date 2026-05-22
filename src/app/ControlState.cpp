@@ -110,7 +110,9 @@ void ControlState::load(
     VideoRandomizerState2& r2,
     bool&                 allowDimensionChangeRecreation,
     MidiSystem&           midiSystem,
-    OscSystem&            oscSystem)
+    OscSystem&            oscSystem,
+    int&                  selectedVideoAsset,
+    int&                  selectedVideoAsset2)
 {
     std::ifstream file(path);
     if (!file.is_open()) return;
@@ -153,7 +155,7 @@ void ControlState::load(
     for (const auto& [key, value] : kv) {
         if (key.find("osc_mapping_") == 0) {
             // Parse key to get OSC address
-            std::string oscAddress = key.substr(13); // "osc_mapping_" is 13 chars
+            std::string oscAddress = key.substr(12); // "osc_mapping_" is 12 chars
 
             try {
                 // Parse value: parameterName,minValue,maxValue,invert
@@ -354,6 +356,8 @@ void ControlState::load(
     loaded.cameraPanX               = readFloat(kv, "cameraPanX",               loaded.cameraPanX);
     loaded.cameraPanY               = readFloat(kv, "cameraPanY",               loaded.cameraPanY);
     loaded.cameraRotation           = readFloat(kv, "cameraRotation",           loaded.cameraRotation);
+    loaded.rgbOverlay               = readVec3 (kv, "rgbOverlay",               loaded.rgbOverlay);
+    loaded.enableRgbOverlay         = readBool (kv, "enableRgbOverlay",         loaded.enableRgbOverlay);
 
     // Randomizer
     VideoRandomizerState rLoaded = r;
@@ -371,6 +375,9 @@ void ControlState::load(
 
     allowDimensionChangeRecreation =
         readBool(kv, "allowDimensionChangeRecreation", allowDimensionChangeRecreation);
+
+    selectedVideoAsset  = readInt(kv, "selectedVideoAsset",  selectedVideoAsset);
+    selectedVideoAsset2 = readInt(kv, "selectedVideoAsset2", selectedVideoAsset2);
 
     // Commit: solo si todo fue bien
     c = loaded;
@@ -391,7 +398,9 @@ void ControlState::save(
     const VideoRandomizerState2& r2,
     bool                      allowDimensionChangeRecreation,
     const MidiSystem&         midiSystem,
-    const OscSystem&          oscSystem)
+    const OscSystem&          oscSystem,
+    int                       selectedVideoAsset,
+    int                       selectedVideoAsset2)
 {
     std::ofstream file(path);
     if (!file.is_open()) {
@@ -597,6 +606,8 @@ void ControlState::save(
     wf("cameraPanX",               c.cameraPanX);
     wf("cameraPanY",               c.cameraPanY);
     wf("cameraRotation",           c.cameraRotation);
+    wv3("rgbOverlay",              c.rgbOverlay);
+    wb("enableRgbOverlay",         c.enableRgbOverlay);
 
     // Randomizer
     wb("autoRandomize",                r.autoRandomize);
@@ -611,4 +622,6 @@ void ControlState::save(
     wb("useShuffleMode2",              r2.useShuffleMode);
     
     wb("allowDimensionChangeRecreation", allowDimensionChangeRecreation);
+    wi("selectedVideoAsset",           selectedVideoAsset);
+    wi("selectedVideoAsset2",          selectedVideoAsset2);
 }

@@ -112,7 +112,9 @@ public:
         const UICallbacks&    callbacks,
         MidiSystem&           midiSystem,
         OscSystem&            oscSystem,
-        AudioSystem&          audioSystem
+        AudioSystem&          audioSystem,
+        const std::string&    video1Path,
+        const std::string&    video2Path
     );
 
 private:
@@ -162,13 +164,15 @@ private:
         std::mt19937&   rng
     );
 
-    void drawNLEEditor(const UICallbacks& callbacks);
+    void drawNLEEditor(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path);
 
     void drawDiagnostics(
         const UIDiagnostics& diag,
         VideoPlayer&         player,
+        VideoPlayer&         player2,
         VideoRegistry&       registry,
         int&                 selectedAsset,
+        int&                 selectedAsset2,
         VisualControls&      controls,
         const UICallbacks&   callbacks
     );
@@ -195,7 +199,9 @@ private:
         const UICallbacks&    callbacks,
         MidiSystem&           midiSystem,
         OscSystem&            oscSystem,
-        AudioSystem&          audioSystem
+        AudioSystem&          audioSystem,
+        const std::string&    video1Path,
+        const std::string&    video2Path
     );
     
     // Content functions for tabs (extracted from window functions)
@@ -247,13 +253,15 @@ private:
         std::mt19937&   rng
     );
     
-    void drawNLEEditorContent(const UICallbacks& callbacks);
+    void drawNLEEditorContent(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path);
     
     void drawDiagnosticsContent(
         const UIDiagnostics& diag,
         VideoPlayer&         player,
+        VideoPlayer&         player2,
         VideoRegistry&       registry,
         int&                 selectedAsset,
+        int&                 selectedAsset2,
         VisualControls&      controls,
         const UICallbacks&   callbacks
     );

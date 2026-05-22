@@ -195,4 +195,7 @@ struct VisualControls {
     float cameraPanY            = 0.0f;   // Vertical offset (-1 to 1)
     float cameraRotation        = 0.0f;   // Rotation in radians
     bool  enableCameraMovement  = true;   // Master toggle
+    // Final RGB overlay (applied after all effects)
+    glm::vec3 rgbOverlay        = glm::vec3(1.0f);  // RGB color to multiply final output
+    bool  enableRgbOverlay      = false;  // Master toggle for RGB overlay
 };

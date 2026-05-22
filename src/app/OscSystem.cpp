@@ -7,6 +7,120 @@
 #include <ifaddrs.h>
 #include <net/if.h>
 
+namespace {
+
+struct ParameterRange {
+    const char* name;
+    float minVal;
+    float maxVal;
+};
+
+// Default ranges for /vjay/<paramName> auto-mapping
+static const ParameterRange DEFAULT_PARAMETER_RANGES[] = {
+    // Procedural
+    {"animationSpeed", 0.0f, 3.0f},
+    {"tempo", 0.0f, 2.0f},
+    {"energy", 0.0f, 1.0f},
+    {"bass", 0.0f, 1.0f},
+    {"mid", 0.0f, 1.0f},
+    {"high", 0.0f, 1.0f},
+    {"colorBlend", 0.0f, 1.0f},
+    {"uvWarpStrength", 0.0f, 1.0f},
+    {"rippleStrength", 0.0f, 1.0f},
+    {"rippleFrequency", 0.0f, 5.0f},
+    {"swirlStrength", 0.0f, 1.0f},
+    {"displacementAmount", 0.0f, 1.0f},
+    {"kaleidoSegments", 1.0f, 12.0f},
+    {"tunnelDepth", 0.0f, 1.0f},
+    {"tunnelCurvature", 0.0f, 1.0f},
+    // Post FX
+    {"bloomIntensity", 0.0f, 1.0f},
+    {"bloomThreshold", 0.0f, 1.0f},
+    {"aberrationAmount", 0.0f, 0.1f},
+    {"grainStrength", 0.0f, 1.0f},
+    {"crtCurvature", 0.0f, 0.5f},
+    {"crtScanlineIntensity", 0.0f, 1.0f},
+    {"crtMaskIntensity", 0.0f, 1.0f},
+    {"crtVignette", 0.0f, 1.0f},
+    {"crtFishEye", 0.0f, 0.5f},
+    {"gaussianBlur", 0.0f, 1.0f},
+    {"directionalBlur", 0.0f, 1.0f},
+    {"directionalBlurAngle", 0.0f, 360.0f},
+    {"zoomBlur", 0.0f, 1.0f},
+    {"motionBlur", 0.0f, 1.0f},
+    {"temporalBlur", 0.0f, 1.0f},
+    {"unsharpMask", 0.0f, 1.0f},
+    {"casAmount", 0.0f, 1.0f},
+    {"localContrast", 0.0f, 1.0f},
+    {"pixelateAmount", 0.0f, 1.0f},
+    {"strobeSpeed", 0.0f, 10.0f},
+    {"thresholdLevel", 0.0f, 1.0f},
+    {"slowZoomAmount", 0.0f, 1.0f},
+    {"edgeStrength", 0.0f, 2.0f},
+    {"edgeThreshold", 0.0f, 1.0f},
+    {"edgeBlend", 0.0f, 1.0f},
+    {"fxaaQualitySubpix", 0.0f, 1.0f},
+    {"fxaaQualityEdgeThreshold", 0.0f, 0.5f},
+    {"fxaaQualityEdgeThresholdMin", 0.0f, 0.2f},
+    // VJay Basics
+    {"videoPlaybackRate", 0.1f, 3.0f},
+    {"videoDecodeOversample", 1.0f, 4.0f},
+    {"videoMix", 0.0f, 1.0f},
+    {"grayscaleAmount", 0.0f, 1.0f},
+    {"sharpenAmount", 0.0f, 1.0f},
+    {"gradeBrightness", -1.0f, 1.0f},
+    {"gradeContrast", 0.0f, 2.0f},
+    {"gradeSaturation", 0.0f, 2.0f},
+    {"gradeHueShift", 0.0f, 360.0f},
+    {"gradeGamma", 0.1f, 3.0f},
+    {"colorLUTIndex", 0.0f, 10.0f},
+    {"splitToneBalance", 0.0f, 1.0f},
+    {"blendProceduralMix", 0.0f, 1.0f},
+    {"blendVideoMix", 0.0f, 1.0f},
+    {"blendFeedbackMix", 0.0f, 1.0f},
+    // VJay Extra
+    {"feedbackAmount", 0.0f, 1.0f},
+    {"trailStrength", 0.0f, 1.0f},
+    {"temporalAccumulation", 0.0f, 1.0f},
+    {"feedbackDecay", 0.0f, 1.0f},
+    {"recursiveBlend", 0.0f, 1.0f},
+    {"glitchAmount", 0.0f, 1.0f},
+    {"glitchDatamosh", 0.0f, 1.0f},
+    {"glitchRGBSplit", 0.0f, 1.0f},
+    {"glitchScanlineBreak", 0.0f, 1.0f},
+    {"glitchJitter", 0.0f, 1.0f},
+    {"glitchTearing", 0.0f, 1.0f},
+    {"glitchPixelSort", 0.0f, 1.0f},
+    {"glitchBufferCorruption", 0.0f, 1.0f},
+    {"analogScanlineFocus", 0.0f, 1.0f},
+    {"analogMaskBalance", 0.0f, 1.0f},
+    {"analogNoise", 0.0f, 1.0f},
+    {"analogBloom", 0.0f, 1.0f},
+    {"vhsDistortion", 0.0f, 1.0f},
+    {"analogChromaticAberration", 0.0f, 0.1f},
+    {"mirrorAmount", 0.0f, 1.0f},
+    {"posterizeLevels", 2.0f, 16.0f},
+    {"zoomPulseAmount", 0.0f, 1.0f},
+    {"rgbShiftAmount", 0.0f, 0.1f},
+    {"audioWarpResponse", 0.0f, 1.0f},
+    {"audioFeedbackResponse", 0.0f, 1.0f},
+    {"audioBlurResponse", 0.0f, 1.0f},
+    {"audioColorResponse", 0.0f, 1.0f},
+    {"audioGlitchResponse", 0.0f, 1.0f},
+    {"audioBeatSync", 0.0f, 2.0f},
+    {"audioLfoRate", 0.0f, 2.0f},
+    {"temporalInterpolation", 0.0f, 1.0f},
+    {"temporalBlendStrength", 0.0f, 1.0f},
+    {"slowMotionFactor", 0.1f, 2.0f},
+    {"frameAccumulation", 0.0f, 1.0f},
+    {"cameraZoom", 0.5f, 2.0f},
+    {"rgbOverlayR", 0.0f, 2.0f},
+    {"rgbOverlayG", 0.0f, 2.0f},
+    {"rgbOverlayB", 0.0f, 2.0f}
+};
+
+} // namespace
+
 OscSystem::OscSystem()
     : serverThread(nullptr)
     , port(9000)
@@ -185,14 +299,17 @@ void OscSystem::addMapping(const std::string& address, const std::string& parame
     mapping.maxValue = maxVal;
     mapping.invert = invert;
     mappings[address] = mapping;
+    if (onMappingsChanged) onMappingsChanged();
 }
 
 void OscSystem::removeMapping(const std::string& address) {
     mappings.erase(address);
+    if (onMappingsChanged) onMappingsChanged();
 }
 
 void OscSystem::clearMappings() {
     mappings.clear();
+    if (onMappingsChanged) onMappingsChanged();
 }
 
 const std::map<std::string, OscMapping>& OscSystem::getMappings() const {
@@ -204,14 +321,17 @@ void OscSystem::addTriggerMapping(const std::string& address, const std::string&
     mapping.address = address;
     mapping.actionName = actionName;
     triggerMappings[address] = mapping;
+    if (onMappingsChanged) onMappingsChanged();
 }
 
 void OscSystem::removeTriggerMapping(const std::string& address) {
     triggerMappings.erase(address);
+    if (onMappingsChanged) onMappingsChanged();
 }
 
 void OscSystem::clearTriggerMappings() {
     triggerMappings.clear();
+    if (onMappingsChanged) onMappingsChanged();
 }
 
 const std::map<std::string, OscTriggerMapping>& OscSystem::getTriggerMappings() const {
@@ -345,21 +465,46 @@ OscMessage OscSystem::parseMessage(const char* path, const char* types, lo_arg**
 
 void OscSystem::applyMapping(const std::string& address, float value, VisualControls& controls) {
     auto it = mappings.find(address);
-    if (it == mappings.end()) {
-        return;
+    float normalizedValue = value; // OSC typically sends 0.0-1.0 already
+    std::string paramName;
+    float minVal = 0.0f;
+    float maxVal = 1.0f;
+    bool invert = false;
+
+    if (it != mappings.end()) {
+        const OscMapping& mapping = it->second;
+        paramName = mapping.parameterName;
+        minVal = mapping.minValue;
+        maxVal = mapping.maxValue;
+        invert = mapping.invert;
+    } else {
+        // Auto-detect /vjay/<parameterName> addresses
+        const std::string prefix = "/vjay/";
+        if (address.rfind(prefix, 0) == 0) {
+            paramName = address.substr(prefix.length());
+            bool found = false;
+            for (const auto& range : DEFAULT_PARAMETER_RANGES) {
+                if (paramName == range.name) {
+                    minVal = range.minVal;
+                    maxVal = range.maxVal;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) return;
+        } else {
+            return;
+        }
     }
 
-    const OscMapping& mapping = it->second;
-    float normalizedValue = value; // OSC typically sends 0.0-1.0 already
-
-    if (mapping.invert) {
+    if (invert) {
         normalizedValue = 1.0f - normalizedValue;
     }
 
-    float mappedValue = mapping.minValue + normalizedValue * (mapping.maxValue - mapping.minValue);
+    float mappedValue = minVal + normalizedValue * (maxVal - minVal);
 
     // Map to VisualControls parameters - all parameters from the wizard
-    const std::string& name = mapping.parameterName;
+    const std::string& name = paramName;
 
     // Procedural
     if (name == "animationSpeed") controls.animationSpeed = mappedValue;
@@ -457,4 +602,9 @@ void OscSystem::applyMapping(const std::string& address, float value, VisualCont
     else if (name == "temporalBlendStrength") controls.temporalBlendStrength = mappedValue;
     else if (name == "slowMotionFactor") controls.slowMotionFactor = mappedValue;
     else if (name == "frameAccumulation") controls.frameAccumulation = mappedValue;
+    else if (name == "cameraZoom") controls.cameraZoom = mappedValue;
+    else if (name == "rgbOverlayR") controls.rgbOverlay.r = mappedValue;
+    else if (name == "rgbOverlayG") controls.rgbOverlay.g = mappedValue;
+    else if (name == "rgbOverlayB") controls.rgbOverlay.b = mappedValue;
+    else if (name == "enableRgbOverlay") controls.enableRgbOverlay = (mappedValue > 0.5f);
 }

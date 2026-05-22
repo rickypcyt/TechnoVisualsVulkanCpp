@@ -247,4 +247,12 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: \
  /usr/include/c++/16.1.1/ratio /usr/include/c++/16.1.1/ctime \
  /usr/include/c++/16.1.1/bits/parse_numbers.h \
  /usr/include/c++/16.1.1/bits/std_mutex.h \
- /usr/include/c++/16.1.1/bits/unique_lock.h
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
+ /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
+ /usr/include/c++/16.1.1/bits/std_thread.h \
+ /usr/include/c++/16.1.1/bits/refwrap.h \
+ /usr/include/c++/16.1.1/bits/unique_ptr.h \
+ /usr/include/c++/16.1.1/semaphore \
+ /usr/include/c++/16.1.1/bits/semaphore_base.h \
+ /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
+ /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h

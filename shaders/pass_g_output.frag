@@ -62,6 +62,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float cameraZoom; float cameraPanX; float cameraPanY; float cameraRotation; int enableCameraMovement;
 
     int enableGrid; int gridMode; int gridCount; int gridRows; int gridColumns; int gridMirrorCells;
+    vec3 rgbOverlay; int enableRgbOverlay;
 } ubo;
 
 layout(set = 1, binding = 0) uniform sampler2D inputTex;
@@ -295,6 +296,11 @@ void main() {
     if (ubo.enablePosterize == 1 && ubo.posterizeLevels > 1.0) {
         float levels = clamp(ubo.posterizeLevels, 2.0, 64.0);
         color = floor(color * levels) / levels;
+    }
+
+    // Final RGB overlay
+    if (ubo.enableRgbOverlay == 1) {
+        color *= clamp(ubo.rgbOverlay, 0.0, 2.0);
     }
 
     outColor = vec4(clamp(color, 0.0, 1.0), 1.0);

@@ -189,6 +189,10 @@ void main() {
 
     float edge = edgeFade(uv);
     float audio = clamp(ubo.energy, 0.0, 1.0);
+    
+    if (ubo.enableAudioReactive == 1) {
+        feedbackMix *= (1.0 + audio * ubo.audioFeedbackResponse);
+    }
 
     if (ubo.enableFeedback == 1 && (trailMix > 0.0001 || feedbackMix > 0.0001)) {
         for (int i = 1; i <= 3; ++i) {

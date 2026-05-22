@@ -74,6 +74,9 @@ public:
     // Set callback for OSC triggers (button presses)
     void setTriggerCallback(std::function<void(const std::string&)> callback);
 
+    // Callback fired whenever mappings or trigger mappings change
+    std::function<void()> onMappingsChanged;
+
     // OSC mapping functions
     void addMapping(const std::string& address, const std::string& parameterName, float minVal, float maxVal, bool invert = false);
     void removeMapping(const std::string& address);
