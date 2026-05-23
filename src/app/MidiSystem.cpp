@@ -1,6 +1,7 @@
 #include "MidiSystem.h"
 #include <iostream>
 #include <cstring>
+#include <utility>
 
 MidiSystem::MidiSystem()
     : midiIn(nullptr)
@@ -156,6 +157,29 @@ const std::map<int, MidiMapping>& MidiSystem::getMappings() const {
     return mappings;
 }
 
+void MidiSystem::addTriggerMapping(int note, const std::string& actionName) {
+    MidiTriggerMapping mapping;
+    mapping.note = note;
+    mapping.actionName = actionName;
+    triggerMappings[note] = mapping;
+}
+
+void MidiSystem::removeTriggerMapping(int note) {
+    triggerMappings.erase(note);
+}
+
+void MidiSystem::clearTriggerMappings() {
+    triggerMappings.clear();
+}
+
+const std::map<int, MidiTriggerMapping>& MidiSystem::getTriggerMappings() const {
+    return triggerMappings;
+}
+
+void MidiSystem::setTriggerCallback(std::function<void(const std::string&)> callback) {
+    triggerCallback = std::move(callback);
+}
+
 void MidiSystem::applyToVisualControls(const MidiMessage& msg, VisualControls& controls) {
     if (msg.type == MidiEventType::CONTROL_CHANGE) {
         applyCCMapping(msg.controller, msg.value, controls);
@@ -297,6 +321,8 @@ void MidiSystem::applyCCMapping(int ccNumber, int value, VisualControls& control
     else if (name == "videoPlaybackRate") controls.videoPlaybackRate = mappedValue;
     else if (name == "videoDecodeOversample") controls.videoDecodeOversample = mappedValue;
     else if (name == "videoMix") controls.videoMix = mappedValue;
+    else if (name == "video2Mix") controls.video2Mix = mappedValue;
+    else if (name == "video2PlaybackRate") controls.video2PlaybackRate = mappedValue;
     else if (name == "grayscaleAmount") controls.grayscaleAmount = mappedValue;
     else if (name == "sharpenAmount") controls.sharpenAmount = mappedValue;
     else if (name == "gradeBrightness") controls.gradeBrightness = mappedValue;
@@ -347,6 +373,14 @@ void MidiSystem::applyCCMapping(int ccNumber, int value, VisualControls& control
 }
 
 void MidiSystem::applyNoteMapping(int note, int velocity, VisualControls& controls) {
+    auto triggerIt = triggerMappings.find(note);
+    if (triggerIt != triggerMappings.end() && velocity > 0) {
+        if (triggerCallback) {
+            triggerCallback(triggerIt->second.actionName);
+        }
+        return;
+    }
+
     // Note-based triggers
     // Low notes (C2-C3) for mode switching
     if (note >= 36 && note <= 48) {

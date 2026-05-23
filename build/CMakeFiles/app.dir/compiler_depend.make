@@ -1738,6 +1738,7 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: /home/ricky/coding/proyects/vulkanc
   /usr/include/c++/16.1.1/bits/hash_bytes.h \
   /usr/include/c++/16.1.1/bits/hashtable.h \
   /usr/include/c++/16.1.1/bits/hashtable_policy.h \
+  /usr/include/c++/16.1.1/bits/intcmp.h \
   /usr/include/c++/16.1.1/bits/invoke.h \
   /usr/include/c++/16.1.1/bits/ios_base.h \
   /usr/include/c++/16.1.1/bits/istream.tcc \
@@ -1785,6 +1786,7 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: /home/ricky/coding/proyects/vulkanc
   /usr/include/c++/16.1.1/bits/stl_map.h \
   /usr/include/c++/16.1.1/bits/stl_multimap.h \
   /usr/include/c++/16.1.1/bits/stl_pair.h \
+  /usr/include/c++/16.1.1/bits/stl_relops.h \
   /usr/include/c++/16.1.1/bits/stl_tree.h \
   /usr/include/c++/16.1.1/bits/stl_uninitialized.h \
   /usr/include/c++/16.1.1/bits/stl_vector.h \
@@ -1856,6 +1858,7 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: /home/ricky/coding/proyects/vulkanc
   /usr/include/c++/16.1.1/type_traits \
   /usr/include/c++/16.1.1/typeinfo \
   /usr/include/c++/16.1.1/unordered_map \
+  /usr/include/c++/16.1.1/utility \
   /usr/include/c++/16.1.1/vector \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
@@ -10363,6 +10366,7 @@ app: /usr/lib/Scrt1.o \
   /usr/lib/libcrypto.so.3 \
   /usr/lib/libdatrie.so.1 \
   /usr/lib/libdav1d.so.7 \
+  /usr/lib/libdb-5.3.so \
   /usr/lib/libdrm.so.2 \
   /usr/lib/libdvdnav.so.4 \
   /usr/lib/libdvdread.so.8 \
@@ -10416,7 +10420,6 @@ app: /usr/lib/Scrt1.o \
   /usr/lib/libpangoft2-1.0.so.0 \
   /usr/lib/libpcre2-8.so.0 \
   /usr/lib/libpgm-5.3.so.0 \
-  /usr/lib/libpipewire-0.3.so.0 \
   /usr/lib/libpixman-1.so.0 \
   /usr/lib/libpng16.so.16 \
   /usr/lib/librav1e.so.0.8 \
@@ -10508,7 +10511,6 @@ app: /usr/lib/Scrt1.o \
   /usr/lib32/libpangocairo-1.0.so.0 \
   /usr/lib32/libpangoft2-1.0.so.0 \
   /usr/lib32/libpcre2-8.so.0 \
-  /usr/lib32/libpipewire-0.3.so.0 \
   /usr/lib32/libpixman-1.so.0 \
   /usr/lib32/libpng16.so.16 \
   /usr/lib32/librsvg-2.so.2 \
@@ -10623,6 +10625,10 @@ CMakeFiles/app.dir/src/app/Application.cpp.o:
 /usr/lib32/libva-x11.so.2:
 
 /usr/lib32/libva-drm.so.2:
+
+/usr/lib32/libunistring.so.5:
+
+/usr/lib32/libtheoraenc.so.2:
 
 /usr/include/glm/ext/matrix_float4x4.hpp:
 
@@ -10933,8 +10939,6 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 /usr/include/c++/16.1.1/bits/deque.tcc:
 
 /usr/include/c++/16.1.1/bits/this_thread_sleep.h:
-
-/usr/lib32/libunistring.so.5:
 
 /usr/include/c++/16.1.1/bits/stl_vector.h:
 
@@ -11301,6 +11305,8 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /home/ricky/coding/proyects/vulkancpp/src/core/Window.cpp:
 
 /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.cpp:
+
+/usr/lib/libdb-5.3.so:
 
 /usr/lib32/libvorbisfile.so.3:
 
@@ -11984,10 +11990,6 @@ CMakeFiles/app.dir/src/main.cpp.o:
 
 /usr/include/glm/ext/quaternion_geometric.inl:
 
-/usr/include/c++/16.1.1/bits/stdexcept_except.h:
-
-/usr/include/glm/ext/quaternion_relational.hpp:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/xsaveintrin.h:
 
 /usr/include/vk_video/vulkan_video_codec_h265std_decode.h:
@@ -12536,6 +12538,22 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h:
 
+/usr/include/c++/16.1.1/bits/stdexcept_except.h:
+
+/usr/include/glm/ext/quaternion_relational.hpp:
+
+/usr/include/c++/16.1.1/bits/intcmp.h:
+
+/usr/include/c++/16.1.1/bits/stl_relops.h:
+
+/usr/include/c++/16.1.1/bits/stl_iterator.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.cpp:
+
+/usr/include/glm/ext/matrix_float3x3_precision.hpp:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/VideoStaging.h:
+
 /usr/include/net/if.h:
 
 /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.h:
@@ -12557,14 +12575,6 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/include/c++/16.1.1/csignal:
 
 /home/ricky/coding/proyects/vulkancpp/src/render/MultiPassPipeline.cpp:
-
-/usr/include/c++/16.1.1/bits/stl_iterator.h:
-
-/home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.cpp:
-
-/usr/include/glm/ext/matrix_float3x3_precision.hpp:
-
-/home/ricky/coding/proyects/vulkancpp/src/video/VideoStaging.h:
 
 /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.cpp:
 
@@ -12623,6 +12633,8 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/lib/libX11-xcb.so.1:
 
 /usr/lib/libXdmcp.so.6:
+
+/usr/include/c++/16.1.1/utility:
 
 /usr/lib/libXfixes.so.3:
 
@@ -12739,8 +12751,6 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o:
 /usr/include/bits/local_lim.h:
 
 /usr/lib/libpgm-5.3.so.0:
-
-/usr/lib/libpipewire-0.3.so.0:
 
 /usr/lib/libpixman-1.so.0:
 
@@ -12864,12 +12874,8 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o:
 
 /usr/lib32/libpango-1.0.so.0:
 
-/usr/lib32/libpipewire-0.3.so.0:
-
 /usr/lib32/libpixman-1.so.0:
 
 /usr/lib32/libpng16.so.16:
 
 /usr/lib32/libsharpyuv.so.0:
-
-/usr/lib32/libtheoraenc.so.2:

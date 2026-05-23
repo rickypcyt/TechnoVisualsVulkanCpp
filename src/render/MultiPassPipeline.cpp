@@ -6,10 +6,90 @@
 #include <cstring>
 #include <chrono>
 
+namespace {
+VkPipelineStageFlags stageForLayout(VkImageLayout layout) {
+    switch (layout) {
+        case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+            return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            return VK_PIPELINE_STAGE_TRANSFER_BIT;
+        case VK_IMAGE_LAYOUT_UNDEFINED:
+        default:
+            return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    }
+}
+}
+
 MultiPassPipeline::MultiPassPipeline() = default;
 
 MultiPassPipeline::~MultiPassPipeline() {
     cleanup();
+}
+
+bool MultiPassPipeline::createTemporalHistoryImage() {
+    destroyTemporalHistoryImage();
+
+    if (extent.width == 0 || extent.height == 0) {
+        return false;
+    }
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = extent.width;
+    imageInfo.extent.height = extent.height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = colorFormat;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateImage(device, &imageInfo, nullptr, &temporalHistory.image) != VK_SUCCESS) {
+        temporalHistory.image = VK_NULL_HANDLE;
+        return false;
+    }
+
+    VkMemoryRequirements memReq{};
+    vkGetImageMemoryRequirements(device, temporalHistory.image, &memReq);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReq.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memReq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &temporalHistory.memory) != VK_SUCCESS) {
+        destroyTemporalHistoryImage();
+        return false;
+    }
+
+    vkBindImageMemory(device, temporalHistory.image, temporalHistory.memory, 0);
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = temporalHistory.image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = colorFormat;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(device, &viewInfo, nullptr, &temporalHistory.imageView) != VK_SUCCESS) {
+        destroyTemporalHistoryImage();
+        return false;
+    }
+
+    temporalHistoryInitialized = false;
+    temporalHistoryLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    return true;
 }
 
 bool MultiPassPipeline::initialize(
@@ -53,6 +133,11 @@ bool MultiPassPipeline::initialize(
         return false;
     }
 
+    if (!createTemporalHistoryImage()) {
+        std::cerr << "[MultiPass] Failed to create temporal history image" << std::endl;
+        return false;
+    }
+
     if (!createFullscreenQuad()) {
         std::cerr << "[MultiPass] Failed to create fullscreen quad" << std::endl;
         return false;
@@ -88,12 +173,14 @@ void MultiPassPipeline::cleanup() {
     cleanupDescriptorSets();
     cleanupPipelines();
     cleanupIntermediateFramebuffers();
+    destroyTemporalHistoryImage();
     cleanupFullscreenQuad();
 
     if (offscreenRenderPass != VK_NULL_HANDLE) {
         vkDestroyRenderPass(device, offscreenRenderPass, nullptr);
         offscreenRenderPass = VK_NULL_HANDLE;
     }
+    intermediateLayouts = {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED};
 }
 
 bool MultiPassPipeline::createOffscreenRenderPass() {
@@ -208,6 +295,8 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
         if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &intermediate[i].framebuffer) != VK_SUCCESS) {
             return false;
         }
+
+        intermediateLayouts[i] = VK_IMAGE_LAYOUT_UNDEFINED;
     }
 
     std::cout << "[MultiPass] Intermediate framebuffers created" << std::endl;
@@ -594,6 +683,59 @@ uint32_t MultiPassPipeline::findMemoryType(uint32_t typeFilter, VkMemoryProperty
     throw std::runtime_error("failed to find suitable memory type");
 }
 
+void MultiPassPipeline::transitionImageLayout(
+    VkCommandBuffer cmd,
+    VkImage image,
+    VkImageLayout oldLayout,
+    VkImageLayout newLayout,
+    VkPipelineStageFlags srcStageMask,
+    VkPipelineStageFlags dstStageMask) {
+    if (image == VK_NULL_HANDLE || cmd == VK_NULL_HANDLE) {
+        return;
+    }
+
+    auto accessMaskForLayout = [](VkImageLayout layout, bool isDst) -> VkAccessFlags {
+        switch (layout) {
+            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                return VK_ACCESS_TRANSFER_WRITE_BIT;
+            case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                return VK_ACCESS_TRANSFER_READ_BIT;
+            case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                return isDst ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+                return VK_ACCESS_SHADER_READ_BIT;
+            case VK_IMAGE_LAYOUT_GENERAL:
+                return VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+            default:
+                return 0;
+        }
+    };
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+    barrier.srcAccessMask = accessMaskForLayout(oldLayout, false);
+    barrier.dstAccessMask = accessMaskForLayout(newLayout, true);
+
+    vkCmdPipelineBarrier(
+        cmd,
+        srcStageMask,
+        dstStageMask,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &barrier);
+}
+
 void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDescriptorSet uboDescriptorSet,
                                 VkRenderPass swapchainRenderPass, std::vector<VkFramebuffer>& swapchainFramebuffers,
                                 uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
@@ -602,10 +744,38 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
     // This ensures passes B-F read from the correct intermediate textures
     updateIntermediateDescriptors(frameIndex);
 
+    auto ensureLayout = [&](VkImage image, VkImageLayout& currentLayout, VkImageLayout newLayout) {
+        if (image == VK_NULL_HANDLE || currentLayout == newLayout) {
+            currentLayout = newLayout;
+            return;
+        }
+        VkPipelineStageFlags srcStage = stageForLayout(currentLayout);
+        VkPipelineStageFlags dstStage = stageForLayout(newLayout);
+        transitionImageLayout(cmd, image, currentLayout, newLayout, srcStage, dstStage);
+        currentLayout = newLayout;
+    };
+
+    if (!temporalHistoryInitialized && temporalHistory.image != VK_NULL_HANDLE) {
+        ensureLayout(temporalHistory.image, temporalHistoryLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+        VkClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 0.0f}};
+        VkImageSubresourceRange range{};
+        range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        range.baseMipLevel = 0;
+        range.levelCount = 1;
+        range.baseArrayLayer = 0;
+        range.layerCount = 1;
+        vkCmdClearColorImage(cmd, temporalHistory.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
+
+        ensureLayout(temporalHistory.image, temporalHistoryLayout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        temporalHistoryInitialized = true;
+    }
+
     // Execute all 7 passes in sequence to offscreen buffers
     int currentBuffer = 0;
 
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
+        int targetBuffer = currentBuffer;
         // Validate descriptor sets before drawing
         if (frameIndex >= passes[pass].descriptorSets[0].size() ||
             frameIndex >= passes[pass].descriptorSets[1].size() ||
@@ -627,6 +797,8 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         }
 
         // Begin render pass
+        ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = offscreenRenderPass;
@@ -658,6 +830,28 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         vkCmdDraw(cmd, 4, 1, 0, 0);
 
         vkCmdEndRenderPass(cmd);
+
+        if (pass == 3 && temporalHistory.image != VK_NULL_HANDLE) {
+            ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+            ensureLayout(temporalHistory.image, temporalHistoryLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+            VkImageCopy copyRegion{};
+            copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copyRegion.srcSubresource.baseArrayLayer = 0;
+            copyRegion.srcSubresource.mipLevel = 0;
+            copyRegion.srcSubresource.layerCount = 1;
+            copyRegion.dstSubresource = copyRegion.srcSubresource;
+            copyRegion.extent = {extent.width, extent.height, 1};
+
+            vkCmdCopyImage(cmd,
+                          intermediate[targetBuffer].image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                          temporalHistory.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          1, &copyRegion);
+
+            ensureLayout(temporalHistory.image, temporalHistoryLayout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
+        ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         // Ping-pong buffers
         currentBuffer = 1 - currentBuffer;
@@ -804,7 +998,10 @@ void MultiPassPipeline::updateDescriptorSets(
                 addTextureWrite(0, intermediate[prevBuffer].imageView, videoSampler);
 
                 if (pass == 3) {
-                    addTextureWrite(1, intermediate[prevBuffer].imageView, videoSampler);
+                    VkImageView historyView = temporalHistory.imageView != VK_NULL_HANDLE
+                        ? temporalHistory.imageView
+                        : intermediate[prevBuffer].imageView;
+                    addTextureWrite(1, historyView, videoSampler);
                 }
             }
             // Pass G (pass 6) needs input texture and procedural texture
@@ -828,6 +1025,7 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
     cleanupIntermediateFramebuffers();
     extent = newExtent;
     createIntermediateFramebuffers();
+    createTemporalHistoryImage();
 
     // CRITICAL: Recreate pipelines since they depend on render pass
     cleanupPipelines();
@@ -869,6 +1067,23 @@ void MultiPassPipeline::cleanupIntermediateFramebuffers() {
             intermediate[i].memory = VK_NULL_HANDLE;
         }
     }
+}
+
+void MultiPassPipeline::destroyTemporalHistoryImage() {
+    if (temporalHistory.imageView != VK_NULL_HANDLE) {
+        vkDestroyImageView(device, temporalHistory.imageView, nullptr);
+        temporalHistory.imageView = VK_NULL_HANDLE;
+    }
+    if (temporalHistory.image != VK_NULL_HANDLE) {
+        vkDestroyImage(device, temporalHistory.image, nullptr);
+        temporalHistory.image = VK_NULL_HANDLE;
+    }
+    if (temporalHistory.memory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, temporalHistory.memory, nullptr);
+        temporalHistory.memory = VK_NULL_HANDLE;
+    }
+    temporalHistoryInitialized = false;
+    temporalHistoryLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
 void MultiPassPipeline::cleanupPipelines() {
@@ -984,7 +1199,9 @@ void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
         if (pass == 3) {
             VkDescriptorImageInfo prevFrameTexInfo{};
             prevFrameTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            prevFrameTexInfo.imageView = intermediate[prevBuffer].imageView;
+            prevFrameTexInfo.imageView = (temporalHistory.imageView != VK_NULL_HANDLE)
+                ? temporalHistory.imageView
+                : intermediate[prevBuffer].imageView;
             prevFrameTexInfo.sampler = videoSampler;
 
             VkWriteDescriptorSet prevFrameTexWrite{};

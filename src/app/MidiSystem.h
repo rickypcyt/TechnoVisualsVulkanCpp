@@ -36,6 +36,11 @@ struct MidiMapping {
     bool invert;
 };
 
+struct MidiTriggerMapping {
+    int note;
+    std::string actionName;
+};
+
 class MidiSystem {
 public:
     MidiSystem();
@@ -65,6 +70,14 @@ public:
     void clearMappings();
     const std::map<int, MidiMapping>& getMappings() const;
 
+    // MIDI trigger mappings (note buttons)
+    void addTriggerMapping(int note, const std::string& actionName);
+    void removeTriggerMapping(int note);
+    void clearTriggerMappings();
+    const std::map<int, MidiTriggerMapping>& getTriggerMappings() const;
+
+    void setTriggerCallback(std::function<void(const std::string&)> callback);
+
     // Apply MIDI message to VisualControls
     void applyToVisualControls(const MidiMessage& msg, VisualControls& controls);
 
@@ -87,7 +100,9 @@ private:
     bool hasLearned;
     MidiMessage lastLearnedMessage;
     std::function<void(const MidiMessage&)> eventCallback;
+    std::function<void(const std::string&)> triggerCallback;
     std::map<int, MidiMapping> mappings;
+    std::map<int, MidiTriggerMapping> triggerMappings;
 
     // Helper functions
     MidiMessage parseMessage(std::vector<unsigned char>* message);

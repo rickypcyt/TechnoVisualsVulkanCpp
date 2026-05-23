@@ -159,8 +159,7 @@ app: \
   /usr/lib32/libdrm.so.2 \
   /usr/lib/libdrm.so.2 \
   /usr/lib/libOpenCL.so.1 \
-  /usr/lib32/libpipewire-0.3.so.0 \
-  /usr/lib/libpipewire-0.3.so.0 \
+  /usr/lib/libdb-5.3.so \
   /usr/lib32/libicuuc.so.78 \
   /usr/lib/libicuuc.so.78 \
   /usr/lib32/libmpg123.so.0 \
@@ -591,9 +590,7 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/lib/libOpenCL.so.1:
 
-/usr/lib32/libpipewire-0.3.so.0:
-
-/usr/lib/libpipewire-0.3.so.0:
+/usr/lib/libdb-5.3.so:
 
 /usr/lib32/libicuuc.so.78:
 

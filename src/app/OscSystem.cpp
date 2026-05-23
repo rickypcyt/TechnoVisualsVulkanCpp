@@ -25,6 +25,7 @@ static const ParameterRange DEFAULT_PARAMETER_RANGES[] = {
     {"mid", 0.0f, 1.0f},
     {"high", 0.0f, 1.0f},
     {"colorBlend", 0.0f, 1.0f},
+    {"rgbOverlay", 0.0f, 2.0f},
     {"uvWarpStrength", 0.0f, 1.0f},
     {"rippleStrength", 0.0f, 1.0f},
     {"rippleFrequency", 0.0f, 5.0f},
@@ -117,6 +118,14 @@ static const ParameterRange DEFAULT_PARAMETER_RANGES[] = {
     {"rgbOverlayR", 0.0f, 2.0f},
     {"rgbOverlayG", 0.0f, 2.0f},
     {"rgbOverlayB", 0.0f, 2.0f}
+};
+
+static const std::pair<const char*, const char*> DEFAULT_TRIGGER_ACTIONS[] = {
+    {"/vjay/randomizeVideo", "randomizeVideo"},
+    {"/vjay/randomizeVideo2", "randomizeVideo2"},
+    {"/vjay/jumpRandom", "jumpRandom"},
+    {"/vjay/folderChanged", "folderChanged"},
+    {"/vjay/applyChanges", "applyChanges"}
 };
 
 } // namespace
@@ -338,11 +347,27 @@ const std::map<std::string, OscTriggerMapping>& OscSystem::getTriggerMappings() 
     return triggerMappings;
 }
 
+void OscSystem::ensureDefaultTriggers() {
+    for (const auto& [address, action] : DEFAULT_TRIGGER_ACTIONS) {
+        if (triggerMappings.find(address) == triggerMappings.end()) {
+            OscTriggerMapping mapping;
+            mapping.address = address;
+            mapping.actionName = action;
+            triggerMappings[address] = mapping;
+            if (onMappingsChanged) onMappingsChanged();
+        }
+    }
+}
+
 void OscSystem::applyToVisualControls(const OscMessage& msg, VisualControls& controls) {
     if (msg.type == OscMessageType::FLOAT) {
-        applyMapping(msg.address, msg.floatValue, controls);
+        applyMapping(msg, controls);
     } else if (msg.type == OscMessageType::INT) {
-        applyMapping(msg.address, static_cast<float>(msg.intValue), controls);
+        OscMessage converted = msg;
+        converted.type = OscMessageType::FLOAT;
+        converted.floatValue = static_cast<float>(msg.intValue);
+        converted.floatValues.clear();
+        applyMapping(converted, controls);
     }
 }
 
@@ -433,6 +458,21 @@ OscMessage OscSystem::parseMessage(const char* path, const char* types, lo_arg**
         return msg;
     }
 
+    // Support up to 3 float values for RGB payloads
+    if (types[0] == 'f' && argc >= 3) {
+        msg.type = OscMessageType::FLOAT;
+        msg.floatValues.clear();
+        for (int i = 0; i < argc; ++i) {
+            if (types[i] == 'f') {
+                msg.floatValues.push_back(argv[i]->f);
+            }
+        }
+        if (!msg.floatValues.empty()) {
+            msg.floatValue = msg.floatValues[0];
+        }
+        return msg;
+    }
+
     switch (types[0]) {
         case 'f':
             msg.type = OscMessageType::FLOAT;
@@ -463,9 +503,10 @@ OscMessage OscSystem::parseMessage(const char* path, const char* types, lo_arg**
     return msg;
 }
 
-void OscSystem::applyMapping(const std::string& address, float value, VisualControls& controls) {
+void OscSystem::applyMapping(const OscMessage& message, VisualControls& controls) {
+    const std::string& address = message.address;
     auto it = mappings.find(address);
-    float normalizedValue = value; // OSC typically sends 0.0-1.0 already
+    float normalizedValue = message.floatValue; // OSC typically sends 0.0-1.0 already
     std::string paramName;
     float minVal = 0.0f;
     float maxVal = 1.0f;
@@ -502,6 +543,14 @@ void OscSystem::applyMapping(const std::string& address, float value, VisualCont
     }
 
     float mappedValue = minVal + normalizedValue * (maxVal - minVal);
+    // RGB payload handling: allow /vjay/rgbOverlay to send 3 floats at once
+    if (message.floatValues.size() >= 3 && paramName == "rgbOverlay") {
+        float r = glm::clamp(message.floatValues[0], minVal, maxVal);
+        float g = glm::clamp(message.floatValues[1], minVal, maxVal);
+        float b = glm::clamp(message.floatValues[2], minVal, maxVal);
+        controls.rgbOverlay = glm::vec3(r, g, b);
+        return;
+    }
 
     // Map to VisualControls parameters - all parameters from the wizard
     const std::string& name = paramName;
@@ -544,6 +593,7 @@ void OscSystem::applyMapping(const std::string& address, float value, VisualCont
     else if (name == "pixelateAmount") controls.pixelateAmount = mappedValue;
     else if (name == "strobeSpeed") controls.strobeSpeed = mappedValue;
     else if (name == "thresholdLevel") controls.thresholdLevel = mappedValue;
+    else if (name == "enableThreshold") controls.enableThreshold = (mappedValue > 0.5f);
     else if (name == "slowZoomAmount") controls.slowZoomAmount = mappedValue;
     else if (name == "edgeStrength") controls.edgeStrength = mappedValue;
     else if (name == "edgeThreshold") controls.edgeThreshold = mappedValue;
@@ -567,6 +617,11 @@ void OscSystem::applyMapping(const std::string& address, float value, VisualCont
     else if (name == "blendProceduralMix") controls.blendProceduralMix = mappedValue;
     else if (name == "blendVideoMix") controls.blendVideoMix = mappedValue;
     else if (name == "blendFeedbackMix") controls.blendFeedbackMix = mappedValue;
+    else if (name == "video2BlendMode") {
+        int mode = static_cast<int>(mappedValue + 0.5f);
+        mode = std::max(0, std::min(4, mode));
+        controls.video2BlendMode = mode;
+    }
     // VJay Extra
     else if (name == "feedbackAmount") controls.feedbackAmount = mappedValue;
     else if (name == "trailStrength") controls.trailStrength = mappedValue;

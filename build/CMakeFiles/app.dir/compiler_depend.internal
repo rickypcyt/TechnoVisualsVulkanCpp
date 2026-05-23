@@ -1742,6 +1742,7 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o
  /usr/include/c++/16.1.1/bits/hash_bytes.h
  /usr/include/c++/16.1.1/bits/hashtable.h
  /usr/include/c++/16.1.1/bits/hashtable_policy.h
+ /usr/include/c++/16.1.1/bits/intcmp.h
  /usr/include/c++/16.1.1/bits/invoke.h
  /usr/include/c++/16.1.1/bits/ios_base.h
  /usr/include/c++/16.1.1/bits/istream.tcc
@@ -1789,6 +1790,7 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o
  /usr/include/c++/16.1.1/bits/stl_map.h
  /usr/include/c++/16.1.1/bits/stl_multimap.h
  /usr/include/c++/16.1.1/bits/stl_pair.h
+ /usr/include/c++/16.1.1/bits/stl_relops.h
  /usr/include/c++/16.1.1/bits/stl_tree.h
  /usr/include/c++/16.1.1/bits/stl_uninitialized.h
  /usr/include/c++/16.1.1/bits/stl_vector.h
@@ -1860,6 +1862,7 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o
  /usr/include/c++/16.1.1/type_traits
  /usr/include/c++/16.1.1/typeinfo
  /usr/include/c++/16.1.1/unordered_map
+ /usr/include/c++/16.1.1/utility
  /usr/include/c++/16.1.1/vector
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h
@@ -10392,6 +10395,7 @@ app
  /usr/lib/libcrypto.so.3
  /usr/lib/libdatrie.so.1
  /usr/lib/libdav1d.so.7
+ /usr/lib/libdb-5.3.so
  /usr/lib/libdrm.so.2
  /usr/lib/libdvdnav.so.4
  /usr/lib/libdvdread.so.8
@@ -10445,7 +10449,6 @@ app
  /usr/lib/libpangoft2-1.0.so.0
  /usr/lib/libpcre2-8.so.0
  /usr/lib/libpgm-5.3.so.0
- /usr/lib/libpipewire-0.3.so.0
  /usr/lib/libpixman-1.so.0
  /usr/lib/libpng16.so.16
  /usr/lib/librav1e.so.0.8
@@ -10537,7 +10540,6 @@ app
  /usr/lib32/libpangocairo-1.0.so.0
  /usr/lib32/libpangoft2-1.0.so.0
  /usr/lib32/libpcre2-8.so.0
- /usr/lib32/libpipewire-0.3.so.0
  /usr/lib32/libpixman-1.so.0
  /usr/lib32/libpng16.so.16
  /usr/lib32/librsvg-2.so.2

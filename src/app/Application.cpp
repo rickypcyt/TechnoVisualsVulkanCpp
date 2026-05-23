@@ -438,6 +438,10 @@ void Application::initMidi() {
         midiSystem.applyToVisualControls(msg, visualControls);
     });
 
+    midiSystem.setTriggerCallback([this](const std::string& action) {
+        handleOscTrigger(action);
+    });
+
     // Try to open the first available MIDI port
     unsigned int portCount = midiSystem.getPortCount();
     if (portCount > 0) {
@@ -1460,11 +1464,30 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     debugAnimationDelta = globalDeltaTime;
     float time = accumulatedTime;
 
-    // Update audio values from AudioSystem
-    visualControls.bass = audioSystem.getBass();
-    visualControls.mid = audioSystem.getMid();
-    visualControls.high = audioSystem.getHigh();
-    visualControls.energy = audioSystem.getRMS();
+    // Update audio values from AudioSystem (normalized + smoothed)
+    auto normalizeAudioLevel = [](float rawValue, float gain, float gamma) {
+        float scaled = std::clamp(rawValue * gain, 0.0f, 1.0f);
+        return (gamma != 1.0f) ? std::pow(scaled, gamma) : scaled;
+    };
+
+    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS(),           5.0f, 0.85f);
+    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass(),  7.0f, 0.90f);
+    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid(),   8.0f, 0.95f);
+    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh(),  9.0f, 1.00f);
+
+    auto& reactive = visualControls.audioReactiveRuntime;
+    reactive.enabled = visualControls.enableAudioReactive;
+    reactive.energy = liveEnergy;
+    reactive.bass   = liveBass;
+    reactive.mid    = liveMid;
+    reactive.high   = liveHigh;
+
+    if (visualControls.enableAudioReactive) {
+        visualControls.energy = liveEnergy;
+        visualControls.bass   = liveBass;
+        visualControls.mid    = liveMid;
+        visualControls.high   = liveHigh;
+    }
 
     // Set basic UBO values
     ubo.model = glm::mat4(1.0f);
@@ -1687,13 +1710,6 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     float blurGain     = std::max(0.0f, visualControls.audioBlurResponse);
     float colorGain    = std::max(0.0f, visualControls.audioColorResponse);
     float glitchGain   = std::max(0.0f, visualControls.audioGlitchResponse);
-
-    auto& reactive = visualControls.audioReactiveRuntime;
-    reactive.enabled = visualControls.enableAudioReactive;
-    reactive.energy = envClamped;
-    reactive.bass = bassClamped;
-    reactive.mid = midClamped;
-    reactive.high = highClamped;
 
     if (visualControls.enableAudioReactive) {
         // Spatial distortion (Pass B)

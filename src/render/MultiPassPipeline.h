@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <memory>
+#include <array>
 #include "EffectChain.h"
 #include "../app/Timeline.h"
 #include "../app/ProjectState.h"
@@ -33,6 +34,12 @@ public:
         VkDeviceMemory memory = VK_NULL_HANDLE;
         VkImageView imageView = VK_NULL_HANDLE;
         VkFramebuffer framebuffer = VK_NULL_HANDLE;
+    };
+
+    struct ImageResource {
+        VkImage image = VK_NULL_HANDLE;
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+        VkImageView imageView = VK_NULL_HANDLE;
     };
 
     MultiPassPipeline();
@@ -114,6 +121,10 @@ private:
     // We need 2 intermediate textures plus final output
     FramebufferResources intermediate[2];  // Ping-pong buffers
     VkFramebuffer swapchainFramebuffer = VK_NULL_HANDLE;  // Final output to swapchain
+    ImageResource temporalHistory;
+    bool temporalHistoryInitialized = false;
+    std::array<VkImageLayout, 2> intermediateLayouts{VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED};
+    VkImageLayout temporalHistoryLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     // Render pass for offscreen rendering
     VkRenderPass offscreenRenderPass = VK_NULL_HANDLE;
@@ -128,11 +139,13 @@ private:
     // Initialization helpers
     bool createOffscreenRenderPass();
     bool createIntermediateFramebuffers();
+    bool createTemporalHistoryImage();
     bool createPipelines();
     bool createDescriptorSets();
     bool createFullscreenQuad();
     
     void cleanupIntermediateFramebuffers();
+    void destroyTemporalHistoryImage();
     void cleanupPipelines();
     void cleanupDescriptorSets();
     void cleanupFullscreenQuad();
@@ -143,4 +156,9 @@ private:
     
     // Memory helper
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    void transitionImageLayout(VkCommandBuffer cmd, VkImage image,
+                               VkImageLayout oldLayout, VkImageLayout newLayout,
+                               VkPipelineStageFlags srcStageMask,
+                               VkPipelineStageFlags dstStageMask);
 };

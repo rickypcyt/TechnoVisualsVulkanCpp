@@ -28,6 +28,7 @@ struct OscMessage {
     int intValue;
     std::string stringValue;
     bool boolValue;
+    std::vector<float> floatValues;
 };
 
 // OSC mapping: maps OSC addresses to VisualControls parameters
@@ -88,6 +89,7 @@ public:
     void removeTriggerMapping(const std::string& address);
     void clearTriggerMappings();
     const std::map<std::string, OscTriggerMapping>& getTriggerMappings() const;
+    void ensureDefaultTriggers();
 
     // Apply OSC message to VisualControls
     void applyToVisualControls(const OscMessage& msg, VisualControls& controls);
@@ -123,5 +125,5 @@ private:
 
     // Helper functions
     OscMessage parseMessage(const char* path, const char* types, lo_arg** argv, int argc);
-    void applyMapping(const std::string& address, float value, VisualControls& controls);
+    void applyMapping(const OscMessage& message, VisualControls& controls);
 };

@@ -394,6 +394,13 @@ struct GlobalParamsUBO {
     alignas(4) float fxaaQualityEdgeThreshold;
     alignas(4) float fxaaQualityEdgeThresholdMin;
 
+    // CameraMovementPassUBO
+    alignas(4) float cameraZoom;
+    alignas(4) float cameraPanX;
+    alignas(4) float cameraPanY;
+    alignas(4) float cameraRotation;
+    alignas(4) int enableCameraMovement;
+
     // GridPassUBO: Grid / Mirroring
     alignas(4) int enableGrid;
     alignas(4) int gridMode;
@@ -401,13 +408,6 @@ struct GlobalParamsUBO {
     alignas(4) int gridRows;
     alignas(4) int gridColumns;
     alignas(4) int gridMirrorCells;
-
-    // CameraMovementPassUBO
-    alignas(4) float cameraZoom;
-    alignas(4) float cameraPanX;
-    alignas(4) float cameraPanY;
-    alignas(4) float cameraRotation;
-    alignas(4) int enableCameraMovement;
 
     // Final RGB overlay
     alignas(16) glm::vec3 rgbOverlay;
@@ -614,6 +614,13 @@ struct GlobalUBO {
     alignas(4) float zoomPulseAmount;
     alignas(4) float rgbShiftAmount;
 
+    // --- Camera movement ---
+    alignas(4) float cameraZoom;
+    alignas(4) float cameraPanX;
+    alignas(4) float cameraPanY;
+    alignas(4) float cameraRotation;
+    alignas(4) int enableCameraMovement;
+
     // --- Grid / Mirroring ---
     alignas(4) int enableGrid;
     alignas(4) int gridMode;
@@ -621,13 +628,6 @@ struct GlobalUBO {
     alignas(4) int gridRows;
     alignas(4) int gridColumns;
     alignas(4) int gridMirrorCells;
-
-    // --- Camera movement ---
-    alignas(4) float cameraZoom;
-    alignas(4) float cameraPanX;
-    alignas(4) float cameraPanY;
-    alignas(4) float cameraRotation;
-    alignas(4) int enableCameraMovement;
 
     // --- Final RGB overlay ---
     alignas(16) glm::vec3 rgbOverlay;

@@ -115,12 +115,16 @@ void ControlState::load(
     int&                  selectedVideoAsset2)
 {
     std::ifstream file(path);
-    if (!file.is_open()) return;
+    if (!file.is_open()) {
+        oscSystem.ensureDefaultTriggers();
+        return;
+    }
 
     const KVMap kv = parseFile(file);
 
     // Clear existing MIDI mappings before loading
     midiSystem.clearMappings();
+    midiSystem.clearTriggerMappings();
 
     // Clear existing OSC mappings before loading
     oscSystem.clearMappings();
@@ -147,6 +151,21 @@ void ControlState::load(
                 }
             } catch (...) {
                 std::cerr << "[ControlState] Failed to parse MIDI mapping: " << key << "=" << value << std::endl;
+            }
+        }
+    }
+
+    oscSystem.ensureDefaultTriggers();
+
+    // Load MIDI trigger mappings
+    for (const auto& [key, value] : kv) {
+        if (key.find("midi_trigger_") == 0) {
+            try {
+                int note = std::stoi(key.substr(13));
+                midiSystem.addTriggerMapping(note, value);
+                std::cout << "[ControlState] Loaded MIDI trigger note " << note << " -> " << value << std::endl;
+            } catch (...) {
+                std::cerr << "[ControlState] Failed to parse MIDI trigger: " << key << "=" << value << std::endl;
             }
         }
     }
@@ -417,6 +436,11 @@ void ControlState::save(
         file << "midi_cc_" << cc << "=" << mapping.parameterName << ","
              << mapping.minValue << "," << mapping.maxValue << ","
              << (mapping.invert ? 1 : 0) << "\n";
+    }
+
+    const auto& midiTriggers = midiSystem.getTriggerMappings();
+    for (const auto& [note, mapping] : midiTriggers) {
+        file << "midi_trigger_" << note << "=" << mapping.actionName << "\n";
     }
 
     // Save OSC mappings
