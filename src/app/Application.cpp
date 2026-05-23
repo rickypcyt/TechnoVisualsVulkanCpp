@@ -672,16 +672,7 @@ bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>
     selectedVideoAsset = newIndex;
     videoSourcePath = assets[newIndex].metadata.path;
 
-    // Start transition: from video 2 to video 1 (only if video 2 is ready)
-    if (videoTexture2.isReady()) {
-        transitionActive = true;
-        transitionFromV1toV2 = false;
-        transitionProgress = 0.0f;
-        transitionStartTime = std::chrono::steady_clock::now();
-        visualControls.video2Mix = 1.0f; // Start with video 2 fully visible
-    } else {
-        visualControls.video2Mix = 0.0f; // No transition, show video 1 immediately
-    }
+    transitionActive = false;
 
     videoRenderer.reset();
     videoPlayer.shutdown();
@@ -735,12 +726,7 @@ bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset
     selectedVideoAsset2 = newIndex;
     videoSourcePath2 = assets[newIndex].metadata.path;
 
-    // Start transition: from video 1 to video 2
-    transitionActive = true;
-    transitionFromV1toV2 = true;
-    transitionProgress = 0.0f;
-    transitionStartTime = std::chrono::steady_clock::now();
-    visualControls.video2Mix = 0.0f; // Start with video 1 fully visible
+    transitionActive = false;
 
     videoRenderer2.reset();
     videoPlayer2.shutdown();
@@ -994,26 +980,7 @@ void Application::mainLoop() {
             }
         }
 
-        // Update video transitions
-        if (transitionActive) {
-            auto now = std::chrono::steady_clock::now();
-            float elapsed = std::chrono::duration<float>(now - transitionStartTime).count();
-            float duration = transitionFromV1toV2 ? transitionDuration : transitionDuration2;
-            
-            transitionProgress = std::min(elapsed / duration, 1.0f);
-            
-            if (transitionFromV1toV2) {
-                // Transition from video 1 to video 2: video2Mix goes from 0 to 1
-                visualControls.video2Mix = transitionProgress;
-            } else {
-                // Transition from video 2 to video 1: video2Mix goes from 1 to 0
-                visualControls.video2Mix = 1.0f - transitionProgress;
-            }
-            
-            if (transitionProgress >= 1.0f) {
-                transitionActive = false;
-            }
-        }
+        transitionActive = false;
 
         // Update auto-randomize colors with smooth interpolation
         if (visualControls.autoRandomizeColors) {
@@ -1414,7 +1381,7 @@ void Application::mainLoop() {
             isReloadingVideo = false;
         };
 
-        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoPlayer, videoRegistry,
+        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoPlayer, videoPlayer2, videoRegistry,
                        selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2, allowDimensionChangeRecreation,
                        controlsDirty, rng, diag, callbacks, midiSystem, oscSystem, audioSystem, videoSourcePath, videoSourcePath2);
         
@@ -1710,49 +1677,82 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     // When enabled, audio levels automatically drive effect intensities
     // so the layers animate without manual slider tweaking.
     // ------------------------------------------------------------------
-    if (visualControls.enableAudioReactive) {
-        float env   = std::clamp(visualControls.energy, 0.0f, 1.0f);
-        float bass  = std::clamp(visualControls.bass,   0.0f, 1.0f);
-        float mid   = std::clamp(visualControls.mid,    0.0f, 1.0f);
-        float high  = std::clamp(visualControls.high,   0.0f, 1.0f);
+    float envClamped  = std::clamp(visualControls.energy, 0.0f, 1.0f);
+    float bassClamped = std::clamp(visualControls.bass,   0.0f, 1.0f);
+    float midClamped  = std::clamp(visualControls.mid,    0.0f, 1.0f);
+    float highClamped = std::clamp(visualControls.high,   0.0f, 1.0f);
 
+    float warpGain     = std::max(0.0f, visualControls.audioWarpResponse);
+    float feedbackGain = std::max(0.0f, visualControls.audioFeedbackResponse);
+    float blurGain     = std::max(0.0f, visualControls.audioBlurResponse);
+    float colorGain    = std::max(0.0f, visualControls.audioColorResponse);
+    float glitchGain   = std::max(0.0f, visualControls.audioGlitchResponse);
+
+    auto& reactive = visualControls.audioReactiveRuntime;
+    reactive.enabled = visualControls.enableAudioReactive;
+    reactive.energy = envClamped;
+    reactive.bass = bassClamped;
+    reactive.mid = midClamped;
+    reactive.high = highClamped;
+
+    if (visualControls.enableAudioReactive) {
         // Spatial distortion (Pass B)
-        ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    env  * 0.15f);
-        ubo.rippleStrength    = std::max(ubo.rippleStrength,    bass * 0.30f);
-        ubo.swirlStrength     = std::max(ubo.swirlStrength,     bass * 0.20f);
-        ubo.displacementAmount= std::max(ubo.displacementAmount,env  * 0.12f);
-        ubo.bendAmount        = std::max(ubo.bendAmount,        env  * 0.10f);
+        ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    envClamped  * 0.15f * warpGain);
+        ubo.rippleStrength    = std::max(ubo.rippleStrength,    bassClamped * 0.30f * warpGain);
+        ubo.swirlStrength     = std::max(ubo.swirlStrength,     bassClamped * 0.20f * warpGain);
+        ubo.displacementAmount= std::max(ubo.displacementAmount,envClamped  * 0.12f * warpGain);
+        ubo.bendAmount        = std::max(ubo.bendAmount,        envClamped  * 0.10f * warpGain);
 
         // Temporal / feedback (Pass D)
-        ubo.feedbackAmount    = std::max(ubo.feedbackAmount,    env  * 0.25f);
-        ubo.trailStrength     = std::max(ubo.trailStrength,     bass * 0.20f);
+        ubo.feedbackAmount    = std::max(ubo.feedbackAmount,    envClamped  * 0.25f * feedbackGain);
+        ubo.trailStrength     = std::max(ubo.trailStrength,     bassClamped * 0.20f * feedbackGain);
 
         // Degradation / glitch (Pass E)
-        ubo.glitchJitter      = std::max(ubo.glitchJitter,      env  * 0.15f);
-        ubo.glitchRGBSplit    = std::max(ubo.glitchRGBSplit,    bass * 0.10f);
-        ubo.glitchTearing     = std::max(ubo.glitchTearing,     mid  * 0.08f);
-        ubo.grainStrength     = std::max(ubo.grainStrength,     env  * 0.20f);
+        ubo.glitchJitter      = std::max(ubo.glitchJitter,      envClamped  * 0.15f * glitchGain);
+        ubo.glitchRGBSplit    = std::max(ubo.glitchRGBSplit,    bassClamped * 0.10f * glitchGain);
+        ubo.glitchTearing     = std::max(ubo.glitchTearing,     midClamped  * 0.08f * glitchGain);
+        ubo.grainStrength     = std::max(ubo.grainStrength,     envClamped  * 0.20f * blurGain);
 
         // Output extras (Pass G)
-        ubo.zoomPulseAmount   = std::max(ubo.zoomPulseAmount,   env  * 0.25f);
-        ubo.slowZoomAmount    = std::max(ubo.slowZoomAmount,    env  * 0.30f);
-        ubo.strobeSpeed       = std::max(ubo.strobeSpeed,       bass * 3.0f);
-        ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    high * 0.03f);
+        ubo.zoomPulseAmount   = std::max(ubo.zoomPulseAmount,   envClamped  * 0.25f * colorGain);
+        ubo.slowZoomAmount    = std::max(ubo.slowZoomAmount,    envClamped  * 0.30f * blurGain);
+        ubo.strobeSpeed       = std::max(ubo.strobeSpeed,       bassClamped * 3.0f * colorGain);
+        ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    highClamped * 0.03f * colorGain);
 
         // Camera movement (2D layer camera)
         if (visualControls.enableCameraMovement) {
             // Very subtle zoom pulse driven by bass (max 6% closer)
-            float zoomPulse = 1.0f + bass * 0.06f + env * 0.02f;
+            float zoomPulse = 1.0f + (bassClamped * 0.06f + envClamped * 0.02f) * warpGain;
             ubo.cameraZoom = std::max(ubo.cameraZoom, zoomPulse);
 
             // Slow orbit rotation driven by energy
-            ubo.cameraRotation += env * 0.3f * globalDeltaTime;
+            ubo.cameraRotation += envClamped * 0.3f * globalDeltaTime * warpGain;
 
             // Gentle pan driven by mid/high (Lissajous-like motion)
-            ubo.cameraPanX = std::max(ubo.cameraPanX, mid  * 0.05f * std::sin(ubo.time * 1.5f));
-            ubo.cameraPanY = std::max(ubo.cameraPanY, high * 0.04f * std::cos(ubo.time * 1.2f));
+            ubo.cameraPanX = std::max(ubo.cameraPanX, midClamped  * 0.05f * std::sin(ubo.time * 1.5f) * warpGain);
+            ubo.cameraPanY = std::max(ubo.cameraPanY, highClamped * 0.04f * std::cos(ubo.time * 1.2f) * warpGain);
         }
     }
+
+    reactive.uvWarpStrength     = ubo.uvWarpStrength;
+    reactive.rippleStrength     = ubo.rippleStrength;
+    reactive.swirlStrength      = ubo.swirlStrength;
+    reactive.displacementAmount = ubo.displacementAmount;
+    reactive.bendAmount         = ubo.bendAmount;
+    reactive.feedbackAmount     = ubo.feedbackAmount;
+    reactive.trailStrength      = ubo.trailStrength;
+    reactive.glitchJitter       = ubo.glitchJitter;
+    reactive.glitchRGBSplit     = ubo.glitchRGBSplit;
+    reactive.glitchTearing      = ubo.glitchTearing;
+    reactive.grainStrength      = ubo.grainStrength;
+    reactive.zoomPulseAmount    = ubo.zoomPulseAmount;
+    reactive.slowZoomAmount     = ubo.slowZoomAmount;
+    reactive.strobeSpeed        = ubo.strobeSpeed;
+    reactive.rgbShiftAmount     = ubo.rgbShiftAmount;
+    reactive.cameraZoom         = ubo.cameraZoom;
+    reactive.cameraPanX         = ubo.cameraPanX;
+    reactive.cameraPanY         = ubo.cameraPanY;
+    reactive.cameraRotation     = ubo.cameraRotation;
 
     uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }

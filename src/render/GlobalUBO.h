@@ -229,6 +229,15 @@ struct GlobalParamsUBO {
     alignas(4) float mid;
     alignas(4) float high;
 
+    // Audio reactivity tuning
+    alignas(4) float audioWarpResponse;
+    alignas(4) float audioFeedbackResponse;
+    alignas(4) float audioBlurResponse;
+    alignas(4) float audioColorResponse;
+    alignas(4) float audioGlitchResponse;
+    alignas(4) float audioBeatSync;
+    alignas(4) float audioLfoRate;
+
     // ColorPassUBO
     alignas(16) glm::vec4 primaryColor;
     alignas(16) glm::vec4 secondaryColor;
@@ -436,7 +445,6 @@ struct GlobalUBO {
     alignas(4) float audioGlitchResponse;
     alignas(4) float audioBeatSync;
     alignas(4) float audioLfoRate;
-    alignas(4) int   enableAudioReactive;
 
     // --- Colores procedurales ---
     alignas(16) glm::vec4 primaryColor;

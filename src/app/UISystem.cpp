@@ -311,6 +311,7 @@ void UISystem::render(
     VideoRandomizerState& randomizer,
     VideoRandomizerState2& randomizer2,
     VideoPlayer&          player,
+    VideoPlayer&          player2,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
     int&                  selectedVideoAsset2,
@@ -332,7 +333,7 @@ void UISystem::render(
     beginFrame();
 
     // Draw main navbar window with tabs
-    drawMainNavbar(controls, randomizer, randomizer2, player, registry,
+    drawMainNavbar(controls, randomizer, randomizer2, player, player2, registry,
                    selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2,
                    allowDimensionChangeRecreation, controlsDirty,
                    rng, diag, callbacks, midiSystem, oscSystem, audioSystem, video1Path, video2Path);
@@ -1891,6 +1892,7 @@ void UISystem::drawMainNavbar(
     VideoRandomizerState& randomizer,
     VideoRandomizerState2& randomizer2,
     VideoPlayer&          player,
+    VideoPlayer&          player2,
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
     int&                  selectedVideoAsset2,
@@ -3497,6 +3499,40 @@ void UISystem::drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& c
     }
     
     ImGui::Dummy(ImVec2(200, maxHeight + 5));
+
+    ImGui::Separator();
+    ImGui::Text("Realtime shader modulation (per audio frame)");
+    const auto& reactive = controls.audioReactiveRuntime;
+    ImGui::Text("State: %s", reactive.enabled ? "ENABLED" : "disabled");
+    if (reactive.enabled) {
+        ImGui::Text("Energy %.3f | Bass %.3f | Mid %.3f | High %.3f",
+                    reactive.energy, reactive.bass, reactive.mid, reactive.high);
+
+        ImGui::Separator();
+        ImGui::Text("Spatial Distortion");
+        ImGui::Text("uvWarp %.3f | ripple %.3f | swirl %.3f", reactive.uvWarpStrength,
+                    reactive.rippleStrength, reactive.swirlStrength);
+        ImGui::Text("displacement %.3f | bend %.3f", reactive.displacementAmount, reactive.bendAmount);
+
+        ImGui::Separator();
+        ImGui::Text("Temporal / Feedback");
+        ImGui::Text("feedback %.3f | trails %.3f", reactive.feedbackAmount, reactive.trailStrength);
+
+        ImGui::Separator();
+        ImGui::Text("Glitch / Grain");
+        ImGui::Text("jitter %.3f | rgbSplit %.3f | tearing %.3f | grain %.3f",
+                    reactive.glitchJitter, reactive.glitchRGBSplit, reactive.glitchTearing, reactive.grainStrength);
+
+        ImGui::Separator();
+        ImGui::Text("Output Extras");
+        ImGui::Text("zoomPulse %.3f | slowZoom %.3f | strobe %.3f | rgbShift %.3f",
+                    reactive.zoomPulseAmount, reactive.slowZoomAmount, reactive.strobeSpeed, reactive.rgbShiftAmount);
+
+        ImGui::Separator();
+        ImGui::Text("Camera");
+        ImGui::Text("zoom %.3f | panX %.3f | panY %.3f | rot %.3f",
+                    reactive.cameraZoom, reactive.cameraPanX, reactive.cameraPanY, reactive.cameraRotation);
+    }
 }
 
 void UISystem::drawParameterIndexContent() {
@@ -3504,112 +3540,103 @@ void UISystem::drawParameterIndexContent() {
     ImGui::Separator();
     ImGui::Text("Use these parameter names for MIDI CC and OSC mapping");
 
+    auto listParams = [](std::initializer_list<const char*> params) {
+        for (const char* name : params) {
+            ImGui::BulletText("%s", name);
+        }
+    };
+
     if (ImGui::BeginTabBar("ParameterTabs")) {
-        if (ImGui::BeginTabItem("Procedural")) {
-            ImGui::Text("animationSpeed - 0.0 to 3.0");
-            ImGui::Text("tempo - 0.0 to 2.0");
-            ImGui::Text("energy - 0.0 to 1.0");
-            ImGui::Text("bass - 0.0 to 1.0");
-            ImGui::Text("mid - 0.0 to 1.0");
-            ImGui::Text("high - 0.0 to 1.0");
-            ImGui::Text("colorBlend - 0.0 to 1.0");
-            ImGui::Text("uvWarpStrength - 0.0 to 1.0");
-            ImGui::Text("rippleStrength - 0.0 to 1.0");
-            ImGui::Text("rippleFrequency - 0.0 to 5.0");
-            ImGui::Text("swirlStrength - 0.0 to 1.0");
-            ImGui::Text("displacementAmount - 0.0 to 1.0");
-            ImGui::Text("kaleidoSegments - 1.0 to 12.0");
-            ImGui::Text("tunnelDepth - 0.0 to 1.0");
-            ImGui::Text("tunnelCurvature - 0.0 to 1.0");
+        if (ImGui::BeginTabItem("Core & Color")) {
+            listParams({
+                "animationSpeed", "animationTargetSeconds", "tempo",
+                "energy", "bass", "mid", "high",
+                "colorBlend", "colorBalance (vec3)",
+                "primaryColor", "secondaryColor", "rgbOverlay",
+                "autoRandomizeColors", "colorRandomizeInterval",
+                "gradeBrightness", "gradeContrast", "gradeSaturation",
+                "gradeHueShift", "gradeGamma", "colorLUTIndex",
+                "splitToneBalance", "splitToneShadows", "splitToneHighlights",
+                "enableColorGrading", "enableRgbOverlay", "enablePostColorBalance"
+            });
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Post FX")) {
-            ImGui::Text("bloomIntensity - 0.0 to 1.0");
-            ImGui::Text("bloomThreshold - 0.0 to 1.0");
-            ImGui::Text("aberrationAmount - 0.0 to 0.1");
-            ImGui::Text("grainStrength - 0.0 to 1.0");
-            ImGui::Text("crtCurvature - 0.0 to 0.5");
-            ImGui::Text("crtScanlineIntensity - 0.0 to 1.0");
-            ImGui::Text("crtMaskIntensity - 0.0 to 1.0");
-            ImGui::Text("crtVignette - 0.0 to 1.0");
-            ImGui::Text("crtFishEye - 0.0 to 0.5");
-            ImGui::Text("gaussianBlur - 0.0 to 1.0");
-            ImGui::Text("directionalBlur - 0.0 to 1.0");
-            ImGui::Text("directionalBlurAngle - 0.0 to 360.0");
-            ImGui::Text("zoomBlur - 0.0 to 1.0");
-            ImGui::Text("motionBlur - 0.0 to 1.0");
-            ImGui::Text("temporalBlur - 0.0 to 1.0");
-            ImGui::Text("unsharpMask - 0.0 to 1.0");
-            ImGui::Text("casAmount - 0.0 to 1.0");
-            ImGui::Text("localContrast - 0.0 to 1.0");
-            ImGui::Text("pixelateAmount - 0.0 to 1.0");
-            ImGui::Text("strobeSpeed - 0.0 to 20.0");
-            ImGui::Text("thresholdLevel - 0.0 to 1.0");
-            ImGui::Text("slowZoomAmount - 0.0 to 1.0");
-            ImGui::Text("edgeStrength - 0.1 to 5.0");
-            ImGui::Text("edgeThreshold - 0.0 to 1.0");
-            ImGui::Text("edgeBlend - 0.0 to 1.0");
-            ImGui::Text("fxaaQualitySubpix - 0.0 to 1.0");
-            ImGui::Text("fxaaQualityEdgeThreshold - 0.0 to 1.0");
-            ImGui::Text("fxaaQualityEdgeThresholdMin - 0.0 to 1.0");
+        if (ImGui::BeginTabItem("Video & Mix")) {
+            listParams({
+                "videoMix", "videoPlaybackRate", "videoDecodeOversample",
+                "autoScaleVideo", "selectedVideoFolder", "loopBlendSeconds", "forcedFpsIndex",
+                "randomVideoStart", "randomJumpInterval", "enableRandomJumpInterval",
+                "enableDualVideo", "video2Mix", "video2BlendMode",
+                "selectedVideo2Folder", "selectedVideo2Asset", "video2PlaybackRate",
+                "randomVideo2Start", "randomJumpInterval2", "enableRandomJumpInterval2",
+                "blendModeProcedural", "blendModeVideo", "blendModeFeedback",
+                "blendProceduralMix", "blendVideoMix", "blendFeedbackMix"
+            });
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("VJay Basics")) {
-            ImGui::Text("videoPlaybackRate - 0.0 to 2.0");
-            ImGui::Text("videoDecodeOversample - 1.0 to 4.0");
-            ImGui::Text("videoMix - 0.0 to 1.0");
-            ImGui::Text("grayscaleAmount - 0.0 to 1.0");
-            ImGui::Text("sharpenAmount - 0.0 to 1.0");
-            ImGui::Text("gradeBrightness - 0.0 to 2.0");
-            ImGui::Text("gradeContrast - 0.0 to 2.0");
-            ImGui::Text("gradeSaturation - 0.0 to 2.0");
-            ImGui::Text("gradeHueShift - 0.0 to 360.0");
-            ImGui::Text("gradeGamma - 0.0 to 2.0");
-            ImGui::Text("colorLUTIndex - 0.0 to 10.0");
-            ImGui::Text("splitToneBalance - 0.0 to 1.0");
-            ImGui::Text("blendProceduralMix - 0.0 to 1.0");
-            ImGui::Text("blendVideoMix - 0.0 to 1.0");
-            ImGui::Text("blendFeedbackMix - 0.0 to 1.0");
+        if (ImGui::BeginTabItem("Spatial & Camera")) {
+            listParams({
+                "uvWarpStrength", "rippleStrength", "rippleFrequency",
+                "swirlStrength", "displacementAmount", "bendAmount",
+                "kaleidoSegments", "tunnelDepth", "tunnelCurvature",
+                "cameraZoom", "cameraPanX", "cameraPanY", "cameraRotation",
+                "enableCameraMovement", "zoomPulseAmount", "slowZoomAmount",
+                "enableMirror", "mirrorAmount", "enableInvert",
+                "enablePosterize", "posterizeLevels", "enableInfrared",
+                "enableGrid", "gridMode", "gridCount", "gridRows", "gridColumns", "gridMirrorCells"
+            });
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("VJay Extra")) {
-            ImGui::Text("feedbackAmount - 0.0 to 1.0");
-            ImGui::Text("trailStrength - 0.0 to 1.0");
-            ImGui::Text("temporalAccumulation - 0.0 to 1.0");
-            ImGui::Text("feedbackDecay - 0.0 to 1.0");
-            ImGui::Text("recursiveBlend - 0.0 to 1.0");
-            ImGui::Text("glitchAmount - 0.0 to 1.0");
-            ImGui::Text("glitchDatamosh - 0.0 to 1.0");
-            ImGui::Text("glitchRGBSplit - 0.0 to 1.0");
-            ImGui::Text("glitchScanlineBreak - 0.0 to 1.0");
-            ImGui::Text("glitchJitter - 0.0 to 1.0");
-            ImGui::Text("glitchTearing - 0.0 to 1.0");
-            ImGui::Text("glitchPixelSort - 0.0 to 1.0");
-            ImGui::Text("glitchBufferCorruption - 0.0 to 1.0");
-            ImGui::Text("analogScanlineFocus - 0.0 to 1.0");
-            ImGui::Text("analogMaskBalance - 0.0 to 1.0");
-            ImGui::Text("analogNoise - 0.0 to 1.0");
-            ImGui::Text("analogBloom - 0.0 to 1.0");
-            ImGui::Text("vhsDistortion - 0.0 to 1.0");
-            ImGui::Text("analogChromaticAberration - 0.0 to 1.0");
-            ImGui::Text("mirrorAmount - 0.0 to 1.0");
-            ImGui::Text("posterizeLevels - 0.0 to 16.0");
-            ImGui::Text("zoomPulseAmount - 0.0 to 1.0");
-            ImGui::Text("rgbShiftAmount - 0.0 to 1.0");
-            ImGui::Text("audioWarpResponse - 0.0 to 1.0");
-            ImGui::Text("audioFeedbackResponse - 0.0 to 1.0");
-            ImGui::Text("audioBlurResponse - 0.0 to 1.0");
-            ImGui::Text("audioColorResponse - 0.0 to 1.0");
-            ImGui::Text("audioGlitchResponse - 0.0 to 1.0");
-            ImGui::Text("audioBeatSync - 0.0 to 1.0");
-            ImGui::Text("audioLfoRate - 0.0 to 10.0");
-            ImGui::Text("temporalInterpolation - 0.0 to 1.0");
-            ImGui::Text("temporalBlendStrength - 0.0 to 1.0");
-            ImGui::Text("slowMotionFactor - 0.0 to 1.0");
-            ImGui::Text("frameAccumulation - 0.0 to 1.0");
+        if (ImGui::BeginTabItem("Post FX & Blur")) {
+            listParams({
+                "bloomIntensity", "bloomThreshold", "enablePostBloom",
+                "aberrationAmount", "enablePostAberration",
+                "grainStrength", "enablePostGrain",
+                "crtCurvature", "crtHorizontalCurvature", "crtFishEye",
+                "crtScanlineIntensity", "crtMaskIntensity", "crtVignette",
+                "enablePostCrtCurvature", "enablePostScanMask", "enablePostVignette", "enablePostFishEye",
+                "gaussianBlur", "directionalBlur", "directionalBlurAngle",
+                "zoomBlur", "motionBlur", "temporalBlur",
+                "unsharpMask", "casAmount", "localContrast",
+                "pixelateAmount", "enablePixelate",
+                "strobeSpeed", "enableStrobe",
+                "thresholdLevel", "enableThreshold",
+                "slowZoomAmount", "enableSlowZoom",
+                "enableEdgeDetect", "edgeStrength", "edgeThreshold", "edgeBlend", "edgeColor",
+                "enableFXAA", "fxaaQualitySubpix", "fxaaQualityEdgeThreshold", "fxaaQualityEdgeThresholdMin"
+            });
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Glitch & Temporal")) {
+            listParams({
+                "feedbackAmount", "trailStrength", "temporalAccumulation",
+                "temporalInterpolation", "temporalBlendStrength", "frameAccumulation",
+                "feedbackDecay", "recursiveBlend", "slowMotionFactor",
+                "glitchAmount", "glitchDatamosh", "glitchRGBSplit", "glitchScanlineBreak",
+                "glitchJitter", "glitchTearing", "glitchPixelSort", "glitchBufferCorruption",
+                "analogScanlineFocus", "analogMaskBalance", "analogNoise", "analogBloom",
+                "vhsDistortion", "analogChromaticAberration",
+                "enableFeedback", "enableTemporal", "enableGlitch", "enableDistortion", "enableAnalog",
+                "enablePostBend", "enablePostGlitch"
+            });
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Extras & Audio")) {
+            listParams({
+                "enableMirror", "enableInvert", "enablePosterize", "enableInfrared",
+                "enableZoomPulse", "zoomPulseAmount", "enableRGBShift", "rgbShiftAmount",
+                "enableGrid", "gridMode", "gridCount", "gridRows", "gridColumns", "gridMirrorCells",
+                "enableAudioReactive", "audioWarpResponse", "audioFeedbackResponse",
+                "audioBlurResponse", "audioColorResponse", "audioGlitchResponse",
+                "audioBeatSync", "audioLfoRate",
+                "enableRandomJumpInterval2", "randomVideo2Start",
+                "enableRandomJumpInterval", "randomVideoStart"
+            });
             ImGui::EndTabItem();
         }
 

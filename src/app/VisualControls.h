@@ -146,6 +146,38 @@ struct VisualControls {
     float audioGlitchResponse = 0.5f;
     float audioBeatSync = 1.0f;
     float audioLfoRate = 0.5f;
+
+    struct AudioReactiveRuntime {
+        bool enabled = false;
+        float energy = 0.0f;
+        float bass = 0.0f;
+        float mid = 0.0f;
+        float high = 0.0f;
+
+        float uvWarpStrength = 0.0f;
+        float rippleStrength = 0.0f;
+        float swirlStrength = 0.0f;
+        float displacementAmount = 0.0f;
+        float bendAmount = 0.0f;
+
+        float feedbackAmount = 0.0f;
+        float trailStrength = 0.0f;
+
+        float glitchJitter = 0.0f;
+        float glitchRGBSplit = 0.0f;
+        float glitchTearing = 0.0f;
+        float grainStrength = 0.0f;
+
+        float zoomPulseAmount = 0.0f;
+        float slowZoomAmount = 0.0f;
+        float strobeSpeed = 0.0f;
+        float rgbShiftAmount = 0.0f;
+
+        float cameraZoom = 0.0f;
+        float cameraPanX = 0.0f;
+        float cameraPanY = 0.0f;
+        float cameraRotation = 0.0f;
+    } audioReactiveRuntime;
     // Temporal processing
     float temporalInterpolation = 0.0f;
     float temporalBlendStrength = 0.0f;

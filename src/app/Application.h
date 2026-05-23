@@ -126,6 +126,8 @@ private:
     float transitionProgress = 0.0f;  // 0.0 to 1.0, current transition progress
     bool transitionActive = false;    // whether a transition is in progress
     bool transitionFromV1toV2 = true; // transition direction
+    float transitionStartMix = 0.0f;
+    float transitionEndMix = 1.0f;
     std::chrono::steady_clock::time_point transitionStartTime;
     std::chrono::steady_clock::time_point lastControlSaveTime;
     std::mt19937 rng{std::random_device{}()};

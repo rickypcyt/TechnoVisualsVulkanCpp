@@ -7,6 +7,9 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     mat4 model; mat4 view; mat4 proj;
     vec2 resolution; vec2 videoResolution;
     float time; float tempo; float energy; float bass; float mid; float high;
+    float audioWarpResponse; float audioFeedbackResponse; float audioBlurResponse;
+    float audioColorResponse; float audioGlitchResponse; float audioBeatSync;
+    float audioLfoRate;
 
     vec4 primaryColor; vec4 secondaryColor; float colorBlend; int mode;
     vec3 colorBalance; float gradeBrightness; float gradeContrast; float gradeSaturation;

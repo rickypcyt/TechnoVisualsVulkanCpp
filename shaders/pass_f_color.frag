@@ -16,6 +16,14 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float mid;
     float high;
 
+    float audioWarpResponse;
+    float audioFeedbackResponse;
+    float audioBlurResponse;
+    float audioColorResponse;
+    float audioGlitchResponse;
+    float audioBeatSync;
+    float audioLfoRate;
+
     vec4 primaryColor;
     vec4 secondaryColor;
     float colorBlend;
