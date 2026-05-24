@@ -3,14 +3,34 @@
 
 #include "shared_ubo.glsl"
 
+const float PI = 3.1415926535;
+
+#define uTime           ubo.time
+#define uTempo          ubo.tempo
+#define uEnergy         ubo.energy
+#define uBass           ubo.bass
+#define uMid            ubo.mid
+#define uHigh           ubo.high
+#define uPrimaryColor   ubo.primaryColor.rgb
+#define uSecondaryColor ubo.secondaryColor.rgb
+
+#include "procedural_anaglyph.glsl"
+
+#undef uTime
+#undef uTempo
+#undef uEnergy
+#undef uBass
+#undef uMid
+#undef uHigh
+#undef uPrimaryColor
+#undef uSecondaryColor
+
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
 layout(set = 1, binding = 0) uniform sampler2D videoTex;
 layout(set = 1, binding = 1) uniform sampler2D videoTexPrev;
 layout(set = 1, binding = 2) uniform sampler2D video2Tex;
-
-const float PI = 3.1415926535;
 
 float luminance(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));
@@ -106,6 +126,10 @@ vec3 renderMode1(vec2 st) {
 vec4 dispatchMode(int m, vec2 st) {
     if (m == 0) return vec4(renderMode0(st), 1.0);
     if (m == 1) return vec4(renderMode1(st), 1.0);
+    if (m == 40) {
+        vec2 aspectCorrected = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+        return renderAnaglyphAssembly(aspectCorrected, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    }
     return vec4(0.0);
 }
 

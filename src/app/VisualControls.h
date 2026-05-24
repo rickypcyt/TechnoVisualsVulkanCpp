@@ -7,6 +7,10 @@ struct VisualControls {
     float animationSpeed = 1.0f;
     float animationTargetSeconds = 1.0f;
     float tempo = 1.0f;
+    bool  enableTempoLfo = true;
+    float tempoLfoSpeed = 0.5f;  // Hz
+    float tempoLfoDepth = 0.3f;  // additive offset
+    float tempoLfoPhase = 0.0f;   // runtime accumulator
     float energy = 0.5f;
     float bass = 0.3f;
     float mid = 0.3f;

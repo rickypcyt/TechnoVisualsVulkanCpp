@@ -16,6 +16,7 @@ CMakeFiles/app.dir/src/app/Application.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h
  /home/ricky/coding/proyects/vulkancpp/src/app/Timeline.h
+ /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h
  /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.h
  /home/ricky/coding/proyects/vulkancpp/src/render/EffectChain.h
  /home/ricky/coding/proyects/vulkancpp/src/render/Export.h
@@ -4874,6 +4875,7 @@ CMakeFiles/app.dir/src/main.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h
  /home/ricky/coding/proyects/vulkancpp/src/app/Timeline.h
+ /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h
  /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.h
  /home/ricky/coding/proyects/vulkancpp/src/render/EffectChain.h
  /home/ricky/coding/proyects/vulkancpp/src/render/Export.h
@@ -5669,6 +5671,7 @@ CMakeFiles/app.dir/src/main.cpp.o
 
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.cpp
+ /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h
  /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.h
  /home/ricky/coding/proyects/vulkancpp/src/render/GlobalUBO.h
  /usr/include/alloca.h
@@ -6676,6 +6679,7 @@ CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o
  /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.cpp
  /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h
  /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h
+ /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h
  /home/ricky/coding/proyects/vulkancpp/src/render/GlobalUBO.h
  /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h
  /usr/include/alloca.h

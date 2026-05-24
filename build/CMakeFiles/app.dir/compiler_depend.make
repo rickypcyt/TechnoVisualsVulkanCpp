@@ -15,6 +15,7 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: /home/ricky/coding/proyects/vulkan
   /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/Timeline.h \
+  /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/EffectChain.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/Export.h \
@@ -4862,6 +4863,7 @@ CMakeFiles/app.dir/src/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/mai
   /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h \
   /home/ricky/coding/proyects/vulkancpp/src/app/Timeline.h \
+  /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/EffectChain.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/Export.h \
@@ -5656,6 +5658,7 @@ CMakeFiles/app.dir/src/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/mai
   /usr/local/include/portaudio.h
 
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.cpp \
+  /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/GlobalUBO.h \
   /usr/include/alloca.h \
@@ -6660,6 +6663,7 @@ CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o: /home/ricky/coding/proyects/
 CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.cpp \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
   /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h \
+  /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/GlobalUBO.h \
   /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.h \
   /usr/include/alloca.h \
@@ -10640,9 +10644,7 @@ CMakeFiles/app.dir/src/app/Application.cpp.o:
 
 /usr/lib32/libtheoraenc.so.2:
 
-/usr/include/glm/ext/matrix_float4x4.hpp:
-
-/usr/include/glm/detail/func_trigonometric.inl:
+/usr/lib32/libtheoradec.so.2:
 
 /usr/include/glm/ext/matrix_float4x3_precision.hpp:
 
@@ -10871,6 +10873,10 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o:
 /usr/include/glm/ext/vector_bool2_precision.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/bmiintrin.h:
+
+/usr/include/glm/detail/func_trigonometric.inl:
+
+/usr/include/glm/ext/matrix_float4x4.hpp:
 
 /usr/include/c++/16.1.1/concepts:
 
@@ -11346,6 +11352,22 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/lib/libva-drm.so.2:
 
+/usr/include/SDL2/SDL_messagebox.h:
+
+/home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.h:
+
+/usr/include/c++/16.1.1/bits/stl_queue.h:
+
+/usr/include/SDL2/SDL_config_unix.h:
+
+/usr/include/c++/16.1.1/cwchar:
+
+/usr/include/bits/mathcalls.h:
+
+/usr/include/glm/ext/matrix_double3x4.hpp:
+
+/usr/include/bits/types/clock_t.h:
+
 /usr/include/glm/detail/type_mat2x2.inl:
 
 /usr/include/bits/endianness.h:
@@ -11406,12 +11428,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/lib/libspeex.so.1:
 
-/usr/include/c++/16.1.1/bits/stl_queue.h:
-
-/home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.h:
-
-/usr/include/SDL2/SDL_config_unix.h:
-
 /usr/lib/libaom.so.3:
 
 /usr/include/SDL2/SDL_sensor.h:
@@ -11450,6 +11466,8 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/wchar.h:
 
+/home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h:
+
 /usr/include/SDL2/SDL_touch.h:
 
 /usr/include/bits/uintn-identity.h:
@@ -11465,14 +11483,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/lib32/libicuuc.so.78:
 
 /usr/include/bits/types/locale_t.h:
-
-/usr/include/c++/16.1.1/cwchar:
-
-/usr/include/bits/mathcalls.h:
-
-/usr/include/glm/ext/matrix_double3x4.hpp:
-
-/usr/include/bits/types/clock_t.h:
 
 /usr/include/c++/16.1.1/tr1/modified_bessel_func.tcc:
 
@@ -11515,6 +11525,8 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/include/bits/typesizes.h:
 
 /usr/include/glm/ext/quaternion_transform.inl:
+
+/usr/include/bits/types/sigevent_t.h:
 
 /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.h:
 
@@ -11624,13 +11636,11 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/SDL2/SDL_loadso.h:
 
-/home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h:
-
 /home/ricky/coding/proyects/vulkancpp/src/video/FrameLayout.h:
 
-/usr/include/c++/16.1.1/bit:
+/home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.h:
 
-/usr/include/SDL2/SDL_messagebox.h:
+/usr/include/c++/16.1.1/bit:
 
 /usr/include/bits/getopt_posix.h:
 
@@ -11679,8 +11689,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/include/c++/16.1.1/memory:
 
 /usr/include/bits/types/__FILE.h:
-
-/usr/lib32/libtheoradec.so.2:
 
 /usr/include/bits/types/siginfo_t.h:
 
@@ -11788,8 +11796,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/bits/types/mbstate_t.h:
 
-/usr/include/bits/types/sigevent_t.h:
-
 /usr/include/glm/detail/type_mat3x4.inl:
 
 /usr/include/c++/16.1.1/ext/type_traits.h:
@@ -11834,11 +11840,21 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/bits/types/time_t.h:
 
+CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o:
+
+/home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/popcntintrin.h:
+
 /usr/include/bits/types/timer_t.h:
 
 /usr/include/vulkan/vulkan_core.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/adxintrin.h:
+
+/usr/include/c++/16.1.1/bits/invoke.h:
+
+/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h:
 
 /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_tables.cpp:
 
@@ -11957,16 +11973,6 @@ CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o:
 /usr/include/c++/16.1.1/bits/functional_hash.h:
 
 /usr/include/bits/types/__mbstate_t.h:
-
-CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/popcntintrin.h:
-
-/home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h:
-
-/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h:
-
-/usr/include/c++/16.1.1/bits/invoke.h:
 
 /usr/include/glm/ext/matrix_float4x4_precision.hpp:
 

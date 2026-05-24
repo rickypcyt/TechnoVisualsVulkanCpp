@@ -46,6 +46,8 @@ namespace {
 
 using KVMap = std::unordered_map<std::string, std::string>;
 
+constexpr int kMaxProceduralMode = 101;
+
 KVMap parseFile(std::ifstream& file) {
     KVMap values;
     std::string line;
@@ -216,6 +218,9 @@ void ControlState::load(
     loaded.animationSpeed          = readFloat(kv, "animationSpeed",          loaded.animationSpeed);
     loaded.animationTargetSeconds  = readFloat(kv, "animationTargetSeconds",  loaded.animationTargetSeconds);
     loaded.tempo                   = readFloat(kv, "tempo",                   loaded.tempo);
+    loaded.enableTempoLfo          = readBool (kv, "enableTempoLfo",          loaded.enableTempoLfo);
+    loaded.tempoLfoSpeed           = readFloat(kv, "tempoLfoSpeed",           loaded.tempoLfoSpeed);
+    loaded.tempoLfoDepth           = readFloat(kv, "tempoLfoDepth",           loaded.tempoLfoDepth);
     loaded.energy                  = readFloat(kv, "energy",                  loaded.energy);
     loaded.bass                    = readFloat(kv, "bass",                    loaded.bass);
     loaded.mid                     = readFloat(kv, "mid",                     loaded.mid);
@@ -225,7 +230,7 @@ void ControlState::load(
     loaded.secondaryColor          = readVec4 (kv, "secondaryColor",          loaded.secondaryColor);
     loaded.autoRandomizeColors     = readBool (kv, "autoRandomizeColors",     loaded.autoRandomizeColors);
     loaded.colorRandomizeInterval  = readFloat(kv, "colorRandomizeInterval",  loaded.colorRandomizeInterval);
-    loaded.activeMode              = std::clamp(readInt(kv, "activeMode", loaded.activeMode), 0, 1);
+    loaded.activeMode              = std::clamp(readInt(kv, "activeMode", loaded.activeMode), 0, kMaxProceduralMode);
     loaded.videoMix                = readFloat(kv, "videoMix",                loaded.videoMix);
     loaded.videoPlaybackRate       = readFloat(kv, "videoPlaybackRate",       loaded.videoPlaybackRate);
     loaded.videoDecodeOversample   = readFloat(kv, "videoDecodeOversample",   loaded.videoDecodeOversample);
@@ -474,6 +479,9 @@ void ControlState::save(
     wf("animationSpeed",          c.animationSpeed);
     wf("animationTargetSeconds",  c.animationTargetSeconds);
     wf("tempo",                   c.tempo);
+    wb("enableTempoLfo",          c.enableTempoLfo);
+    wf("tempoLfoSpeed",           c.tempoLfoSpeed);
+    wf("tempoLfoDepth",           c.tempoLfoDepth);
     wf("energy",                  c.energy);
     wf("bass",                    c.bass);
     wf("mid",                     c.mid);

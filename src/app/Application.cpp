@@ -1525,6 +1525,21 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     debugAnimationDelta = globalDeltaTime;
     float time = accumulatedTime;
 
+    constexpr float kTwoPi = 6.28318530718f;
+    if (visualControls.enableTempoLfo) {
+        float lfoSpeed = std::max(0.01f, visualControls.tempoLfoSpeed);
+        float phaseAdvance = globalDeltaTime * lfoSpeed * kTwoPi;
+        visualControls.tempoLfoPhase = std::fmod(visualControls.tempoLfoPhase + phaseAdvance, kTwoPi);
+        if (visualControls.tempoLfoPhase < 0.0f) visualControls.tempoLfoPhase += kTwoPi;
+    }
+
+    float tempoValue = visualControls.tempo;
+    if (visualControls.enableTempoLfo) {
+        float lfoValue = std::sin(visualControls.tempoLfoPhase);
+        tempoValue += visualControls.tempoLfoDepth * lfoValue;
+    }
+    tempoValue = std::clamp(tempoValue, 0.05f, 8.0f);
+
     // Update audio values from AudioSystem (normalized + smoothed)
     auto normalizeAudioLevel = [](float rawValue, float gain, float gamma) {
         float scaled = std::clamp(rawValue * gain, 0.0f, 1.0f);
@@ -1573,7 +1588,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.primaryColor = visualControls.primaryColor;
     ubo.secondaryColor = visualControls.secondaryColor;
     ubo.colorBlend = visualControls.colorBlend;
-    ubo.tempo = visualControls.tempo;
+    ubo.tempo = tempoValue;
     ubo.energy = visualControls.energy;
     ubo.bass = visualControls.bass;
     ubo.mid = visualControls.mid;

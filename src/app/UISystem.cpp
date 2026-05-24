@@ -56,6 +56,29 @@ namespace fs = std::filesystem;
 static const std::array<int, 5> FORCED_FPS_OPTIONS_UI = {0, 15, 24, 30, 60};
 
 namespace {
+
+constexpr int kLayerModeValues[] = {0, 1, 40};
+constexpr int kLayerModeCount = sizeof(kLayerModeValues) / sizeof(kLayerModeValues[0]);
+constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Anaglyph 3D\0";
+
+int layerIndexFromMode(int mode) {
+    for (int i = 0; i < kLayerModeCount; ++i) {
+        if (kLayerModeValues[i] == mode) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+bool drawActiveLayerCombo(const char* label, int& activeMode) {
+    int layerIndex = layerIndexFromMode(activeMode);
+    bool selectionChanged = ImGui::Combo(label, &layerIndex, kLayerComboItems);
+    if (selectionChanged) {
+        activeMode = kLayerModeValues[layerIndex];
+    }
+    return selectionChanged;
+}
+
 float randFloat(std::mt19937& rng, float lo, float hi) {
     return std::uniform_real_distribution<float>(lo, hi)(rng);
 }
@@ -570,7 +593,7 @@ void UISystem::drawProceduralControls(
 
     ImGui::Separator();
     ImGui::Text("Layers");
-    changed |= ImGui::Combo("Active Layer", &controls.activeMode, "Layer 0\0Layer 1\0Anaglyph 3D\0");
+    changed |= drawActiveLayerCombo("Active Layer", controls.activeMode);
 
     ImGui::Separator();
     ImGui::Text("Color Palette");
@@ -626,6 +649,11 @@ void UISystem::drawProceduralControls(
     ImGui::Separator();
     ImGui::Text("Audio-inspired inputs");
     changed |= ImGui::SliderFloat("Tempo",  &controls.tempo,  0.25f, 4.0f);
+    changed |= ImGui::Checkbox("Auto tempo LFO", &controls.enableTempoLfo);
+    if (controls.enableTempoLfo) {
+        changed |= ImGui::SliderFloat("LFO speed (Hz)", &controls.tempoLfoSpeed, 0.05f, 4.0f, "%.2f Hz");
+        changed |= ImGui::SliderFloat("LFO depth", &controls.tempoLfoDepth, 0.0f, 2.0f);
+    }
     changed |= ImGui::SliderFloat("Energy", &controls.energy, 0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
@@ -2044,7 +2072,7 @@ void UISystem::drawProceduralControlsContent(
 
     ImGui::Separator();
     ImGui::Text("Layers");
-    changed |= ImGui::Combo("Active Layer", &controls.activeMode, "Layer 0\0Layer 1\0Anaglyph 3D\0");
+    changed |= drawActiveLayerCombo("Active Layer", controls.activeMode);
 
     ImGui::Separator();
     ImGui::Text("Color Palette");
@@ -3432,6 +3460,11 @@ void UISystem::drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& c
     
     ImGui::Text("Audio-inspired inputs");
     ImGui::SliderFloat("Tempo",  &controls.tempo,  0.25f, 4.0f);
+    ImGui::Checkbox("Auto tempo LFO", &controls.enableTempoLfo);
+    if (controls.enableTempoLfo) {
+        ImGui::SliderFloat("LFO speed (Hz)", &controls.tempoLfoSpeed, 0.05f, 4.0f, "%.2f Hz");
+        ImGui::SliderFloat("LFO depth", &controls.tempoLfoDepth, 0.0f, 2.0f);
+    }
     ImGui::SliderFloat("Energy", &controls.energy, 0.0f, 1.0f);
     ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
     ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
