@@ -8,6 +8,14 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     vec2 resolution; vec2 videoResolution;
     float time; float tempo; float energy; float bass; float mid; float high;
 
+    float audioWarpResponse;
+    float audioFeedbackResponse;
+    float audioBlurResponse;
+    float audioColorResponse;
+    float audioGlitchResponse;
+    float audioBeatSync;
+    float audioLfoRate;
+
     vec4 primaryColor; vec4 secondaryColor; float colorBlend; int mode;
     vec3 colorBalance; float gradeBrightness; float gradeContrast; float gradeSaturation;
     float gradeHueShift; float gradeGamma; int colorLUTIndex; float splitToneBalance;
@@ -62,6 +70,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float cameraZoom; float cameraPanX; float cameraPanY; float cameraRotation; int enableCameraMovement;
 
     int enableGrid; int gridMode; int gridCount; int gridRows; int gridColumns; int gridMirrorCells;
+    int gridShowLines; float gridLineWidth; float gridLineIntensity; vec3 gridLineColor;
 } ubo;
 
 layout(set = 1, binding = 0) uniform sampler2D inputTex;
@@ -78,39 +87,39 @@ float hash21(vec2 p) {
 float luminance(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 
 vec2 applyGrid(vec2 p) {
-    vec2 uvGrid = p;
-    if (ubo.enableGrid == 1) {
-        if (ubo.gridMode == 0 && ubo.gridCount > 1) {
-            vec2 scaled = uvGrid * float(ubo.gridCount);
-            vec2 cell = floor(scaled);
-            vec2 f = fract(scaled);
-            if (ubo.gridMirrorCells == 1) {
-                if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
-                if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
-            }
-            uvGrid = f;
-        } else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
-            vec2 scaled = uvGrid * float(ubo.gridCount);
-            vec2 cell = floor(scaled);
-            vec2 f = fract(scaled);
-            if (ubo.gridMirrorCells == 1) {
-                if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
-                if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
-            }
-            uvGrid = f;
-        } else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
-            vec2 gridSize = vec2(float(ubo.gridColumns), float(ubo.gridRows));
-            vec2 scaled = uvGrid * gridSize;
-            vec2 cell = floor(scaled);
-            vec2 f = fract(scaled);
-            if (ubo.gridMirrorCells == 1) {
-                if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
-                if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
-            }
-            uvGrid = f;
+    if (ubo.enableGrid != 1) return p;
+
+    if (ubo.gridMode == 0 && ubo.gridCount > 1) {
+        // Duplicar horizontalmente (N columnas)
+        float x = p.x * float(ubo.gridCount);
+        float cellX = floor(x);
+        p.x = fract(x);
+        if (ubo.gridMirrorCells == 1 && int(cellX) % 2 != 0)
+            p.x = 1.0 - p.x;
+
+    } else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
+        // Duplicar verticalmente (N filas)
+        float y = p.y * float(ubo.gridCount);
+        float cellY = floor(y);
+        p.y = fract(y);
+        if (ubo.gridMirrorCells == 1 && int(cellY) % 2 != 0)
+            p.y = 1.0 - p.y;
+
+    } else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
+        // Matriz de filas × columnas
+        float x = p.x * float(ubo.gridColumns);
+        float y = p.y * float(ubo.gridRows);
+        float cellX = floor(x);
+        float cellY = floor(y);
+        p.x = fract(x);
+        p.y = fract(y);
+        if (ubo.gridMirrorCells == 1) {
+            if (int(cellX) % 2 != 0) p.x = 1.0 - p.x;
+            if (int(cellY) % 2 != 0) p.y = 1.0 - p.y;
         }
     }
-    return clamp(uvGrid, 0.0, 1.0);
+
+    return clamp(p, 0.0, 1.0);
 }
 
 vec3 sampleInput(vec2 p) {
@@ -193,115 +202,5 @@ vec3 blendMode(vec3 base, vec3 layer, int mode) {
 }
 
 void main() {
-    float timeScale = max(ubo.slowMotionFactor, 0.1);
-    float t = ubo.time / timeScale;
-    vec2 centered = uv * 2.0 - 1.0;
-
-    // Base samples
-    vec3 color = sampleInput(uv);
-    vec3 procColor = texture(proceduralTex, uv).rgb;
-
-    // BLOOM (cheap): bright mask -> blur -> add
-    if (ubo.enablePostBloom == 1 && ubo.bloomIntensity > 0.0001) {
-        float bright = max(max(color.r, color.g), color.b);
-        float mask = smoothstep(clamp(ubo.bloomThreshold, 0.0, 1.0), 1.0, bright);
-        vec3 b = blur3x3(uv);
-        color += b * mask * clamp(ubo.bloomIntensity * 0.4, 0.0, 2.0);
-    }
-
-    // ANALOG scanlines / mask
-    if (ubo.enableAnalog == 1) {
-        if (ubo.analogScanlineFocus > 0.0001) {
-            float scan = 0.4 + 0.6 * sin((uv.y + sin(t * 0.01) * 0.01) * PI * 400.0);
-            color *= mix(1.0, scan, ubo.analogScanlineFocus);
-        }
-        if (ubo.analogMaskBalance > 0.0001) {
-            float mask = (0.7 + 0.3 * sin(uv.x * PI * 960.0)) * (0.7 + 0.3 * cos(uv.y * PI * 540.0));
-            color *= mix(1.0, mask, ubo.analogMaskBalance);
-        }
-    }
-
-    // CRT scanline mask
-    if (ubo.enablePostScanMask == 1) {
-        float scanlineFreq = 240.0 * (ubo.resolution.y / 480.0);
-        float scan = 0.5 + 0.5 * sin((uv.y + t * 0.2) * PI * scanlineFreq);
-        color *= mix(1.0, scan, clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
-    }
-
-    // EDGE detect overlay
-    if (ubo.enableEdgeDetect == 1 && (ubo.edgeStrength > 0.0001 || ubo.edgeBlend > 0.0001)) {
-        float edge = sobelEdgeStrength(uv) * ubo.edgeStrength;
-        float thr = clamp(ubo.edgeThreshold, 0.0, 1.0);
-        float e = smoothstep(thr, thr + 0.5, edge);
-        vec3 edgeTint = mix(vec3(e), ubo.edgeColor * e, clamp(ubo.edgeBlend, 0.0, 1.0));
-        color = mix(color, edgeTint, e);
-    }
-
-    // Blend with procedural (two-stage modes)
-    vec3 blendProc = blendMode(color, procColor, ubo.blendModeProcedural);
-    vec3 blendVideo = blendMode(procColor, color, ubo.blendModeVideo);
-    color = mix(color, blendProc, clamp(ubo.blendProceduralMix, 0.0, 1.0));
-    color = mix(color, blendVideo, clamp(ubo.blendVideoMix, 0.0, 1.0));
-
-    // Strobe (brightness pulsar)
-    if (ubo.enableStrobe == 1 && ubo.strobeSpeed > 0.0001) {
-        float freq = max(ubo.strobeSpeed, 0.0001);
-        float wave = sin(t * freq * PI * 2.0);
-        float pulse = step(0.0, wave);
-        float strength = clamp(freq / 10.0, 0.1, 1.0);
-        vec3 dark = mix(color, vec3(0.0), strength);
-        vec3 flash = clamp(color * (1.0 + strength * 4.0), 0.0, 3.0);
-        color = mix(dark, flash, pulse);
-    }
-
-    // Final grayscale mix
-    float luma = dot(color, vec3(0.299, 0.587, 0.114));
-    color = mix(color, vec3(luma), clamp(ubo.grayscaleAmount, 0.0, 1.0));
-
-    // Post color balance (optional)
-    if (ubo.enablePostColorBalance == 1) {
-        color *= ubo.colorBalance;
-    }
-
-    // Clamp before FXAA to keep samples stable
-    color = clamp(color, 0.0, 1.5);
-
-    // FXAA: if enabled, apply to the composed color by sampling the same input neighborhood.
-    // Note: for perfect results FXAA should run on final render target; this approximates by
-    // using sampleInput which reads inputTex neighborhood — acceptable for single-pass setups.
-    if (ubo.enableFXAA == 1) {
-        // Write temporary into texture memory is not possible here; we approximate by using fxaa_compose on uv
-        vec3 aa = fxaa_compose(uv);
-        color = mix(color, aa, 0.9); // blend to avoid oversharpening; tune as desired
-    }
-
-    // Zoom pulse (temporal zoom in/out)
-    if (ubo.enableZoomPulse == 1 && ubo.zoomPulseAmount > 0.0001) {
-        float wave = sin(t * 2.0 * PI);
-        float amt = clamp(ubo.zoomPulseAmount, 0.0, 1.0);
-        float zoom = 1.0 - amt * 0.4 * wave;
-        zoom = max(zoom, 0.2);
-        vec2 zoomUV = (uv - 0.5) / zoom + 0.5;
-        vec3 zoomColor = sampleInput(zoomUV);
-        color = mix(color, zoomColor, clamp(abs(wave) * amt * 1.5, 0.0, 1.0));
-    }
-
-    // RGB shift (chromatic aberration style)
-    if (ubo.enableRGBShift == 1 && ubo.rgbShiftAmount > 0.0001) {
-        float shift = clamp(ubo.rgbShiftAmount, -0.5, 0.5);
-        vec2 texel = 1.0 / max(ubo.resolution, vec2(1.0));
-        vec2 offset = vec2(shift) * texel * 50.0;
-        float r = texture(inputTex, applyGrid(uv + offset)).r;
-        float g = texture(inputTex, applyGrid(uv)).g;
-        float b = texture(inputTex, applyGrid(uv - offset)).b;
-        color = mix(color, vec3(r, g, b), clamp(abs(shift) * 8.0, 0.0, 1.0));
-    }
-
-    // Posterize
-    if (ubo.enablePosterize == 1 && ubo.posterizeLevels > 1.0) {
-        float levels = clamp(ubo.posterizeLevels, 2.0, 64.0);
-        color = floor(color * levels) / levels;
-    }
-
-    outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+    outColor = vec4(1.0, 0.0, 0.0, 1.0); // rojo puro, sin condiciones
 }

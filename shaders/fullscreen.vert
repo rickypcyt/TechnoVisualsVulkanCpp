@@ -163,6 +163,10 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int gridRows;
     int gridColumns;
     int gridMirrorCells;
+    int gridShowLines;
+    float gridLineWidth;
+    float gridLineIntensity;
+    vec3 gridLineColor;
 } ubo;
 
 const vec2 positions[3] = vec2[](

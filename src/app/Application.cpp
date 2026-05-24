@@ -55,6 +55,9 @@ void Application::run() {
     
     // Initialize pipelines (after descriptor sets are ready)
     initPipelines();
+
+    // Update fullscreen descriptor sets (UBO + 1 sampler) - must be after initPipelines()
+    updateFullscreenDescriptorSets();
     initFramebuffers();
     
     // Initialize UI
@@ -146,12 +149,66 @@ void Application::initRenderPass() {
 }
 
 void Application::initPipelines() {
-    // Create pipeline layout
-    VkDescriptorSetLayout layout = descriptorSetManager.getLayout();
+    // Create fullscreen descriptor set layout (only 2 bindings: UBO + 1 sampler)
+    VkDescriptorSetLayoutBinding uboLayoutBinding{};
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.descriptorCount = 1;
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    uboLayoutBinding.pImmutableSamplers = nullptr;
+
+    VkDescriptorSetLayoutBinding samplerBinding{};
+    samplerBinding.binding = 1;
+    samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerBinding.descriptorCount = 1;
+    samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    samplerBinding.pImmutableSamplers = nullptr;
+
+    std::array<VkDescriptorSetLayoutBinding, 2> fullscreenBindings = {uboLayoutBinding, samplerBinding};
+    VkDescriptorSetLayoutCreateInfo fullscreenLayoutInfo{};
+    fullscreenLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    fullscreenLayoutInfo.bindingCount = static_cast<uint32_t>(fullscreenBindings.size());
+    fullscreenLayoutInfo.pBindings = fullscreenBindings.data();
+
+    if (vkCreateDescriptorSetLayout(vulkanContext.getDevice(), &fullscreenLayoutInfo, nullptr, &fullscreenDescriptorSetLayout) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create fullscreen descriptor set layout");
+    }
+
+    // Create fullscreen descriptor pool
+    std::array<VkDescriptorPoolSize, 2> fullscreenPoolSizes{};
+    fullscreenPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    fullscreenPoolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
+    fullscreenPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    fullscreenPoolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT;
+
+    VkDescriptorPoolCreateInfo fullscreenPoolInfo{};
+    fullscreenPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    fullscreenPoolInfo.poolSizeCount = static_cast<uint32_t>(fullscreenPoolSizes.size());
+    fullscreenPoolInfo.pPoolSizes = fullscreenPoolSizes.data();
+    fullscreenPoolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
+
+    if (vkCreateDescriptorPool(vulkanContext.getDevice(), &fullscreenPoolInfo, nullptr, &fullscreenDescriptorPool) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create fullscreen descriptor pool");
+    }
+
+    // Allocate fullscreen descriptor sets
+    std::vector<VkDescriptorSetLayout> fullscreenLayouts(MAX_FRAMES_IN_FLIGHT, fullscreenDescriptorSetLayout);
+    VkDescriptorSetAllocateInfo fullscreenAllocInfo{};
+    fullscreenAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    fullscreenAllocInfo.descriptorPool = fullscreenDescriptorPool;
+    fullscreenAllocInfo.descriptorSetCount = static_cast<uint32_t>(fullscreenLayouts.size());
+    fullscreenAllocInfo.pSetLayouts = fullscreenLayouts.data();
+
+    fullscreenDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+    if (vkAllocateDescriptorSets(vulkanContext.getDevice(), &fullscreenAllocInfo, fullscreenDescriptorSets.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate fullscreen descriptor sets");
+    }
+
+    // Create pipeline layout for fullscreen using the fullscreen descriptor set layout
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutInfo.setLayoutCount = 1;
-    layoutInfo.pSetLayouts = &layout;
+    layoutInfo.pSetLayouts = &fullscreenDescriptorSetLayout;
 
     if (vkCreatePipelineLayout(vulkanContext.getDevice(), &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout");
@@ -705,6 +762,7 @@ bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>
                 const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
             );
         }
+        updateFullscreenDescriptorSets();
 
         multiPassPipeline.updateDescriptorSets(
             uniformBufferManager.getBuffers(),
@@ -759,6 +817,7 @@ bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset
                 const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
             );
         }
+        updateFullscreenDescriptorSets();
 
         multiPassPipeline.updateDescriptorSets(
             uniformBufferManager.getBuffers(),
@@ -885,6 +944,7 @@ void Application::mainLoop() {
                                                        videoSubsystemInitialized ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()) : nullptr,
                                                        videoSubsystemInitialized ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()) : nullptr);
                     }
+                    if (videoSubsystemInitialized) updateFullscreenDescriptorSets();
 
                     // 7. Restart frame system last
                     frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT, vulkanContext.getSwapchainImageCount());
@@ -1288,6 +1348,7 @@ void Application::mainLoop() {
                         const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
                     );
                 }
+                updateFullscreenDescriptorSets();
 
                 // Update multipass descriptor sets with new textures
                 multiPassPipeline.updateDescriptorSets(
@@ -1777,6 +1838,32 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }
 
+void Application::updateFullscreenDescriptorSets() {
+    if (fullscreenDescriptorSets.size() != MAX_FRAMES_IN_FLIGHT) {
+        return; // Descriptor sets not yet created
+    }
+
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBufferManager.getBuffers()[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(GlobalParamsUBO);
+
+        VkWriteDescriptorSet uboWrite{};
+        uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uboWrite.dstSet = fullscreenDescriptorSets[i];
+        uboWrite.dstBinding = 0;
+        uboWrite.dstArrayElement = 0;
+        uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboWrite.descriptorCount = 1;
+        uboWrite.pBufferInfo = &bufferInfo;
+
+        vkUpdateDescriptorSets(vulkanContext.getDevice(), 1, &uboWrite, 0, nullptr);
+        // Binding 1 (inputTexture) lo actualiza execute() cada frame
+        // apuntando al output final del multipass pipeline
+    }
+}
+
 void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContext& frame) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1794,6 +1881,7 @@ void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContex
     // Execute multi-pass pipeline
     if (videoSubsystemInitialized) {
         VkDescriptorSet descriptorSet = descriptorSetManager.getSet(frame.frameIndex);
+        VkDescriptorSet fullscreenDescriptorSet = fullscreenDescriptorSets[frame.frameIndex];
         multiPassPipeline.execute(
             commandBuffer,
             frame.frameIndex,
@@ -1803,7 +1891,7 @@ void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContex
             frame.swapchainImageIndex,
             fullscreenPipeline,
             pipelineLayout,
-            descriptorSet,
+            fullscreenDescriptorSet,
             vulkanContext.getSwapchainExtent(),
             swapchainSampler
         );
@@ -1821,7 +1909,7 @@ void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContex
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
-        VkDescriptorSet descriptorSet = descriptorSetManager.getSet(frame.frameIndex);
+        VkDescriptorSet descriptorSet = fullscreenDescriptorSets[frame.frameIndex];
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
                                0, 1, &descriptorSet, 0, nullptr);
 
@@ -1891,6 +1979,14 @@ void Application::cleanup() {
     }
     if (pipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(vulkanContext.getDevice(), pipelineLayout, nullptr);
+    }
+
+    // Cleanup fullscreen descriptor resources
+    if (fullscreenDescriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(vulkanContext.getDevice(), fullscreenDescriptorPool, nullptr);
+    }
+    if (fullscreenDescriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(vulkanContext.getDevice(), fullscreenDescriptorSetLayout, nullptr);
     }
 
     // Cleanup swapchain sampler

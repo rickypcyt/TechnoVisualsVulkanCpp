@@ -243,7 +243,7 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
         imageInfo.format = colorFormat;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -830,6 +830,9 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         vkCmdDraw(cmd, 4, 1, 0, 0);
 
         vkCmdEndRenderPass(cmd);
+
+        // Render pass automatically transitions to SHADER_READ_ONLY_OPTIMAL (finalLayout)
+        intermediateLayouts[targetBuffer] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         if (pass == 3 && temporalHistory.image != VK_NULL_HANDLE) {
             ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);

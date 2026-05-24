@@ -110,6 +110,11 @@ private:
     VkSampler swapchainSampler = VK_NULL_HANDLE;
     ResourceHandle vertexBufferHandle;
 
+    // Fullscreen descriptor set (separate from multipass - only 2 bindings)
+    VkDescriptorSetLayout fullscreenDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool fullscreenDescriptorPool = VK_NULL_HANDLE;
+    std::vector<VkDescriptorSet> fullscreenDescriptorSets;
+
     // UI and controls
     UISystem uiSystem;
     VisualControls visualControls;
@@ -162,6 +167,7 @@ private:
     void initFramebuffers();
     void initCommandBuffers();
     void initVideo();
+    void updateFullscreenDescriptorSets();
     void initUI();
     void initNLE();
     void initMultiPassPipeline();
