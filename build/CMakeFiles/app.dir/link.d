@@ -11,6 +11,7 @@ app: \
   CMakeFiles/app.dir/src/app/AudioSystem.cpp.o \
   CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o \
   CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o \
+  CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o \
   CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o \
   CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o \
   CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o \
@@ -299,6 +300,8 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o:
 CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o:
 
 CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o:
+
+CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o:
 
 CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o:
 

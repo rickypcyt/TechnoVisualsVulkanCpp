@@ -8,81 +8,40 @@ layout(location = 0) out vec4 fragColor;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTexture;
 
-vec2 mirrorCell(vec2 p, vec2 gridSize, int mirrorCells) {
-    vec2 cell = floor(p * gridSize);
-    vec2 f = fract(p * gridSize);
+vec2 applyGrid(vec2 uv) {
+    if (ubo.enableGrid != 1) return uv;
 
-    if (mirrorCells == 1) {
-        if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
-        if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
+    vec2 gridSize = vec2(1.0);
+
+    // Select grid layout
+    if (ubo.gridMode == 0) {
+        gridSize = vec2(float(max(ubo.gridCount, 1)), 1.0);
+    }
+    else if (ubo.gridMode == 1) {
+        gridSize = vec2(1.0, float(max(ubo.gridCount, 1)));
+    }
+    else { 
+        gridSize = vec2(
+            float(max(ubo.gridColumns, 1)),
+            float(max(ubo.gridRows, 1))
+        );
     }
 
-    return f;
-}
+    // Scale into grid space
+    vec2 cellUV = uv * gridSize;
 
-vec2 applyGrid(vec2 p) {
-    if (ubo.enableGrid != 1) return p;
+    vec2 cellID = floor(cellUV);
+    vec2 localUV = fract(cellUV);
 
-    if (ubo.gridMode == 0 && ubo.gridCount > 1) {
-        // Duplicar horizontalmente (N columnas)
-        float x = p.x * float(ubo.gridCount);
-        float cellX = floor(x);
-        p.x = fract(x);
-        if (ubo.gridMirrorCells == 1 && int(cellX) % 2 != 0)
-            p.x = 1.0 - p.x;
-
-    } else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
-        // Duplicar verticalmente (N filas)
-        float y = p.y * float(ubo.gridCount);
-        float cellY = floor(y);
-        p.y = fract(y);
-        if (ubo.gridMirrorCells == 1 && int(cellY) % 2 != 0)
-            p.y = 1.0 - p.y;
-
-    } else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
-        // Matriz de filas × columnas
-        float x = p.x * float(ubo.gridColumns);
-        float y = p.y * float(ubo.gridRows);
-        float cellX = floor(x);
-        float cellY = floor(y);
-        p.x = fract(x);
-        p.y = fract(y);
-        if (ubo.gridMirrorCells == 1) {
-            if (int(cellX) % 2 != 0) p.x = 1.0 - p.x;
-            if (int(cellY) % 2 != 0) p.y = 1.0 - p.y;
-        }
+    if (ubo.gridMirrorCells == 1) {
+        vec2 mirrorMask = mod(cellID, 2.0);
+        localUV = mix(localUV, 1.0 - localUV, step(0.5, mirrorMask));
     }
 
-    return clamp(p, 0.0, 1.0);
+    return clamp(localUV, 0.0, 1.0);
 }
 
 void main() {
-    vec2 sampleUV = uv;
-
-    if (ubo.enableGrid == 1) {
-        if (ubo.gridMode == 0 && ubo.gridCount > 1) {
-            float x = uv.x * float(ubo.gridCount);
-            sampleUV.x = fract(x);
-            if (ubo.gridMirrorCells == 1 && int(floor(x)) % 2 != 0)
-                sampleUV.x = 1.0 - sampleUV.x;
-
-        } else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
-            float y = uv.y * float(ubo.gridCount);
-            sampleUV.y = fract(y);
-            if (ubo.gridMirrorCells == 1 && int(floor(y)) % 2 != 0)
-                sampleUV.y = 1.0 - sampleUV.y;
-
-        } else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
-            float x = uv.x * float(ubo.gridColumns);
-            float y = uv.y * float(ubo.gridRows);
-            sampleUV.x = fract(x);
-            sampleUV.y = fract(y);
-            if (ubo.gridMirrorCells == 1) {
-                if (int(floor(x)) % 2 != 0) sampleUV.x = 1.0 - sampleUV.x;
-                if (int(floor(y)) % 2 != 0) sampleUV.y = 1.0 - sampleUV.y;
-            }
-        }
-    }
-
-    fragColor = texture(inputTexture, clamp(sampleUV, 0.0, 1.0));
+    vec2 sampleUV = applyGrid(uv);
+    fragColor = texture(inputTexture, sampleUV);
 }

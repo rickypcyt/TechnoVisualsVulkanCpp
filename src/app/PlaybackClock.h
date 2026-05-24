@@ -1,72 +1,90 @@
 #pragma once
 #include <chrono>
 
-// PTS-based clock for accurate video playback timing
+// High-precision playback clock (PTS-style)
+// Handles pause/resume, speed scaling, and seeking without time drift.
 class PlaybackClock {
 public:
-    PlaybackClock() : paused(false), speed_factor(1.0f) {
+    PlaybackClock() {
         reset();
     }
-    
+
     void reset() {
-        start_time = std::chrono::steady_clock::now();
-        accumulated_time = 0.0;
-        last_pause_time = std::chrono::steady_clock::time_point();
+        base_time = std::chrono::steady_clock::now();
+        accumulated = 0.0;
         paused = false;
-        speed_factor = 1.0f;
+        speed = 1.0f;
+        pause_start = {};
     }
-    
+
     void pause() {
-        if (!paused) {
-            paused = true;
-            last_pause_time = std::chrono::steady_clock::now();
-        }
+        if (paused) return;
+
+        paused = true;
+        pause_start = std::chrono::steady_clock::now();
     }
-    
+
     void resume() {
-        if (paused) {
-            auto now = std::chrono::steady_clock::now();
-            auto pause_duration = std::chrono::duration<double>(now - last_pause_time).count();
-            accumulated_time += pause_duration;
-            paused = false;
-            // Adjust start_time to account for the pause
-            start_time += std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-                std::chrono::duration<double>(pause_duration));
-        }
+        if (!paused) return;
+
+        auto now = std::chrono::steady_clock::now();
+        accumulated += elapsedSeconds(pause_start, now);
+        paused = false;
+
+        // Shift base_time forward so continuity is preserved
+        base_time = now;
     }
-    
-    void setSpeed(float factor) {
-        // When changing speed, we need to adjust the accumulated time
+
+    void setSpeed(float newSpeed) {
+        if (newSpeed <= 0.0f) return;
+
+        // commit current time before changing scale
         double current = getCurrentTime();
-        speed_factor = factor;
-        reset();
-        accumulated_time = current / speed_factor;
+
+        speed = newSpeed;
+
+        base_time = std::chrono::steady_clock::now();
+        accumulated = current / speed;
     }
-    
+
+    void seek(double timeSeconds) {
+        accumulated = timeSeconds;
+        base_time = std::chrono::steady_clock::now();
+        paused = false;
+    }
+
     double getCurrentTime() const {
         if (paused) {
-            auto pause_duration = std::chrono::duration<double>(
-                std::chrono::steady_clock::now() - last_pause_time).count();
-            return (accumulated_time + pause_duration) * speed_factor;
-        } else {
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration<double>(now - start_time).count();
-            return (accumulated_time + elapsed) * speed_factor;
+            return accumulated * speed;
         }
+
+        auto now = std::chrono::steady_clock::now();
+        double elapsed = elapsedSeconds(base_time, now);
+
+        return (accumulated + elapsed) * speed;
     }
-    
-    void seek(double time) {
-        reset();
-        accumulated_time = time / speed_factor;
+
+    bool isPaused() const {
+        return paused;
     }
-    
-    bool isPaused() const { return paused; }
-    float getSpeedFactor() const { return speed_factor; }
-    
+
+    float getSpeed() const {
+        return speed;
+    }
+
 private:
-    std::chrono::steady_clock::time_point start_time;
-    std::chrono::steady_clock::time_point last_pause_time;
-    double accumulated_time;
-    bool paused;
-    float speed_factor;
+    static double elapsedSeconds(
+        std::chrono::steady_clock::time_point a,
+        std::chrono::steady_clock::time_point b
+    ) {
+        return std::chrono::duration<double>(b - a).count();
+    }
+
+private:
+    std::chrono::steady_clock::time_point base_time;
+    std::chrono::steady_clock::time_point pause_start;
+
+    double accumulated = 0.0;
+    bool paused = false;
+    float speed = 1.0f;
 };

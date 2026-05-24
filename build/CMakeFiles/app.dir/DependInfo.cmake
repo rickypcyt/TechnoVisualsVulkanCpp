@@ -16,6 +16,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/ricky/coding/proyects/vulkancpp/src/app/UISystem.cpp" "CMakeFiles/app.dir/src/app/UISystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/UISystem.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.cpp" "CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/parameters/MidiBindingSystem.cpp" "CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o.d"
+  "/home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterBindingRegistry.cpp" "CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.cpp" "CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/parameters/PresetMorpher.cpp" "CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o.d"
   "/home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.cpp" "CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o" "gcc" "CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o.d"

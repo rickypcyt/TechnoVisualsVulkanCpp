@@ -1,5 +1,4 @@
 #include "ControlState.h"
-#include "MidiSystem.h"
 #include "OscSystem.h"
 
 #include <glm/glm.hpp>
@@ -143,7 +142,6 @@ void ControlState::load(
     VideoRandomizerState& r,
     VideoRandomizerState2& r2,
     bool&                 allowDimensionChangeRecreation,
-    MidiSystem&           midiSystem,
     OscSystem&            oscSystem,
     int&                  selectedVideoAsset,
     int&                  selectedVideoAsset2)
@@ -156,38 +154,10 @@ void ControlState::load(
 
     const KVMap kv = parseFile(file);
 
-    midiSystem.clearMappings();
-    midiSystem.clearTriggerMappings();
     oscSystem.clearMappings();
     oscSystem.clearTriggerMappings();
 
-    for (const auto& [key, value] : kv) {
-        if (key.find("midi_cc_") == 0) {
-            try {
-                int ccNumber = std::stoi(key.substr(8));
-                std::istringstream iss(value);
-                std::string paramName;
-                float minVal, maxVal;
-                int invert;
-                char comma;
-                if (std::getline(iss, paramName, ',') &&
-                    (iss >> minVal >> comma >> maxVal >> comma >> invert)) {
-                    midiSystem.addMapping(ccNumber, paramName, minVal, maxVal, invert != 0);
-                }
-            } catch (...) {}
-        }
-    }
-
     oscSystem.ensureDefaultTriggers();
-
-    for (const auto& [key, value] : kv) {
-        if (key.find("midi_trigger_") == 0) {
-            try {
-                int note = std::stoi(key.substr(13));
-                midiSystem.addTriggerMapping(note, value);
-            } catch (...) {}
-        }
-    }
 
     for (const auto& [key, value] : kv) {
         if (key.find("osc_mapping_") == 0) {
@@ -246,7 +216,6 @@ void ControlState::save(
     const VideoRandomizerState& r,
     const VideoRandomizerState2& r2,
     bool                      allowDimensionChangeRecreation,
-    const MidiSystem&         midiSystem,
     const OscSystem&          oscSystem,
     int                       selectedVideoAsset,
     int                       selectedVideoAsset2)
@@ -258,19 +227,8 @@ void ControlState::save(
     }
 
     file << "# VJAY Control State - Key=Value\n"
-         << "# VisualControls now handled by ParameterRegistry/JsonSerializer\n\n";
-
-    const auto& mappings = midiSystem.getMappings();
-    for (const auto& [cc, mapping] : mappings) {
-        file << "midi_cc_" << cc << "=" << mapping.parameterName << ","
-             << mapping.minValue << "," << mapping.maxValue << ","
-             << (mapping.invert ? 1 : 0) << "\n";
-    }
-
-    const auto& midiTriggers = midiSystem.getTriggerMappings();
-    for (const auto& [note, mapping] : midiTriggers) {
-        file << "midi_trigger_" << note << "=" << mapping.actionName << "\n";
-    }
+         << "# VisualControls now handled by ParameterRegistry/JsonSerializer\n"
+         << "# MIDI mappings now handled separately by MidiSystem\n\n";
 
     const auto& oscMappings = oscSystem.getMappings();
     for (const auto& [address, mapping] : oscMappings) {

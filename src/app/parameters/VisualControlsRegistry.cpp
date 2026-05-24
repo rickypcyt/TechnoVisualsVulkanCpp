@@ -2,238 +2,243 @@
 #include "../VisualControls.h"
 
 void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
-    // CORE
-    r.registerFloat("animationSpeed", &c.animationSpeed, 0.0f, 10.0f);
-    r.registerFloat("animationTargetSeconds", &c.animationTargetSeconds, 0.0f, 10.0f);
-    r.registerFloat("tempo", &c.tempo, 20.0f, 300.0f);
-    r.registerBool("enableTempoLfo", &c.enableTempoLfo);
-    r.registerFloat("tempoLfoSpeed", &c.tempoLfoSpeed, 0.0f, 10.0f);
-    r.registerFloat("tempoLfoDepth", &c.tempoLfoDepth, 0.0f, 2.0f);
-    r.registerFloat("tempoLfoPhase", &c.tempoLfoPhase, 0.0f, 6.28f);
-    r.registerFloat("energy", &c.energy, 0.0f, 1.0f);
-    r.registerFloat("bass", &c.bass, 0.0f, 1.0f);
-    r.registerFloat("mid", &c.mid, 0.0f, 1.0f);
-    r.registerFloat("high", &c.high, 0.0f, 1.0f);
+    auto& playback = c.playback;
+    auto& color = c.color;
+    auto& fx = c.fx;
+    auto& post = c.post;
+    auto& audio = c.audio;
+    auto& temporal = c.temporal;
+    auto& blending = c.blending;
+    auto& camera = c.camera;
+    auto& grid = c.grid;
+    auto& system = c.system;
+    // CORE / PLAYBACK
+    r.registerFloat("animationSpeed", &playback.animationSpeed, 0.0f, 10.0f);
+    r.registerFloat("animationTargetSeconds", &playback.animationTargetSeconds, 0.0f, 10.0f);
+    r.registerFloat("tempo", &playback.tempo, 20.0f, 300.0f);
+    r.registerBool("enableTempoLfo", &playback.enableTempoLfo);
+    r.registerFloat("tempoLfoSpeed", &playback.tempoLfoSpeed, 0.0f, 10.0f);
+    r.registerFloat("tempoLfoDepth", &playback.tempoLfoDepth, 0.0f, 2.0f);
+    r.registerFloat("tempoLfoPhase", &playback.tempoLfoPhase, 0.0f, 6.28f);
+    r.registerInt("activeMode", &playback.activeMode, 0, 10);
+
+    // Audio analysis snapshot (exposed for monitoring)
+    r.registerFloat("energy", &audio.energy, 0.0f, 1.0f);
+    r.registerFloat("bass", &audio.bass, 0.0f, 1.0f);
+    r.registerFloat("mid", &audio.mid, 0.0f, 1.0f);
+    r.registerFloat("high", &audio.high, 0.0f, 1.0f);
 
     // COLORS
-    r.registerFloat("colorBlend", &c.colorBlend, 0.0f, 1.0f);
-    r.registerVec4("primaryColor", &c.primaryColor);
-    r.registerVec4("secondaryColor", &c.secondaryColor);
-    r.registerBool("autoRandomizeColors", &c.autoRandomizeColors);
-    r.registerFloat("colorRandomizeInterval", &c.colorRandomizeInterval, 0.1f, 60.0f);
-    r.registerFloat("colorRandomizeElapsed", &c.colorRandomizeElapsed, 0.0f, 60.0f);
-    r.registerVec4("primaryColorTarget", &c.primaryColorTarget);
-    r.registerVec4("secondaryColorTarget", &c.secondaryColorTarget);
-    r.registerInt("activeMode", &c.activeMode, 0, 10);
+    r.registerFloat("colorBlend", &color.colorBlend, 0.0f, 1.0f);
+    r.registerVec4("primaryColor", &color.primaryColor);
+    r.registerVec4("secondaryColor", &color.secondaryColor);
+    r.registerBool("autoRandomizeColors", &color.autoRandomizeColors);
+    r.registerFloat("colorRandomizeInterval", &color.colorRandomizeInterval, 0.1f, 60.0f);
+    r.registerFloat("colorRandomizeElapsed", &color.colorRandomizeElapsed, 0.0f, 60.0f);
+    r.registerVec4("primaryColorTarget", &color.primaryColorTarget);
+    r.registerVec4("secondaryColorTarget", &color.secondaryColorTarget);
 
     // VIDEO
-    r.registerFloat("videoMix", &c.videoMix, 0.0f, 1.0f);
-    r.registerFloat("videoPlaybackRate", &c.videoPlaybackRate, 0.1f, 4.0f);
-    r.registerFloat("videoDecodeOversample", &c.videoDecodeOversample, 1.0f, 4.0f);
-    r.registerBool("autoScaleVideo", &c.autoScaleVideo);
+    r.registerFloat("videoMix", &playback.videoMix, 0.0f, 1.0f);
+    r.registerFloat("videoPlaybackRate", &playback.videoPlaybackRate, 0.1f, 4.0f);
+    r.registerFloat("videoDecodeOversample", &playback.videoDecodeOversample, 1.0f, 4.0f);
+    r.registerBool("autoScaleVideo", &playback.autoScaleVideo);
 
     // DUAL VIDEO
-    r.registerBool("enableDualVideo", &c.enableDualVideo);
-    r.registerFloat("video2Mix", &c.video2Mix, 0.0f, 1.0f);
-    r.registerInt("video2BlendMode", &c.video2BlendMode, 0, 4);
-    r.registerInt("selectedVideo2Asset", &c.selectedVideo2Asset, 0, 1000);
-    r.registerString("selectedVideo2Folder", &c.selectedVideo2Folder);
-    r.registerFloat("video2PlaybackRate", &c.video2PlaybackRate, 0.1f, 4.0f);
-    r.registerBool("randomVideo2Start", &c.randomVideo2Start);
-    r.registerFloat("randomJumpInterval2", &c.randomJumpInterval2, 0.1f, 60.0f);
-    r.registerBool("enableRandomJumpInterval2", &c.enableRandomJumpInterval2);
-    r.registerString("selectedVideoFolder", &c.selectedVideoFolder);
+    r.registerBool("enableDualVideo", &playback.enableDualVideo);
+    r.registerFloat("video2Mix", &playback.video2Mix, 0.0f, 1.0f);
+    r.registerInt("video2BlendMode", &playback.video2BlendMode, 0, 4);
+    r.registerInt("selectedVideo2Asset", &playback.selectedVideo2Asset, 0, 1000);
+    r.registerString("selectedVideo2Folder", &playback.selectedVideo2Folder);
+    r.registerFloat("video2PlaybackRate", &playback.video2PlaybackRate, 0.1f, 4.0f);
+    r.registerBool("randomVideo2Start", &playback.randomVideo2Start);
+    r.registerFloat("randomJumpInterval2", &playback.randomJumpInterval2, 0.1f, 60.0f);
+    r.registerBool("enableRandomJumpInterval2", &playback.enableRandomJumpInterval2);
+    r.registerString("selectedVideoFolder", &playback.selectedVideoFolder);
 
-    // POST PROCESSING
-    r.registerFloat("grayscaleAmount", &c.grayscaleAmount, 0.0f, 1.0f);
-    r.registerFloat("sharpenAmount", &c.sharpenAmount, 0.0f, 2.0f);
-    r.registerBool("upscaleEnabled", &c.upscaleEnabled);
-    r.registerFloat("loopBlendSeconds", &c.loopBlendSeconds, 0.0f, 5.0f);
-    r.registerInt("forcedFpsIndex", &c.forcedFpsIndex, 0, 10);
+    // POST PROCESSING BASICS
+    r.registerFloat("grayscaleAmount", &playback.grayscaleAmount, 0.0f, 1.0f);
+    r.registerFloat("sharpenAmount", &playback.sharpenAmount, 0.0f, 2.0f);
+    r.registerBool("upscaleEnabled", &playback.upscaleEnabled);
+    r.registerFloat("loopBlendSeconds", &playback.loopBlendSeconds, 0.0f, 5.0f);
+    r.registerInt("forcedFpsIndex", &playback.forcedFpsIndex, 0, 10);
 
-    // CRT
-    r.registerFloat("crtCurvature", &c.crtCurvature, 0.0f, 1.0f);
-    r.registerFloat("crtHorizontalCurvature", &c.crtHorizontalCurvature, 0.0f, 1.0f);
-    r.registerFloat("crtScanlineIntensity", &c.crtScanlineIntensity, 0.0f, 5.0f);
-    r.registerFloat("crtMaskIntensity", &c.crtMaskIntensity, 0.0f, 5.0f);
-    r.registerFloat("crtVignette", &c.crtVignette, 0.0f, 2.0f);
-    r.registerFloat("crtFishEye", &c.crtFishEye, 0.0f, 1.0f);
-    r.registerBool("enablePostCrtCurvature", &c.enablePostCrtCurvature);
-    r.registerBool("enablePostScanMask", &c.enablePostScanMask);
-    r.registerBool("enablePostVignette", &c.enablePostVignette);
-    r.registerBool("enablePostFishEye", &c.enablePostFishEye);
+    // CRT / POST
+    r.registerFloat("crtCurvature", &post.crtCurvature, 0.0f, 1.0f);
+    r.registerFloat("crtHorizontalCurvature", &post.crtHorizontalCurvature, 0.0f, 1.0f);
+    r.registerFloat("crtScanlineIntensity", &post.crtScanlineIntensity, 0.0f, 5.0f);
+    r.registerFloat("crtMaskIntensity", &post.crtMaskIntensity, 0.0f, 5.0f);
+    r.registerFloat("crtVignette", &post.crtVignette, 0.0f, 2.0f);
+    r.registerFloat("crtFishEye", &post.crtFishEye, 0.0f, 1.0f);
+    r.registerBool("enablePostCrtCurvature", &post.enablePostCrtCurvature);
+    r.registerBool("enablePostScanMask", &post.enablePostScanMask);
+    r.registerBool("enablePostVignette", &post.enablePostVignette);
+    r.registerBool("enablePostFishEye", &post.enablePostFishEye);
 
-    // BLOOM
-    r.registerBool("enablePostBloom", &c.enablePostBloom);
-    r.registerFloat("bloomIntensity", &c.bloomIntensity, 0.0f, 5.0f);
-    r.registerFloat("bloomThreshold", &c.bloomThreshold, 0.0f, 5.0f);
+    // BLOOM / ABERRATION / GRAIN / BEND
+    r.registerBool("enablePostBloom", &post.enablePostBloom);
+    r.registerFloat("bloomIntensity", &post.bloomIntensity, 0.0f, 5.0f);
+    r.registerFloat("bloomThreshold", &post.bloomThreshold, 0.0f, 5.0f);
+    r.registerBool("enablePostAberration", &post.enablePostAberration);
+    r.registerFloat("aberrationAmount", &post.aberrationAmount, 0.0f, 0.1f);
+    r.registerBool("enablePostGrain", &post.enablePostGrain);
+    r.registerFloat("grainStrength", &post.grainStrength, 0.0f, 1.0f);
+    r.registerBool("enablePostBend", &post.enablePostBend);
+    r.registerFloat("bendAmount", &fx.bendAmount, 0.0f, 1.0f);
 
-    // ABERRATION
-    r.registerBool("enablePostAberration", &c.enablePostAberration);
-    r.registerFloat("aberrationAmount", &c.aberrationAmount, 0.0f, 0.1f);
+    // GLITCH / RANDOM VIDEO
+    r.registerBool("enablePostGlitch", &post.enablePostGlitch);
+    r.registerFloat("glitchAmount", &fx.glitchAmount, 0.0f, 1.0f);
+    r.registerBool("randomVideoStart", &playback.randomVideoStart);
+    r.registerFloat("randomJumpInterval", &playback.randomJumpInterval, 0.1f, 60.0f);
+    r.registerBool("enableRandomJumpInterval", &playback.enableRandomJumpInterval);
 
-    // GRAIN
-    r.registerBool("enablePostGrain", &c.enablePostGrain);
-    r.registerFloat("grainStrength", &c.grainStrength, 0.0f, 1.0f);
-
-    // BEND
-    r.registerBool("enablePostBend", &c.enablePostBend);
-    r.registerFloat("bendAmount", &c.bendAmount, 0.0f, 1.0f);
-
-    // GLITCH
-    r.registerBool("enablePostGlitch", &c.enablePostGlitch);
-    r.registerFloat("glitchAmount", &c.glitchAmount, 0.0f, 1.0f);
-    r.registerBool("randomVideoStart", &c.randomVideoStart);
-    r.registerFloat("randomJumpInterval", &c.randomJumpInterval, 0.1f, 60.0f);
-    r.registerBool("enableRandomJumpInterval", &c.enableRandomJumpInterval);
-
-    // COLOR BALANCE
-    r.registerBool("enablePostColorBalance", &c.enablePostColorBalance);
-    r.registerVec3("colorBalance", &c.colorBalance);
+    // COLOR BALANCE / RGB OVERLAY
+    r.registerBool("enablePostColorBalance", &post.enablePostColorBalance);
+    r.registerVec3("colorBalance", &color.colorBalance);
+    r.registerVec3("rgbOverlay", &color.rgbOverlay);
+    r.registerBool("enableRgbOverlay", &color.enableRgbOverlay);
 
     // COLOR GRADING
-    r.registerBool("enableColorGrading", &c.enableColorGrading);
-    r.registerFloat("gradeBrightness", &c.gradeBrightness, -1.0f, 1.0f);
-    r.registerFloat("gradeContrast", &c.gradeContrast, 0.0f, 2.0f);
-    r.registerFloat("gradeSaturation", &c.gradeSaturation, 0.0f, 2.0f);
-    r.registerFloat("gradeHueShift", &c.gradeHueShift, 0.0f, 6.28f);
-    r.registerFloat("gradeGamma", &c.gradeGamma, 0.1f, 3.0f);
-    r.registerInt("colorLUTIndex", &c.colorLUTIndex, 0, 10);
-    r.registerFloat("splitToneBalance", &c.splitToneBalance, 0.0f, 1.0f);
-    r.registerVec3("splitToneShadows", &c.splitToneShadows);
-    r.registerVec3("splitToneHighlights", &c.splitToneHighlights);
+    r.registerBool("enableColorGrading", &color.enableColorGrading);
+    r.registerFloat("gradeBrightness", &color.gradeBrightness, -1.0f, 1.0f);
+    r.registerFloat("gradeContrast", &color.gradeContrast, 0.0f, 2.0f);
+    r.registerFloat("gradeSaturation", &color.gradeSaturation, 0.0f, 2.0f);
+    r.registerFloat("gradeHueShift", &color.gradeHueShift, 0.0f, 6.28f);
+    r.registerFloat("gradeGamma", &color.gradeGamma, 0.1f, 3.0f);
+    r.registerInt("colorLUTIndex", &color.colorLUTIndex, 0, 10);
+    r.registerFloat("splitToneBalance", &color.splitToneBalance, 0.0f, 1.0f);
+    r.registerVec3("splitToneShadows", &color.splitToneShadows);
+    r.registerVec3("splitToneHighlights", &color.splitToneHighlights);
 
-    // TEMPORAL FEEDBACK
-    r.registerBool("enableFeedback", &c.enableFeedback);
-    r.registerFloat("feedbackAmount", &c.feedbackAmount, 0.0f, 1.0f);
-    r.registerFloat("trailStrength", &c.trailStrength, 0.0f, 1.0f);
-    r.registerFloat("temporalAccumulation", &c.temporalAccumulation, 0.0f, 1.0f);
-    r.registerFloat("feedbackDecay", &c.feedbackDecay, 0.0f, 1.0f);
-    r.registerFloat("recursiveBlend", &c.recursiveBlend, 0.0f, 1.0f);
-    r.registerBool("enableTemporal", &c.enableTemporal);
-    r.registerFloat("temporalInterpolation", &c.temporalInterpolation, 0.0f, 1.0f);
-    r.registerFloat("temporalBlendStrength", &c.temporalBlendStrength, 0.0f, 1.0f);
-    r.registerFloat("slowMotionFactor", &c.slowMotionFactor, 0.1f, 2.0f);
-    r.registerFloat("frameAccumulation", &c.frameAccumulation, 0.0f, 1.0f);
+    // TEMPORAL / FEEDBACK
+    r.registerBool("enableFeedback", &temporal.enableFeedback);
+    r.registerFloat("feedbackAmount", &temporal.feedbackAmount, 0.0f, 1.0f);
+    r.registerFloat("trailStrength", &temporal.trailStrength, 0.0f, 1.0f);
+    r.registerFloat("temporalAccumulation", &temporal.temporalAccumulation, 0.0f, 1.0f);
+    r.registerFloat("feedbackDecay", &temporal.feedbackDecay, 0.0f, 1.0f);
+    r.registerFloat("recursiveBlend", &temporal.recursiveBlend, 0.0f, 1.0f);
+    r.registerBool("enableTemporal", &temporal.enableTemporal);
+    r.registerFloat("temporalInterpolation", &playback.temporalInterpolation, 0.0f, 1.0f);
+    r.registerFloat("temporalBlendStrength", &playback.temporalBlendStrength, 0.0f, 1.0f);
+    r.registerFloat("slowMotionFactor", &playback.slowMotionFactor, 0.1f, 2.0f);
+    r.registerFloat("frameAccumulation", &playback.frameAccumulation, 0.0f, 1.0f);
 
     // SPATIAL DISTORTION
-    r.registerBool("enableDistortion", &c.enableDistortion);
-    r.registerFloat("uvWarpStrength", &c.uvWarpStrength, 0.0f, 5.0f);
-    r.registerFloat("rippleStrength", &c.rippleStrength, 0.0f, 5.0f);
-    r.registerFloat("rippleFrequency", &c.rippleFrequency, 0.1f, 10.0f);
-    r.registerFloat("swirlStrength", &c.swirlStrength, 0.0f, 5.0f);
-    r.registerFloat("displacementAmount", &c.displacementAmount, 0.0f, 2.0f);
-    r.registerFloat("kaleidoSegments", &c.kaleidoSegments, 0.0f, 16.0f);
-    r.registerFloat("tunnelDepth", &c.tunnelDepth, 0.0f, 2.0f);
-    r.registerFloat("tunnelCurvature", &c.tunnelCurvature, 0.0f, 2.0f);
+    r.registerBool("enableDistortion", &fx.enableDistortion);
+    r.registerFloat("uvWarpStrength", &fx.uvWarpStrength, 0.0f, 5.0f);
+    r.registerFloat("rippleStrength", &fx.rippleStrength, 0.0f, 5.0f);
+    r.registerFloat("rippleFrequency", &fx.rippleFrequency, 0.1f, 10.0f);
+    r.registerFloat("swirlStrength", &fx.swirlStrength, 0.0f, 5.0f);
+    r.registerFloat("displacementAmount", &fx.displacementAmount, 0.0f, 2.0f);
+    r.registerFloat("kaleidoSegments", &fx.kaleidoSegments, 0.0f, 16.0f);
+    r.registerFloat("tunnelDepth", &fx.tunnelDepth, 0.0f, 2.0f);
+    r.registerFloat("tunnelCurvature", &fx.tunnelCurvature, 0.0f, 2.0f);
 
     // BLUR / MOTION
-    r.registerBool("enableBlurMotion", &c.enableBlurMotion);
-    r.registerFloat("gaussianBlur", &c.gaussianBlur, 0.0f, 10.0f);
-    r.registerFloat("directionalBlur", &c.directionalBlur, 0.0f, 10.0f);
-    r.registerFloat("directionalBlurAngle", &c.directionalBlurAngle, 0.0f, 6.28f);
-    r.registerFloat("zoomBlur", &c.zoomBlur, 0.0f, 10.0f);
-    r.registerFloat("motionBlur", &c.motionBlur, 0.0f, 10.0f);
-    r.registerFloat("temporalBlur", &c.temporalBlur, 0.0f, 10.0f);
+    r.registerBool("enableBlurMotion", &fx.enableBlurMotion);
+    r.registerFloat("gaussianBlur", &fx.gaussianBlur, 0.0f, 10.0f);
+    r.registerFloat("directionalBlur", &fx.directionalBlur, 0.0f, 10.0f);
+    r.registerFloat("directionalBlurAngle", &fx.directionalBlurAngle, 0.0f, 6.28f);
+    r.registerFloat("zoomBlur", &fx.zoomBlur, 0.0f, 10.0f);
+    r.registerFloat("motionBlur", &fx.motionBlur, 0.0f, 10.0f);
+    r.registerFloat("temporalBlur", &fx.temporalBlur, 0.0f, 10.0f);
 
     // SHARPENING
-    r.registerBool("enableSharpen", &c.enableSharpen);
-    r.registerFloat("unsharpMask", &c.unsharpMask, 0.0f, 2.0f);
-    r.registerFloat("casAmount", &c.casAmount, 0.0f, 2.0f);
-    r.registerFloat("localContrast", &c.localContrast, 0.0f, 2.0f);
+    r.registerBool("enableSharpen", &fx.enableSharpen);
+    r.registerFloat("unsharpMask", &fx.unsharpMask, 0.0f, 2.0f);
+    r.registerFloat("casAmount", &fx.casAmount, 0.0f, 2.0f);
+    r.registerFloat("localContrast", &fx.localContrast, 0.0f, 2.0f);
 
     // GLITCH ADVANCED
-    r.registerFloat("glitchDatamosh", &c.glitchDatamosh, 0.0f, 1.0f);
-    r.registerFloat("glitchRGBSplit", &c.glitchRGBSplit, 0.0f, 1.0f);
-    r.registerFloat("glitchScanlineBreak", &c.glitchScanlineBreak, 0.0f, 1.0f);
-    r.registerFloat("glitchJitter", &c.glitchJitter, 0.0f, 1.0f);
-    r.registerFloat("glitchTearing", &c.glitchTearing, 0.0f, 1.0f);
-    r.registerFloat("glitchPixelSort", &c.glitchPixelSort, 0.0f, 1.0f);
-    r.registerFloat("glitchBufferCorruption", &c.glitchBufferCorruption, 0.0f, 1.0f);
+    r.registerBool("enableGlitch", &fx.enableGlitch);
+    r.registerFloat("glitchDatamosh", &fx.glitchDatamosh, 0.0f, 1.0f);
+    r.registerFloat("glitchRGBSplit", &fx.glitchRGBSplit, 0.0f, 1.0f);
+    r.registerFloat("glitchScanlineBreak", &fx.glitchScanlineBreak, 0.0f, 1.0f);
+    r.registerFloat("glitchJitter", &fx.glitchJitter, 0.0f, 1.0f);
+    r.registerFloat("glitchTearing", &fx.glitchTearing, 0.0f, 1.0f);
+    r.registerFloat("glitchPixelSort", &fx.glitchPixelSort, 0.0f, 1.0f);
+    r.registerFloat("glitchBufferCorruption", &fx.glitchBufferCorruption, 0.0f, 1.0f);
 
     // COMPOSITING
-    r.registerBool("enableBlending", &c.enableBlending);
-    r.registerInt("blendModeProcedural", &c.blendModeProcedural, 0, 10);
-    r.registerInt("blendModeVideo", &c.blendModeVideo, 0, 10);
-    r.registerInt("blendModeFeedback", &c.blendModeFeedback, 0, 10);
-    r.registerFloat("blendProceduralMix", &c.blendProceduralMix, 0.0f, 1.0f);
-    r.registerFloat("blendVideoMix", &c.blendVideoMix, 0.0f, 1.0f);
-    r.registerFloat("blendFeedbackMix", &c.blendFeedbackMix, 0.0f, 1.0f);
+    r.registerBool("enableBlending", &blending.enableBlending);
+    r.registerInt("blendModeProcedural", &blending.blendModeProcedural, 0, 10);
+    r.registerInt("blendModeVideo", &blending.blendModeVideo, 0, 10);
+    r.registerInt("blendModeFeedback", &blending.blendModeFeedback, 0, 10);
+    r.registerFloat("blendProceduralMix", &blending.blendProceduralMix, 0.0f, 1.0f);
+    r.registerFloat("blendVideoMix", &blending.blendVideoMix, 0.0f, 1.0f);
+    r.registerFloat("blendFeedbackMix", &blending.blendFeedbackMix, 0.0f, 1.0f);
 
     // ANALOG / CRT BOOSTER
-    r.registerBool("enableAnalog", &c.enableAnalog);
-    r.registerFloat("analogScanlineFocus", &c.analogScanlineFocus, 0.0f, 1.0f);
-    r.registerFloat("analogMaskBalance", &c.analogMaskBalance, 0.0f, 1.0f);
-    r.registerFloat("analogNoise", &c.analogNoise, 0.0f, 1.0f);
-    r.registerFloat("analogBloom", &c.analogBloom, 0.0f, 1.0f);
-    r.registerFloat("vhsDistortion", &c.vhsDistortion, 0.0f, 1.0f);
-    r.registerFloat("analogChromaticAberration", &c.analogChromaticAberration, 0.0f, 0.1f);
+    r.registerBool("enableAnalog", &post.enableAnalog);
+    r.registerFloat("analogScanlineFocus", &post.analogScanlineFocus, 0.0f, 1.0f);
+    r.registerFloat("analogMaskBalance", &post.analogMaskBalance, 0.0f, 1.0f);
+    r.registerFloat("analogNoise", &post.analogNoise, 0.0f, 1.0f);
+    r.registerFloat("analogBloom", &post.analogBloom, 0.0f, 1.0f);
+    r.registerFloat("vhsDistortion", &post.vhsDistortion, 0.0f, 1.0f);
+    r.registerFloat("analogChromaticAberration", &post.analogChromaticAberration, 0.0f, 0.1f);
 
     // AUDIO REACTIVE
-    r.registerBool("enableAudioReactive", &c.enableAudioReactive);
-    r.registerFloat("audioWarpResponse", &c.audioWarpResponse, 0.0f, 2.0f);
-    r.registerFloat("audioFeedbackResponse", &c.audioFeedbackResponse, 0.0f, 2.0f);
-    r.registerFloat("audioBlurResponse", &c.audioBlurResponse, 0.0f, 2.0f);
-    r.registerFloat("audioColorResponse", &c.audioColorResponse, 0.0f, 2.0f);
-    r.registerFloat("audioGlitchResponse", &c.audioGlitchResponse, 0.0f, 2.0f);
-    r.registerFloat("audioBeatSync", &c.audioBeatSync, 0.0f, 1.0f);
-    r.registerFloat("audioLfoRate", &c.audioLfoRate, 0.0f, 5.0f);
-    r.registerFloat("audioHighGain", &c.audioHighGain, 0.0f, 5.0f);
-    r.registerFloat("audioReactiveDrive", &c.audioReactiveDrive, 0.0f, 10.0f);
+    r.registerBool("enableAudioReactive", &system.enableAudioReactive);
+    r.registerFloat("audioWarpResponse", &audio.warpResponse, 0.0f, 2.0f);
+    r.registerFloat("audioFeedbackResponse", &audio.feedbackResponse, 0.0f, 2.0f);
+    r.registerFloat("audioBlurResponse", &audio.blurResponse, 0.0f, 2.0f);
+    r.registerFloat("audioColorResponse", &audio.colorResponse, 0.0f, 2.0f);
+    r.registerFloat("audioGlitchResponse", &audio.glitchResponse, 0.0f, 2.0f);
+    r.registerFloat("audioBeatSync", &audio.beatSync, 0.0f, 1.0f);
+    r.registerFloat("audioLfoRate", &audio.lfoRate, 0.0f, 5.0f);
+    r.registerFloat("audioHighGain", &audio.highGain, 0.0f, 5.0f);
+    r.registerFloat("audioReactiveDrive", &audio.reactiveDrive, 0.0f, 10.0f);
 
-    // EXTRA EFFECTS
-    r.registerFloat("pixelateAmount", &c.pixelateAmount, 0.0f, 1.0f);
-    r.registerFloat("strobeSpeed", &c.strobeSpeed, 0.0f, 50.0f);
-    r.registerFloat("thresholdLevel", &c.thresholdLevel, 0.0f, 1.0f);
-    r.registerFloat("slowZoomAmount", &c.slowZoomAmount, 0.0f, 1.0f);
-    r.registerBool("enableEdgeDetect", &c.enableEdgeDetect);
-    r.registerFloat("edgeStrength", &c.edgeStrength, 0.0f, 5.0f);
-    r.registerFloat("edgeThreshold", &c.edgeThreshold, 0.0f, 1.0f);
-    r.registerFloat("edgeBlend", &c.edgeBlend, 0.0f, 1.0f);
-    r.registerVec3("edgeColor", &c.edgeColor);
-    r.registerBool("enablePixelate", &c.enablePixelate);
-    r.registerBool("enableStrobe", &c.enableStrobe);
-    r.registerBool("enableThreshold", &c.enableThreshold);
-    r.registerBool("enableSlowZoom", &c.enableSlowZoom);
+    // EXTRA EFFECTS / EDGE
+    r.registerFloat("pixelateAmount", &fx.pixelateAmount, 0.0f, 1.0f);
+    r.registerFloat("strobeSpeed", &fx.strobeSpeed, 0.0f, 50.0f);
+    r.registerFloat("thresholdLevel", &fx.thresholdLevel, 0.0f, 1.0f);
+    r.registerFloat("slowZoomAmount", &fx.slowZoomAmount, 0.0f, 1.0f);
+    r.registerBool("enableEdgeDetect", &fx.enableEdgeDetect);
+    r.registerFloat("edgeStrength", &fx.edgeStrength, 0.0f, 5.0f);
+    r.registerFloat("edgeThreshold", &fx.edgeThreshold, 0.0f, 1.0f);
+    r.registerFloat("edgeBlend", &fx.edgeBlend, 0.0f, 1.0f);
+    r.registerVec3("edgeColor", &fx.edgeColor);
+    r.registerBool("enablePixelate", &fx.enablePixelate);
+    r.registerBool("enableStrobe", &fx.enableStrobe);
+    r.registerBool("enableThreshold", &fx.enableThreshold);
+    r.registerBool("enableSlowZoom", &fx.enableSlowZoom);
 
-    // VJAY EXTRA
-    r.registerBool("enableMirror", &c.enableMirror);
-    r.registerBool("enableInvert", &c.enableInvert);
-    r.registerBool("enablePosterize", &c.enablePosterize);
-    r.registerBool("enableInfrared", &c.enableInfrared);
-    r.registerBool("enableZoomPulse", &c.enableZoomPulse);
-    r.registerBool("enableRGBShift", &c.enableRGBShift);
-    r.registerFloat("mirrorAmount", &c.mirrorAmount, 0.0f, 1.0f);
-    r.registerFloat("posterizeLevels", &c.posterizeLevels, 2.0f, 32.0f);
-    r.registerFloat("zoomPulseAmount", &c.zoomPulseAmount, 0.0f, 1.0f);
-    r.registerFloat("rgbShiftAmount", &c.rgbShiftAmount, 0.0f, 0.1f);
+    // VJAY EXTRA / FX toggles
+    r.registerBool("enableMirror", &fx.enableMirror);
+    r.registerBool("enableInvert", &fx.enableInvert);
+    r.registerBool("enablePosterize", &fx.enablePosterize);
+    r.registerBool("enableInfrared", &fx.enableInfrared);
+    r.registerBool("enableZoomPulse", &fx.enableZoomPulse);
+    r.registerBool("enableRGBShift", &fx.enableRGBShift);
+    r.registerFloat("mirrorAmount", &fx.mirrorAmount, 0.0f, 1.0f);
+    r.registerFloat("posterizeLevels", &fx.posterizeLevels, 2.0f, 32.0f);
+    r.registerFloat("zoomPulseAmount", &fx.zoomPulseAmount, 0.0f, 1.0f);
+    r.registerFloat("rgbShiftAmount", &fx.rgbShiftAmount, 0.0f, 0.1f);
 
-    // FXAA
-    r.registerBool("enableFXAA", &c.enableFXAA);
-    r.registerFloat("fxaaQualitySubpix", &c.fxaaQualitySubpix, 0.0f, 1.0f);
-    r.registerFloat("fxaaQualityEdgeThreshold", &c.fxaaQualityEdgeThreshold, 0.0f, 0.5f);
-    r.registerFloat("fxaaQualityEdgeThresholdMin", &c.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f);
+    // FXAA / SYSTEM
+    r.registerBool("enableFXAA", &system.enableFXAA);
+    r.registerFloat("fxaaQualitySubpix", &system.fxaaQualitySubpix, 0.0f, 1.0f);
+    r.registerFloat("fxaaQualityEdgeThreshold", &system.fxaaQualityEdgeThreshold, 0.0f, 0.5f);
+    r.registerFloat("fxaaQualityEdgeThresholdMin", &system.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f);
 
     // GRID / MIRRORING
-    r.registerBool("enableGrid", &c.enableGrid);
-    r.registerInt("gridMode", &c.gridMode, 0, 2);
-    r.registerInt("gridCount", &c.gridCount, 1, 10);
-    r.registerInt("gridRows", &c.gridRows, 1, 10);
-    r.registerInt("gridColumns", &c.gridColumns, 1, 10);
-    r.registerBool("gridMirrorCells", &c.gridMirrorCells);
-    r.registerBool("gridShowLines", &c.gridShowLines);
-    r.registerFloat("gridLineWidth", &c.gridLineWidth, 0.0f, 0.01f);
-    r.registerFloat("gridLineIntensity", &c.gridLineIntensity, 0.0f, 1.0f);
-    r.registerVec3("gridLineColor", &c.gridLineColor);
+    r.registerBool("enableGrid", &grid.enabled);
+    r.registerInt("gridMode", &grid.mode, 0, 2);
+    r.registerInt("gridCount", &grid.count, 1, 10);
+    r.registerInt("gridRows", &grid.rows, 1, 10);
+    r.registerInt("gridColumns", &grid.columns, 1, 10);
+    r.registerBool("gridMirrorCells", &grid.mirrorCells);
+    r.registerBool("gridShowLines", &grid.showLines);
+    r.registerFloat("gridLineWidth", &grid.lineWidth, 0.0f, 0.01f);
+    r.registerFloat("gridLineIntensity", &grid.lineIntensity, 0.0f, 1.0f);
+    r.registerVec3("gridLineColor", &grid.lineColor);
 
     // CAMERA
-    r.registerFloat("cameraZoom", &c.cameraZoom, 0.1f, 5.0f);
-    r.registerFloat("cameraPanX", &c.cameraPanX, -1.0f, 1.0f);
-    r.registerFloat("cameraPanY", &c.cameraPanY, -1.0f, 1.0f);
-    r.registerFloat("cameraRotation", &c.cameraRotation, -3.14f, 3.14f);
-    r.registerBool("enableCameraMovement", &c.enableCameraMovement);
-
-    // RGB OVERLAY
-    r.registerVec3("rgbOverlay", &c.rgbOverlay);
-    r.registerBool("enableRgbOverlay", &c.enableRgbOverlay);
+    r.registerFloat("cameraZoom", &camera.zoom, 0.1f, 5.0f);
+    r.registerFloat("cameraPanX", &camera.panX, -1.0f, 1.0f);
+    r.registerFloat("cameraPanY", &camera.panY, -1.0f, 1.0f);
+    r.registerFloat("cameraRotation", &camera.rotation, -3.14f, 3.14f);
+    r.registerBool("enableCameraMovement", &camera.enableMovement);
 }

@@ -16,6 +16,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o.d"
   "CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o"
   "CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o.d"
+  "CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o"
+  "CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o.d"
   "CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o"
   "CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o.d"
   "CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o"

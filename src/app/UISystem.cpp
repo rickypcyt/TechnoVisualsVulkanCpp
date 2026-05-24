@@ -261,70 +261,70 @@ bool randBool(std::mt19937& rng) {
 }
 
 void randomizeVJayExtraControls(VisualControls& controls, std::mt19937& rng) {
-    if (controls.enablePixelate) {
-        controls.pixelateAmount = randFloat(rng, 0.0f, 1.0f);
+    if (controls.fx.enablePixelate) {
+        controls.fx.pixelateAmount = randFloat(rng, 0.0f, 1.0f);
     }
 
-    if (controls.enableStrobe) {
-        controls.strobeSpeed = randFloat(rng, 0.0f, 20.0f);
+    if (controls.fx.enableStrobe) {
+        controls.fx.strobeSpeed = randFloat(rng, 0.0f, 20.0f);
     }
 
-    if (controls.enableThreshold) {
-        controls.thresholdLevel = randFloat(rng, 0.0f, 1.0f);
+    if (controls.fx.enableThreshold) {
+        controls.fx.thresholdLevel = randFloat(rng, 0.0f, 1.0f);
     }
 
-    if (controls.enableSlowZoom) {
-        controls.slowZoomAmount = randFloat(rng, 0.0f, 1.0f);
+    if (controls.fx.enableSlowZoom) {
+        controls.fx.slowZoomAmount = randFloat(rng, 0.0f, 1.0f);
     }
 
-    if (controls.enableEdgeDetect) {
-        controls.edgeStrength = randFloat(rng, 0.1f, 5.0f);
-        controls.edgeThreshold = randFloat(rng, 0.0f, 1.0f);
-        controls.edgeBlend = randFloat(rng, 0.0f, 1.0f);
-        controls.edgeColor = glm::vec3(randFloat(rng, 0.0f, 1.0f),
+    if (controls.fx.enableEdgeDetect) {
+        controls.fx.edgeStrength = randFloat(rng, 0.1f, 5.0f);
+        controls.fx.edgeThreshold = randFloat(rng, 0.0f, 1.0f);
+        controls.fx.edgeBlend = randFloat(rng, 0.0f, 1.0f);
+        controls.fx.edgeColor = glm::vec3(randFloat(rng, 0.0f, 1.0f),
                                        randFloat(rng, 0.0f, 1.0f),
                                        randFloat(rng, 0.0f, 1.0f));
     }
 
-    if (controls.enableFXAA) {
-        controls.fxaaQualitySubpix = randFloat(rng, 0.0f, 1.0f);
-        controls.fxaaQualityEdgeThreshold = randFloat(rng, 0.0f, 0.5f);
-        controls.fxaaQualityEdgeThresholdMin = randFloat(rng, 0.0f, 0.2f);
+    if (controls.system.enableFXAA) {
+        controls.system.fxaaQualitySubpix = randFloat(rng, 0.0f, 1.0f);
+        controls.system.fxaaQualityEdgeThreshold = randFloat(rng, 0.0f, 0.5f);
+        controls.system.fxaaQualityEdgeThresholdMin = randFloat(rng, 0.0f, 0.2f);
     }
 
-    if (controls.enableMirror) {
-        controls.mirrorAmount = randFloat(rng, 0.0f, 1.0f);
+    if (controls.fx.enableMirror) {
+        controls.fx.mirrorAmount = randFloat(rng, 0.0f, 1.0f);
     }
 
-    if (controls.enablePosterize) {
-        controls.posterizeLevels = randFloat(rng, 2.0f, 16.0f);
+    if (controls.fx.enablePosterize) {
+        controls.fx.posterizeLevels = randFloat(rng, 2.0f, 16.0f);
     }
 
-    if (controls.enableZoomPulse) {
-        controls.zoomPulseAmount = randFloat(rng, 0.0f, 1.0f);
+    if (controls.fx.enableZoomPulse) {
+        controls.fx.zoomPulseAmount = randFloat(rng, 0.0f, 1.0f);
     }
 
-    if (controls.enableRGBShift) {
-        controls.rgbShiftAmount = randFloat(rng, 0.0f, 0.1f);
+    if (controls.fx.enableRGBShift) {
+        controls.fx.rgbShiftAmount = randFloat(rng, 0.0f, 0.1f);
     }
 
-    if (controls.enableGrid) {
-        controls.gridMode = randInt(rng, 0, 2);
-        if (controls.gridMode == 2) {
-            controls.gridRows = randInt(rng, 1, 8);
-            controls.gridColumns = randInt(rng, 1, 8);
-            controls.gridCount = std::max(2, controls.gridColumns);
+    if (controls.grid.enabled) {
+        controls.grid.mode = randInt(rng, 0, 2);
+        if (controls.grid.mode == 2) {
+            controls.grid.rows = randInt(rng, 1, 8);
+            controls.grid.columns = randInt(rng, 1, 8);
+            controls.grid.count = std::max(2, controls.grid.columns);
         } else {
-            controls.gridCount = randInt(rng, 2, 8);
+            controls.grid.count = randInt(rng, 2, 8);
         }
-        controls.gridMirrorCells = randBool(rng);
+        controls.grid.mirrorCells = randBool(rng);
     }
 
-    if (controls.enableCameraMovement) {
-        controls.cameraZoom = randFloat(rng, 0.5f, 2.0f);
-        controls.cameraPanX = randFloat(rng, -1.0f, 1.0f);
-        controls.cameraPanY = randFloat(rng, -1.0f, 1.0f);
-        controls.cameraRotation = randFloat(rng, -3.14159f, 3.14159f);
+    if (controls.camera.enableMovement) {
+        controls.camera.zoom = randFloat(rng, 0.5f, 2.0f);
+        controls.camera.panX = randFloat(rng, -1.0f, 1.0f);
+        controls.camera.panY = randFloat(rng, -1.0f, 1.0f);
+        controls.camera.rotation = randFloat(rng, -3.14159f, 3.14159f);
     }
 }
 
@@ -333,95 +333,95 @@ void randomizeVJayBasicsControls(VisualControls& controls, std::mt19937& rng) {
     auto ri  = [&](int lo, int hi) { return randInt(rng, lo, hi); };
     auto u01 = [&]() { return randFloat(rng, 0.0f, 1.0f); };
 
-    if (controls.enableColorGrading) {
-        controls.gradeBrightness = rr(-0.2f, 0.2f);
-        controls.gradeContrast = rr(0.8f, 1.4f);
-        controls.gradeSaturation = rr(0.6f, 1.6f);
-        controls.gradeHueShift = rr(-90.0f, 90.0f);
-        controls.gradeGamma = rr(0.8f, 1.4f);
-        controls.colorLUTIndex = ri(0, 5);
-        controls.splitToneBalance = u01() * 0.5f;
-        controls.splitToneShadows = glm::vec3(u01(), u01(), u01());
-        controls.splitToneHighlights = glm::vec3(u01(), u01(), u01());
+    if (controls.color.enableColorGrading) {
+        controls.color.gradeBrightness = rr(-0.2f, 0.2f);
+        controls.color.gradeContrast = rr(0.8f, 1.4f);
+        controls.color.gradeSaturation = rr(0.6f, 1.6f);
+        controls.color.gradeHueShift = rr(-90.0f, 90.0f);
+        controls.color.gradeGamma = rr(0.8f, 1.4f);
+        controls.color.colorLUTIndex = ri(0, 5);
+        controls.color.splitToneBalance = u01() * 0.5f;
+        controls.color.splitToneShadows = glm::vec3(u01(), u01(), u01());
+        controls.color.splitToneHighlights = glm::vec3(u01(), u01(), u01());
     }
 
-    if (controls.enableFeedback) {
-        controls.feedbackAmount = u01();
-        controls.trailStrength = u01();
-        controls.temporalAccumulation = u01();
-        controls.feedbackDecay = u01();
-        controls.recursiveBlend = u01();
+    if (controls.temporal.enableFeedback) {
+        controls.temporal.feedbackAmount = u01();
+        controls.temporal.trailStrength = u01();
+        controls.temporal.temporalAccumulation = u01();
+        controls.temporal.feedbackDecay = u01();
+        controls.temporal.recursiveBlend = u01();
     }
 
-    if (controls.enableDistortion) {
-        controls.uvWarpStrength = rr(0.0f, 0.5f);
-        controls.rippleStrength = rr(0.0f, 0.5f);
-        controls.rippleFrequency = rr(0.5f, 6.0f);
-        controls.swirlStrength = rr(-0.5f, 0.5f);
-        controls.displacementAmount = rr(0.0f, 0.5f);
-        controls.kaleidoSegments = rr(3.0f, 12.0f);
-        controls.tunnelDepth = rr(0.0f, 0.5f);
-        controls.tunnelCurvature = rr(-0.5f, 0.5f);
+    if (controls.fx.enableDistortion) {
+        controls.fx.uvWarpStrength = rr(0.0f, 0.5f);
+        controls.fx.rippleStrength = rr(0.0f, 0.5f);
+        controls.fx.rippleFrequency = rr(0.5f, 6.0f);
+        controls.fx.swirlStrength = rr(-0.5f, 0.5f);
+        controls.fx.displacementAmount = rr(0.0f, 0.5f);
+        controls.fx.kaleidoSegments = rr(3.0f, 12.0f);
+        controls.fx.tunnelDepth = rr(0.0f, 0.5f);
+        controls.fx.tunnelCurvature = rr(-0.5f, 0.5f);
     }
 
-    if (controls.enableBlurMotion) {
-        controls.gaussianBlur = u01();
-        controls.directionalBlur = u01();
-        controls.directionalBlurAngle = rr(0.0f, 360.0f);
-        controls.zoomBlur = u01();
-        controls.motionBlur = u01();
-        controls.temporalBlur = u01();
+    if (controls.fx.enableBlurMotion) {
+        controls.fx.gaussianBlur = u01();
+        controls.fx.directionalBlur = u01();
+        controls.fx.directionalBlurAngle = rr(0.0f, 360.0f);
+        controls.fx.zoomBlur = u01();
+        controls.fx.motionBlur = u01();
+        controls.fx.temporalBlur = u01();
     }
 
-    if (controls.enableSharpen) {
-        controls.unsharpMask = u01();
-        controls.casAmount = u01();
-        controls.localContrast = u01();
+    if (controls.fx.enableSharpen) {
+        controls.fx.unsharpMask = u01();
+        controls.fx.casAmount = u01();
+        controls.fx.localContrast = u01();
     }
 
-    if (controls.enableGlitch) {
-        controls.glitchDatamosh = u01();
-        controls.glitchRGBSplit = u01();
-        controls.glitchScanlineBreak = u01();
-        controls.glitchJitter = u01();
-        controls.glitchTearing = u01();
-        controls.glitchPixelSort = u01();
-        controls.glitchBufferCorruption = u01();
+    if (controls.fx.enableGlitch) {
+        controls.fx.glitchDatamosh = u01();
+        controls.fx.glitchRGBSplit = u01();
+        controls.fx.glitchScanlineBreak = u01();
+        controls.fx.glitchJitter = u01();
+        controls.fx.glitchTearing = u01();
+        controls.fx.glitchPixelSort = u01();
+        controls.fx.glitchBufferCorruption = u01();
     }
 
-    if (controls.enableBlending) {
-        controls.blendModeProcedural = ri(0, 5);
-        controls.blendModeVideo = ri(0, 5);
-        controls.blendModeFeedback = ri(0, 5);
-        controls.blendProceduralMix = rr(0.0f, 2.0f);
-        controls.blendVideoMix = rr(0.0f, 2.0f);
-        controls.blendFeedbackMix = rr(0.0f, 2.0f);
+    if (controls.blending.enableBlending) {
+        controls.blending.blendModeProcedural = ri(0, 5);
+        controls.blending.blendModeVideo = ri(0, 5);
+        controls.blending.blendModeFeedback = ri(0, 5);
+        controls.blending.blendProceduralMix = rr(0.0f, 2.0f);
+        controls.blending.blendVideoMix = rr(0.0f, 2.0f);
+        controls.blending.blendFeedbackMix = rr(0.0f, 2.0f);
     }
 
-    if (controls.enableAnalog) {
-        controls.analogScanlineFocus = u01();
-        controls.analogMaskBalance = u01();
-        controls.analogNoise = u01();
-        controls.analogBloom = rr(0.0f, 2.0f);
-        controls.vhsDistortion = u01();
-        controls.analogChromaticAberration = rr(0.0f, 0.25f);
+    if (controls.post.enableAnalog) {
+        controls.post.analogScanlineFocus = u01();
+        controls.post.analogMaskBalance = u01();
+        controls.post.analogNoise = u01();
+        controls.post.analogBloom = rr(0.0f, 2.0f);
+        controls.post.vhsDistortion = u01();
+        controls.post.analogChromaticAberration = rr(0.0f, 0.25f);
     }
 
-    if (controls.enableAudioReactive) {
-        controls.audioWarpResponse = rr(0.0f, 2.0f);
-        controls.audioFeedbackResponse = rr(0.0f, 2.0f);
-        controls.audioBlurResponse = rr(0.0f, 2.0f);
-        controls.audioColorResponse = rr(0.0f, 2.0f);
-        controls.audioGlitchResponse = rr(0.0f, 2.0f);
-        controls.audioBeatSync = rr(0.0f, 4.0f);
-        controls.audioLfoRate = rr(0.05f, 4.0f);
+    if (controls.system.enableAudioReactive) {
+        controls.audio.warpResponse = rr(0.0f, 2.0f);
+        controls.audio.feedbackResponse = rr(0.0f, 2.0f);
+        controls.audio.blurResponse = rr(0.0f, 2.0f);
+        controls.audio.colorResponse = rr(0.0f, 2.0f);
+        controls.audio.glitchResponse = rr(0.0f, 2.0f);
+        controls.audio.beatSync = rr(0.0f, 4.0f);
+        controls.audio.lfoRate = rr(0.05f, 4.0f);
     }
 
-    if (controls.enableTemporal) {
-        controls.temporalInterpolation = u01();
-        controls.temporalBlendStrength = u01();
-        controls.slowMotionFactor = rr(0.1f, 4.0f);
-        controls.frameAccumulation = u01();
+    if (controls.temporal.enableTemporal) {
+        controls.playback.temporalInterpolation = u01();
+        controls.playback.temporalBlendStrength = u01();
+        controls.playback.slowMotionFactor = rr(0.1f, 4.0f);
+        controls.playback.frameAccumulation = u01();
     }
 }
 } // namespace
@@ -584,24 +584,24 @@ void UISystem::drawProceduralControls(
     if (!ImGui::Begin("Procedural Controls")) { ImGui::End(); return; }
 
     ImGui::Text("Animation");
-    changed |= ImGui::SliderFloat("Speed", &controls.animationSpeed, 0.1f, 8.0f, "%.2fx");
-    changed |= ImGui::SliderFloat("Target change (s)", &controls.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
+    changed |= ImGui::SliderFloat("Speed", &controls.playback.animationSpeed, 0.1f, 8.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Target change (s)", &controls.playback.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
     ImGui::SameLine();
     if (ImGui::Button("Snap 1s")) {
-        controls.animationTargetSeconds = 1.0f;
-        controls.animationSpeed = 1.0f;
+        controls.playback.animationTargetSeconds = 1.0f;
+        controls.playback.animationSpeed = 1.0f;
         changed = true;
     }
 
     ImGui::Separator();
     ImGui::Text("Layers");
-    changed |= drawActiveLayerCombo("Active Layer", controls.activeMode);
+    changed |= drawActiveLayerCombo("Active Layer", controls.playback.activeMode);
 
     ImGui::Separator();
     ImGui::Text("Color Palette");
-    changed |= ImGui::ColorEdit4("Primary",   glm::value_ptr(controls.primaryColor));
-    changed |= ImGui::ColorEdit4("Secondary", glm::value_ptr(controls.secondaryColor));
-    changed |= ImGui::SliderFloat("Blend", &controls.colorBlend, 0.0f, 1.0f);
+    changed |= ImGui::ColorEdit4("Primary",   glm::value_ptr(controls.color.primaryColor));
+    changed |= ImGui::ColorEdit4("Secondary", glm::value_ptr(controls.color.secondaryColor));
+    changed |= ImGui::SliderFloat("Blend", &controls.color.colorBlend, 0.0f, 1.0f);
     
     if (ImGui::Button("Randomize Colors")) {
         // Generate random colors with good gradient potential using HSV
@@ -635,60 +635,60 @@ void UISystem::drawProceduralControls(
             return glm::vec3(r + m, g + m, b + m);
         };
         
-        controls.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
-        controls.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, secondarySat, secondaryVal), 1.0f);
-        controls.primaryColor = controls.primaryColorTarget;
-        controls.secondaryColor = controls.secondaryColorTarget;
+        controls.color.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
+        controls.color.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, secondarySat, secondaryVal), 1.0f);
+        controls.color.primaryColor = controls.color.primaryColorTarget;
+        controls.color.secondaryColor = controls.color.secondaryColorTarget;
         changed = true;
         controlsDirty = true;
     }
     
-    changed |= ImGui::Checkbox("Auto Randomize", &controls.autoRandomizeColors);
-    if (controls.autoRandomizeColors) {
-        changed |= ImGui::SliderFloat("Interval (s)", &controls.colorRandomizeInterval, 0.1f, 5.0f, "%.1fs");
+    changed |= ImGui::Checkbox("Auto Randomize", &controls.color.autoRandomizeColors);
+    if (controls.color.autoRandomizeColors) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.color.colorRandomizeInterval, 0.1f, 5.0f, "%.1fs");
     }
 
     ImGui::Separator();
     ImGui::Text("Audio-inspired inputs");
-    changed |= ImGui::SliderFloat("Tempo",  &controls.tempo,  0.25f, 4.0f);
-    changed |= ImGui::Checkbox("Auto tempo LFO", &controls.enableTempoLfo);
-    if (controls.enableTempoLfo) {
-        changed |= ImGui::SliderFloat("LFO speed (Hz)", &controls.tempoLfoSpeed, 0.05f, 4.0f, "%.2f Hz");
-        changed |= ImGui::SliderFloat("LFO depth", &controls.tempoLfoDepth, 0.0f, 2.0f);
+    changed |= ImGui::SliderFloat("Tempo",  &controls.playback.tempo,  0.25f, 4.0f);
+    changed |= ImGui::Checkbox("Auto tempo LFO", &controls.playback.enableTempoLfo);
+    if (controls.playback.enableTempoLfo) {
+        changed |= ImGui::SliderFloat("LFO speed (Hz)", &controls.playback.tempoLfoSpeed, 0.05f, 4.0f, "%.2f Hz");
+        changed |= ImGui::SliderFloat("LFO depth", &controls.playback.tempoLfoDepth, 0.0f, 2.0f);
     }
-    changed |= ImGui::SliderFloat("Energy", &controls.energy, 0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("High",   &controls.high,   0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("High gain boost", &controls.audioHighGain, 0.5f, 4.0f, "%.2fx");
-    changed |= ImGui::SliderFloat("Procedural audio drive", &controls.audioReactiveDrive, 0.5f, 3.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Energy", &controls.audio.energy, 0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Bass",   &controls.audio.bass,   0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Mid",    &controls.audio.mid,    0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("High",   &controls.audio.high,   0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("High gain boost", &controls.audio.highGain, 0.5f, 4.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Procedural audio drive", &controls.audio.reactiveDrive, 0.5f, 3.0f, "%.2fx");
 
     ImGui::Separator();
     ImGui::Text("Video");
-    changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Video Mix",   &controls.playback.videoMix,         0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Video speed", &controls.playback.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
 
-    if (ImGui::SliderFloat("Decode oversample", &controls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
-        controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
+    if (ImGui::SliderFloat("Decode oversample", &controls.playback.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
+        controls.playback.videoDecodeOversample = std::clamp(controls.playback.videoDecodeOversample, 1.0f, 8.0f);
         changed = true;
     }
 
-    changed |= ImGui::Checkbox("Auto Scale Video", &controls.autoScaleVideo);
+    changed |= ImGui::Checkbox("Auto Scale Video", &controls.playback.autoScaleVideo);
 
     static const char* forceFpsLabels[] = {"Off", "15 fps", "24 fps", "30 fps", "60 fps"};
-    int forceIdx = std::clamp(controls.forcedFpsIndex, 0,
+    int forceIdx = std::clamp(controls.playback.forcedFpsIndex, 0,
                               static_cast<int>(FORCED_FPS_OPTIONS_UI.size()) - 1);
-    if (forceIdx != controls.forcedFpsIndex) { controls.forcedFpsIndex = forceIdx; changed = true; }
+    if (forceIdx != controls.playback.forcedFpsIndex) { controls.playback.forcedFpsIndex = forceIdx; changed = true; }
     if (ImGui::Combo("Force FPS", &forceIdx, forceFpsLabels, IM_ARRAYSIZE(forceFpsLabels))) {
-        controls.forcedFpsIndex = forceIdx;
+        controls.playback.forcedFpsIndex = forceIdx;
         changed = true;
     }
 
-    changed |= ImGui::SliderFloat("Grayscale", &controls.grayscaleAmount, 0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Sharpen",   &controls.sharpenAmount,   0.0f, 1.0f);
-    changed |= ImGui::Checkbox("Bicubic Upscale", &controls.upscaleEnabled);
+    changed |= ImGui::SliderFloat("Grayscale", &controls.playback.grayscaleAmount, 0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Sharpen",   &controls.playback.sharpenAmount,   0.0f, 1.0f);
+    changed |= ImGui::Checkbox("Bicubic Upscale", &controls.playback.upscaleEnabled);
 
-    changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
+    changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.playback.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
 
     // --- Video asset selector ---
     ImGui::TextWrapped("Video %s", diag.videoReady ? "online" : "unavailable");
@@ -721,9 +721,9 @@ void UISystem::drawProceduralControls(
     }
 
     int currentFolderIndex = 0;
-    if (!controls.selectedVideoFolder.empty()) {
+    if (!controls.playback.selectedVideoFolder.empty()) {
         for (size_t i = 0; i < availableFolders.size(); ++i) {
-            if (availableFolders[i] == controls.selectedVideoFolder) {
+            if (availableFolders[i] == controls.playback.selectedVideoFolder) {
                 currentFolderIndex = static_cast<int>(i);
                 break;
             }
@@ -732,8 +732,8 @@ void UISystem::drawProceduralControls(
 
     if (ImGui::Combo("Load Folder", &currentFolderIndex, folderItems.data(), static_cast<int>(folderItems.size()))) {
         std::string newFolder = (currentFolderIndex == 0) ? "" : availableFolders[currentFolderIndex];
-        if (controls.selectedVideoFolder != newFolder) {
-            controls.selectedVideoFolder = newFolder;
+        if (controls.playback.selectedVideoFolder != newFolder) {
+            controls.playback.selectedVideoFolder = newFolder;
             if (callbacks.onFolderChanged) {
                 callbacks.onFolderChanged();
             }
@@ -741,14 +741,14 @@ void UISystem::drawProceduralControls(
     }
 
     // Show current loaded folder
-    if (controls.selectedVideoFolder.empty()) {
+    if (controls.playback.selectedVideoFolder.empty()) {
         ImGui::Text("Current loaded folder: All Folders");
     } else {
-        ImGui::Text("Current loaded folder: %s", controls.selectedVideoFolder.c_str());
+        ImGui::Text("Current loaded folder: %s", controls.playback.selectedVideoFolder.c_str());
     }
 
     // Video assets from current folder
-    const auto& assets = registry.getFilteredAssets(controls.selectedVideoFolder);
+    const auto& assets = registry.getFilteredAssets(controls.playback.selectedVideoFolder);
     if (assets.empty()) {
         ImGui::TextDisabled("No videos found in this folder");
     } else {
@@ -842,10 +842,10 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
     if (!ImGui::Begin("VJAY BASICS")) { ImGui::End(); return; }
 
     auto setAllToggles = [&](bool v) {
-        c.enableColorGrading  = v; c.enableFeedback    = v; c.enableDistortion = v;
-        c.enableBlurMotion    = v; c.enableSharpen     = v; c.enableGlitch     = v;
-        c.enableBlending      = v; c.enableAnalog      = v; c.enableAudioReactive = v;
-        c.enableTemporal      = v;
+        c.color.enableColorGrading  = v; c.temporal.enableFeedback    = v; c.fx.enableDistortion = v;
+        c.fx.enableBlurMotion    = v; c.fx.enableSharpen     = v; c.fx.enableGlitch     = v;
+        c.blending.enableBlending      = v; c.post.enableAnalog      = v; c.system.enableAudioReactive = v;
+        c.temporal.enableTemporal      = v;
     };
 
     if (ImGui::Button("Randomize VJAY basics")) {
@@ -859,118 +859,121 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
     ImGui::SameLine();
     if (ImGui::Button("Reset VJAY basics")) {
         setAllToggles(false);
-        c.gradeBrightness = 0; c.gradeContrast = 1; c.gradeSaturation = 1;
-        c.gradeHueShift = 0; c.gradeGamma = 1; c.colorLUTIndex = 0;
-        c.splitToneBalance = 0.5f;
-        c.splitToneShadows = glm::vec3(0); c.splitToneHighlights = glm::vec3(1);
-        c.feedbackAmount = 0; c.trailStrength = 0; c.temporalAccumulation = 0;
-        c.feedbackDecay = 0; c.recursiveBlend = 0;
-        c.uvWarpStrength = 0; c.rippleStrength = 0; c.rippleFrequency = 1;
-        c.swirlStrength = 0; c.displacementAmount = 0; c.kaleidoSegments = 6;
-        c.tunnelDepth = 0; c.tunnelCurvature = 0;
-        c.gaussianBlur = 0; c.directionalBlur = 0; c.directionalBlurAngle = 0;
-        c.zoomBlur = 0; c.motionBlur = 0; c.temporalBlur = 0;
-        c.unsharpMask = 0; c.casAmount = 0; c.localContrast = 0;
-        c.glitchDatamosh = 0; c.glitchRGBSplit = 0; c.glitchScanlineBreak = 0;
-        c.glitchJitter = 0; c.glitchTearing = 0; c.glitchPixelSort = 0; c.glitchBufferCorruption = 0;
-        c.blendModeProcedural = 0; c.blendModeVideo = 1; c.blendModeFeedback = 2;
-        c.blendProceduralMix = 1; c.blendVideoMix = 1; c.blendFeedbackMix = 0.5f;
-        c.analogScanlineFocus = 0.5f; c.analogMaskBalance = 0.5f; c.analogNoise = 0.2f;
-        c.analogBloom = 0.3f; c.vhsDistortion = 0; c.analogChromaticAberration = 0.02f;
-        c.audioWarpResponse = 0; c.audioFeedbackResponse = 0; c.audioBlurResponse = 0;
-        c.audioColorResponse = 0; c.audioGlitchResponse = 0; c.audioBeatSync = 0; c.audioLfoRate = 0.5f;
-        c.temporalInterpolation = 0; c.temporalBlendStrength = 0; c.slowMotionFactor = 1; c.frameAccumulation = 0;
+        c.color.gradeBrightness = 0; c.color.gradeContrast = 1; c.color.gradeSaturation = 1;
+        c.color.gradeHueShift = 0; c.color.gradeGamma = 1; c.color.colorLUTIndex = 0;
+        c.color.splitToneBalance = 0.5f;
+        c.color.splitToneShadows = glm::vec3(0); c.color.splitToneHighlights = glm::vec3(1);
+        c.temporal.feedbackAmount = 0; c.temporal.trailStrength = 0; c.temporal.temporalAccumulation = 0;
+        c.temporal.feedbackDecay = 0; c.temporal.recursiveBlend = 0;
+        c.fx.uvWarpStrength = 0; c.fx.rippleStrength = 0; c.fx.rippleFrequency = 1;
+        c.fx.swirlStrength = 0; c.fx.displacementAmount = 0; c.fx.kaleidoSegments = 6;
+        c.fx.tunnelDepth = 0; c.fx.tunnelCurvature = 0;
+        c.fx.gaussianBlur = 0; c.fx.directionalBlur = 0; c.fx.directionalBlurAngle = 0;
+        c.fx.zoomBlur = 0; c.fx.motionBlur = 0; c.fx.temporalBlur = 0;
+        c.fx.unsharpMask = 0; c.fx.casAmount = 0; c.fx.localContrast = 0;
+        c.fx.glitchDatamosh = 0; c.fx.glitchRGBSplit = 0; c.fx.glitchScanlineBreak = 0;
+        c.fx.glitchJitter = 0; c.fx.glitchTearing = 0; c.fx.glitchPixelSort = 0; c.fx.glitchBufferCorruption = 0;
+        c.blending.blendModeProcedural = 0; c.blending.blendModeVideo = 1; c.blending.blendModeFeedback = 2;
+        c.blending.blendProceduralMix = 1; c.blending.blendVideoMix = 1; c.blending.blendFeedbackMix = 0.5f;
+        c.post.analogScanlineFocus = 0.5f; c.post.analogMaskBalance = 0.5f; c.post.analogNoise = 0.2f;
+        c.post.analogBloom = 0.3f; c.post.vhsDistortion = 0; c.post.analogChromaticAberration = 0.02f;
+        c.audio.warpResponse = 0; c.audio.feedbackResponse = 0; c.audio.blurResponse = 0;
+        c.audio.colorResponse = 0; c.audio.glitchResponse = 0; c.audio.beatSync = 0; c.audio.lfoRate = 0.5f;
+        c.playback.temporalInterpolation = 0; c.playback.temporalBlendStrength = 0; c.playback.slowMotionFactor = 1; c.playback.frameAccumulation = 0;
         changed = true; controlsDirty = true;
     }
 
     // Macro para secciones con toggle on/off
-#define VJAY_SECTION(num, title, toggleField, body) \
-    ImGui::Text(num ". " title); ImGui::SameLine(); \
-    changed |= ImGui::Checkbox("On##" title, &c.toggleField); \
-    ImGui::Separator(); \
-    ImGui::BeginDisabled(!c.toggleField); \
-    body \
-    ImGui::EndDisabled(); \
-    ImGui::Spacing();
+#define VJAY_SECTION(num, title, toggleExpr, body) \
+    { \
+        ImGui::Text(num ". " title); ImGui::SameLine(); \
+        auto& toggleRef__ = (toggleExpr); \
+        changed |= ImGui::Checkbox("On##" title, &toggleRef__); \
+        ImGui::Separator(); \
+        ImGui::BeginDisabled(!toggleRef__); \
+        body \
+        ImGui::EndDisabled(); \
+        ImGui::Spacing(); \
+    }
 
-    VJAY_SECTION("1","Color grading dinamico", enableColorGrading,
-        changed |= ImGui::SliderFloat("Brightness",       &c.gradeBrightness,  -1.0f, 1.0f,   "%.2f");
-        changed |= ImGui::SliderFloat("Contrast",         &c.gradeContrast,     0.1f, 2.5f,   "%.2f");
-        changed |= ImGui::SliderFloat("Saturation",       &c.gradeSaturation,   0.0f, 2.5f,   "%.2f");
-        changed |= ImGui::SliderFloat("Hue shift",        &c.gradeHueShift,  -180.0f, 180.0f, "%.1f\xc2\xb0");
-        changed |= ImGui::SliderFloat("Gamma",            &c.gradeGamma,        0.4f, 3.0f,   "%.2f");
-        changed |= ImGui::Combo("LUT",                    &c.colorLUTIndex,     LUT_ITEMS);
-        changed |= ImGui::SliderFloat("Split tone balance",&c.splitToneBalance, 0.0f, 1.0f,   "%.2f");
-        changed |= ImGui::ColorEdit3("Split tone shadows",    glm::value_ptr(c.splitToneShadows));
-        changed |= ImGui::ColorEdit3("Split tone highlights", glm::value_ptr(c.splitToneHighlights));
+    VJAY_SECTION("1","Color grading dinamico", c.color.enableColorGrading,
+        changed |= ImGui::SliderFloat("Brightness",       &c.color.gradeBrightness,  -1.0f, 1.0f,   "%.2f");
+        changed |= ImGui::SliderFloat("Contrast",         &c.color.gradeContrast,     0.1f, 2.5f,   "%.2f");
+        changed |= ImGui::SliderFloat("Saturation",       &c.color.gradeSaturation,   0.0f, 2.5f,   "%.2f");
+        changed |= ImGui::SliderFloat("Hue shift",        &c.color.gradeHueShift,  -180.0f, 180.0f, "%.1f\xc2\xb0");
+        changed |= ImGui::SliderFloat("Gamma",            &c.color.gradeGamma,        0.4f, 3.0f,   "%.2f");
+        changed |= ImGui::Combo("LUT",                    &c.color.colorLUTIndex,     LUT_ITEMS);
+        changed |= ImGui::SliderFloat("Split tone balance",&c.color.splitToneBalance, 0.0f, 1.0f,   "%.2f");
+        changed |= ImGui::ColorEdit3("Split tone shadows",    glm::value_ptr(c.color.splitToneShadows));
+        changed |= ImGui::ColorEdit3("Split tone highlights", glm::value_ptr(c.color.splitToneHighlights));
     )
-    VJAY_SECTION("2","Feedback temporal", enableFeedback,
-        changed |= ImGui::SliderFloat("Feedback",              &c.feedbackAmount,      0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Trails",                &c.trailStrength,       0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Temporal accumulation", &c.temporalAccumulation,0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Decay",                 &c.feedbackDecay,       0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Recursive blend",       &c.recursiveBlend,      0,1,"%.2f");
+    VJAY_SECTION("2","Feedback temporal", c.temporal.enableFeedback,
+        changed |= ImGui::SliderFloat("Feedback",              &c.temporal.feedbackAmount,      0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Trails",                &c.temporal.trailStrength,       0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Temporal accumulation", &c.temporal.temporalAccumulation,0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Decay",                 &c.temporal.feedbackDecay,       0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Recursive blend",       &c.temporal.recursiveBlend,      0,1,"%.2f");
     )
-    VJAY_SECTION("3","Distorsion espacial", enableDistortion,
-        changed |= ImGui::SliderFloat("UV warp",      &c.uvWarpStrength,    0.0f,  0.5f, "%.3f");
-        changed |= ImGui::SliderFloat("Ripple",       &c.rippleStrength,    0.0f,  0.5f, "%.3f");
-        changed |= ImGui::SliderFloat("Ripple freq",  &c.rippleFrequency,   0.5f,  6.0f, "%.1f");
-        changed |= ImGui::SliderFloat("Swirl",        &c.swirlStrength,    -0.5f,  0.5f, "%.3f");
-        changed |= ImGui::SliderFloat("Displacement", &c.displacementAmount,0.0f,  0.5f, "%.3f");
-        changed |= ImGui::SliderFloat("Kaleido segs", &c.kaleidoSegments,   3.0f, 12.0f, "%.0f");
-        changed |= ImGui::SliderFloat("Tunnel depth", &c.tunnelDepth,       0.0f,  0.5f, "%.3f");
-        changed |= ImGui::SliderFloat("Tunnel curv",  &c.tunnelCurvature,  -0.5f,  0.5f, "%.3f");
+    VJAY_SECTION("3","Distorsion espacial", c.fx.enableDistortion,
+        changed |= ImGui::SliderFloat("UV warp",      &c.fx.uvWarpStrength,    0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Ripple",       &c.fx.rippleStrength,    0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Ripple freq",  &c.fx.rippleFrequency,   0.5f,  6.0f, "%.1f");
+        changed |= ImGui::SliderFloat("Swirl",        &c.fx.swirlStrength,    -0.5f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Displacement", &c.fx.displacementAmount,0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Kaleido segs", &c.fx.kaleidoSegments,   3.0f, 12.0f, "%.0f");
+        changed |= ImGui::SliderFloat("Tunnel depth", &c.fx.tunnelDepth,       0.0f,  0.5f, "%.3f");
+        changed |= ImGui::SliderFloat("Tunnel curv",  &c.fx.tunnelCurvature,  -0.5f,  0.5f, "%.3f");
     )
-    VJAY_SECTION("4","Blur & motion", enableBlurMotion,
-        changed |= ImGui::SliderFloat("Gaussian blur",     &c.gaussianBlur,        0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Directional blur",  &c.directionalBlur,     0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Directional angle", &c.directionalBlurAngle,0,360,"%.0f\xc2\xb0");
-        changed |= ImGui::SliderFloat("Zoom blur",         &c.zoomBlur,            0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Motion blur",       &c.motionBlur,          0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Temporal blur",     &c.temporalBlur,        0,1,"%.2f");
+    VJAY_SECTION("4","Blur & motion", c.fx.enableBlurMotion,
+        changed |= ImGui::SliderFloat("Gaussian blur",     &c.fx.gaussianBlur,        0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Directional blur",  &c.fx.directionalBlur,     0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Directional angle", &c.fx.directionalBlurAngle,0,360,"%.0f\xc2\xb0");
+        changed |= ImGui::SliderFloat("Zoom blur",         &c.fx.zoomBlur,            0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Motion blur",       &c.fx.motionBlur,          0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Temporal blur",     &c.fx.temporalBlur,        0,1,"%.2f");
     )
-    VJAY_SECTION("5","Sharpen / detalle", enableSharpen,
-        changed |= ImGui::SliderFloat("Unsharp mask",  &c.unsharpMask,   0,1,"%.2f");
-        changed |= ImGui::SliderFloat("CAS",           &c.casAmount,     0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Local contrast",&c.localContrast, 0,1,"%.2f");
+    VJAY_SECTION("5","Sharpen / detalle", c.fx.enableSharpen,
+        changed |= ImGui::SliderFloat("Unsharp mask",  &c.fx.unsharpMask,   0,1,"%.2f");
+        changed |= ImGui::SliderFloat("CAS",           &c.fx.casAmount,     0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Local contrast",&c.fx.localContrast, 0,1,"%.2f");
     )
-    VJAY_SECTION("6","Glitch / corruption", enableGlitch,
-        changed |= ImGui::SliderFloat("Datamosh",          &c.glitchDatamosh,       0,1,"%.2f");
-        changed |= ImGui::SliderFloat("RGB split",         &c.glitchRGBSplit,       0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Scanline break",    &c.glitchScanlineBreak,  0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Jitter",            &c.glitchJitter,         0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Tearing",           &c.glitchTearing,        0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Pixel sorting",     &c.glitchPixelSort,      0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Buffer corruption", &c.glitchBufferCorruption,0,1,"%.2f");
+    VJAY_SECTION("6","Glitch / corruption", c.fx.enableGlitch,
+        changed |= ImGui::SliderFloat("Datamosh",          &c.fx.glitchDatamosh,       0,1,"%.2f");
+        changed |= ImGui::SliderFloat("RGB split",         &c.fx.glitchRGBSplit,       0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Scanline break",    &c.fx.glitchScanlineBreak,  0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Jitter",            &c.fx.glitchJitter,         0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Tearing",           &c.fx.glitchTearing,        0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Pixel sorting",     &c.fx.glitchPixelSort,      0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Buffer corruption", &c.fx.glitchBufferCorruption,0,1,"%.2f");
     )
-    VJAY_SECTION("7","Compositing & blending", enableBlending,
-        changed |= ImGui::Combo("Video blend",     &c.blendModeVideo,     BLEND_ITEMS);
-        changed |= ImGui::Combo("Feedback blend",  &c.blendModeFeedback,  BLEND_ITEMS);
-        changed |= ImGui::SliderFloat("Video mix",     &c.blendVideoMix,    0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Feedback mix",  &c.blendFeedbackMix, 0,2,"%.2f");
+    VJAY_SECTION("7","Compositing & blending", c.blending.enableBlending,
+        changed |= ImGui::Combo("Video blend",     &c.blending.blendModeVideo,     BLEND_ITEMS);
+        changed |= ImGui::Combo("Feedback blend",  &c.blending.blendModeFeedback,  BLEND_ITEMS);
+        changed |= ImGui::SliderFloat("Video mix",     &c.blending.blendVideoMix,    0,2,"%.2f");
+        changed |= ImGui::SliderFloat("Feedback mix",  &c.blending.blendFeedbackMix, 0,2,"%.2f");
     )
-    VJAY_SECTION("8","CRT / analog simulation", enableAnalog,
-        changed |= ImGui::SliderFloat("Scanline focus",&c.analogScanlineFocus,        0,1,   "%.2f");
-        changed |= ImGui::SliderFloat("Mask balance",  &c.analogMaskBalance,          0,1,   "%.2f");
-        changed |= ImGui::SliderFloat("Analog noise",  &c.analogNoise,                0,1,   "%.2f");
-        changed |= ImGui::SliderFloat("Analog bloom",  &c.analogBloom,                0,2,   "%.2f");
-        changed |= ImGui::SliderFloat("VHS distortion",&c.vhsDistortion,              0,1,   "%.2f");
-        changed |= ImGui::SliderFloat("Analog chroma", &c.analogChromaticAberration,  0,0.25f,"%.3f");
+    VJAY_SECTION("8","CRT / analog simulation", c.post.enableAnalog,
+        changed |= ImGui::SliderFloat("Scanline focus",&c.post.analogScanlineFocus,        0,1,   "%.2f");
+        changed |= ImGui::SliderFloat("Mask balance",  &c.post.analogMaskBalance,          0,1,   "%.2f");
+        changed |= ImGui::SliderFloat("Analog noise",  &c.post.analogNoise,                0,1,   "%.2f");
+        changed |= ImGui::SliderFloat("Analog bloom",  &c.post.analogBloom,                0,2,   "%.2f");
+        changed |= ImGui::SliderFloat("VHS distortion",&c.post.vhsDistortion,              0,1,   "%.2f");
+        changed |= ImGui::SliderFloat("Analog chroma", &c.post.analogChromaticAberration,  0,0.25f,"%.3f");
     )
-    VJAY_SECTION("9","Audio reactivity", enableAudioReactive,
-        changed |= ImGui::SliderFloat("Warp response",    &c.audioWarpResponse,    0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Feedback response",&c.audioFeedbackResponse,0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Blur response",    &c.audioBlurResponse,    0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Color response",   &c.audioColorResponse,   0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Glitch response",  &c.audioGlitchResponse,  0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Beat sync",        &c.audioBeatSync,        0,4,"%.2f");
-        changed |= ImGui::SliderFloat("LFO rate",         &c.audioLfoRate,     0.05f,4,"%.2f Hz");
+    VJAY_SECTION("9","Audio reactivity", c.system.enableAudioReactive,
+        changed |= ImGui::SliderFloat("Warp response",    &c.audio.warpResponse,    0,2,"%.2f");
+        changed |= ImGui::SliderFloat("Feedback response",&c.audio.feedbackResponse,0,2,"%.2f");
+        changed |= ImGui::SliderFloat("Blur response",    &c.audio.blurResponse,    0,2,"%.2f");
+        changed |= ImGui::SliderFloat("Color response",   &c.audio.colorResponse,   0,2,"%.2f");
+        changed |= ImGui::SliderFloat("Glitch response",  &c.audio.glitchResponse,  0,2,"%.2f");
+        changed |= ImGui::SliderFloat("Beat sync",        &c.audio.beatSync,        0,4,"%.2f");
+        changed |= ImGui::SliderFloat("LFO rate",         &c.audio.lfoRate,     0.05f,4,"%.2f Hz");
     )
-    VJAY_SECTION("10","Temporal speed processing", enableTemporal,
-        changed |= ImGui::SliderFloat("Frame interpolation",&c.temporalInterpolation, 0,1,   "%.2f");
-        changed |= ImGui::SliderFloat("Temporal blend",     &c.temporalBlendStrength, 0,1,   "%.2f");
-        changed |= ImGui::SliderFloat("Slow-motion",        &c.slowMotionFactor,  0.1f,4,   "%.2fx");
-        changed |= ImGui::SliderFloat("Frame accumulation", &c.frameAccumulation,     0,1,   "%.2f");
+    VJAY_SECTION("10","Temporal speed processing", c.temporal.enableTemporal,
+        changed |= ImGui::SliderFloat("Frame interpolation",&c.playback.temporalInterpolation, 0,1,   "%.2f");
+        changed |= ImGui::SliderFloat("Temporal blend",     &c.playback.temporalBlendStrength, 0,1,   "%.2f");
+        changed |= ImGui::SliderFloat("Slow-motion",        &c.playback.slowMotionFactor,  0.1f,4,   "%.2fx");
+        changed |= ImGui::SliderFloat("Frame accumulation", &c.playback.frameAccumulation,     0,1,   "%.2f");
     )
 #undef VJAY_SECTION
 
@@ -989,10 +992,10 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     if (!ImGui::Begin("VJAY EXTRA")) { ImGui::End(); return; }
 
     auto setAllExtraToggles = [&](bool v) {
-        c.enablePixelate = v; c.enableStrobe = v; c.enableThreshold = v; c.enableSlowZoom = v;
-        c.enableMirror = v; c.enableInvert = v; c.enablePosterize = v; c.enableInfrared = v;
-        c.enableZoomPulse = v; c.enableRGBShift = v; c.enableFXAA = v; c.enableGrid = v;
-        c.enableEdgeDetect = v; c.enableCameraMovement = v;
+        c.fx.enablePixelate = v; c.fx.enableStrobe = v; c.fx.enableThreshold = v; c.fx.enableSlowZoom = v;
+        c.fx.enableMirror = v; c.fx.enableInvert = v; c.fx.enablePosterize = v; c.fx.enableInfrared = v;
+        c.fx.enableZoomPulse = v; c.fx.enableRGBShift = v; c.system.enableFXAA = v; c.grid.enabled = v;
+        c.fx.enableEdgeDetect = v; c.camera.enableMovement = v;
     };
 
     if (ImGui::Button("Randomize VJAY extra")) {
@@ -1001,12 +1004,12 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     }
     ImGui::SameLine();
     if (ImGui::Button("Reset VJAY extra")) {
-        c.pixelateAmount = 0; c.strobeSpeed = 0; c.thresholdLevel = 0.5f; c.slowZoomAmount = 0;
-        c.enablePixelate = c.enableStrobe = c.enableThreshold = c.enableSlowZoom = false;
-        c.enableFXAA = true;
-        c.fxaaQualitySubpix = 0.75f;
-        c.fxaaQualityEdgeThreshold = 0.125f;
-        c.fxaaQualityEdgeThresholdMin = 0.0625f;
+        c.fx.pixelateAmount = 0; c.fx.strobeSpeed = 0; c.fx.thresholdLevel = 0.5f; c.fx.slowZoomAmount = 0;
+        c.fx.enablePixelate = c.fx.enableStrobe = c.fx.enableThreshold = c.fx.enableSlowZoom = false;
+        c.system.enableFXAA = true;
+        c.system.fxaaQualitySubpix = 0.75f;
+        c.system.fxaaQualityEdgeThreshold = 0.125f;
+        c.system.fxaaQualityEdgeThresholdMin = 0.0625f;
         changed = true; controlsDirty = true;
     }
     ImGui::SameLine();
@@ -1014,59 +1017,62 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
     ImGui::SameLine();
     if (ImGui::Button("Turn all OFF")) { setAllExtraToggles(false); changed = true; controlsDirty = true; }
 
-#define EXTRA_SECTION(num, label, toggleField, slider) \
-    ImGui::Spacing(); ImGui::Text(num ". " label); ImGui::SameLine(); \
-    changed |= ImGui::Checkbox("On##" label, &c.toggleField); \
-    ImGui::Separator(); \
-    ImGui::BeginDisabled(!c.toggleField); \
-    slider \
-    ImGui::EndDisabled();
+#define EXTRA_SECTION(num, label, toggleExpr, slider) \
+    { \
+        ImGui::Spacing(); ImGui::Text(num ". " label); ImGui::SameLine(); \
+        auto& extraToggle__ = (toggleExpr); \
+        changed |= ImGui::Checkbox("On##" label, &extraToggle__); \
+        ImGui::Separator(); \
+        ImGui::BeginDisabled(!extraToggle__); \
+        slider \
+        ImGui::EndDisabled(); \
+    }
 
-    EXTRA_SECTION("1","Pixelate",  enablePixelate,  changed |= ImGui::SliderFloat("Pixelate amount", &c.pixelateAmount,  0,1,"%.2f");)
-    EXTRA_SECTION("2","Strobe",    enableStrobe,    changed |= ImGui::SliderFloat("Strobe speed",    &c.strobeSpeed,    0,20,"%.1f Hz");)
-    EXTRA_SECTION("3","Threshold", enableThreshold, changed |= ImGui::SliderFloat("Threshold level", &c.thresholdLevel,  0,1,"%.2f");)
-    EXTRA_SECTION("4","Slow Zoom", enableSlowZoom,  changed |= ImGui::SliderFloat("Slow zoom amount",&c.slowZoomAmount,  0,1,"%.2f");)
-    EXTRA_SECTION("5","Edge Detect", enableEdgeDetect,
-        changed |= ImGui::SliderFloat("Edge strength",  &c.edgeStrength,  0.1f, 5.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Edge threshold", &c.edgeThreshold, 0.0f, 1.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Edge blend",     &c.edgeBlend,     0.0f, 1.0f, "%.2f");
-        changed |= ImGui::ColorEdit3("Edge color", glm::value_ptr(c.edgeColor));
+    EXTRA_SECTION("1","Pixelate",  c.fx.enablePixelate,  changed |= ImGui::SliderFloat("Pixelate amount", &c.fx.pixelateAmount,  0,1,"%.2f");)
+    EXTRA_SECTION("2","Strobe",    c.fx.enableStrobe,    changed |= ImGui::SliderFloat("Strobe speed",    &c.fx.strobeSpeed,    0,20,"%.1f Hz");)
+    EXTRA_SECTION("3","Threshold", c.fx.enableThreshold, changed |= ImGui::SliderFloat("Threshold level", &c.fx.thresholdLevel,  0,1,"%.2f");)
+    EXTRA_SECTION("4","Slow Zoom", c.fx.enableSlowZoom,  changed |= ImGui::SliderFloat("Slow zoom amount",&c.fx.slowZoomAmount,  0,1,"%.2f");)
+    EXTRA_SECTION("5","Edge Detect", c.fx.enableEdgeDetect,
+        changed |= ImGui::SliderFloat("Edge strength",  &c.fx.edgeStrength,  0.1f, 5.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Edge threshold", &c.fx.edgeThreshold, 0.0f, 1.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Edge blend",     &c.fx.edgeBlend,     0.0f, 1.0f, "%.2f");
+        changed |= ImGui::ColorEdit3("Edge color", glm::value_ptr(c.fx.edgeColor));
     )
 #undef EXTRA_SECTION
 
     // FXAA - Fast Approximate Anti-Aliasing for smooth HD edges
     ImGui::Spacing(); ImGui::Text("6. FXAA (Anti-Aliasing)"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##FXAA", &c.enableFXAA);
+    changed |= ImGui::Checkbox("On##FXAA", &c.system.enableFXAA);
     ImGui::Separator();
-    ImGui::BeginDisabled(!c.enableFXAA);
-    changed |= ImGui::SliderFloat("Quality Subpix",      &c.fxaaQualitySubpix,       0.0f, 1.0f, "%.3f");
-    changed |= ImGui::SliderFloat("Edge Threshold",      &c.fxaaQualityEdgeThreshold, 0.0f, 0.5f, "%.4f");
-    changed |= ImGui::SliderFloat("Edge Threshold Min",  &c.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f, "%.4f");
+    ImGui::BeginDisabled(!c.system.enableFXAA);
+    changed |= ImGui::SliderFloat("Quality Subpix",      &c.system.fxaaQualitySubpix,       0.0f, 1.0f, "%.3f");
+    changed |= ImGui::SliderFloat("Edge Threshold",      &c.system.fxaaQualityEdgeThreshold, 0.0f, 0.5f, "%.4f");
+    changed |= ImGui::SliderFloat("Edge Threshold Min",  &c.system.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f, "%.4f");
     ImGui::EndDisabled();
 
     // Grid / Mirroring - Show video in multiple positions
     ImGui::Spacing(); ImGui::Text("7. Grid / Mirroring"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Grid", &c.enableGrid);
+    changed |= ImGui::Checkbox("On##Grid", &c.grid.enabled);
     ImGui::Separator();
-    ImGui::BeginDisabled(!c.enableGrid);
+    ImGui::BeginDisabled(!c.grid.enabled);
     static const char* gridModeLabels[] = {"Vertical (side by side)", "Horizontal (stacked)", "Matrix (grid 2D)"};
-    changed |= ImGui::Combo("Mode", &c.gridMode, gridModeLabels, 3);
+    changed |= ImGui::Combo("Mode", &c.grid.mode, gridModeLabels, 3);
 
-    if (c.gridMode == 2) {
+    if (c.grid.mode == 2) {
         // Matrix mode: show rows and columns
-        changed |= ImGui::SliderInt("Rows", &c.gridRows, 1, 8);
-        changed |= ImGui::SliderInt("Columns", &c.gridColumns, 1, 8);
+        changed |= ImGui::SliderInt("Rows", &c.grid.rows, 1, 8);
+        changed |= ImGui::SliderInt("Columns", &c.grid.columns, 1, 8);
     } else {
         // Vertical or Horizontal mode: show count
-        changed |= ImGui::SliderInt("Count", &c.gridCount, 2, 8);
+        changed |= ImGui::SliderInt("Count", &c.grid.count, 2, 8);
     }
 
-    changed |= ImGui::Checkbox("Mirror cells", &c.gridMirrorCells);
-    changed |= ImGui::Checkbox("Show grid lines", &c.gridShowLines);
-    ImGui::BeginDisabled(!c.gridShowLines);
-    changed |= ImGui::SliderFloat("Line width", &c.gridLineWidth, 0.0001f, 0.05f);
-    changed |= ImGui::SliderFloat("Line intensity", &c.gridLineIntensity, 0.0f, 1.0f);
-    changed |= ImGui::ColorEdit3("Line color", &c.gridLineColor[0]);
+    changed |= ImGui::Checkbox("Mirror cells", &c.grid.mirrorCells);
+    changed |= ImGui::Checkbox("Show grid lines", &c.grid.showLines);
+    ImGui::BeginDisabled(!c.grid.showLines);
+    changed |= ImGui::SliderFloat("Line width", &c.grid.lineWidth, 0.0001f, 0.05f);
+    changed |= ImGui::SliderFloat("Line intensity", &c.grid.lineIntensity, 0.0f, 1.0f);
+    changed |= ImGui::ColorEdit3("Line color", &c.grid.lineColor[0]);
     ImGui::EndDisabled();
     ImGui::EndDisabled();
 
@@ -1199,11 +1205,11 @@ void UISystem::drawDiagnostics(
         if (player.isReady()) {
             double fd  = std::max(1e-6, player.frameDuration());
             double fps = 1.0 / fd;
-            double oversample = std::max(1.0, static_cast<double>(controls.videoDecodeOversample));
+            double oversample = std::max(1.0, static_cast<double>(controls.playback.videoDecodeOversample));
             double playRate = [&]() -> double {
                 // Calculo inline de effectivePlaybackRate
-                double base = std::clamp((double)controls.videoPlaybackRate, 0.05, 8.0);
-                int idx = std::clamp(controls.forcedFpsIndex, 0,
+                double base = std::clamp((double)controls.playback.videoPlaybackRate, 0.05, 8.0);
+                int idx = std::clamp(controls.playback.forcedFpsIndex, 0,
                                      static_cast<int>(FORCED_FPS_OPTIONS_UI.size())-1);
                 int forced = FORCED_FPS_OPTIONS_UI[idx];
                 if (forced <= 0) return base;
@@ -1212,16 +1218,16 @@ void UISystem::drawDiagnostics(
             ImGui::Text("Clip FPS: %.2f",     fps);
             ImGui::Text("Display FPS: %.2f",  fps * playRate);
             ImGui::Text("Decode FPS:  %.2f",  fps * std::max(playRate, oversample));
-            if (controls.forcedFpsIndex > 0)
-                ImGui::Text("Forced FPS: %d", FORCED_FPS_OPTIONS_UI[controls.forcedFpsIndex]);
+            if (controls.playback.forcedFpsIndex > 0)
+                ImGui::Text("Forced FPS: %d", FORCED_FPS_OPTIONS_UI[controls.playback.forcedFpsIndex]);
         }
     } else {
         ImGui::Text("Video offline");
     }
 
     if (ImGui::Button("Reset Palette")) {
-        controls.primaryColor   = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
-        controls.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+        controls.color.primaryColor   = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
+        controls.color.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
     }
 
     const auto& assets = registry.getAssets();
@@ -1262,17 +1268,17 @@ void UISystem::drawDiagnostics(
         ImGui::Text("UBO delta: %.6f", diag.animationDelta);
         ImGui::Text("Speed multiplier: %.2fx", diag.animationRelativeSpeed);
         ImGui::Text("Seconds per unit: %.3f", diag.animationSecondsPerUnit);
-        bool targetChanged = ImGui::SliderFloat("Target seconds", &controls.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
+        bool targetChanged = ImGui::SliderFloat("Target seconds", &controls.playback.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
         if (targetChanged && callbacks.onControlsChanged) callbacks.onControlsChanged();
-        float suggestedSpeed = 1.0f / std::max(0.1f, controls.animationTargetSeconds);
+        float suggestedSpeed = 1.0f / std::max(0.1f, controls.playback.animationTargetSeconds);
         ImGui::Text("Suggested speed: %.2fx", suggestedSpeed);
         if (ImGui::Button("Apply suggested speed")) {
-            controls.animationSpeed = suggestedSpeed;
+            controls.playback.animationSpeed = suggestedSpeed;
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset time phase")) {
-            controls.animationSpeed = 1.0f;
-            controls.animationTargetSeconds = 1.0f;
+            controls.playback.animationSpeed = 1.0f;
+            controls.playback.animationTargetSeconds = 1.0f;
             if (callbacks.onControlsChanged) callbacks.onControlsChanged();
         }
     }
@@ -2063,24 +2069,24 @@ void UISystem::drawProceduralControlsContent(
     bool changed = false;
 
     ImGui::Text("Animation");
-    changed |= ImGui::SliderFloat("Speed", &controls.animationSpeed, 0.1f, 8.0f, "%.2fx");
-    changed |= ImGui::SliderFloat("Target change (s)", &controls.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
+    changed |= ImGui::SliderFloat("Speed", &controls.playback.animationSpeed, 0.1f, 8.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Target change (s)", &controls.playback.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
     ImGui::SameLine();
     if (ImGui::Button("Snap 1s")) {
-        controls.animationTargetSeconds = 1.0f;
-        controls.animationSpeed = 1.0f;
+        controls.playback.animationTargetSeconds = 1.0f;
+        controls.playback.animationSpeed = 1.0f;
         changed = true;
     }
 
     ImGui::Separator();
     ImGui::Text("Layers");
-    changed |= drawActiveLayerCombo("Active Layer", controls.activeMode);
+    changed |= drawActiveLayerCombo("Active Layer", controls.playback.activeMode);
 
     ImGui::Separator();
     ImGui::Text("Color Palette");
-    changed |= ImGui::ColorEdit4("Primary",   glm::value_ptr(controls.primaryColor));
-    changed |= ImGui::ColorEdit4("Secondary", glm::value_ptr(controls.secondaryColor));
-    changed |= ImGui::SliderFloat("Blend", &controls.colorBlend, 0.0f, 1.0f);
+    changed |= ImGui::ColorEdit4("Primary",   glm::value_ptr(controls.color.primaryColor));
+    changed |= ImGui::ColorEdit4("Secondary", glm::value_ptr(controls.color.secondaryColor));
+    changed |= ImGui::SliderFloat("Blend", &controls.color.colorBlend, 0.0f, 1.0f);
     
     if (ImGui::Button("Randomize Colors")) {
         std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
@@ -2111,17 +2117,17 @@ void UISystem::drawProceduralControlsContent(
             return glm::vec3(r + m, g + m, b + m);
         };
         
-        controls.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
-        controls.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, secondarySat, secondaryVal), 1.0f);
-        controls.primaryColor = controls.primaryColorTarget;
-        controls.secondaryColor = controls.secondaryColorTarget;
+        controls.color.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
+        controls.color.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, secondarySat, secondaryVal), 1.0f);
+        controls.color.primaryColor = controls.color.primaryColorTarget;
+        controls.color.secondaryColor = controls.color.secondaryColorTarget;
         changed = true;
         controlsDirty = true;
     }
     
-    changed |= ImGui::Checkbox("Auto Randomize", &controls.autoRandomizeColors);
-    if (controls.autoRandomizeColors) {
-        changed |= ImGui::SliderFloat("Interval (s)", &controls.colorRandomizeInterval, 0.1f, 5.0f, "%.1fs");
+    changed |= ImGui::Checkbox("Auto Randomize", &controls.color.autoRandomizeColors);
+    if (controls.color.autoRandomizeColors) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.color.colorRandomizeInterval, 0.1f, 5.0f, "%.1fs");
     }
 
     if (changed && callbacks.onControlsChanged) callbacks.onControlsChanged();
@@ -2146,33 +2152,33 @@ void UISystem::drawVideoContent(
     ImGui::Separator();
     ImGui::Text("Video Tweaks (Global)");
     ImGui::Separator();
-    changed |= ImGui::Checkbox("Enable dual video", &controls.enableDualVideo);
-    changed |= ImGui::SliderFloat("Grayscale", &controls.grayscaleAmount, 0.0f, 1.0f);
-    changed |= ImGui::SliderFloat("Sharpen",   &controls.sharpenAmount,   0.0f, 1.0f);
-    changed |= ImGui::Checkbox("Bicubic Upscale", &controls.upscaleEnabled);
-    changed |= ImGui::Checkbox("Auto Scale Video", &controls.autoScaleVideo);
+    changed |= ImGui::Checkbox("Enable dual video", &controls.playback.enableDualVideo);
+    changed |= ImGui::SliderFloat("Grayscale", &controls.playback.grayscaleAmount, 0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Sharpen",   &controls.playback.sharpenAmount,   0.0f, 1.0f);
+    changed |= ImGui::Checkbox("Bicubic Upscale", &controls.playback.upscaleEnabled);
+    changed |= ImGui::Checkbox("Auto Scale Video", &controls.playback.autoScaleVideo);
     
-    if (ImGui::SliderFloat("Decode oversample", &controls.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
-        controls.videoDecodeOversample = std::clamp(controls.videoDecodeOversample, 1.0f, 8.0f);
+    if (ImGui::SliderFloat("Decode oversample", &controls.playback.videoDecodeOversample, 1.0f, 8.0f, "%.1fx")) {
+        controls.playback.videoDecodeOversample = std::clamp(controls.playback.videoDecodeOversample, 1.0f, 8.0f);
         changed = true;
     }
 
     static const char* forceFpsLabels[] = {"Off", "15 fps", "24 fps", "30 fps", "60 fps"};
-    int forceIdx = std::clamp(controls.forcedFpsIndex, 0,
+    int forceIdx = std::clamp(controls.playback.forcedFpsIndex, 0,
                               static_cast<int>(FORCED_FPS_OPTIONS_UI.size()) - 1);
-    if (forceIdx != controls.forcedFpsIndex) { controls.forcedFpsIndex = forceIdx; changed = true; }
+    if (forceIdx != controls.playback.forcedFpsIndex) { controls.playback.forcedFpsIndex = forceIdx; changed = true; }
     if (ImGui::Combo("Force FPS", &forceIdx, forceFpsLabels, IM_ARRAYSIZE(forceFpsLabels))) {
-        controls.forcedFpsIndex = forceIdx;
+        controls.playback.forcedFpsIndex = forceIdx;
         changed = true;
     }
 
-    changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
+    changed |= ImGui::SliderFloat("Loop crossfade (s)", &controls.playback.loopBlendSeconds, 0.0f, 2.0f, "%.2f s");
     changed |= ImGui::Checkbox("Allow dimension change recreation", &allowDimensionChangeRecreation);
 
     ImGui::Separator();
     ImGui::Text("Video 1 Randomization");
-    changed |= ImGui::Checkbox("Random Start Video 1", &controls.randomVideoStart);
-    if (controls.randomVideoStart) {
+    changed |= ImGui::Checkbox("Random Start Video 1", &controls.playback.randomVideoStart);
+    if (controls.playback.randomVideoStart) {
         ImGui::SameLine();
         if (ImGui::Button("Jump Random") && callbacks.onJumpRandom) {
             callbacks.onJumpRandom();
@@ -2180,9 +2186,9 @@ void UISystem::drawVideoContent(
     }
 
     ImGui::Indent();
-    changed |= ImGui::Checkbox("Auto jump interval", &controls.enableRandomJumpInterval);
-    if (controls.enableRandomJumpInterval) {
-        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval, 1.0f, 60.0f, "%.1f s");
+    changed |= ImGui::Checkbox("Auto jump interval", &controls.playback.enableRandomJumpInterval);
+    if (controls.playback.enableRandomJumpInterval) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.playback.randomJumpInterval, 1.0f, 60.0f, "%.1f s");
     }
     ImGui::Unindent();
 
@@ -2190,13 +2196,13 @@ void UISystem::drawVideoContent(
     ImGui::Text("Video 1");
     ImGui::Separator();
     ImGui::Text("Playback");
-    changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("Video Mix",   &controls.playback.videoMix,         0.0f, 1.0f);
     ImGui::Indent();
     ImGui::TextDisabled("Blend vs. procedural");
-    changed |= ImGui::Combo("##VideoProceduralBlend", &controls.blendModeProcedural, BLEND_ITEMS);
-    changed |= ImGui::SliderFloat("Procedural Mix##Video", &controls.blendProceduralMix, 0.0f, 2.0f, "%.2f");
+    changed |= ImGui::Combo("##VideoProceduralBlend", &controls.blending.blendModeProcedural, BLEND_ITEMS);
+    changed |= ImGui::SliderFloat("Procedural Mix##Video", &controls.blending.blendProceduralMix, 0.0f, 2.0f, "%.2f");
     ImGui::Unindent();
-    changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Video speed", &controls.playback.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
 
     ImGui::Separator();
     ImGui::Text("Selection");
@@ -2229,9 +2235,9 @@ void UISystem::drawVideoContent(
     }
 
     int currentFolderIndex = 0;
-    if (!controls.selectedVideoFolder.empty()) {
+    if (!controls.playback.selectedVideoFolder.empty()) {
         for (size_t i = 0; i < availableFolders.size(); ++i) {
-            if (availableFolders[i] == controls.selectedVideoFolder) {
+            if (availableFolders[i] == controls.playback.selectedVideoFolder) {
                 currentFolderIndex = static_cast<int>(i);
                 break;
             }
@@ -2240,21 +2246,21 @@ void UISystem::drawVideoContent(
 
     if (ImGui::Combo("Load Folder##V1", &currentFolderIndex, folderItems.data(), static_cast<int>(folderItems.size()))) {
         std::string newFolder = (currentFolderIndex == 0) ? "" : availableFolders[currentFolderIndex];
-        if (controls.selectedVideoFolder != newFolder) {
-            controls.selectedVideoFolder = newFolder;
+        if (controls.playback.selectedVideoFolder != newFolder) {
+            controls.playback.selectedVideoFolder = newFolder;
             if (callbacks.onFolderChanged) {
                 callbacks.onFolderChanged();
             }
         }
     }
 
-    if (controls.selectedVideoFolder.empty()) {
+    if (controls.playback.selectedVideoFolder.empty()) {
         ImGui::Text("Current loaded folder: All Folders");
     } else {
-        ImGui::Text("Current loaded folder: %s", controls.selectedVideoFolder.c_str());
+        ImGui::Text("Current loaded folder: %s", controls.playback.selectedVideoFolder.c_str());
     }
 
-    const auto& assets = registry.getFilteredAssets(controls.selectedVideoFolder);
+    const auto& assets = registry.getFilteredAssets(controls.playback.selectedVideoFolder);
     if (assets.empty()) {
         ImGui::TextDisabled("No videos found in this folder");
     } else {
@@ -2329,17 +2335,17 @@ void UISystem::drawVideoContent(
     ImGui::Text("Video 2");
     ImGui::Separator();
     ImGui::Text("Playback");
-    ImGui::BeginDisabled(!controls.enableDualVideo);
-    changed |= ImGui::SliderFloat("Video 2 Mix", &controls.video2Mix, 0.0f, 1.0f);
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    changed |= ImGui::SliderFloat("Video 2 Mix", &controls.playback.video2Mix, 0.0f, 1.0f);
     static const char* blendLabels = "Mix\0Add\0Multiply\0Screen\0Difference\0";
-    changed |= ImGui::Combo("Blend Mode", &controls.video2BlendMode, blendLabels, 5);
-    changed |= ImGui::SliderFloat("Video 2 speed", &controls.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
+    changed |= ImGui::Combo("Blend Mode", &controls.playback.video2BlendMode, blendLabels, 5);
+    changed |= ImGui::SliderFloat("Video 2 speed", &controls.playback.video2PlaybackRate, 0.1f, 5.0f, "%.2fx");
     ImGui::EndDisabled();
 
     ImGui::Separator();
     ImGui::Text("Randomization");
-    changed |= ImGui::Checkbox("Random Start Video 2", &controls.randomVideo2Start);
-    if (controls.randomVideo2Start) {
+    changed |= ImGui::Checkbox("Random Start Video 2", &controls.playback.randomVideo2Start);
+    if (controls.playback.randomVideo2Start) {
         ImGui::SameLine();
         if (ImGui::Button("Jump Random##V2") && callbacks.onJumpRandom) {
             callbacks.onJumpRandom();
@@ -2347,9 +2353,9 @@ void UISystem::drawVideoContent(
     }
 
     ImGui::Indent();
-    changed |= ImGui::Checkbox("Auto jump interval", &controls.enableRandomJumpInterval2);
-    if (controls.enableRandomJumpInterval2) {
-        changed |= ImGui::SliderFloat("Interval (s)", &controls.randomJumpInterval2, 1.0f, 60.0f, "%.1f s");
+    changed |= ImGui::Checkbox("Auto jump interval", &controls.playback.enableRandomJumpInterval2);
+    if (controls.playback.enableRandomJumpInterval2) {
+        changed |= ImGui::SliderFloat("Interval (s)", &controls.playback.randomJumpInterval2, 1.0f, 60.0f, "%.1f s");
     }
     ImGui::Unindent();
 
@@ -2357,9 +2363,9 @@ void UISystem::drawVideoContent(
     ImGui::Text("Selection");
 
     int currentFolder2Index = 0;
-    if (!controls.selectedVideo2Folder.empty()) {
+    if (!controls.playback.selectedVideo2Folder.empty()) {
         for (size_t i = 0; i < availableFolders.size(); ++i) {
-            if (availableFolders[i] == controls.selectedVideo2Folder) {
+            if (availableFolders[i] == controls.playback.selectedVideo2Folder) {
                 currentFolder2Index = static_cast<int>(i);
                 break;
             }
@@ -2368,21 +2374,21 @@ void UISystem::drawVideoContent(
 
     if (ImGui::Combo("Load Folder##V2", &currentFolder2Index, folderItems.data(), static_cast<int>(folderItems.size()))) {
         std::string newFolder = (currentFolder2Index == 0) ? "" : availableFolders[currentFolder2Index];
-        if (controls.selectedVideo2Folder != newFolder) {
-            controls.selectedVideo2Folder = newFolder;
+        if (controls.playback.selectedVideo2Folder != newFolder) {
+            controls.playback.selectedVideo2Folder = newFolder;
             if (callbacks.onFolderChanged2) {
                 callbacks.onFolderChanged2();
             }
         }
     }
 
-    if (controls.selectedVideo2Folder.empty()) {
+    if (controls.playback.selectedVideo2Folder.empty()) {
         ImGui::Text("Current loaded folder: All Folders");
     } else {
-        ImGui::Text("Current loaded folder: %s", controls.selectedVideo2Folder.c_str());
+        ImGui::Text("Current loaded folder: %s", controls.playback.selectedVideo2Folder.c_str());
     }
 
-    const auto& assets2 = registry.getFilteredAssets(controls.selectedVideo2Folder);
+    const auto& assets2 = registry.getFilteredAssets(controls.playback.selectedVideo2Folder);
     if (assets2.empty()) {
         ImGui::TextDisabled("No videos found in this folder");
     } else {
@@ -2472,16 +2478,16 @@ void UISystem::drawPostFxContent(
     ImGui::Text("Post FX");
 
     auto setPostFxEnabled = [&](bool enabled) {
-        controls.enablePostCrtCurvature  = enabled;
-        controls.enablePostScanMask      = enabled;
-        controls.enablePostVignette      = enabled;
-        controls.enablePostFishEye       = enabled;
-        controls.enablePostBloom         = enabled;
-        controls.enablePostAberration    = enabled;
-        controls.enablePostGrain         = enabled;
-        controls.enablePostBend          = enabled;
-        controls.enablePostGlitch        = enabled;
-        controls.enablePostColorBalance  = enabled;
+        controls.post.enablePostCrtCurvature  = enabled;
+        controls.post.enablePostScanMask      = enabled;
+        controls.post.enablePostVignette      = enabled;
+        controls.post.enablePostFishEye       = enabled;
+        controls.post.enablePostBloom         = enabled;
+        controls.post.enablePostAberration    = enabled;
+        controls.post.enablePostGrain         = enabled;
+        controls.post.enablePostBend          = enabled;
+        controls.post.enablePostGlitch        = enabled;
+        controls.post.enablePostColorBalance  = enabled;
     };
 
     if (ImGui::Button("Randomize Post FX")) {
@@ -2489,34 +2495,34 @@ void UISystem::drawPostFxContent(
         auto rr = [&](float lo, float hi) {
             return std::uniform_real_distribution<float>(lo, hi)(rng);
         };
-        if (controls.enablePostCrtCurvature)  { controls.crtCurvature = rr(0,0.6f); controls.crtHorizontalCurvature = rr(0,0.6f); }
-        if (controls.enablePostScanMask)       { controls.crtScanlineIntensity = u01(rng); controls.crtMaskIntensity = u01(rng); }
-        if (controls.enablePostVignette)       { controls.crtVignette = u01(rng); }
-        if (controls.enablePostFishEye)        { controls.crtFishEye = rr(-3,3); }
-        if (controls.enablePostBloom)          { controls.bloomIntensity = rr(0,2); controls.bloomThreshold = u01(rng); }
-        if (controls.enablePostAberration)     { controls.aberrationAmount = rr(-0.05f,0.05f); }
-        if (controls.enablePostGrain)          { controls.grainStrength = rr(0,0.5f); }
-        if (controls.enablePostBend)           { controls.bendAmount = u01(rng); }
-        if (controls.enablePostGlitch)         { controls.glitchAmount = u01(rng); }
-        if (controls.enablePostColorBalance)   { controls.colorBalance = glm::vec3(rr(0,2), rr(0,2), rr(0,2)); }
+        if (controls.post.enablePostCrtCurvature)  { controls.post.crtCurvature = rr(0,0.6f); controls.post.crtHorizontalCurvature = rr(0,0.6f); }
+        if (controls.post.enablePostScanMask)       { controls.post.crtScanlineIntensity = u01(rng); controls.post.crtMaskIntensity = u01(rng); }
+        if (controls.post.enablePostVignette)       { controls.post.crtVignette = u01(rng); }
+        if (controls.post.enablePostFishEye)        { controls.post.crtFishEye = rr(-3,3); }
+        if (controls.post.enablePostBloom)          { controls.post.bloomIntensity = rr(0,2); controls.post.bloomThreshold = u01(rng); }
+        if (controls.post.enablePostAberration)     { controls.post.aberrationAmount = rr(-0.05f,0.05f); }
+        if (controls.post.enablePostGrain)          { controls.post.grainStrength = rr(0,0.5f); }
+        if (controls.post.enablePostBend)           { controls.fx.bendAmount = u01(rng); }
+        if (controls.post.enablePostGlitch)         { controls.fx.glitchAmount = u01(rng); }
+        if (controls.post.enablePostColorBalance)   { controls.color.colorBalance = glm::vec3(rr(0,2), rr(0,2), rr(0,2)); }
         controlsDirty = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("Reset Post FX")) {
         setPostFxEnabled(false);
-        controls.crtCurvature           = 0.15f;
-        controls.crtHorizontalCurvature = 0.15f;
-        controls.crtScanlineIntensity   = 0.35f;
-        controls.crtMaskIntensity       = 0.35f;
-        controls.crtVignette            = 0.55f;
-        controls.crtFishEye             = 0.0f;
-        controls.bloomIntensity         = 0.45f;
-        controls.bloomThreshold         = 0.7f;
-        controls.aberrationAmount       = 0.02f;
-        controls.grainStrength          = 0.15f;
-        controls.bendAmount             = 0.0f;
-        controls.glitchAmount           = 0.0f;
-        controls.colorBalance           = glm::vec3(1.0f);
+        controls.post.crtCurvature           = 0.15f;
+        controls.post.crtHorizontalCurvature = 0.15f;
+        controls.post.crtScanlineIntensity   = 0.35f;
+        controls.post.crtMaskIntensity       = 0.35f;
+        controls.post.crtVignette            = 0.55f;
+        controls.post.crtFishEye             = 0.0f;
+        controls.post.bloomIntensity         = 0.45f;
+        controls.post.bloomThreshold         = 0.7f;
+        controls.post.aberrationAmount       = 0.02f;
+        controls.post.grainStrength          = 0.15f;
+        controls.fx.bendAmount             = 0.0f;
+        controls.fx.glitchAmount           = 0.0f;
+        controls.color.colorBalance           = glm::vec3(1.0f);
         changed = true; controlsDirty = true;
     }
     ImGui::SameLine();
@@ -2527,44 +2533,47 @@ void UISystem::drawPostFxContent(
     ImGui::Separator();
 
     // Macros para no repetir el patron checkbox+slider
-#define POST_FX_SECTION(label, toggleField, ...) \
-    changed |= ImGui::Checkbox(label, &controls.toggleField); \
-    ImGui::BeginDisabled(!controls.toggleField); \
-    __VA_ARGS__ \
-    ImGui::EndDisabled();
+#define POST_FX_SECTION(label, toggleExpr, ...) \
+    { \
+        auto& postToggle__ = (toggleExpr); \
+        changed |= ImGui::Checkbox(label, &postToggle__); \
+        ImGui::BeginDisabled(!postToggle__); \
+        __VA_ARGS__ \
+        ImGui::EndDisabled(); \
+    }
 
-    POST_FX_SECTION("CRT Curvature", enablePostCrtCurvature,
-        changed |= ImGui::SliderFloat("CRT Curvature V", &controls.crtCurvature, 0.0f, 0.6f, "%.2f");
-        changed |= ImGui::SliderFloat("CRT Curvature H", &controls.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
+    POST_FX_SECTION("CRT Curvature", controls.post.enablePostCrtCurvature,
+        changed |= ImGui::SliderFloat("CRT Curvature V", &controls.post.crtCurvature, 0.0f, 0.6f, "%.2f");
+        changed |= ImGui::SliderFloat("CRT Curvature H", &controls.post.crtHorizontalCurvature, 0.0f, 0.6f, "%.2f");
     )
-    POST_FX_SECTION("Scanlines / Mask", enablePostScanMask,
-        changed |= ImGui::SliderFloat("CRT Scanlines", &controls.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
-        changed |= ImGui::SliderFloat("CRT Mask",      &controls.crtMaskIntensity,     0.0f, 1.0f, "%.2f");
+    POST_FX_SECTION("Scanlines / Mask", controls.post.enablePostScanMask,
+        changed |= ImGui::SliderFloat("CRT Scanlines", &controls.post.crtScanlineIntensity, 0.0f, 1.0f, "%.2f");
+        changed |= ImGui::SliderFloat("CRT Mask",      &controls.post.crtMaskIntensity,     0.0f, 1.0f, "%.2f");
     )
-    POST_FX_SECTION("Vignette", enablePostVignette,
-        changed |= ImGui::SliderFloat("CRT Black Bars", &controls.crtVignette, 0.0f, 1.0f, "%.2f");
+    POST_FX_SECTION("Vignette", controls.post.enablePostVignette,
+        changed |= ImGui::SliderFloat("CRT Black Bars", &controls.post.crtVignette, 0.0f, 1.0f, "%.2f");
     )
-    POST_FX_SECTION("Fish-eye", enablePostFishEye,
-        changed |= ImGui::SliderFloat("CRT Fish-eye", &controls.crtFishEye, -3.0f, 3.0f, "%.2f");
+    POST_FX_SECTION("Fish-eye", controls.post.enablePostFishEye,
+        changed |= ImGui::SliderFloat("CRT Fish-eye", &controls.post.crtFishEye, -3.0f, 3.0f, "%.2f");
     )
-    POST_FX_SECTION("Bloom", enablePostBloom,
-        changed |= ImGui::SliderFloat("Bloom Intensity", &controls.bloomIntensity, 0.0f, 2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Bloom Threshold", &controls.bloomThreshold, 0.0f, 1.0f, "%.2f");
+    POST_FX_SECTION("Bloom", controls.post.enablePostBloom,
+        changed |= ImGui::SliderFloat("Bloom Intensity", &controls.post.bloomIntensity, 0.0f, 2.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Bloom Threshold", &controls.post.bloomThreshold, 0.0f, 1.0f, "%.2f");
     )
-    POST_FX_SECTION("Aberration##Toggle", enablePostAberration,
-        changed |= ImGui::SliderFloat("Aberration", &controls.aberrationAmount, -0.05f, 0.05f, "%.3f");
+    POST_FX_SECTION("Aberration##Toggle", controls.post.enablePostAberration,
+        changed |= ImGui::SliderFloat("Aberration", &controls.post.aberrationAmount, -0.05f, 0.05f, "%.3f");
     )
-    POST_FX_SECTION("Film Grain##Toggle", enablePostGrain,
-        changed |= ImGui::SliderFloat("Film Grain", &controls.grainStrength, 0.0f, 0.5f, "%.2f");
+    POST_FX_SECTION("Film Grain##Toggle", controls.post.enablePostGrain,
+        changed |= ImGui::SliderFloat("Film Grain", &controls.post.grainStrength, 0.0f, 0.5f, "%.2f");
     )
-    POST_FX_SECTION("Screen Bend", enablePostBend,
-        changed |= ImGui::SliderFloat("Bend Amount", &controls.bendAmount, 0.0f, 1.0f, "%.2f");
+    POST_FX_SECTION("Screen Bend", controls.post.enablePostBend,
+        changed |= ImGui::SliderFloat("Bend Amount", &controls.fx.bendAmount, 0.0f, 1.0f, "%.2f");
     )
-    POST_FX_SECTION("Glitch wrapper", enablePostGlitch,
-        changed |= ImGui::SliderFloat("Glitch Intensity", &controls.glitchAmount, 0.0f, 1.0f, "%.2f");
+    POST_FX_SECTION("Glitch wrapper", controls.post.enablePostGlitch,
+        changed |= ImGui::SliderFloat("Glitch Intensity", &controls.fx.glitchAmount, 0.0f, 1.0f, "%.2f");
     )
-    POST_FX_SECTION("RGB Mix##Toggle", enablePostColorBalance,
-        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.colorBalance), 0.0f, 2.0f);
+    POST_FX_SECTION("RGB Mix##Toggle", controls.post.enablePostColorBalance,
+        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.color.colorBalance), 0.0f, 2.0f);
     )
 #undef POST_FX_SECTION
 
@@ -2583,10 +2592,10 @@ void UISystem::drawVJayBasicsContent(
     static const char* BLEND_ITEMS = "Add\0Screen\0Multiply\0Overlay\0Difference\0Soft Light\0";
 
     auto setAllToggles = [&](bool v) {
-        controls.enableColorGrading  = v; controls.enableFeedback    = v; controls.enableDistortion = v;
-        controls.enableBlurMotion    = v; controls.enableSharpen     = v; controls.enableGlitch     = v;
-        controls.enableBlending      = v; controls.enableAnalog      = v; controls.enableAudioReactive = v;
-        controls.enableTemporal      = v;
+        controls.color.enableColorGrading  = v; controls.temporal.enableFeedback    = v; controls.fx.enableDistortion = v;
+        controls.fx.enableBlurMotion    = v; controls.fx.enableSharpen     = v; controls.fx.enableGlitch     = v;
+        controls.blending.enableBlending      = v; controls.post.enableAnalog      = v; controls.system.enableAudioReactive = v;
+        controls.temporal.enableTemporal      = v;
     };
 
     if (ImGui::Button("Randomize VJAY basics")) {
@@ -2600,156 +2609,156 @@ void UISystem::drawVJayBasicsContent(
     ImGui::SameLine();
     if (ImGui::Button("Reset VJAY basics")) {
         setAllToggles(false);
-        controls.gradeBrightness = 0; controls.gradeContrast = 1; controls.gradeSaturation = 1;
-        controls.gradeHueShift = 0; controls.gradeGamma = 1; controls.colorLUTIndex = 0;
-        controls.splitToneBalance = 0.5f;
-        controls.splitToneShadows = glm::vec3(0); controls.splitToneHighlights = glm::vec3(1);
-        controls.feedbackAmount = 0; controls.trailStrength = 0; controls.temporalAccumulation = 0;
-        controls.feedbackDecay = 0; controls.recursiveBlend = 0;
-        controls.uvWarpStrength = 0; controls.rippleStrength = 0; controls.rippleFrequency = 1;
-        controls.swirlStrength = 0; controls.displacementAmount = 0; controls.kaleidoSegments = 6;
-        controls.tunnelDepth = 0; controls.tunnelCurvature = 0;
-        controls.gaussianBlur = 0; controls.directionalBlur = 0; controls.directionalBlurAngle = 0;
-        controls.zoomBlur = 0; controls.motionBlur = 0; controls.temporalBlur = 0;
-        controls.unsharpMask = 0; controls.casAmount = 0; controls.localContrast = 0;
-        controls.glitchDatamosh = 0; controls.glitchRGBSplit = 0; controls.glitchScanlineBreak = 0;
-        controls.glitchJitter = 0; controls.glitchTearing = 0; controls.glitchPixelSort = 0; controls.glitchBufferCorruption = 0;
-        controls.blendModeProcedural = 0; controls.blendModeVideo = 1; controls.blendModeFeedback = 2;
-        controls.blendProceduralMix = 1; controls.blendVideoMix = 1; controls.blendFeedbackMix = 0.5f;
-        controls.analogScanlineFocus = 0.5f; controls.analogMaskBalance = 0.5f; controls.analogNoise = 0.2f;
-        controls.analogBloom = 0.3f; controls.vhsDistortion = 0; controls.analogChromaticAberration = 0.02f;
-        controls.audioWarpResponse = 0; controls.audioFeedbackResponse = 0; controls.audioBlurResponse = 0;
-        controls.audioColorResponse = 0; controls.audioGlitchResponse = 0; controls.audioBeatSync = 0; controls.audioLfoRate = 0.5f;
-        controls.temporalInterpolation = 0; controls.temporalBlendStrength = 0; controls.slowMotionFactor = 1; controls.frameAccumulation = 0;
+        controls.color.gradeBrightness = 0; controls.color.gradeContrast = 1; controls.color.gradeSaturation = 1;
+        controls.color.gradeHueShift = 0; controls.color.gradeGamma = 1; controls.color.colorLUTIndex = 0;
+        controls.color.splitToneBalance = 0.5f;
+        controls.color.splitToneShadows = glm::vec3(0); controls.color.splitToneHighlights = glm::vec3(1);
+        controls.temporal.feedbackAmount = 0; controls.temporal.trailStrength = 0; controls.temporal.temporalAccumulation = 0;
+        controls.temporal.feedbackDecay = 0; controls.temporal.recursiveBlend = 0;
+        controls.fx.uvWarpStrength = 0; controls.fx.rippleStrength = 0; controls.fx.rippleFrequency = 1;
+        controls.fx.swirlStrength = 0; controls.fx.displacementAmount = 0; controls.fx.kaleidoSegments = 6;
+        controls.fx.tunnelDepth = 0; controls.fx.tunnelCurvature = 0;
+        controls.fx.gaussianBlur = 0; controls.fx.directionalBlur = 0; controls.fx.directionalBlurAngle = 0;
+        controls.fx.zoomBlur = 0; controls.fx.motionBlur = 0; controls.fx.temporalBlur = 0;
+        controls.fx.unsharpMask = 0; controls.fx.casAmount = 0; controls.fx.localContrast = 0;
+        controls.fx.glitchDatamosh = 0; controls.fx.glitchRGBSplit = 0; controls.fx.glitchScanlineBreak = 0;
+        controls.fx.glitchJitter = 0; controls.fx.glitchTearing = 0; controls.fx.glitchPixelSort = 0; controls.fx.glitchBufferCorruption = 0;
+        controls.blending.blendModeProcedural = 0; controls.blending.blendModeVideo = 1; controls.blending.blendModeFeedback = 2;
+        controls.blending.blendProceduralMix = 1; controls.blending.blendVideoMix = 1; controls.blending.blendFeedbackMix = 0.5f;
+        controls.post.analogScanlineFocus = 0.5f; controls.post.analogMaskBalance = 0.5f; controls.post.analogNoise = 0.2f;
+        controls.post.analogBloom = 0.3f; controls.post.vhsDistortion = 0; controls.post.analogChromaticAberration = 0.02f;
+        controls.audio.warpResponse = 0; controls.audio.feedbackResponse = 0; controls.audio.blurResponse = 0;
+        controls.audio.colorResponse = 0; controls.audio.glitchResponse = 0; controls.audio.beatSync = 0; controls.audio.lfoRate = 0.5f;
+        controls.playback.temporalInterpolation = 0; controls.playback.temporalBlendStrength = 0; controls.playback.slowMotionFactor = 1; controls.playback.frameAccumulation = 0;
         changed = true; controlsDirty = true;
     }
 
     ImGui::Text("1. Color grading dinamico"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Color grading", &controls.enableColorGrading);
+    changed |= ImGui::Checkbox("On##Color grading", &controls.color.enableColorGrading);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableColorGrading);
-    changed |= ImGui::SliderFloat("Brightness",       &controls.gradeBrightness,  -1.0f, 1.0f,   "%.2f");
-    changed |= ImGui::SliderFloat("Contrast",         &controls.gradeContrast,     0.1f, 2.5f,   "%.2f");
-    changed |= ImGui::SliderFloat("Saturation",       &controls.gradeSaturation,   0.0f, 2.5f,   "%.2f");
-    changed |= ImGui::SliderFloat("Hue shift",        &controls.gradeHueShift,  -180.0f, 180.0f, "%.1f°");
-    changed |= ImGui::SliderFloat("Gamma",            &controls.gradeGamma,        0.4f, 3.0f,   "%.2f");
-    changed |= ImGui::Combo("LUT",                    &controls.colorLUTIndex,     LUT_ITEMS);
-    changed |= ImGui::SliderFloat("Split tone balance",&controls.splitToneBalance, 0.0f, 1.0f,   "%.2f");
-    changed |= ImGui::ColorEdit3("Split tone shadows",    glm::value_ptr(controls.splitToneShadows));
-    changed |= ImGui::ColorEdit3("Split tone highlights", glm::value_ptr(controls.splitToneHighlights));
+    ImGui::BeginDisabled(!controls.color.enableColorGrading);
+    changed |= ImGui::SliderFloat("Brightness",       &controls.color.gradeBrightness,  -1.0f, 1.0f,   "%.2f");
+    changed |= ImGui::SliderFloat("Contrast",         &controls.color.gradeContrast,     0.1f, 2.5f,   "%.2f");
+    changed |= ImGui::SliderFloat("Saturation",       &controls.color.gradeSaturation,   0.0f, 2.5f,   "%.2f");
+    changed |= ImGui::SliderFloat("Hue shift",        &controls.color.gradeHueShift,  -180.0f, 180.0f, "%.1f°");
+    changed |= ImGui::SliderFloat("Gamma",            &controls.color.gradeGamma,        0.4f, 3.0f,   "%.2f");
+    changed |= ImGui::Combo("LUT",                    &controls.color.colorLUTIndex,     LUT_ITEMS);
+    changed |= ImGui::SliderFloat("Split tone balance",&controls.color.splitToneBalance, 0.0f, 1.0f,   "%.2f");
+    changed |= ImGui::ColorEdit3("Split tone shadows",    glm::value_ptr(controls.color.splitToneShadows));
+    changed |= ImGui::ColorEdit3("Split tone highlights", glm::value_ptr(controls.color.splitToneHighlights));
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("2. Feedback temporal"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Feedback", &controls.enableFeedback);
+    changed |= ImGui::Checkbox("On##Feedback", &controls.temporal.enableFeedback);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableFeedback);
-    changed |= ImGui::SliderFloat("Feedback",              &controls.feedbackAmount,      0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Trails",                &controls.trailStrength,       0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Temporal accumulation", &controls.temporalAccumulation,0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Decay",                 &controls.feedbackDecay,       0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Recursive blend",       &controls.recursiveBlend,      0,1,"%.2f");
+    ImGui::BeginDisabled(!controls.temporal.enableFeedback);
+    changed |= ImGui::SliderFloat("Feedback",              &controls.temporal.feedbackAmount,      0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Trails",                &controls.temporal.trailStrength,       0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Temporal accumulation", &controls.temporal.temporalAccumulation,0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Decay",                 &controls.temporal.feedbackDecay,       0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Recursive blend",       &controls.temporal.recursiveBlend,      0,1,"%.2f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("3. Distorsion espacial"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Distortion", &controls.enableDistortion);
+    changed |= ImGui::Checkbox("On##Distortion", &controls.fx.enableDistortion);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableDistortion);
-    changed |= ImGui::SliderFloat("UV warp",      &controls.uvWarpStrength,    0.0f,  0.5f, "%.3f");
-    changed |= ImGui::SliderFloat("Ripple",       &controls.rippleStrength,    0.0f,  0.5f, "%.3f");
-    changed |= ImGui::SliderFloat("Ripple freq",  &controls.rippleFrequency,   0.5f,  6.0f, "%.1f");
-    changed |= ImGui::SliderFloat("Swirl",        &controls.swirlStrength,    -0.5f,  0.5f, "%.3f");
-    changed |= ImGui::SliderFloat("Displacement", &controls.displacementAmount,0.0f,  0.5f, "%.3f");
-    changed |= ImGui::SliderFloat("Kaleido segs", &controls.kaleidoSegments,   3.0f, 12.0f, "%.0f");
-    changed |= ImGui::SliderFloat("Tunnel depth", &controls.tunnelDepth,       0.0f,  0.5f, "%.3f");
-    changed |= ImGui::SliderFloat("Tunnel curv",  &controls.tunnelCurvature,  -0.5f,  0.5f, "%.3f");
+    ImGui::BeginDisabled(!controls.fx.enableDistortion);
+    changed |= ImGui::SliderFloat("UV warp",      &controls.fx.uvWarpStrength,    0.0f,  0.5f, "%.3f");
+    changed |= ImGui::SliderFloat("Ripple",       &controls.fx.rippleStrength,    0.0f,  0.5f, "%.3f");
+    changed |= ImGui::SliderFloat("Ripple freq",  &controls.fx.rippleFrequency,   0.5f,  6.0f, "%.1f");
+    changed |= ImGui::SliderFloat("Swirl",        &controls.fx.swirlStrength,    -0.5f,  0.5f, "%.3f");
+    changed |= ImGui::SliderFloat("Displacement", &controls.fx.displacementAmount,0.0f,  0.5f, "%.3f");
+    changed |= ImGui::SliderFloat("Kaleido segs", &controls.fx.kaleidoSegments,   3.0f, 12.0f, "%.0f");
+    changed |= ImGui::SliderFloat("Tunnel depth", &controls.fx.tunnelDepth,       0.0f,  0.5f, "%.3f");
+    changed |= ImGui::SliderFloat("Tunnel curv",  &controls.fx.tunnelCurvature,  -0.5f,  0.5f, "%.3f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("4. Blur & motion"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Blur", &controls.enableBlurMotion);
+    changed |= ImGui::Checkbox("On##Blur", &controls.fx.enableBlurMotion);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableBlurMotion);
-    changed |= ImGui::SliderFloat("Gaussian blur",     &controls.gaussianBlur,        0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Directional blur",  &controls.directionalBlur,     0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Directional angle", &controls.directionalBlurAngle,0,360,"%.0f°");
-    changed |= ImGui::SliderFloat("Zoom blur",         &controls.zoomBlur,            0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Motion blur",       &controls.motionBlur,          0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Temporal blur",     &controls.temporalBlur,        0,1,"%.2f");
+    ImGui::BeginDisabled(!controls.fx.enableBlurMotion);
+    changed |= ImGui::SliderFloat("Gaussian blur",     &controls.fx.gaussianBlur,        0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Directional blur",  &controls.fx.directionalBlur,     0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Directional angle", &controls.fx.directionalBlurAngle,0,360,"%.0f°");
+    changed |= ImGui::SliderFloat("Zoom blur",         &controls.fx.zoomBlur,            0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Motion blur",       &controls.fx.motionBlur,          0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Temporal blur",     &controls.fx.temporalBlur,        0,1,"%.2f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("5. Sharpen / detalle"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Sharpen", &controls.enableSharpen);
+    changed |= ImGui::Checkbox("On##Sharpen", &controls.fx.enableSharpen);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableSharpen);
-    changed |= ImGui::SliderFloat("Unsharp mask",  &controls.unsharpMask,   0,1,"%.2f");
-    changed |= ImGui::SliderFloat("CAS",           &controls.casAmount,     0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Local contrast",&controls.localContrast, 0,1,"%.2f");
+    ImGui::BeginDisabled(!controls.fx.enableSharpen);
+    changed |= ImGui::SliderFloat("Unsharp mask",  &controls.fx.unsharpMask,   0,1,"%.2f");
+    changed |= ImGui::SliderFloat("CAS",           &controls.fx.casAmount,     0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Local contrast",&controls.fx.localContrast, 0,1,"%.2f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("6. Glitch / corruption"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Glitch", &controls.enableGlitch);
+    changed |= ImGui::Checkbox("On##Glitch", &controls.fx.enableGlitch);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableGlitch);
-    changed |= ImGui::SliderFloat("Datamosh",          &controls.glitchDatamosh,       0,1,"%.2f");
-    changed |= ImGui::SliderFloat("RGB split",         &controls.glitchRGBSplit,       0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Scanline break",    &controls.glitchScanlineBreak,  0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Jitter",            &controls.glitchJitter,         0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Tearing",           &controls.glitchTearing,        0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Pixel sorting",     &controls.glitchPixelSort,      0,1,"%.2f");
-    changed |= ImGui::SliderFloat("Buffer corruption", &controls.glitchBufferCorruption,0,1,"%.2f");
+    ImGui::BeginDisabled(!controls.fx.enableGlitch);
+    changed |= ImGui::SliderFloat("Datamosh",          &controls.fx.glitchDatamosh,       0,1,"%.2f");
+    changed |= ImGui::SliderFloat("RGB split",         &controls.fx.glitchRGBSplit,       0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Scanline break",    &controls.fx.glitchScanlineBreak,  0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Jitter",            &controls.fx.glitchJitter,         0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Tearing",           &controls.fx.glitchTearing,        0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Pixel sorting",     &controls.fx.glitchPixelSort,      0,1,"%.2f");
+    changed |= ImGui::SliderFloat("Buffer corruption", &controls.fx.glitchBufferCorruption,0,1,"%.2f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("7. Compositing & blending"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Blending", &controls.enableBlending);
+    changed |= ImGui::Checkbox("On##Blending", &controls.blending.enableBlending);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableBlending);
-    changed |= ImGui::Combo("Video blend",     &controls.blendModeVideo,     BLEND_ITEMS);
-    changed |= ImGui::Combo("Feedback blend",  &controls.blendModeFeedback,  BLEND_ITEMS);
-    changed |= ImGui::SliderFloat("Video mix",     &controls.blendVideoMix,    0,2,"%.2f");
-    changed |= ImGui::SliderFloat("Feedback mix",  &controls.blendFeedbackMix, 0,2,"%.2f");
+    ImGui::BeginDisabled(!controls.blending.enableBlending);
+    changed |= ImGui::Combo("Video blend",     &controls.blending.blendModeVideo,     BLEND_ITEMS);
+    changed |= ImGui::Combo("Feedback blend",  &controls.blending.blendModeFeedback,  BLEND_ITEMS);
+    changed |= ImGui::SliderFloat("Video mix",     &controls.blending.blendVideoMix,    0,2,"%.2f");
+    changed |= ImGui::SliderFloat("Feedback mix",  &controls.blending.blendFeedbackMix, 0,2,"%.2f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("8. CRT / analog simulation"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Analog", &controls.enableAnalog);
+    changed |= ImGui::Checkbox("On##Analog", &controls.post.enableAnalog);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableAnalog);
-    changed |= ImGui::SliderFloat("Scanline focus",&controls.analogScanlineFocus,        0,1,   "%.2f");
-    changed |= ImGui::SliderFloat("Mask balance",  &controls.analogMaskBalance,          0,1,   "%.2f");
-    changed |= ImGui::SliderFloat("Analog noise",  &controls.analogNoise,                0,1,   "%.2f");
-    changed |= ImGui::SliderFloat("Analog bloom",  &controls.analogBloom,                0,2,   "%.2f");
-    changed |= ImGui::SliderFloat("VHS distortion",&controls.vhsDistortion,              0,1,   "%.2f");
-    changed |= ImGui::SliderFloat("Analog chroma", &controls.analogChromaticAberration,  0,0.25f,"%.3f");
+    ImGui::BeginDisabled(!controls.post.enableAnalog);
+    changed |= ImGui::SliderFloat("Scanline focus",&controls.post.analogScanlineFocus,        0,1,   "%.2f");
+    changed |= ImGui::SliderFloat("Mask balance",  &controls.post.analogMaskBalance,          0,1,   "%.2f");
+    changed |= ImGui::SliderFloat("Analog noise",  &controls.post.analogNoise,                0,1,   "%.2f");
+    changed |= ImGui::SliderFloat("Analog bloom",  &controls.post.analogBloom,                0,2,   "%.2f");
+    changed |= ImGui::SliderFloat("VHS distortion",&controls.post.vhsDistortion,              0,1,   "%.2f");
+    changed |= ImGui::SliderFloat("Analog chroma", &controls.post.analogChromaticAberration,  0,0.25f,"%.3f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("9. Audio reactivity"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Audio", &controls.enableAudioReactive);
+    changed |= ImGui::Checkbox("On##Audio", &controls.system.enableAudioReactive);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableAudioReactive);
-    changed |= ImGui::SliderFloat("Warp response",    &controls.audioWarpResponse,    0,2,"%.2f");
-    changed |= ImGui::SliderFloat("Feedback response",&controls.audioFeedbackResponse,0,2,"%.2f");
-    changed |= ImGui::SliderFloat("Blur response",    &controls.audioBlurResponse,    0,2,"%.2f");
-    changed |= ImGui::SliderFloat("Color response",   &controls.audioColorResponse,   0,2,"%.2f");
-    changed |= ImGui::SliderFloat("Glitch response",  &controls.audioGlitchResponse,  0,2,"%.2f");
-    changed |= ImGui::SliderFloat("Beat sync",        &controls.audioBeatSync,        0,4,"%.2f");
-    changed |= ImGui::SliderFloat("LFO rate",         &controls.audioLfoRate,     0.05f,4,"%.2f Hz");
+    ImGui::BeginDisabled(!controls.system.enableAudioReactive);
+    changed |= ImGui::SliderFloat("Warp response",    &controls.audio.warpResponse,    0,2,"%.2f");
+    changed |= ImGui::SliderFloat("Feedback response",&controls.audio.feedbackResponse,0,2,"%.2f");
+    changed |= ImGui::SliderFloat("Blur response",    &controls.audio.blurResponse,    0,2,"%.2f");
+    changed |= ImGui::SliderFloat("Color response",   &controls.audio.colorResponse,   0,2,"%.2f");
+    changed |= ImGui::SliderFloat("Glitch response",  &controls.audio.glitchResponse,  0,2,"%.2f");
+    changed |= ImGui::SliderFloat("Beat sync",        &controls.audio.beatSync,        0,4,"%.2f");
+    changed |= ImGui::SliderFloat("LFO rate",         &controls.audio.lfoRate,     0.05f,4,"%.2f Hz");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
     ImGui::Text("10. Temporal speed processing"); ImGui::SameLine();
-    changed |= ImGui::Checkbox("On##Temporal", &controls.enableTemporal);
+    changed |= ImGui::Checkbox("On##Temporal", &controls.temporal.enableTemporal);
     ImGui::Separator();
-    ImGui::BeginDisabled(!controls.enableTemporal);
-    changed |= ImGui::SliderFloat("Frame interpolation",&controls.temporalInterpolation, 0,1,   "%.2f");
-    changed |= ImGui::SliderFloat("Temporal blend",     &controls.temporalBlendStrength, 0,1,   "%.2f");
-    changed |= ImGui::SliderFloat("Slow-motion",        &controls.slowMotionFactor,  0.1f,4,   "%.2fx");
-    changed |= ImGui::SliderFloat("Frame accumulation", &controls.frameAccumulation,     0,1,   "%.2f");
+    ImGui::BeginDisabled(!controls.temporal.enableTemporal);
+    changed |= ImGui::SliderFloat("Frame interpolation",&controls.playback.temporalInterpolation, 0,1,   "%.2f");
+    changed |= ImGui::SliderFloat("Temporal blend",     &controls.playback.temporalBlendStrength, 0,1,   "%.2f");
+    changed |= ImGui::SliderFloat("Slow-motion",        &controls.playback.slowMotionFactor,  0.1f,4,   "%.2fx");
+    changed |= ImGui::SliderFloat("Frame accumulation", &controls.playback.frameAccumulation,     0,1,   "%.2f");
     ImGui::EndDisabled();
     ImGui::Spacing();
 
@@ -2763,10 +2772,10 @@ void UISystem::drawVJayExtraContent(
 ) {
     bool changed = false;
     auto setAllExtraToggles = [&](bool v) {
-        controls.enablePixelate = v; controls.enableStrobe = v; controls.enableThreshold = v; controls.enableSlowZoom = v;
-        controls.enableMirror = v; controls.enableInvert = v; controls.enablePosterize = v; controls.enableInfrared = v;
-        controls.enableZoomPulse = v; controls.enableRGBShift = v; controls.enableFXAA = v; controls.enableGrid = v;
-        controls.enableEdgeDetect = v; controls.enableCameraMovement = v;
+        controls.fx.enablePixelate = v; controls.fx.enableStrobe = v; controls.fx.enableThreshold = v; controls.fx.enableSlowZoom = v;
+        controls.fx.enableMirror = v; controls.fx.enableInvert = v; controls.fx.enablePosterize = v; controls.fx.enableInfrared = v;
+        controls.fx.enableZoomPulse = v; controls.fx.enableRGBShift = v; controls.system.enableFXAA = v; controls.grid.enabled = v;
+        controls.fx.enableEdgeDetect = v; controls.camera.enableMovement = v;
     };
 
     if (ImGui::Button("Randomize VJAY extra")) {
@@ -2775,12 +2784,12 @@ void UISystem::drawVJayExtraContent(
     }
     ImGui::SameLine();
     if (ImGui::Button("Reset VJAY extra")) {
-        controls.pixelateAmount = 0; controls.strobeSpeed = 0; controls.thresholdLevel = 0.5f; controls.slowZoomAmount = 0;
-        controls.enablePixelate = controls.enableStrobe = controls.enableThreshold = controls.enableSlowZoom = false;
-        controls.enableFXAA = true;
-        controls.fxaaQualitySubpix = 0.75f;
-        controls.fxaaQualityEdgeThreshold = 0.125f;
-        controls.fxaaQualityEdgeThresholdMin = 0.0625f;
+        controls.fx.pixelateAmount = 0; controls.fx.strobeSpeed = 0; controls.fx.thresholdLevel = 0.5f; controls.fx.slowZoomAmount = 0;
+        controls.fx.enablePixelate = controls.fx.enableStrobe = controls.fx.enableThreshold = controls.fx.enableSlowZoom = false;
+        controls.system.enableFXAA = true;
+        controls.system.fxaaQualitySubpix = 0.75f;
+        controls.system.fxaaQualityEdgeThreshold = 0.125f;
+        controls.system.fxaaQualityEdgeThresholdMin = 0.0625f;
         changed = true; controlsDirty = true;
     }
     ImGui::SameLine();
@@ -2790,97 +2799,97 @@ void UISystem::drawVJayExtraContent(
 
     ImGui::Separator();
 
-    changed |= ImGui::Checkbox("Pixelate", &controls.enablePixelate);
-    ImGui::BeginDisabled(!controls.enablePixelate);
-    changed |= ImGui::SliderFloat("Pixelate amount", &controls.pixelateAmount, 0.0f, 1.0f, "%.2f");
+    changed |= ImGui::Checkbox("Pixelate", &controls.fx.enablePixelate);
+    ImGui::BeginDisabled(!controls.fx.enablePixelate);
+    changed |= ImGui::SliderFloat("Pixelate amount", &controls.fx.pixelateAmount, 0.0f, 1.0f, "%.2f");
     ImGui::EndDisabled();
 
-    changed |= ImGui::Checkbox("Strobe", &controls.enableStrobe);
-    ImGui::BeginDisabled(!controls.enableStrobe);
-    changed |= ImGui::SliderFloat("Strobe speed", &controls.strobeSpeed, 0.0f, 20.0f, "%.1f");
+    changed |= ImGui::Checkbox("Strobe", &controls.fx.enableStrobe);
+    ImGui::BeginDisabled(!controls.fx.enableStrobe);
+    changed |= ImGui::SliderFloat("Strobe speed", &controls.fx.strobeSpeed, 0.0f, 20.0f, "%.1f");
     ImGui::EndDisabled();
 
-    changed |= ImGui::Checkbox("Threshold", &controls.enableThreshold);
-    ImGui::BeginDisabled(!controls.enableThreshold);
-    changed |= ImGui::SliderFloat("Threshold level", &controls.thresholdLevel, 0.0f, 1.0f, "%.2f");
+    changed |= ImGui::Checkbox("Threshold", &controls.fx.enableThreshold);
+    ImGui::BeginDisabled(!controls.fx.enableThreshold);
+    changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
     ImGui::EndDisabled();
 
-    changed |= ImGui::Checkbox("Slow zoom", &controls.enableSlowZoom);
-    ImGui::BeginDisabled(!controls.enableSlowZoom);
-    changed |= ImGui::SliderFloat("Slow zoom amount", &controls.slowZoomAmount, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    ImGui::Separator();
-
-    changed |= ImGui::Checkbox("FXAA", &controls.enableFXAA);
-    ImGui::BeginDisabled(!controls.enableFXAA);
-    changed |= ImGui::SliderFloat("FXAA Quality Subpix", &controls.fxaaQualitySubpix, 0.0f, 1.0f, "%.3f");
-    changed |= ImGui::SliderFloat("FXAA Edge Threshold", &controls.fxaaQualityEdgeThreshold, 0.0f, 0.5f, "%.3f");
-    changed |= ImGui::SliderFloat("FXAA Edge Threshold Min", &controls.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f, "%.3f");
+    changed |= ImGui::Checkbox("Slow zoom", &controls.fx.enableSlowZoom);
+    ImGui::BeginDisabled(!controls.fx.enableSlowZoom);
+    changed |= ImGui::SliderFloat("Slow zoom amount", &controls.fx.slowZoomAmount, 0.0f, 1.0f, "%.2f");
     ImGui::EndDisabled();
 
     ImGui::Separator();
 
-    changed |= ImGui::Checkbox("Mirror", &controls.enableMirror);
-    ImGui::BeginDisabled(!controls.enableMirror);
-    changed |= ImGui::SliderFloat("Mirror amount", &controls.mirrorAmount, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Posterize", &controls.enablePosterize);
-    ImGui::BeginDisabled(!controls.enablePosterize);
-    changed |= ImGui::SliderFloat("Posterize levels", &controls.posterizeLevels, 2.0f, 16.0f, "%.0f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("Zoom pulse", &controls.enableZoomPulse);
-    ImGui::BeginDisabled(!controls.enableZoomPulse);
-    changed |= ImGui::SliderFloat("Zoom pulse amount", &controls.zoomPulseAmount, 0.0f, 1.0f, "%.2f");
-    ImGui::EndDisabled();
-
-    changed |= ImGui::Checkbox("RGB shift", &controls.enableRGBShift);
-    ImGui::BeginDisabled(!controls.enableRGBShift);
-    changed |= ImGui::SliderFloat("RGB shift amount", &controls.rgbShiftAmount, 0.0f, 0.1f, "%.3f");
+    changed |= ImGui::Checkbox("FXAA", &controls.system.enableFXAA);
+    ImGui::BeginDisabled(!controls.system.enableFXAA);
+    changed |= ImGui::SliderFloat("FXAA Quality Subpix", &controls.system.fxaaQualitySubpix, 0.0f, 1.0f, "%.3f");
+    changed |= ImGui::SliderFloat("FXAA Edge Threshold", &controls.system.fxaaQualityEdgeThreshold, 0.0f, 0.5f, "%.3f");
+    changed |= ImGui::SliderFloat("FXAA Edge Threshold Min", &controls.system.fxaaQualityEdgeThresholdMin, 0.0f, 0.2f, "%.3f");
     ImGui::EndDisabled();
 
     ImGui::Separator();
 
-    changed |= ImGui::Checkbox("Grid overlay", &controls.enableGrid);
-    ImGui::BeginDisabled(!controls.enableGrid);
-    changed |= ImGui::Combo("Grid mode", &controls.gridMode, "Vertical\0Horizontal\0Matrix\0");
-    if (controls.gridMode == 2) {
-        changed |= ImGui::SliderInt("Rows", &controls.gridRows, 1, 8);
-        changed |= ImGui::SliderInt("Columns", &controls.gridColumns, 1, 8);
+    changed |= ImGui::Checkbox("Mirror", &controls.fx.enableMirror);
+    ImGui::BeginDisabled(!controls.fx.enableMirror);
+    changed |= ImGui::SliderFloat("Mirror amount", &controls.fx.mirrorAmount, 0.0f, 1.0f, "%.2f");
+    ImGui::EndDisabled();
+
+    changed |= ImGui::Checkbox("Posterize", &controls.fx.enablePosterize);
+    ImGui::BeginDisabled(!controls.fx.enablePosterize);
+    changed |= ImGui::SliderFloat("Posterize levels", &controls.fx.posterizeLevels, 2.0f, 16.0f, "%.0f");
+    ImGui::EndDisabled();
+
+    changed |= ImGui::Checkbox("Zoom pulse", &controls.fx.enableZoomPulse);
+    ImGui::BeginDisabled(!controls.fx.enableZoomPulse);
+    changed |= ImGui::SliderFloat("Zoom pulse amount", &controls.fx.zoomPulseAmount, 0.0f, 1.0f, "%.2f");
+    ImGui::EndDisabled();
+
+    changed |= ImGui::Checkbox("RGB shift", &controls.fx.enableRGBShift);
+    ImGui::BeginDisabled(!controls.fx.enableRGBShift);
+    changed |= ImGui::SliderFloat("RGB shift amount", &controls.fx.rgbShiftAmount, 0.0f, 0.1f, "%.3f");
+    ImGui::EndDisabled();
+
+    ImGui::Separator();
+
+    changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
+    ImGui::BeginDisabled(!controls.grid.enabled);
+    changed |= ImGui::Combo("Grid mode", &controls.grid.mode, "Vertical\0Horizontal\0Matrix\0");
+    if (controls.grid.mode == 2) {
+        changed |= ImGui::SliderInt("Rows", &controls.grid.rows, 1, 8);
+        changed |= ImGui::SliderInt("Columns", &controls.grid.columns, 1, 8);
     } else {
-        changed |= ImGui::SliderInt("Grid count", &controls.gridCount, 1, 8);
+        changed |= ImGui::SliderInt("Grid count", &controls.grid.count, 1, 8);
     }
-    changed |= ImGui::Checkbox("Mirror cells", &controls.gridMirrorCells);
-    if (controls.gridMirrorCells) {
+    changed |= ImGui::Checkbox("Mirror cells", &controls.grid.mirrorCells);
+    if (controls.grid.mirrorCells) {
         ImGui::TextDisabled("Alternate cells mirrored for seamless edges");
     }
-    changed |= ImGui::Checkbox("Show grid lines", &controls.gridShowLines);
-    ImGui::BeginDisabled(!controls.gridShowLines);
-    changed |= ImGui::SliderFloat("Line width", &controls.gridLineWidth, 0.0001f, 0.05f, "%.4f");
-    changed |= ImGui::SliderFloat("Line intensity", &controls.gridLineIntensity, 0.0f, 1.0f, "%.2f");
-    changed |= ImGui::ColorEdit3("Line color", &controls.gridLineColor[0]);
+    changed |= ImGui::Checkbox("Show grid lines", &controls.grid.showLines);
+    ImGui::BeginDisabled(!controls.grid.showLines);
+    changed |= ImGui::SliderFloat("Line width", &controls.grid.lineWidth, 0.0001f, 0.05f, "%.4f");
+    changed |= ImGui::SliderFloat("Line intensity", &controls.grid.lineIntensity, 0.0f, 1.0f, "%.2f");
+    changed |= ImGui::ColorEdit3("Line color", &controls.grid.lineColor[0]);
     ImGui::EndDisabled();
     ImGui::EndDisabled();
 
     ImGui::Separator();
 
     // Camera Movement
-    changed |= ImGui::Checkbox("Camera movement", &controls.enableCameraMovement);
-    ImGui::BeginDisabled(!controls.enableCameraMovement);
-    changed |= ImGui::SliderFloat("Camera zoom", &controls.cameraZoom, 0.5f, 2.0f, "%.2f");
-    changed |= ImGui::SliderFloat("Camera pan X", &controls.cameraPanX, -1.0f, 1.0f, "%.2f");
-    changed |= ImGui::SliderFloat("Camera pan Y", &controls.cameraPanY, -1.0f, 1.0f, "%.2f");
-    changed |= ImGui::SliderFloat("Camera rotation", &controls.cameraRotation, -3.14159f, 3.14159f, "%.2f rad");
+    changed |= ImGui::Checkbox("Camera movement", &controls.camera.enableMovement);
+    ImGui::BeginDisabled(!controls.camera.enableMovement);
+    changed |= ImGui::SliderFloat("Camera zoom", &controls.camera.zoom, 0.5f, 2.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Camera pan X", &controls.camera.panX, -1.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Camera pan Y", &controls.camera.panY, -1.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Camera rotation", &controls.camera.rotation, -3.14159f, 3.14159f, "%.2f rad");
     ImGui::EndDisabled();
 
     ImGui::Separator();
 
     // Final RGB overlay
-    changed |= ImGui::Checkbox("RGB Overlay", &controls.enableRgbOverlay);
-    ImGui::BeginDisabled(!controls.enableRgbOverlay);
-    changed |= ImGui::ColorEdit3("Overlay color", &controls.rgbOverlay[0]);
+    changed |= ImGui::Checkbox("RGB Overlay", &controls.color.enableRgbOverlay);
+    ImGui::BeginDisabled(!controls.color.enableRgbOverlay);
+    changed |= ImGui::ColorEdit3("Overlay color", &controls.color.rgbOverlay[0]);
     ImGui::EndDisabled();
 
     if (changed) controlsDirty = true;
@@ -2995,10 +3004,10 @@ void UISystem::drawDiagnosticsContent(
         if (player.isReady()) {
             double fd  = std::max(1e-6, player.frameDuration());
             double fps = 1.0 / fd;
-            double oversample = std::max(1.0, static_cast<double>(controls.videoDecodeOversample));
+            double oversample = std::max(1.0, static_cast<double>(controls.playback.videoDecodeOversample));
             double playRate = [&]() -> double {
-                double base = std::clamp((double)controls.videoPlaybackRate, 0.05, 8.0);
-                int idx = std::clamp(controls.forcedFpsIndex, 0,
+                double base = std::clamp((double)controls.playback.videoPlaybackRate, 0.05, 8.0);
+                int idx = std::clamp(controls.playback.forcedFpsIndex, 0,
                                      static_cast<int>(FORCED_FPS_OPTIONS_UI.size())-1);
                 int forced = FORCED_FPS_OPTIONS_UI[idx];
                 if (forced <= 0) return base;
@@ -3007,8 +3016,8 @@ void UISystem::drawDiagnosticsContent(
             ImGui::Text("Clip FPS: %.2f",     fps);
             ImGui::Text("Display FPS: %.2f",  fps * playRate);
             ImGui::Text("Decode FPS:  %.2f",  fps * std::max(playRate, oversample));
-            if (controls.forcedFpsIndex > 0)
-                ImGui::Text("Forced FPS: %d", FORCED_FPS_OPTIONS_UI[controls.forcedFpsIndex]);
+            if (controls.playback.forcedFpsIndex > 0)
+                ImGui::Text("Forced FPS: %d", FORCED_FPS_OPTIONS_UI[controls.playback.forcedFpsIndex]);
         }
     } else {
         ImGui::Text("Video offline");
@@ -3026,8 +3035,8 @@ void UISystem::drawDiagnosticsContent(
     }
 
     if (ImGui::Button("Reset Palette")) {
-        controls.primaryColor   = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
-        controls.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
+        controls.color.primaryColor   = glm::vec4(0.9f, 0.4f, 0.1f, 1.0f);
+        controls.color.secondaryColor = glm::vec4(0.1f, 0.5f, 0.8f, 1.0f);
     }
 
     const auto& assets = registry.getAssets();
@@ -3068,17 +3077,17 @@ void UISystem::drawDiagnosticsContent(
         ImGui::Text("UBO delta: %.6f", diag.animationDelta);
         ImGui::Text("Speed multiplier: %.2fx", diag.animationRelativeSpeed);
         ImGui::Text("Seconds per unit: %.3f", diag.animationSecondsPerUnit);
-        bool targetChanged = ImGui::SliderFloat("Target seconds", &controls.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
+        bool targetChanged = ImGui::SliderFloat("Target seconds", &controls.playback.animationTargetSeconds, 0.1f, 5.0f, "%.2fs");
         if (targetChanged && callbacks.onControlsChanged) callbacks.onControlsChanged();
-        float suggestedSpeed = 1.0f / std::max(0.1f, controls.animationTargetSeconds);
+        float suggestedSpeed = 1.0f / std::max(0.1f, controls.playback.animationTargetSeconds);
         ImGui::Text("Suggested speed: %.2fx", suggestedSpeed);
         if (ImGui::Button("Apply suggested speed")) {
-            controls.animationSpeed = suggestedSpeed;
+            controls.playback.animationSpeed = suggestedSpeed;
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset time phase")) {
-            controls.animationSpeed = 1.0f;
-            controls.animationTargetSeconds = 1.0f;
+            controls.playback.animationSpeed = 1.0f;
+            controls.playback.animationTargetSeconds = 1.0f;
             if (callbacks.onControlsChanged) callbacks.onControlsChanged();
         }
     }
@@ -3464,26 +3473,26 @@ void UISystem::drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& c
     ImGui::Separator();
     
     ImGui::Text("Audio-inspired inputs");
-    ImGui::SliderFloat("Tempo",  &controls.tempo,  0.25f, 4.0f);
-    ImGui::Checkbox("Auto tempo LFO", &controls.enableTempoLfo);
-    if (controls.enableTempoLfo) {
-        ImGui::SliderFloat("LFO speed (Hz)", &controls.tempoLfoSpeed, 0.05f, 4.0f, "%.2f Hz");
-        ImGui::SliderFloat("LFO depth", &controls.tempoLfoDepth, 0.0f, 2.0f);
+    ImGui::SliderFloat("Tempo",  &controls.playback.tempo,  0.25f, 4.0f);
+    ImGui::Checkbox("Auto tempo LFO", &controls.playback.enableTempoLfo);
+    if (controls.playback.enableTempoLfo) {
+        ImGui::SliderFloat("LFO speed (Hz)", &controls.playback.tempoLfoSpeed, 0.05f, 4.0f, "%.2f Hz");
+        ImGui::SliderFloat("LFO depth", &controls.playback.tempoLfoDepth, 0.0f, 2.0f);
     }
-    ImGui::SliderFloat("Energy", &controls.energy, 0.0f, 1.0f);
-    ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
-    ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
-    ImGui::SliderFloat("High",   &controls.high,   0.0f, 1.0f);
-    ImGui::SliderFloat("High gain boost", &controls.audioHighGain, 0.5f, 4.0f, "%.2fx");
-    ImGui::SliderFloat("Procedural audio drive", &controls.audioReactiveDrive, 0.5f, 3.0f, "%.2fx");
+    ImGui::SliderFloat("Energy", &controls.audio.energy, 0.0f, 1.0f);
+    ImGui::SliderFloat("Bass",   &controls.audio.bass,   0.0f, 1.0f);
+    ImGui::SliderFloat("Mid",    &controls.audio.mid,    0.0f, 1.0f);
+    ImGui::SliderFloat("High",   &controls.audio.high,   0.0f, 1.0f);
+    ImGui::SliderFloat("High gain boost", &controls.audio.highGain, 0.5f, 4.0f, "%.2fx");
+    ImGui::SliderFloat("Procedural audio drive", &controls.audio.reactiveDrive, 0.5f, 3.0f, "%.2fx");
     
     ImGui::Separator();
 
     ImGui::Text("Monitoreo en vivo (solo lectura)");
-    float liveEnergy = controls.audioReactiveRuntime.energy;
-    float liveBass   = controls.audioReactiveRuntime.bass;
-    float liveMid    = controls.audioReactiveRuntime.mid;
-    float liveHigh   = controls.audioReactiveRuntime.high;
+    float liveEnergy = controls.runtime.audioReactive.energy;
+    float liveBass   = controls.runtime.audioReactive.bass;
+    float liveMid    = controls.runtime.audioReactive.mid;
+    float liveHigh   = controls.runtime.audioReactive.high;
     ImGui::BeginDisabled(true);
     ImGui::SliderFloat("Energy meter", &liveEnergy, 0.0f, 1.0f, "%.2f");
     ImGui::SliderFloat("Bass meter",   &liveBass,   0.0f, 1.0f, "%.2f");
@@ -3585,7 +3594,7 @@ void UISystem::drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& c
 
     ImGui::Separator();
     ImGui::Text("Realtime shader modulation (per audio frame)");
-    const auto& reactive = controls.audioReactiveRuntime;
+    const auto& reactive = controls.runtime.audioReactive;
     ImGui::Text("State: %s", reactive.enabled ? "ENABLED" : "disabled");
     if (reactive.enabled) {
         ImGui::Text("Energy %.3f | Bass %.3f | Mid %.3f | High %.3f",

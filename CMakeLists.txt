@@ -73,6 +73,7 @@ add_executable(app
     src/app/AudioSystem.cpp
     src/app/parameters/ParameterRegistry.cpp
     src/app/parameters/VisualControlsRegistry.cpp
+    src/app/parameters/ParameterBindingRegistry.cpp
     src/app/parameters/JsonSerializer.cpp
     src/app/parameters/MidiBindingSystem.cpp
     src/app/parameters/PresetMorpher.cpp

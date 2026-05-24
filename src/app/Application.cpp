@@ -41,7 +41,7 @@ void Application::run() {
     // Load control state before video init so selectedVideoFolder is respected
     JsonSerializer::load(visualControlsPath, parameterRegistry);
     ControlState::load(controlStatePath, videoRandomizer, videoRandomizer2,
-                       allowDimensionChangeRecreation, midiSystem, oscSystem,
+                       allowDimensionChangeRecreation, oscSystem,
                        selectedVideoAsset, selectedVideoAsset2);
 
     // Initialize video
@@ -390,8 +390,8 @@ void Application::initCommandBuffers() {
 
 void Application::initVideo() {
     std::cout << "[Application] initVideo() called" << std::endl;
-    videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
-    const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+    videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
+    const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
     if (!assets.empty()) {
         if (selectedVideoAsset < 0 || selectedVideoAsset >= static_cast<int>(assets.size())) {
             selectedVideoAsset = 0;
@@ -407,7 +407,7 @@ void Application::initVideo() {
         std::cerr << "[Application] Failed to initialize video player" << std::endl;
         return;
     }
-    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
     
     // Initialize CPU frame pool with initial video resolution
     cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()), 
@@ -429,7 +429,7 @@ void Application::initVideo() {
     }
 
     // Initialize video 2 (dual source)
-    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
     if (!assets2.empty()) {
         if (selectedVideoAsset2 < 0 || selectedVideoAsset2 >= static_cast<int>(assets2.size())) {
             selectedVideoAsset2 = 0;
@@ -447,7 +447,7 @@ void Application::initVideo() {
         return;
     }
     std::cout << "[Application] Video player 2 initialized: " << videoSourcePath2 << ", isReady=" << videoPlayer2.isReady() << std::endl;
-    videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+    videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
 
     cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
                          static_cast<uint32_t>(videoPlayer2.height()),
@@ -503,7 +503,7 @@ void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job
         int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
         int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
         if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-            videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+            videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
             vkDeviceWaitIdle(vulkanContext.getDevice());
             videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
             videoTexture.cleanup(resourceSystem);
@@ -534,7 +534,7 @@ void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job
         int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
         int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
         if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-            videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+            videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
             vkDeviceWaitIdle(vulkanContext.getDevice());
             videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
             videoTexture2.cleanup(resourceSystem);
@@ -611,7 +611,7 @@ void Application::initOsc() {
     oscSystem.onMappingsChanged = [this]() {
         JsonSerializer::save(visualControlsPath, parameterRegistry);
         ControlState::save(controlStatePath, videoRandomizer, videoRandomizer2,
-                           allowDimensionChangeRecreation, midiSystem, oscSystem,
+                           allowDimensionChangeRecreation, oscSystem,
                            selectedVideoAsset, selectedVideoAsset2);
     };
 
@@ -640,7 +640,7 @@ void Application::initAudio() {
 void Application::handleOscTrigger(const std::string& action) {
     if (action == "randomizeVideo") {
         if (!canChangeVideo()) return;
-        const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         if (assets.size() > 1) {
             int newIndex = pickNextVideoIndex(assets);
             reloadVideoAtIndex(newIndex, assets);
@@ -648,7 +648,7 @@ void Application::handleOscTrigger(const std::string& action) {
         isReloadingVideo = false;
     } else if (action == "randomizeVideo2") {
         if (!canChangeVideo()) return;
-        const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
         if (assets.size() > 1) {
             int newIndex = pickNextVideoIndex2(assets);
             reloadVideoAtIndex2(newIndex, assets);
@@ -664,8 +664,8 @@ void Application::handleOscTrigger(const std::string& action) {
         }
     } else if (action == "folderChanged") {
         if (!canChangeVideo()) return;
-        videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
-        const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+        videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         videoRandomizer.shuffleQueue.clear();
         videoRandomizer.currentShuffleIndex = 0;
         videoRandomizer2.shuffleQueue.clear();
@@ -678,7 +678,7 @@ void Application::handleOscTrigger(const std::string& action) {
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
             if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
                 vkDeviceWaitIdle(vulkanContext.getDevice());
                 videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                 videoTexture.cleanup(resourceSystem);
@@ -817,7 +817,7 @@ bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>
     int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
     int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
     if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-        videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+        videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
         vkDeviceWaitIdle(vulkanContext.getDevice());
         videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture.cleanup(resourceSystem);
@@ -872,7 +872,7 @@ bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset
     int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
     int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
     if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-        videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+        videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
         vkDeviceWaitIdle(vulkanContext.getDevice());
         videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture2.cleanup(resourceSystem);
@@ -1072,10 +1072,10 @@ void Application::mainLoop() {
         transitionActive = false;
 
         // Update auto-randomize colors with smooth interpolation
-        if (visualControls.autoRandomizeColors) {
-            visualControls.colorRandomizeElapsed += deltaTime;
+        if (visualControls.color.autoRandomizeColors) {
+            visualControls.color.colorRandomizeElapsed += deltaTime;
             
-            if (visualControls.colorRandomizeElapsed >= visualControls.colorRandomizeInterval) {
+            if (visualControls.color.colorRandomizeElapsed >= visualControls.color.colorRandomizeInterval) {
                 // Generate new target colors
                 std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
                 std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
@@ -1100,15 +1100,15 @@ void Application::mainLoop() {
                     return glm::vec3(r + m, g + m, b + m);
                 };
                 
-                visualControls.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
-                visualControls.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, primarySat, primaryVal), 1.0f);
-                visualControls.colorRandomizeElapsed = 0.0f;
+                visualControls.color.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
+                visualControls.color.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, primarySat, primaryVal), 1.0f);
+                visualControls.color.colorRandomizeElapsed = 0.0f;
             }
             
             // Smooth interpolation towards target colors
             float lerpSpeed = 2.0f * deltaTime; // Adjust speed factor as needed
-            visualControls.primaryColor = glm::mix(visualControls.primaryColor, visualControls.primaryColorTarget, lerpSpeed);
-            visualControls.secondaryColor = glm::mix(visualControls.secondaryColor, visualControls.secondaryColorTarget, lerpSpeed);
+            visualControls.color.primaryColor = glm::mix(visualControls.color.primaryColor, visualControls.color.primaryColorTarget, lerpSpeed);
+            visualControls.color.secondaryColor = glm::mix(visualControls.color.secondaryColor, visualControls.color.secondaryColorTarget, lerpSpeed);
         }
 
         // Update auto-randomize
@@ -1123,7 +1123,7 @@ void Application::mainLoop() {
                     videoRandomizer.elapsedSeconds = 0.0f;
                 } else {
                     // Trigger random video change
-                    const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+                    const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
                     if (assets.size() > 1) {
                         int newIndex = pickNextVideoIndex(assets);
                         reloadVideoAtIndex(newIndex, assets);
@@ -1134,7 +1134,7 @@ void Application::mainLoop() {
         }
 
         // Update auto-randomize for Video 2
-        if (videoRandomizer2.autoRandomize && videoSubsystemInitialized && visualControls.enableDualVideo) {
+        if (videoRandomizer2.autoRandomize && videoSubsystemInitialized && visualControls.playback.enableDualVideo) {
             videoRandomizer2.elapsedSeconds += deltaTime;
             float targetInterval = (videoRandomizer2.useVideoDuration && videoRandomizer2.currentVideoDuration > 0.0f)
                 ? videoRandomizer2.currentVideoDuration
@@ -1145,7 +1145,7 @@ void Application::mainLoop() {
                     videoRandomizer2.elapsedSeconds = 0.0f;
                 } else {
                     // Trigger random video change for Video 2
-                    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+                    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
                     if (assets2.size() > 1) {
                         int newIndex = pickNextVideoIndex2(assets2);
                         reloadVideoAtIndex2(newIndex, assets2);
@@ -1156,9 +1156,9 @@ void Application::mainLoop() {
         }
 
         // Update auto random jump interval
-        if (visualControls.enableRandomJumpInterval && visualControls.randomVideoStart && videoSubsystemInitialized) {
+        if (visualControls.playback.enableRandomJumpInterval && visualControls.playback.randomVideoStart && videoSubsystemInitialized) {
             auto timeSinceLastJump = std::chrono::duration<float>(now - lastRandomJumpTime).count();
-            if (timeSinceLastJump >= visualControls.randomJumpInterval) {
+            if (timeSinceLastJump >= visualControls.playback.randomJumpInterval) {
                 // Perform random jump within full video range (0% to 100%)
                 double duration = videoPlayer.durationSeconds();
                 if (duration > 0) {
@@ -1180,10 +1180,10 @@ void Application::mainLoop() {
 
         // Update video playback rate
         if (videoSubsystemInitialized) {
-            videoPlayer.setPlaybackRate(visualControls.videoPlaybackRate);
+            videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
         }
         if (videoSubsystemInitialized2) {
-            videoPlayer2.setPlaybackRate(visualControls.video2PlaybackRate);
+            videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
         }
 
         // Update video texture
@@ -1200,7 +1200,7 @@ void Application::mainLoop() {
         diag.lastFrameImageIndex = frame.swapchainImageIndex;
         diag.swapchainWidth = vulkanContext.getSwapchainExtent().width;
         diag.swapchainHeight = vulkanContext.getSwapchainExtent().height;
-        diag.currentMode = visualControls.activeMode;
+        diag.currentMode = visualControls.playback.activeMode;
         diag.videoReady = videoSubsystemInitialized && videoTexture.isReady();
         diag.videoWidth = videoTexture.getWidth();
         diag.videoHeight = videoTexture.getHeight();
@@ -1220,7 +1220,7 @@ void Application::mainLoop() {
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                 if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
                     vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                     videoTexture.cleanup(resourceSystem);
@@ -1249,7 +1249,7 @@ void Application::mainLoop() {
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                 if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-                    videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+                    videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
                     vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
                     videoTexture2.cleanup(resourceSystem);
@@ -1276,8 +1276,8 @@ void Application::mainLoop() {
         };
         callbacks.onFolderChanged = [this]() {
             if (!canChangeVideo()) return;
-            videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideoFolder);
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+            videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
+            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
             videoRandomizer.shuffleQueue.clear();
             videoRandomizer.currentShuffleIndex = 0;
             videoRandomizer2.shuffleQueue.clear();
@@ -1290,7 +1290,7 @@ void Application::mainLoop() {
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                 if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
                     vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                     videoTexture.cleanup(resourceSystem);
@@ -1316,7 +1316,7 @@ void Application::mainLoop() {
         };
         callbacks.onRandomizeVideo = [this]() {
             if (!canChangeVideo()) return;
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideoFolder);
+            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
             if (assets.size() > 1) {
                 int newIndex = pickNextVideoIndex(assets);
                 reloadVideoAtIndex(newIndex, assets);
@@ -1334,7 +1334,7 @@ void Application::mainLoop() {
         };
         callbacks.onRandomizeVideo2 = [this]() {
             if (!canChangeVideo()) return;
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
             if (assets.size() > 1) {
                 int newIndex = pickNextVideoIndex2(assets);
                 reloadVideoAtIndex2(newIndex, assets);
@@ -1349,7 +1349,7 @@ void Application::mainLoop() {
             int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
             int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
             if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+                videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
                 vkDeviceWaitIdle(vulkanContext.getDevice());
                 videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
                 videoTexture.cleanup(resourceSystem);  // Destroy staging ring
@@ -1395,8 +1395,8 @@ void Application::mainLoop() {
 
         callbacks.onFolderChanged2 = [this]() {
             if (!canChangeVideo()) return;
-            videoRegistry.scan(videoAssetsRoot, visualControls.selectedVideo2Folder);
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.selectedVideo2Folder);
+            videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideo2Folder);
+            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
             videoRandomizer.shuffleQueue.clear();
             videoRandomizer.currentShuffleIndex = 0;
             videoRandomizer2.shuffleQueue.clear();
@@ -1409,7 +1409,7 @@ void Application::mainLoop() {
                 int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
                 int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
                 if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-                    videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+                    videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
                     vkDeviceWaitIdle(vulkanContext.getDevice());
                     videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
                     videoTexture2.cleanup(resourceSystem);
@@ -1445,7 +1445,7 @@ void Application::mainLoop() {
             std::cout << "[Application] Initializing video player 2 with: " << videoSourcePath2 << std::endl;
             if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
                 std::cout << "[Application] Video player 2 initialized successfully, isReady=" << videoPlayer2.isReady() << std::endl;
-                videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+                videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
                 vkDeviceWaitIdle(vulkanContext.getDevice());
                 videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
                 videoTexture2.cleanup(resourceSystem);
@@ -1543,7 +1543,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     lastGlobalTime = currentTime;
 
     // Apply animation speed to delta
-    float speed = std::max(0.01f, visualControls.animationSpeed);
+    float speed = std::max(0.01f, visualControls.playback.animationSpeed);
     accumulatedTime += globalDeltaTime * speed;
 
     debugAnimationElapsedSeconds = accumulatedTime;
@@ -1551,17 +1551,17 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     float time = accumulatedTime;
 
     constexpr float kTwoPi = 6.28318530718f;
-    if (visualControls.enableTempoLfo) {
-        float lfoSpeed = std::max(0.01f, visualControls.tempoLfoSpeed);
+    if (visualControls.playback.enableTempoLfo) {
+        float lfoSpeed = std::max(0.01f, visualControls.playback.tempoLfoSpeed);
         float phaseAdvance = globalDeltaTime * lfoSpeed * kTwoPi;
-        visualControls.tempoLfoPhase = std::fmod(visualControls.tempoLfoPhase + phaseAdvance, kTwoPi);
-        if (visualControls.tempoLfoPhase < 0.0f) visualControls.tempoLfoPhase += kTwoPi;
+        visualControls.playback.tempoLfoPhase = std::fmod(visualControls.playback.tempoLfoPhase + phaseAdvance, kTwoPi);
+        if (visualControls.playback.tempoLfoPhase < 0.0f) visualControls.playback.tempoLfoPhase += kTwoPi;
     }
 
-    float tempoValue = visualControls.tempo;
-    if (visualControls.enableTempoLfo) {
-        float lfoValue = std::sin(visualControls.tempoLfoPhase);
-        tempoValue += visualControls.tempoLfoDepth * lfoValue;
+    float tempoValue = visualControls.playback.tempo;
+    if (visualControls.playback.enableTempoLfo) {
+        float lfoValue = std::sin(visualControls.playback.tempoLfoPhase);
+        tempoValue += visualControls.playback.tempoLfoDepth * lfoValue;
     }
     tempoValue = std::clamp(tempoValue, 0.05f, 8.0f);
 
@@ -1575,20 +1575,20 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass(),  5.0f, 0.90f);
     float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid(),   3.0f, 0.95f);
     float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh(),  3.0f, 1.00f);
-    liveHigh = std::clamp(liveHigh * visualControls.audioHighGain, 0.0f, 1.0f);
+    liveHigh = std::clamp(liveHigh * visualControls.audio.highGain, 0.0f, 1.0f);
 
-    auto& reactive = visualControls.audioReactiveRuntime;
-    reactive.enabled = visualControls.enableAudioReactive;
+    auto& reactive = visualControls.runtime.audioReactive;
+    reactive.enabled = visualControls.system.enableAudioReactive;
     reactive.energy = liveEnergy;
     reactive.bass   = liveBass;
     reactive.mid    = liveMid;
     reactive.high   = liveHigh;
 
-    if (visualControls.enableAudioReactive) {
-        visualControls.energy = liveEnergy;
-        visualControls.bass   = liveBass;
-        visualControls.mid    = liveMid;
-        visualControls.high   = liveHigh;
+    if (visualControls.system.enableAudioReactive) {
+        visualControls.audio.energy = liveEnergy;
+        visualControls.audio.bass   = liveBass;
+        visualControls.audio.mid    = liveMid;
+        visualControls.audio.high   = liveHigh;
     }
 
     // Set basic UBO values
@@ -1603,222 +1603,222 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.videoResolution = glm::vec2(static_cast<float>(videoTexture.getWidth()),
                                     static_cast<float>(videoTexture.getHeight()));
     ubo.time = time;
-    ubo.mode = visualControls.activeMode;
-    ubo.videoMix = visualControls.videoMix;
+    ubo.mode = visualControls.playback.activeMode;
+    ubo.videoMix = visualControls.playback.videoMix;
     ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.isReady()) ? 1.0f : 0.0f;
-    ubo.video2Mix = visualControls.video2Mix;
-    ubo.video2Available = (visualControls.enableDualVideo && videoSubsystemInitialized2 && videoTexture2.isReady()) ? 1.0f : 0.0f;
-    ubo.video2BlendMode = visualControls.video2BlendMode;
+    ubo.video2Mix = visualControls.playback.video2Mix;
+    ubo.video2Available = (visualControls.playback.enableDualVideo && videoSubsystemInitialized2 && videoTexture2.isReady()) ? 1.0f : 0.0f;
+    ubo.video2BlendMode = visualControls.playback.video2BlendMode;
 
     // Set visual control values
-    ubo.primaryColor = visualControls.primaryColor;
-    ubo.secondaryColor = visualControls.secondaryColor;
-    ubo.colorBlend = visualControls.colorBlend;
+    ubo.primaryColor = visualControls.color.primaryColor;
+    ubo.secondaryColor = visualControls.color.secondaryColor;
+    ubo.colorBlend = visualControls.color.colorBlend;
     ubo.tempo = tempoValue;
-    ubo.energy = visualControls.energy;
-    ubo.bass = visualControls.bass;
-    ubo.mid = visualControls.mid;
-    ubo.high = visualControls.high;
-    ubo.audioReactiveDrive = visualControls.audioReactiveDrive;
+    ubo.energy = visualControls.audio.energy;
+    ubo.bass = visualControls.audio.bass;
+    ubo.mid = visualControls.audio.mid;
+    ubo.high = visualControls.audio.high;
+    ubo.audioReactiveDrive = visualControls.audio.reactiveDrive;
     
     // Audio reactivity parameters
-    ubo.audioWarpResponse = visualControls.audioWarpResponse;
-    ubo.audioFeedbackResponse = visualControls.audioFeedbackResponse;
-    ubo.audioBlurResponse = visualControls.audioBlurResponse;
-    ubo.audioColorResponse = visualControls.audioColorResponse;
-    ubo.audioGlitchResponse = visualControls.audioGlitchResponse;
-    ubo.audioBeatSync = visualControls.audioBeatSync;
-    ubo.audioLfoRate = visualControls.audioLfoRate;
-    ubo.enableAudioReactive = visualControls.enableAudioReactive ? 1 : 0;
+    ubo.audioWarpResponse = visualControls.audio.warpResponse;
+    ubo.audioFeedbackResponse = visualControls.audio.feedbackResponse;
+    ubo.audioBlurResponse = visualControls.audio.blurResponse;
+    ubo.audioColorResponse = visualControls.audio.colorResponse;
+    ubo.audioGlitchResponse = visualControls.audio.glitchResponse;
+    ubo.audioBeatSync = visualControls.audio.beatSync;
+    ubo.audioLfoRate = visualControls.audio.lfoRate;
+    ubo.enableAudioReactive = visualControls.system.enableAudioReactive ? 1 : 0;
     
     // Post FX basicos
-    ubo.grayscaleAmount = visualControls.grayscaleAmount;
-    ubo.sharpenAmount = visualControls.sharpenAmount;
-    ubo.upscaleEnabled = visualControls.upscaleEnabled ? 1.0f : 0.0f;
+    ubo.grayscaleAmount = visualControls.playback.grayscaleAmount;
+    ubo.sharpenAmount = visualControls.playback.sharpenAmount;
+    ubo.upscaleEnabled = visualControls.playback.upscaleEnabled ? 1.0f : 0.0f;
 
     // Enable/Disable flags for post FX
-    ubo.enablePostCrtCurvature = visualControls.enablePostCrtCurvature ? 1 : 0;
-    ubo.enablePostScanMask = visualControls.enablePostScanMask ? 1 : 0;
-    ubo.enablePostVignette = visualControls.enablePostVignette ? 1 : 0;
-    ubo.enablePostFishEye = visualControls.enablePostFishEye ? 1 : 0;
-    ubo.enablePostBloom = visualControls.enablePostBloom ? 1 : 0;
-    ubo.enablePostAberration = visualControls.enablePostAberration ? 1 : 0;
-    ubo.enablePostGrain = visualControls.enablePostGrain ? 1 : 0;
-    ubo.enablePostBend = visualControls.enablePostBend ? 1 : 0;
-    ubo.enablePostGlitch = visualControls.enablePostGlitch ? 1 : 0;
-    ubo.enablePostColorBalance = visualControls.enablePostColorBalance ? 1 : 0;
+    ubo.enablePostCrtCurvature = visualControls.post.enablePostCrtCurvature ? 1 : 0;
+    ubo.enablePostScanMask = visualControls.post.enablePostScanMask ? 1 : 0;
+    ubo.enablePostVignette = visualControls.post.enablePostVignette ? 1 : 0;
+    ubo.enablePostFishEye = visualControls.post.enablePostFishEye ? 1 : 0;
+    ubo.enablePostBloom = visualControls.post.enablePostBloom ? 1 : 0;
+    ubo.enablePostAberration = visualControls.post.enablePostAberration ? 1 : 0;
+    ubo.enablePostGrain = visualControls.post.enablePostGrain ? 1 : 0;
+    ubo.enablePostBend = visualControls.post.enablePostBend ? 1 : 0;
+    ubo.enablePostGlitch = visualControls.post.enablePostGlitch ? 1 : 0;
+    ubo.enablePostColorBalance = visualControls.post.enablePostColorBalance ? 1 : 0;
 
     // Enable/Disable flags for VJAY BASICS
-    ubo.enableColorGrading = visualControls.enableColorGrading ? 1 : 0;
-    ubo.enableFeedback = visualControls.enableFeedback ? 1 : 0;
-    ubo.enableDistortion = visualControls.enableDistortion ? 1 : 0;
-    ubo.enableBlurMotion = visualControls.enableBlurMotion ? 1 : 0;
-    ubo.enableSharpen = visualControls.enableSharpen ? 1 : 0;
-    ubo.enablePostGlitch = visualControls.enableGlitch ? 1 : 0;
-    ubo.enableBlending = visualControls.enableBlending ? 1 : 0;
-    ubo.enableAnalog = visualControls.enableAnalog ? 1 : 0;
-    ubo.enableAudioReactive = visualControls.enableAudioReactive ? 1 : 0;
-    ubo.enableTemporal = visualControls.enableTemporal ? 1 : 0;
+    ubo.enableColorGrading = visualControls.color.enableColorGrading ? 1 : 0;
+    ubo.enableFeedback = visualControls.temporal.enableFeedback ? 1 : 0;
+    ubo.enableDistortion = visualControls.fx.enableDistortion ? 1 : 0;
+    ubo.enableBlurMotion = visualControls.fx.enableBlurMotion ? 1 : 0;
+    ubo.enableSharpen = visualControls.fx.enableSharpen ? 1 : 0;
+    ubo.enablePostGlitch = visualControls.fx.enableGlitch ? 1 : 0;
+    ubo.enableBlending = visualControls.blending.enableBlending ? 1 : 0;
+    ubo.enableAnalog = visualControls.post.enableAnalog ? 1 : 0;
+    ubo.enableAudioReactive = visualControls.system.enableAudioReactive ? 1 : 0;
+    ubo.enableTemporal = visualControls.temporal.enableTemporal ? 1 : 0;
 
     // Enable/Disable flags for VJAY EXTRA
-    ubo.enablePixelate = visualControls.enablePixelate ? 1 : 0;
-    ubo.enableStrobe = visualControls.enableStrobe ? 1 : 0;
-    ubo.enableThreshold = visualControls.enableThreshold ? 1 : 0;
-    ubo.enableSlowZoom = visualControls.enableSlowZoom ? 1 : 0;
-    ubo.enableMirror = visualControls.enableMirror ? 1 : 0;
-    ubo.enableInvert = visualControls.enableInvert ? 1 : 0;
-    ubo.enablePosterize = visualControls.enablePosterize ? 1 : 0;
-    ubo.enableInfrared = visualControls.enableInfrared ? 1 : 0;
-    ubo.enableZoomPulse = visualControls.enableZoomPulse ? 1 : 0;
-    ubo.enableRGBShift = visualControls.enableRGBShift ? 1 : 0;
+    ubo.enablePixelate = visualControls.fx.enablePixelate ? 1 : 0;
+    ubo.enableStrobe = visualControls.fx.enableStrobe ? 1 : 0;
+    ubo.enableThreshold = visualControls.fx.enableThreshold ? 1 : 0;
+    ubo.enableSlowZoom = visualControls.fx.enableSlowZoom ? 1 : 0;
+    ubo.enableMirror = visualControls.fx.enableMirror ? 1 : 0;
+    ubo.enableInvert = visualControls.fx.enableInvert ? 1 : 0;
+    ubo.enablePosterize = visualControls.fx.enablePosterize ? 1 : 0;
+    ubo.enableInfrared = visualControls.fx.enableInfrared ? 1 : 0;
+    ubo.enableZoomPulse = visualControls.fx.enableZoomPulse ? 1 : 0;
+    ubo.enableRGBShift = visualControls.fx.enableRGBShift ? 1 : 0;
 
     // CRT
-    ubo.crtCurvature = visualControls.crtCurvature;
-    ubo.crtHorizontalCurvature = visualControls.crtHorizontalCurvature;
-    ubo.crtScanlineIntensity = visualControls.crtScanlineIntensity;
-    ubo.crtMaskIntensity = visualControls.crtMaskIntensity;
-    ubo.crtVignette = visualControls.crtVignette;
-    ubo.crtFishEye = visualControls.crtFishEye;
+    ubo.crtCurvature = visualControls.post.crtCurvature;
+    ubo.crtHorizontalCurvature = visualControls.post.crtHorizontalCurvature;
+    ubo.crtScanlineIntensity = visualControls.post.crtScanlineIntensity;
+    ubo.crtMaskIntensity = visualControls.post.crtMaskIntensity;
+    ubo.crtVignette = visualControls.post.crtVignette;
+    ubo.crtFishEye = visualControls.post.crtFishEye;
     
     // Bloom
-    ubo.bloomIntensity = visualControls.bloomIntensity;
-    ubo.bloomThreshold = visualControls.bloomThreshold;
+    ubo.bloomIntensity = visualControls.post.bloomIntensity;
+    ubo.bloomThreshold = visualControls.post.bloomThreshold;
     
     // Aberracion / grano / bend / glitch
-    ubo.aberrationAmount = visualControls.aberrationAmount;
-    ubo.grainStrength = visualControls.grainStrength;
-    ubo.bendAmount = visualControls.bendAmount;
-    ubo.glitchAmount = visualControls.glitchAmount;
+    ubo.aberrationAmount = visualControls.post.aberrationAmount;
+    ubo.grainStrength = visualControls.post.grainStrength;
+    ubo.bendAmount = visualControls.fx.bendAmount;
+    ubo.glitchAmount = visualControls.fx.glitchAmount;
     
     // Color grading
-    ubo.colorBalance = visualControls.colorBalance;
-    ubo.gradeBrightness = visualControls.gradeBrightness;
-    ubo.gradeContrast = visualControls.gradeContrast;
-    ubo.gradeSaturation = visualControls.gradeSaturation;
-    ubo.gradeHueShift = visualControls.gradeHueShift;
-    ubo.gradeGamma = visualControls.gradeGamma;
-    ubo.colorLUTIndex = visualControls.colorLUTIndex;
-    ubo.splitToneBalance = visualControls.splitToneBalance;
-    ubo.splitToneShadows = visualControls.splitToneShadows;
-    ubo.splitToneHighlights = visualControls.splitToneHighlights;
+    ubo.colorBalance = visualControls.color.colorBalance;
+    ubo.gradeBrightness = visualControls.color.gradeBrightness;
+    ubo.gradeContrast = visualControls.color.gradeContrast;
+    ubo.gradeSaturation = visualControls.color.gradeSaturation;
+    ubo.gradeHueShift = visualControls.color.gradeHueShift;
+    ubo.gradeGamma = visualControls.color.gradeGamma;
+    ubo.colorLUTIndex = visualControls.color.colorLUTIndex;
+    ubo.splitToneBalance = visualControls.color.splitToneBalance;
+    ubo.splitToneShadows = visualControls.color.splitToneShadows;
+    ubo.splitToneHighlights = visualControls.color.splitToneHighlights;
     
     // Feedback temporal
-    ubo.feedbackAmount = visualControls.feedbackAmount;
-    ubo.trailStrength = visualControls.trailStrength;
-    ubo.temporalAccumulation = visualControls.temporalAccumulation;
-    ubo.feedbackDecay = visualControls.feedbackDecay;
-    ubo.recursiveBlend = visualControls.recursiveBlend;
+    ubo.feedbackAmount = visualControls.temporal.feedbackAmount;
+    ubo.trailStrength = visualControls.temporal.trailStrength;
+    ubo.temporalAccumulation = visualControls.temporal.temporalAccumulation;
+    ubo.feedbackDecay = visualControls.temporal.feedbackDecay;
+    ubo.recursiveBlend = visualControls.temporal.recursiveBlend;
     
     // Distorsion espacial
-    ubo.uvWarpStrength = visualControls.uvWarpStrength;
-    ubo.rippleStrength = visualControls.rippleStrength;
-    ubo.rippleFrequency = visualControls.rippleFrequency;
-    ubo.swirlStrength = visualControls.swirlStrength;
-    ubo.displacementAmount = visualControls.displacementAmount;
-    ubo.kaleidoSegments = visualControls.kaleidoSegments;
-    ubo.tunnelDepth = visualControls.tunnelDepth;
-    ubo.tunnelCurvature = visualControls.tunnelCurvature;
+    ubo.uvWarpStrength = visualControls.fx.uvWarpStrength;
+    ubo.rippleStrength = visualControls.fx.rippleStrength;
+    ubo.rippleFrequency = visualControls.fx.rippleFrequency;
+    ubo.swirlStrength = visualControls.fx.swirlStrength;
+    ubo.displacementAmount = visualControls.fx.displacementAmount;
+    ubo.kaleidoSegments = visualControls.fx.kaleidoSegments;
+    ubo.tunnelDepth = visualControls.fx.tunnelDepth;
+    ubo.tunnelCurvature = visualControls.fx.tunnelCurvature;
     
     // Blur y motion
-    ubo.gaussianBlur = visualControls.gaussianBlur;
-    ubo.directionalBlur = visualControls.directionalBlur;
-    ubo.directionalBlurAngle = visualControls.directionalBlurAngle;
-    ubo.zoomBlur = visualControls.zoomBlur;
-    ubo.motionBlur = visualControls.motionBlur;
-    ubo.temporalBlur = visualControls.temporalBlur;
+    ubo.gaussianBlur = visualControls.fx.gaussianBlur;
+    ubo.directionalBlur = visualControls.fx.directionalBlur;
+    ubo.directionalBlurAngle = visualControls.fx.directionalBlurAngle;
+    ubo.zoomBlur = visualControls.fx.zoomBlur;
+    ubo.motionBlur = visualControls.fx.motionBlur;
+    ubo.temporalBlur = visualControls.fx.temporalBlur;
     
     // Sharpening
-    ubo.unsharpMask = visualControls.unsharpMask;
-    ubo.casAmount = visualControls.casAmount;
-    ubo.localContrast = visualControls.localContrast;
+    ubo.unsharpMask = visualControls.fx.unsharpMask;
+    ubo.casAmount = visualControls.fx.casAmount;
+    ubo.localContrast = visualControls.fx.localContrast;
     
     // Glitch detallado
-    ubo.glitchDatamosh = visualControls.glitchDatamosh;
-    ubo.glitchRGBSplit = visualControls.glitchRGBSplit;
-    ubo.glitchScanlineBreak = visualControls.glitchScanlineBreak;
-    ubo.glitchJitter = visualControls.glitchJitter;
-    ubo.glitchTearing = visualControls.glitchTearing;
-    ubo.glitchPixelSort = visualControls.glitchPixelSort;
-    ubo.glitchBufferCorruption = visualControls.glitchBufferCorruption;
+    ubo.glitchDatamosh = visualControls.fx.glitchDatamosh;
+    ubo.glitchRGBSplit = visualControls.fx.glitchRGBSplit;
+    ubo.glitchScanlineBreak = visualControls.fx.glitchScanlineBreak;
+    ubo.glitchJitter = visualControls.fx.glitchJitter;
+    ubo.glitchTearing = visualControls.fx.glitchTearing;
+    ubo.glitchPixelSort = visualControls.fx.glitchPixelSort;
+    ubo.glitchBufferCorruption = visualControls.fx.glitchBufferCorruption;
     
     // Blending / compositing
-    ubo.blendModeProcedural = visualControls.blendModeProcedural;
-    ubo.blendModeVideo = visualControls.blendModeVideo;
-    ubo.blendModeFeedback = visualControls.blendModeFeedback;
-    ubo.blendProceduralMix = visualControls.blendProceduralMix;
-    ubo.blendVideoMix = visualControls.blendVideoMix;
-    ubo.blendFeedbackMix = visualControls.blendFeedbackMix;
+    ubo.blendModeProcedural = visualControls.blending.blendModeProcedural;
+    ubo.blendModeVideo = visualControls.blending.blendModeVideo;
+    ubo.blendModeFeedback = visualControls.blending.blendModeFeedback;
+    ubo.blendProceduralMix = visualControls.blending.blendProceduralMix;
+    ubo.blendVideoMix = visualControls.blending.blendVideoMix;
+    ubo.blendFeedbackMix = visualControls.blending.blendFeedbackMix;
     
     // Analog / CRT avanzado
-    ubo.analogScanlineFocus = visualControls.analogScanlineFocus;
-    ubo.analogMaskBalance = visualControls.analogMaskBalance;
+    ubo.analogScanlineFocus = visualControls.post.analogScanlineFocus;
+    ubo.analogMaskBalance = visualControls.post.analogMaskBalance;
     
     // Temporal
-    ubo.frameAccumulation = visualControls.frameAccumulation;
-    ubo.slowMotionFactor = visualControls.slowMotionFactor;
-    ubo.temporalInterpolation = visualControls.temporalInterpolation;
+    ubo.frameAccumulation = visualControls.playback.frameAccumulation;
+    ubo.slowMotionFactor = visualControls.playback.slowMotionFactor;
+    ubo.temporalInterpolation = visualControls.playback.temporalInterpolation;
     
     // Efectos extra (VJAY EXTRA)
-    ubo.pixelateAmount = visualControls.pixelateAmount;
-    ubo.strobeSpeed = visualControls.strobeSpeed;
-    ubo.thresholdLevel = visualControls.thresholdLevel;
-    ubo.slowZoomAmount = visualControls.slowZoomAmount;
-    ubo.enableEdgeDetect = visualControls.enableEdgeDetect ? 1 : 0;
-    ubo.edgeStrength = visualControls.edgeStrength;
-    ubo.edgeThreshold = visualControls.edgeThreshold;
-    ubo.edgeBlend = visualControls.edgeBlend;
-    ubo.edgeColor = visualControls.edgeColor;
-    ubo.mirrorAmount = visualControls.mirrorAmount;
-    ubo.posterizeLevels = visualControls.posterizeLevels;
-    ubo.zoomPulseAmount = visualControls.zoomPulseAmount;
-    ubo.rgbShiftAmount = visualControls.rgbShiftAmount;
+    ubo.pixelateAmount = visualControls.fx.pixelateAmount;
+    ubo.strobeSpeed = visualControls.fx.strobeSpeed;
+    ubo.thresholdLevel = visualControls.fx.thresholdLevel;
+    ubo.slowZoomAmount = visualControls.fx.slowZoomAmount;
+    ubo.enableEdgeDetect = visualControls.fx.enableEdgeDetect ? 1 : 0;
+    ubo.edgeStrength = visualControls.fx.edgeStrength;
+    ubo.edgeThreshold = visualControls.fx.edgeThreshold;
+    ubo.edgeBlend = visualControls.fx.edgeBlend;
+    ubo.edgeColor = visualControls.fx.edgeColor;
+    ubo.mirrorAmount = visualControls.fx.mirrorAmount;
+    ubo.posterizeLevels = visualControls.fx.posterizeLevels;
+    ubo.zoomPulseAmount = visualControls.fx.zoomPulseAmount;
+    ubo.rgbShiftAmount = visualControls.fx.rgbShiftAmount;
     
     // FXAA
-    ubo.enableFXAA = visualControls.enableFXAA ? 1 : 0;
-    ubo.fxaaQualitySubpix = visualControls.fxaaQualitySubpix;
-    ubo.fxaaQualityEdgeThreshold = visualControls.fxaaQualityEdgeThreshold;
-    ubo.fxaaQualityEdgeThresholdMin = visualControls.fxaaQualityEdgeThresholdMin;
+    ubo.enableFXAA = visualControls.system.enableFXAA ? 1 : 0;
+    ubo.fxaaQualitySubpix = visualControls.system.fxaaQualitySubpix;
+    ubo.fxaaQualityEdgeThreshold = visualControls.system.fxaaQualityEdgeThreshold;
+    ubo.fxaaQualityEdgeThresholdMin = visualControls.system.fxaaQualityEdgeThresholdMin;
 
     // Grid / Mirroring
-    ubo.enableGrid = visualControls.enableGrid ? 1 : 0;
-    ubo.gridMode = visualControls.gridMode;
-    ubo.gridCount = visualControls.gridCount;
-    ubo.gridRows = visualControls.gridRows;
-    ubo.gridColumns = visualControls.gridColumns;
-    ubo.gridMirrorCells = visualControls.gridMirrorCells ? 1 : 0;
-    ubo.gridShowLines = visualControls.gridShowLines ? 1 : 0;
-    ubo.gridLineWidth = visualControls.gridLineWidth;
-    ubo.gridLineIntensity = visualControls.gridLineIntensity;
-    ubo.gridLineColor = visualControls.gridLineColor;
+    ubo.enableGrid = visualControls.grid.enabled ? 1 : 0;
+    ubo.gridMode = visualControls.grid.mode;
+    ubo.gridCount = visualControls.grid.count;
+    ubo.gridRows = visualControls.grid.rows;
+    ubo.gridColumns = visualControls.grid.columns;
+    ubo.gridMirrorCells = visualControls.grid.mirrorCells ? 1 : 0;
+    ubo.gridShowLines = visualControls.grid.showLines ? 1 : 0;
+    ubo.gridLineWidth = visualControls.grid.lineWidth;
+    ubo.gridLineIntensity = visualControls.grid.lineIntensity;
+    ubo.gridLineColor = visualControls.grid.lineColor;
 
     // Camera movement
-    ubo.cameraZoom = visualControls.cameraZoom;
-    ubo.cameraPanX = visualControls.cameraPanX;
-    ubo.cameraPanY = visualControls.cameraPanY;
-    ubo.cameraRotation = visualControls.cameraRotation;
-    ubo.enableCameraMovement = visualControls.enableCameraMovement ? 1 : 0;
+    ubo.cameraZoom = visualControls.camera.zoom;
+    ubo.cameraPanX = visualControls.camera.panX;
+    ubo.cameraPanY = visualControls.camera.panY;
+    ubo.cameraRotation = visualControls.camera.rotation;
+    ubo.enableCameraMovement = visualControls.camera.enableMovement ? 1 : 0;
 
     // Final RGB overlay
-    ubo.rgbOverlay = visualControls.rgbOverlay;
-    ubo.enableRgbOverlay = visualControls.enableRgbOverlay ? 1 : 0;
+    ubo.rgbOverlay = visualControls.color.rgbOverlay;
+    ubo.enableRgbOverlay = visualControls.color.enableRgbOverlay ? 1 : 0;
 
     // ------------------------------------------------------------------
     // AUDIO REACTIVITY AUTO-MODULATION
     // When enabled, audio levels automatically drive effect intensities
     // so the layers animate without manual slider tweaking.
     // ------------------------------------------------------------------
-    float envClamped  = std::clamp(visualControls.energy, 0.0f, 1.0f);
-    float bassClamped = std::clamp(visualControls.bass,   0.0f, 1.0f);
-    float midClamped  = std::clamp(visualControls.mid,    0.0f, 1.0f);
-    float highClamped = std::clamp(visualControls.high,   0.0f, 1.0f);
+    float envClamped  = std::clamp(visualControls.audio.energy, 0.0f, 1.0f);
+    float bassClamped = std::clamp(visualControls.audio.bass,   0.0f, 1.0f);
+    float midClamped  = std::clamp(visualControls.audio.mid,    0.0f, 1.0f);
+    float highClamped = std::clamp(visualControls.audio.high,   0.0f, 1.0f);
 
-    float warpGain     = std::max(0.0f, visualControls.audioWarpResponse);
-    float feedbackGain = std::max(0.0f, visualControls.audioFeedbackResponse);
-    float blurGain     = std::max(0.0f, visualControls.audioBlurResponse);
-    float colorGain    = std::max(0.0f, visualControls.audioColorResponse);
-    float glitchGain   = std::max(0.0f, visualControls.audioGlitchResponse);
+    float warpGain     = std::max(0.0f, visualControls.audio.warpResponse);
+    float feedbackGain = std::max(0.0f, visualControls.audio.feedbackResponse);
+    float blurGain     = std::max(0.0f, visualControls.audio.blurResponse);
+    float colorGain    = std::max(0.0f, visualControls.audio.colorResponse);
+    float glitchGain   = std::max(0.0f, visualControls.audio.glitchResponse);
 
-    if (visualControls.enableAudioReactive) {
+    if (visualControls.system.enableAudioReactive) {
         // Spatial distortion (Pass B)
         ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    envClamped  * 0.15f * warpGain);
         ubo.rippleStrength    = std::max(ubo.rippleStrength,    bassClamped * 0.30f * warpGain);
@@ -1843,7 +1843,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
         ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    highClamped * 0.03f * colorGain);
 
         // Camera movement (2D layer camera)
-        if (visualControls.enableCameraMovement) {
+        if (visualControls.camera.enableMovement) {
             // Very subtle zoom pulse driven by bass (max 6% closer)
             float zoomPulse = 1.0f + (bassClamped * 0.06f + envClamped * 0.02f) * warpGain;
             ubo.cameraZoom = std::max(ubo.cameraZoom, zoomPulse);
@@ -1988,7 +1988,7 @@ void Application::cleanup() {
     // Save control state
     JsonSerializer::save(visualControlsPath, parameterRegistry);
     ControlState::save(controlStatePath, videoRandomizer, videoRandomizer2,
-                       allowDimensionChangeRecreation, midiSystem, oscSystem,
+                       allowDimensionChangeRecreation, oscSystem,
                        selectedVideoAsset, selectedVideoAsset2);
 
     // Shutdown UI

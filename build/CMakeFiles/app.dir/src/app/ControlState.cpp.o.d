@@ -118,36 +118,71 @@ CMakeFiles/app.dir/src/app/ControlState.cpp.o: \
  /usr/include/c++/16.1.1/bits/node_handle.h \
  /usr/include/c++/16.1.1/bits/stl_map.h \
  /usr/include/c++/16.1.1/bits/stl_multimap.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/MidiSystem.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src/RtMidi.h \
- /usr/include/c++/16.1.1/exception \
- /usr/include/c++/16.1.1/bits/exception_ptr.h \
- /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.h \
+ /usr/include/lo/lo.h /usr/include/lo/lo_endian.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/stdint.h \
+ /usr/include/stdint.h /usr/include/bits/stdint-uintn.h \
+ /usr/include/bits/stdint-least.h /usr/include/netinet/in.h \
+ /usr/include/sys/socket.h /usr/include/bits/types/struct_iovec.h \
+ /usr/include/bits/socket.h /usr/include/bits/socket_type.h \
+ /usr/include/bits/sockaddr.h /usr/include/asm/socket.h \
+ /usr/include/asm-generic/socket.h /usr/include/linux/posix_types.h \
+ /usr/include/linux/stddef.h /usr/include/asm/posix_types.h \
+ /usr/include/asm/posix_types_64.h /usr/include/asm-generic/posix_types.h \
+ /usr/include/asm/bitsperlong.h /usr/include/asm-generic/bitsperlong.h \
+ /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
+ /usr/include/bits/types/struct_osockaddr.h /usr/include/bits/in.h \
+ /usr/include/lo/lo_types.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
+ /usr/include/bits/types/sigevent_t.h \
+ /usr/include/bits/types/__sigval_t.h /usr/include/bits/netdb.h \
+ /usr/include/lo/lo_osc_types.h /usr/include/lo/lo_errors.h \
+ /usr/include/lo/lo_lowlevel.h /usr/include/lo/lo_serverthread.h \
+ /usr/include/lo/lo_macros.h /usr/include/c++/16.1.1/vector \
+ /usr/include/c++/16.1.1/bits/stl_uninitialized.h \
+ /usr/include/c++/16.1.1/bits/stl_vector.h \
+ /usr/include/c++/16.1.1/bits/stl_bvector.h \
+ /usr/include/c++/16.1.1/bits/vector.tcc \
+ /usr/include/c++/16.1.1/functional \
+ /usr/include/c++/16.1.1/bits/refwrap.h \
+ /usr/include/c++/16.1.1/bits/std_function.h \
  /usr/include/c++/16.1.1/typeinfo \
- /usr/include/c++/16.1.1/bits/nested_exception.h \
- /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
- /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
- /usr/include/c++/16.1.1/bits/ios_base.h \
- /usr/include/c++/16.1.1/ext/atomicity.h \
+ /usr/include/c++/16.1.1/bits/functexcept.h \
+ /usr/include/c++/16.1.1/unordered_map \
+ /usr/include/c++/16.1.1/bits/unordered_map.h \
+ /usr/include/c++/16.1.1/bits/hashtable.h \
+ /usr/include/c++/16.1.1/bits/hashtable_policy.h \
+ /usr/include/c++/16.1.1/bits/enable_special_members.h \
+ /usr/include/c++/16.1.1/array /usr/include/c++/16.1.1/bits/binders.h \
+ /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
+ /usr/include/c++/16.1.1/atomic \
+ /usr/include/c++/16.1.1/bits/atomic_base.h \
+ /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/16.1.1/bits/atomic_wait.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
  /usr/include/pthread.h /usr/include/sched.h /usr/include/bits/sched.h \
  /usr/include/linux/sched/types.h /usr/include/linux/types.h \
  /usr/include/asm/types.h /usr/include/asm-generic/types.h \
- /usr/include/asm-generic/int-ll64.h /usr/include/asm/bitsperlong.h \
- /usr/include/asm-generic/bitsperlong.h /usr/include/linux/posix_types.h \
- /usr/include/linux/stddef.h /usr/include/asm/posix_types.h \
- /usr/include/asm/posix_types_64.h /usr/include/asm-generic/posix_types.h \
+ /usr/include/asm-generic/int-ll64.h \
  /usr/include/bits/types/struct_sched_param.h /usr/include/bits/cpu-set.h \
  /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/timex.h \
  /usr/include/bits/types/struct_tm.h \
  /usr/include/bits/types/struct_itimerspec.h /usr/include/bits/setjmp.h \
  /usr/include/bits/types/struct___jmp_buf_tag.h \
  /usr/include/bits/pthread_stack_min-dynamic.h \
+ /usr/include/c++/16.1.1/cstdint \
+ /usr/include/c++/16.1.1/bits/std_thread.h \
+ /usr/include/c++/16.1.1/bits/unique_ptr.h \
+ /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
+ /usr/include/c++/16.1.1/exception \
+ /usr/include/c++/16.1.1/bits/exception_ptr.h \
+ /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
+ /usr/include/c++/16.1.1/bits/nested_exception.h \
+ /usr/include/c++/16.1.1/bits/ios_base.h \
+ /usr/include/c++/16.1.1/ext/atomicity.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
  /usr/include/sys/single_threaded.h \
  /usr/include/c++/16.1.1/bits/locale_classes.h \
- /usr/include/c++/16.1.1/bits/functexcept.h \
  /usr/include/c++/16.1.1/bits/locale_classes.tcc \
  /usr/include/c++/16.1.1/system_error \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/error_constants.h \
@@ -164,22 +199,15 @@ CMakeFiles/app.dir/src/app/ControlState.cpp.o: \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
  /usr/include/c++/16.1.1/bits/locale_facets.tcc \
  /usr/include/c++/16.1.1/bits/basic_ios.tcc \
- /usr/include/c++/16.1.1/bits/ostream_print.h \
- /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/bits/istream.tcc /usr/include/c++/16.1.1/vector \
- /usr/include/c++/16.1.1/bits/stl_uninitialized.h \
- /usr/include/c++/16.1.1/bits/stl_vector.h \
- /usr/include/c++/16.1.1/bits/stl_bvector.h \
- /usr/include/c++/16.1.1/bits/vector.tcc \
- /usr/include/c++/16.1.1/functional \
- /usr/include/c++/16.1.1/bits/refwrap.h \
- /usr/include/c++/16.1.1/bits/std_function.h \
- /usr/include/c++/16.1.1/unordered_map \
- /usr/include/c++/16.1.1/bits/unordered_map.h \
- /usr/include/c++/16.1.1/bits/hashtable.h \
- /usr/include/c++/16.1.1/bits/hashtable_policy.h \
- /usr/include/c++/16.1.1/bits/enable_special_members.h \
- /usr/include/c++/16.1.1/array /usr/include/c++/16.1.1/bits/binders.h \
+ /usr/include/c++/16.1.1/semaphore \
+ /usr/include/c++/16.1.1/bits/semaphore_base.h \
+ /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
+ /usr/include/c++/16.1.1/ctime \
+ /usr/include/c++/16.1.1/bits/parse_numbers.h \
+ /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
+ /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
+ /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/VisualControls.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
  /usr/include/c++/16.1.1/cmath /usr/include/math.h \
@@ -203,10 +231,7 @@ CMakeFiles/app.dir/src/app/ControlState.cpp.o: \
  /usr/include/c++/16.1.1/tr1/riemann_zeta.tcc \
  /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
  /usr/include/assert.h /usr/include/glm/simd/platform.h \
- /usr/include/c++/16.1.1/cstdint \
- /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/stdint.h \
- /usr/include/stdint.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h /usr/include/c++/16.1.1/climits \
+ /usr/include/c++/16.1.1/climits \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/limits.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
@@ -326,37 +351,12 @@ CMakeFiles/app.dir/src/app/ControlState.cpp.o: \
  /usr/include/glm/packing.hpp /usr/include/glm/detail/func_packing.inl \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
- /usr/include/glm/detail/func_integer.inl \
- /home/ricky/coding/proyects/vulkancpp/src/app/OscSystem.h \
- /usr/include/lo/lo.h /usr/include/lo/lo_endian.h \
- /usr/include/netinet/in.h /usr/include/sys/socket.h \
- /usr/include/bits/types/struct_iovec.h /usr/include/bits/socket.h \
- /usr/include/bits/socket_type.h /usr/include/bits/sockaddr.h \
- /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
- /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
- /usr/include/bits/types/struct_osockaddr.h /usr/include/bits/in.h \
- /usr/include/lo/lo_types.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
- /usr/include/bits/types/sigevent_t.h \
- /usr/include/bits/types/__sigval_t.h /usr/include/bits/netdb.h \
- /usr/include/lo/lo_osc_types.h /usr/include/lo/lo_errors.h \
- /usr/include/lo/lo_lowlevel.h /usr/include/lo/lo_serverthread.h \
- /usr/include/lo/lo_macros.h /usr/include/c++/16.1.1/thread \
- /usr/include/c++/16.1.1/stop_token /usr/include/c++/16.1.1/atomic \
- /usr/include/c++/16.1.1/bits/atomic_base.h \
- /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
- /usr/include/c++/16.1.1/bits/atomic_wait.h \
- /usr/include/c++/16.1.1/bits/std_thread.h \
- /usr/include/c++/16.1.1/bits/unique_ptr.h \
- /usr/include/c++/16.1.1/semaphore \
- /usr/include/c++/16.1.1/bits/semaphore_base.h \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime \
- /usr/include/c++/16.1.1/bits/parse_numbers.h \
- /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
- /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
- /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
- /usr/include/c++/16.1.1/bits/unique_lock.h \
- /usr/include/c++/16.1.1/fstream /usr/include/c++/16.1.1/bits/codecvt.h \
+ /usr/include/glm/detail/func_integer.inl /usr/include/c++/16.1.1/fstream \
+ /usr/include/c++/16.1.1/istream /usr/include/c++/16.1.1/ostream \
+ /usr/include/c++/16.1.1/bits/ostream_print.h \
+ /usr/include/c++/16.1.1/bits/ostream.tcc \
+ /usr/include/c++/16.1.1/bits/istream.tcc \
+ /usr/include/c++/16.1.1/bits/codecvt.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
  /usr/include/c++/16.1.1/bits/fstream.tcc /usr/include/c++/16.1.1/sstream \
@@ -371,5 +371,6 @@ CMakeFiles/app.dir/src/app/ControlState.cpp.o: \
  /usr/include/c++/16.1.1/bits/ranges_algobase.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
  /usr/include/c++/16.1.1/pstl/execution_defs.h \
- /usr/include/c++/16.1.1/deque /usr/include/c++/16.1.1/bits/stl_deque.h \
+ /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/deque \
+ /usr/include/c++/16.1.1/bits/stl_deque.h \
  /usr/include/c++/16.1.1/bits/deque.tcc

@@ -13,6 +13,14 @@ const vec2 positions[3] = vec2[](
 
 void main() {
     vec2 pos = positions[gl_VertexIndex];
+
     gl_Position = vec4(pos, 0.0, 1.0);
-    uv = pos * 0.5 + 0.5;
+
+    // Base UV from NDC
+    vec2 baseUV = pos * 0.5 + 0.5;
+
+    // Vulkan Y-flip safety (common requirement depending on render target origin)
+    baseUV.y = 1.0 - baseUV.y;
+
+    uv = baseUV;
 }

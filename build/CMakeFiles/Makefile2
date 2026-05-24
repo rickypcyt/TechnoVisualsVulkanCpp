@@ -328,7 +328,7 @@ _deps/rtmidi-build/clean: _deps/rtmidi-build/CMakeFiles/uninstall.dir/clean
 CMakeFiles/gen_ubo.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gen_ubo.dir/build.make CMakeFiles/gen_ubo.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gen_ubo.dir/build.make CMakeFiles/gen_ubo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=36 "Built target gen_ubo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=37 "Built target gen_ubo"
 .PHONY : CMakeFiles/gen_ubo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -345,7 +345,7 @@ gen_ubo: CMakeFiles/gen_ubo.dir/rule
 # codegen rule for target.
 CMakeFiles/gen_ubo.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gen_ubo.dir/build.make CMakeFiles/gen_ubo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=36 "Finished codegen for target gen_ubo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=37 "Finished codegen for target gen_ubo"
 .PHONY : CMakeFiles/gen_ubo.dir/codegen
 
 # clean rule for target.
@@ -361,12 +361,12 @@ CMakeFiles/app.dir/all: CMakeFiles/gen_ubo.dir/all
 CMakeFiles/app.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33 "Built target app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 "Built target app"
 .PHONY : CMakeFiles/app.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/app.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 36
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 37
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/app.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : CMakeFiles/app.dir/rule
@@ -378,7 +378,7 @@ app: CMakeFiles/app.dir/rule
 # codegen rule for target.
 CMakeFiles/app.dir/codegen: CMakeFiles/gen_ubo.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33 "Finished codegen for target app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 "Finished codegen for target app"
 .PHONY : CMakeFiles/app.dir/codegen
 
 # clean rule for target.
@@ -1321,7 +1321,7 @@ _deps/rtmidi-build/CMakeFiles/ContinuousSubmit.dir/clean:
 _deps/rtmidi-build/CMakeFiles/cmidiin.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=34,35 "Built target cmidiin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=35,36 "Built target cmidiin"
 .PHONY : _deps/rtmidi-build/CMakeFiles/cmidiin.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1338,7 +1338,7 @@ cmidiin: _deps/rtmidi-build/CMakeFiles/cmidiin.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/cmidiin.dir/build.make _deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=34,35 "Finished codegen for target cmidiin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=35,36 "Finished codegen for target cmidiin"
 .PHONY : _deps/rtmidi-build/CMakeFiles/cmidiin.dir/codegen
 
 # clean rule for target.
@@ -1353,12 +1353,12 @@ _deps/rtmidi-build/CMakeFiles/cmidiin.dir/clean:
 _deps/rtmidi-build/CMakeFiles/midiclock.dir/all: _deps/rtmidi-build/CMakeFiles/rtmidi.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=86,87 "Built target midiclock"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=87 "Built target midiclock"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/all
 
 # Build rule for subdir invocation for target.
 _deps/rtmidi-build/CMakeFiles/midiclock.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/rtmidi-build/CMakeFiles/midiclock.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/rule
@@ -1370,7 +1370,7 @@ midiclock: _deps/rtmidi-build/CMakeFiles/midiclock.dir/rule
 # codegen rule for target.
 _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/rtmidi-build/CMakeFiles/midiclock.dir/build.make _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=86,87 "Finished codegen for target midiclock"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=87 "Finished codegen for target midiclock"
 .PHONY : _deps/rtmidi-build/CMakeFiles/midiclock.dir/codegen
 
 # clean rule for target.
@@ -1673,12 +1673,12 @@ _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_sse41.dir/clean:
 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all: _deps/boost_math-build/CMakeFiles/boost_math.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=50,51,52,53,54,55,56 "Built target kfr_dsp_avx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=51,52,53,54,55,56 "Built target kfr_dsp_avx"
 .PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all
 
 # Build rule for subdir invocation for target.
 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 6
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/rule
@@ -1690,7 +1690,7 @@ kfr_dsp_avx: _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/rule
 # codegen rule for target.
 _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/build.make _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=50,51,52,53,54,55,56 "Finished codegen for target kfr_dsp_avx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=51,52,53,54,55,56 "Finished codegen for target kfr_dsp_avx"
 .PHONY : _deps/kfr-build/src/dsp/CMakeFiles/kfr_dsp_avx.dir/codegen
 
 # clean rule for target.
@@ -1801,12 +1801,12 @@ _deps/boost_math-build/CMakeFiles/boost_math.dir/clean:
 _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all:
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=83,84,85 "Built target kfr_io"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=83,84,85,86 "Built target kfr_io"
 .PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
 
 # Build rule for subdir invocation for target.
 _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles 0
 .PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/rule
@@ -1818,7 +1818,7 @@ kfr_io: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/rule
 # codegen rule for target.
 _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/build.make _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=83,84,85 "Finished codegen for target kfr_io"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=83,84,85,86 "Finished codegen for target kfr_io"
 .PHONY : _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/codegen
 
 # clean rule for target.
@@ -1839,7 +1839,7 @@ _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/boost_math-build/C
 _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all: _deps/kfr-build/src/io/CMakeFiles/kfr_io.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=37,38,39,40,41,42,43,44,45,46,47,48,49 "Built target kfr_audio"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=38,39,40,41,42,43,44,45,46,47,48,49,50 "Built target kfr_audio"
 .PHONY : _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1856,7 +1856,7 @@ kfr_audio: _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/rule
 # codegen rule for target.
 _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/build.make _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=37,38,39,40,41,42,43,44,45,46,47,48,49 "Finished codegen for target kfr_audio"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=38,39,40,41,42,43,44,45,46,47,48,49,50 "Finished codegen for target kfr_audio"
 .PHONY : _deps/kfr-build/src/audio/CMakeFiles/kfr_audio.dir/codegen
 
 # clean rule for target.

@@ -1,4 +1,5 @@
 #include "MidiSystem.h"
+#include "parameters/ParameterBindingRegistry.h"
 #include <iostream>
 #include <cstring>
 #include <utility>
@@ -103,27 +104,31 @@ void MidiSystem::update() {
     std::vector<unsigned char> message;
     try {
         while (midiIn->getMessage(&message) > 0) {
-            if (!message.empty()) {
-                MidiMessage msg = parseMessage(&message);
+            if (message.empty())
+                continue;
 
-                // Learn mode: capture the first message
-                if (learnMode && !hasLearned) {
+            MidiMessage msg = parseMessage(message);
+
+            // Learn mode: capture only valid control messages
+            if (learnMode && !hasLearned) {
+                if (msg.type == MidiEventType::CONTROL_CHANGE ||
+                    msg.type == MidiEventType::NOTE_ON) {
                     lastLearnedMessage = msg;
                     hasLearned = true;
-                    learnMode = false; // Exit learn mode after capturing
+                    learnMode = false;
                     std::cout << "[MidiSystem] Learned MIDI message: ";
                     if (msg.type == MidiEventType::CONTROL_CHANGE) {
                         std::cout << "CC " << msg.controller << " value " << msg.value << std::endl;
                     } else if (msg.type == MidiEventType::NOTE_ON) {
                         std::cout << "Note " << msg.note << " velocity " << msg.velocity << std::endl;
                     }
-                    continue; // Don't process the learned message yet
                 }
+                continue;
+            }
 
-                // Call event callback if set
-                if (eventCallback) {
-                    eventCallback(msg);
-                }
+            // Call event callback if set
+            if (eventCallback) {
+                eventCallback(msg);
             }
         }
     } catch (RtMidiError& error) {
@@ -219,35 +224,54 @@ void MidiSystem::clearLearnedMessage() {
     hasLearned = false;
 }
 
-MidiMessage MidiSystem::parseMessage(std::vector<unsigned char>* message) {
-    MidiMessage msg;
-    msg.channel = static_cast<int>((*message)[0] & 0x0F);
-    unsigned char status = (*message)[0] & 0xF0;
+MidiMessage MidiSystem::parseMessage(const std::vector<unsigned char>& message) {
+    MidiMessage msg{};
 
-    switch (status) {
+    if (message.empty())
+        return msg;
+
+    const uint8_t status = message[0];
+    const uint8_t type = status & 0xF0;
+
+    msg.channel = status & 0x0F;
+
+    switch (type) {
         case 0x80: // Note Off
-            msg.type = MidiEventType::NOTE_OFF;
-            msg.note = static_cast<int>((*message)[1]);
-            msg.velocity = static_cast<int>((*message)[2]);
+            if (message.size() >= 3) {
+                msg.type = MidiEventType::NOTE_OFF;
+                msg.note = static_cast<int>(message[1]);
+                msg.velocity = static_cast<int>(message[2]);
+            }
             break;
         case 0x90: // Note On
-            msg.type = MidiEventType::NOTE_ON;
-            msg.note = static_cast<int>((*message)[1]);
-            msg.velocity = static_cast<int>((*message)[2]);
+            if (message.size() >= 3) {
+                if (message[2] == 0)
+                    msg.type = MidiEventType::NOTE_OFF;
+                else
+                    msg.type = MidiEventType::NOTE_ON;
+                msg.note = static_cast<int>(message[1]);
+                msg.velocity = static_cast<int>(message[2]);
+            }
             break;
         case 0xB0: // Control Change
-            msg.type = MidiEventType::CONTROL_CHANGE;
-            msg.controller = static_cast<int>((*message)[1]);
-            msg.value = static_cast<int>((*message)[2]);
+            if (message.size() >= 3) {
+                msg.type = MidiEventType::CONTROL_CHANGE;
+                msg.controller = static_cast<int>(message[1]);
+                msg.value = static_cast<int>(message[2]);
+            }
             break;
         case 0xC0: // Program Change
-            msg.type = MidiEventType::PROGRAM_CHANGE;
-            msg.value = static_cast<int>((*message)[1]);
+            if (message.size() >= 2) {
+                msg.type = MidiEventType::PROGRAM_CHANGE;
+                msg.value = static_cast<int>(message[1]);
+            }
             break;
         case 0xE0: // Pitch Bend
-            msg.type = MidiEventType::PITCH_BEND;
-            int bend = (*message)[1] + ((*message)[2] << 7);
-            msg.pitch = (static_cast<double>(bend) - 8192.0) / 8192.0;
+            if (message.size() >= 3) {
+                msg.type = MidiEventType::PITCH_BEND;
+                int bend = message[1] | (message[2] << 7);
+                msg.pitch = (static_cast<double>(bend) - 8192.0) / 8192.0;
+            }
             break;
     }
 
@@ -269,112 +293,38 @@ void MidiSystem::applyCCMapping(int ccNumber, int value, VisualControls& control
 
     float mappedValue = mapping.minValue + normalizedValue * (mapping.maxValue - mapping.minValue);
 
-    // Map to VisualControls parameters - all parameters from the wizard
-    const std::string& name = mapping.parameterName;
+    const auto& registry = ParameterBindingRegistry::get();
+    auto regIt = registry.find(mapping.parameterName);
 
-    // Procedural
-    if (name == "animationSpeed") controls.animationSpeed = mappedValue;
-    else if (name == "tempo") controls.tempo = mappedValue;
-    else if (name == "energy") controls.energy = mappedValue;
-    else if (name == "bass") controls.bass = mappedValue;
-    else if (name == "mid") controls.mid = mappedValue;
-    else if (name == "high") controls.high = mappedValue;
-    else if (name == "colorBlend") controls.colorBlend = mappedValue;
-    else if (name == "uvWarpStrength") controls.uvWarpStrength = mappedValue;
-    else if (name == "rippleStrength") controls.rippleStrength = mappedValue;
-    else if (name == "rippleFrequency") controls.rippleFrequency = mappedValue;
-    else if (name == "swirlStrength") controls.swirlStrength = mappedValue;
-    else if (name == "displacementAmount") controls.displacementAmount = mappedValue;
-    else if (name == "kaleidoSegments") controls.kaleidoSegments = mappedValue;
-    else if (name == "tunnelDepth") controls.tunnelDepth = mappedValue;
-    else if (name == "tunnelCurvature") controls.tunnelCurvature = mappedValue;
-    // Post FX
-    else if (name == "bloomIntensity") controls.bloomIntensity = mappedValue;
-    else if (name == "bloomThreshold") controls.bloomThreshold = mappedValue;
-    else if (name == "aberrationAmount") controls.aberrationAmount = mappedValue;
-    else if (name == "grainStrength") controls.grainStrength = mappedValue;
-    else if (name == "crtCurvature") controls.crtCurvature = mappedValue;
-    else if (name == "crtScanlineIntensity") controls.crtScanlineIntensity = mappedValue;
-    else if (name == "crtMaskIntensity") controls.crtMaskIntensity = mappedValue;
-    else if (name == "crtVignette") controls.crtVignette = mappedValue;
-    else if (name == "crtFishEye") controls.crtFishEye = mappedValue;
-    else if (name == "gaussianBlur") controls.gaussianBlur = mappedValue;
-    else if (name == "directionalBlur") controls.directionalBlur = mappedValue;
-    else if (name == "directionalBlurAngle") controls.directionalBlurAngle = mappedValue;
-    else if (name == "zoomBlur") controls.zoomBlur = mappedValue;
-    else if (name == "motionBlur") controls.motionBlur = mappedValue;
-    else if (name == "temporalBlur") controls.temporalBlur = mappedValue;
-    else if (name == "unsharpMask") controls.unsharpMask = mappedValue;
-    else if (name == "casAmount") controls.casAmount = mappedValue;
-    else if (name == "localContrast") controls.localContrast = mappedValue;
-    else if (name == "pixelateAmount") controls.pixelateAmount = mappedValue;
-    else if (name == "strobeSpeed") controls.strobeSpeed = mappedValue;
-    else if (name == "thresholdLevel") controls.thresholdLevel = mappedValue;
-    else if (name == "slowZoomAmount") controls.slowZoomAmount = mappedValue;
-    else if (name == "edgeStrength") controls.edgeStrength = mappedValue;
-    else if (name == "edgeThreshold") controls.edgeThreshold = mappedValue;
-    else if (name == "edgeBlend") controls.edgeBlend = mappedValue;
-    else if (name == "fxaaQualitySubpix") controls.fxaaQualitySubpix = mappedValue;
-    else if (name == "fxaaQualityEdgeThreshold") controls.fxaaQualityEdgeThreshold = mappedValue;
-    else if (name == "fxaaQualityEdgeThresholdMin") controls.fxaaQualityEdgeThresholdMin = mappedValue;
-    // VJay Basics
-    else if (name == "videoPlaybackRate") controls.videoPlaybackRate = mappedValue;
-    else if (name == "videoDecodeOversample") controls.videoDecodeOversample = mappedValue;
-    else if (name == "videoMix") controls.videoMix = mappedValue;
-    else if (name == "video2Mix") controls.video2Mix = mappedValue;
-    else if (name == "video2PlaybackRate") controls.video2PlaybackRate = mappedValue;
-    else if (name == "grayscaleAmount") controls.grayscaleAmount = mappedValue;
-    else if (name == "sharpenAmount") controls.sharpenAmount = mappedValue;
-    else if (name == "gradeBrightness") controls.gradeBrightness = mappedValue;
-    else if (name == "gradeContrast") controls.gradeContrast = mappedValue;
-    else if (name == "gradeSaturation") controls.gradeSaturation = mappedValue;
-    else if (name == "gradeHueShift") controls.gradeHueShift = mappedValue;
-    else if (name == "gradeGamma") controls.gradeGamma = mappedValue;
-    else if (name == "colorLUTIndex") controls.colorLUTIndex = static_cast<int>(mappedValue);
-    else if (name == "splitToneBalance") controls.splitToneBalance = mappedValue;
-    else if (name == "blendProceduralMix") controls.blendProceduralMix = mappedValue;
-    else if (name == "blendVideoMix") controls.blendVideoMix = mappedValue;
-    else if (name == "blendFeedbackMix") controls.blendFeedbackMix = mappedValue;
-    // VJay Extra
-    else if (name == "feedbackAmount") controls.feedbackAmount = mappedValue;
-    else if (name == "trailStrength") controls.trailStrength = mappedValue;
-    else if (name == "temporalAccumulation") controls.temporalAccumulation = mappedValue;
-    else if (name == "feedbackDecay") controls.feedbackDecay = mappedValue;
-    else if (name == "recursiveBlend") controls.recursiveBlend = mappedValue;
-    else if (name == "glitchAmount") controls.glitchAmount = mappedValue;
-    else if (name == "glitchDatamosh") controls.glitchDatamosh = mappedValue;
-    else if (name == "glitchRGBSplit") controls.glitchRGBSplit = mappedValue;
-    else if (name == "glitchScanlineBreak") controls.glitchScanlineBreak = mappedValue;
-    else if (name == "glitchJitter") controls.glitchJitter = mappedValue;
-    else if (name == "glitchTearing") controls.glitchTearing = mappedValue;
-    else if (name == "glitchPixelSort") controls.glitchPixelSort = mappedValue;
-    else if (name == "glitchBufferCorruption") controls.glitchBufferCorruption = mappedValue;
-    else if (name == "analogScanlineFocus") controls.analogScanlineFocus = mappedValue;
-    else if (name == "analogMaskBalance") controls.analogMaskBalance = mappedValue;
-    else if (name == "analogNoise") controls.analogNoise = mappedValue;
-    else if (name == "analogBloom") controls.analogBloom = mappedValue;
-    else if (name == "vhsDistortion") controls.vhsDistortion = mappedValue;
-    else if (name == "analogChromaticAberration") controls.analogChromaticAberration = mappedValue;
-    else if (name == "mirrorAmount") controls.mirrorAmount = mappedValue;
-    else if (name == "posterizeLevels") controls.posterizeLevels = mappedValue;
-    else if (name == "zoomPulseAmount") controls.zoomPulseAmount = mappedValue;
-    else if (name == "rgbShiftAmount") controls.rgbShiftAmount = mappedValue;
-    else if (name == "audioWarpResponse") controls.audioWarpResponse = mappedValue;
-    else if (name == "audioFeedbackResponse") controls.audioFeedbackResponse = mappedValue;
-    else if (name == "audioBlurResponse") controls.audioBlurResponse = mappedValue;
-    else if (name == "audioColorResponse") controls.audioColorResponse = mappedValue;
-    else if (name == "audioGlitchResponse") controls.audioGlitchResponse = mappedValue;
-    else if (name == "audioBeatSync") controls.audioBeatSync = mappedValue;
-    else if (name == "audioLfoRate") controls.audioLfoRate = mappedValue;
-    else if (name == "temporalInterpolation") controls.temporalInterpolation = mappedValue;
-    else if (name == "temporalBlendStrength") controls.temporalBlendStrength = mappedValue;
-    else if (name == "slowMotionFactor") controls.slowMotionFactor = mappedValue;
-    else if (name == "frameAccumulation") controls.frameAccumulation = mappedValue;
+    if (regIt == registry.end()) {
+        return;
+    }
+
+    const ParamBinding& binding = regIt->second;
+
+    switch (binding.type) {
+        case ParamBinding::Type::Float:
+            binding.set(controls, mappedValue);
+            break;
+        case ParamBinding::Type::Int:
+            binding.set(controls, static_cast<int>(mappedValue));
+            break;
+        case ParamBinding::Type::Bool:
+            binding.set(controls, mappedValue > 0.5f);
+            break;
+        case ParamBinding::Type::Vec3:
+        case ParamBinding::Type::Vec4:
+            // Vec3/Vec4 not supported for CC mapping (requires multi-dimensional input)
+            break;
+    }
 }
 
 void MidiSystem::applyNoteMapping(int note, int velocity, VisualControls& controls) {
+    if (velocity <= 0)
+        return;
+
     auto triggerIt = triggerMappings.find(note);
-    if (triggerIt != triggerMappings.end() && velocity > 0) {
+    if (triggerIt != triggerMappings.end()) {
         if (triggerCallback) {
             triggerCallback(triggerIt->second.actionName);
         }
@@ -385,19 +335,17 @@ void MidiSystem::applyNoteMapping(int note, int velocity, VisualControls& contro
     // Low notes (C2-C3) for mode switching
     if (note >= 36 && note <= 48) {
         int mode = note - 36;
-        controls.activeMode = mode;
+        controls.playback.activeMode = mode;
     }
     // High notes for triggering effects
-    else if (note >= 60 && velocity > 0) {
-        // Trigger random video change on C4 (note 60)
-        if (note == 60) {
-            // This would need to be connected to Application's video randomizer
-            // For now, just a placeholder
+    else if (note >= 60) {
+        switch (note) {
+            case 62: controls.post.enablePostBloom = !controls.post.enablePostBloom; break;
+            case 64: controls.post.enablePostGlitch = !controls.post.enablePostGlitch; break;
+            case 65: controls.post.enablePostBend = !controls.post.enablePostBend; break;
+            case 67: controls.temporal.enableFeedback = !controls.temporal.enableFeedback; break;
+            default:
+                break;
         }
-        // Toggle effects on other notes
-        else if (note == 62) controls.enablePostBloom = !controls.enablePostBloom;
-        else if (note == 64) controls.enablePostGlitch = !controls.enablePostGlitch;
-        else if (note == 65) controls.enablePostBend = !controls.enablePostBend;
-        else if (note == 67) controls.enableFeedback = !controls.enableFeedback;
     }
 }

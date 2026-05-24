@@ -105,7 +105,7 @@ private:
     std::map<int, MidiTriggerMapping> triggerMappings;
 
     // Helper functions
-    MidiMessage parseMessage(std::vector<unsigned char>* message);
+    MidiMessage parseMessage(const std::vector<unsigned char>& message);
     void applyCCMapping(int ccNumber, int value, VisualControls& controls);
     void applyNoteMapping(int note, int velocity, VisualControls& controls);
 };

@@ -977,6 +977,30 @@ src/app/parameters/MidiBindingSystem.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.s
 .PHONY : src/app/parameters/MidiBindingSystem.cpp.s
 
+src/app/parameters/ParameterBindingRegistry.o: src/app/parameters/ParameterBindingRegistry.cpp.o
+.PHONY : src/app/parameters/ParameterBindingRegistry.o
+
+# target to build an object file
+src/app/parameters/ParameterBindingRegistry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o
+.PHONY : src/app/parameters/ParameterBindingRegistry.cpp.o
+
+src/app/parameters/ParameterBindingRegistry.i: src/app/parameters/ParameterBindingRegistry.cpp.i
+.PHONY : src/app/parameters/ParameterBindingRegistry.i
+
+# target to preprocess a source file
+src/app/parameters/ParameterBindingRegistry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.i
+.PHONY : src/app/parameters/ParameterBindingRegistry.cpp.i
+
+src/app/parameters/ParameterBindingRegistry.s: src/app/parameters/ParameterBindingRegistry.cpp.s
+.PHONY : src/app/parameters/ParameterBindingRegistry.s
+
+# target to generate assembly for a file
+src/app/parameters/ParameterBindingRegistry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.s
+.PHONY : src/app/parameters/ParameterBindingRegistry.cpp.s
+
 src/app/parameters/ParameterRegistry.o: src/app/parameters/ParameterRegistry.cpp.o
 .PHONY : src/app/parameters/ParameterRegistry.o
 
@@ -1661,6 +1685,9 @@ help:
 	@echo "... src/app/parameters/MidiBindingSystem.o"
 	@echo "... src/app/parameters/MidiBindingSystem.i"
 	@echo "... src/app/parameters/MidiBindingSystem.s"
+	@echo "... src/app/parameters/ParameterBindingRegistry.o"
+	@echo "... src/app/parameters/ParameterBindingRegistry.i"
+	@echo "... src/app/parameters/ParameterBindingRegistry.s"
 	@echo "... src/app/parameters/ParameterRegistry.o"
 	@echo "... src/app/parameters/ParameterRegistry.i"
 	@echo "... src/app/parameters/ParameterRegistry.s"
