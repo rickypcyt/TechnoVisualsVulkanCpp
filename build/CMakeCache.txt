@@ -826,6 +826,8 @@ FFMPEG_libswscale_VERSION:INTERNAL=9.5.101
 FIND_PACKAGE_MESSAGE_DETAILS_ALSA:INTERNAL=[/usr/lib/libasound.so][/usr/include][v1.2.15.3()]
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v2.5.1()]
+//Details about finding Python3
+FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/usr/bin/python3.14][found components: Interpreter ][v3.14.5()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //Details about finding Vulkan
@@ -938,6 +940,17 @@ Vulkan_INCLUDE_DIR-ADVANCED:INTERNAL=1
 Vulkan_LIBRARY-ADVANCED:INTERNAL=1
 //CMAKE_INSTALL_PREFIX during last run
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
+//Compiler reason failure
+_Python3_Compiler_REASON_FAILURE:INTERNAL=
+//Development reason failure
+_Python3_Development_REASON_FAILURE:INTERNAL=
+//Path to a program.
+_Python3_EXECUTABLE:INTERNAL=/usr/bin/python3.14
+//Python3 Properties
+_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;14;5;64;32;<none>;cpython-314-x86_64-linux-gnu;abi3;/usr/lib/python3.14;/usr/lib/python3.14;/usr/lib/python3.14/site-packages;/usr/lib/python3.14/site-packages
+_Python3_INTERPRETER_SIGNATURE:INTERNAL=5da1bc9426cdb93bc62bc48997978eb2
+//NumPy reason failure
+_Python3_NumPy_REASON_FAILURE:INTERNAL=
 __pkg_config_arguments_FFMPEG:INTERNAL=REQUIRED;IMPORTED_TARGET;libavformat;libavcodec;libavutil;libswscale;libswresample
 __pkg_config_arguments_LIBLO:INTERNAL=REQUIRED;liblo
 __pkg_config_arguments_PORTAUDIO:INTERNAL=REQUIRED;portaudio-2.0

@@ -1,4 +1,6 @@
 # Hashes of file build rules.
+7bb89d1d96f5be4bf33d4c2a707e95f0 /home/ricky/coding/proyects/vulkancpp/shaders/shared_ubo.glsl
+ef8ca78de7e58b0f233ad65dce7d2156 CMakeFiles/gen_ubo
 48cc27bb4120918134ec082601bfc3df _deps/rtmidi-build/CMakeFiles/Continuous
 f6d26b85d81037c51f4a8460cc7505ba _deps/rtmidi-build/CMakeFiles/ContinuousBuild
 b9ca679394d0662ae1c298c1742f598e _deps/rtmidi-build/CMakeFiles/ContinuousConfigure

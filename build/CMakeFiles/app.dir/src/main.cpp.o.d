@@ -587,6 +587,7 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
  /usr/include/glm/detail/func_integer.inl \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../render/../ubo_layout.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/DescriptorSetManager.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/ShaderCompiler.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/MultiPassPipeline.h \

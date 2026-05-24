@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+
 project(VulkanApp)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -9,6 +10,7 @@ find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale libswresample)
 
 # RtMidi for MIDI support
@@ -37,6 +39,18 @@ pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
+
+set(UBO_LAYOUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/ubo_layout.h)
+set(SHARED_UBO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shared_ubo.glsl)
+add_custom_command(
+    OUTPUT ${SHARED_UBO_FILE}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ubo_glsl.py
+    DEPENDS ${UBO_LAYOUT_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ubo_glsl.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating shared_ubo.glsl from src/ubo_layout.h"
+)
+
+add_custom_target(gen_ubo DEPENDS ${SHARED_UBO_FILE})
 
 add_executable(app
     src/main.cpp
@@ -70,6 +84,8 @@ add_executable(app
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdl2.cpp
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
 )
+
+add_dependencies(app gen_ubo)
 
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include)
 

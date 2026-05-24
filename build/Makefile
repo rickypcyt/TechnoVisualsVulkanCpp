@@ -162,6 +162,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named gen_ubo
+
+# Build rule for target.
+gen_ubo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gen_ubo
+.PHONY : gen_ubo
+
+# fast build rule for target.
+gen_ubo/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gen_ubo.dir/build.make CMakeFiles/gen_ubo.dir/build
+.PHONY : gen_ubo/fast
+
+#=============================================================================
 # Target rules for targets named app
 
 # Build rule for target.
@@ -1484,6 +1497,7 @@ help:
 	@echo "... NightlySubmit"
 	@echo "... NightlyTest"
 	@echo "... NightlyUpdate"
+	@echo "... gen_ubo"
 	@echo "... uninstall"
 	@echo "... apinames"
 	@echo "... app"

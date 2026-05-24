@@ -265,6 +265,7 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
  /usr/include/glm/detail/func_integer.inl \
+ /home/ricky/coding/proyects/vulkancpp/src/render/../ubo_layout.h \
  /usr/include/c++/16.1.1/stdexcept /usr/include/c++/16.1.1/exception \
  /usr/include/c++/16.1.1/bits/exception_ptr.h \
  /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \

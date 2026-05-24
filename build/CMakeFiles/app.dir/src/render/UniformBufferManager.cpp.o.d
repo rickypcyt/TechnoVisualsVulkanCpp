@@ -302,5 +302,7 @@ CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: \
  /usr/include/glm/packing.hpp /usr/include/glm/detail/func_packing.inl \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
- /usr/include/glm/detail/func_integer.inl /usr/include/c++/16.1.1/cstring \
- /usr/include/string.h /usr/include/strings.h
+ /usr/include/glm/detail/func_integer.inl \
+ /home/ricky/coding/proyects/vulkancpp/src/render/../ubo_layout.h \
+ /usr/include/c++/16.1.1/cstring /usr/include/string.h \
+ /usr/include/strings.h
