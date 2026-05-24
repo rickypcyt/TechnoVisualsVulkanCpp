@@ -1,3 +1,5 @@
+// Application.cpp — refactorizado completo
+
 #include "Application.h"
 #include "parameters/VisualControlsRegistry.h"
 #include "parameters/JsonSerializer.h"
@@ -10,6 +12,139 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <random>
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers internos
+// ─────────────────────────────────────────────────────────────────────────────
+
+glm::ivec2 Application::getScreenSize() const {
+    auto ext = vulkanContext.getSwapchainExtent();
+    return glm::ivec2(static_cast<int>(ext.width), static_cast<int>(ext.height));
+}
+
+// Sincroniza todos los descriptor sets con el estado actual de las texturas.
+void Application::updateAllDescriptorSets() {
+    // Descriptor sets principales (multipass)
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        descriptorSetManager.updateSet(
+            vulkanContext.getDevice(), i,
+            uniformBufferManager.getBuffers()[i],
+            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+        );
+    }
+    updateFullscreenDescriptorSets();
+
+    // Multipass pipeline usa las dos fuentes de vídeo
+    const bool has2 = videoTexture2.isReady();
+    multiPassPipeline.updateDescriptorSets(
+        uniformBufferManager.getBuffers(),
+        videoTexture.getImageView(),
+        videoTexture.getPrevImageView(),
+        videoTexture.getSampler(),
+        videoTexture.getSampler(),
+        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+    );
+}
+
+// Reconstruye GPU texture + CPU pool para un slot ya inicializado.
+void Application::rebuildVideoTexture(int slot) {
+    vkDeviceWaitIdle(vulkanContext.getDevice());
+    if (slot == 0) {
+        videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+        videoTexture.cleanup(resourceSystem);
+        videoTexture.createResources(
+            resourceSystem, vulkanContext.getDevice(),
+            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+            static_cast<uint32_t>(videoPlayer.width()),
+            static_cast<uint32_t>(videoPlayer.height())
+        );
+        cpuFramePool.resize(
+            static_cast<uint32_t>(videoPlayer.width()),
+            static_cast<uint32_t>(videoPlayer.height()),
+            static_cast<uint32_t>(videoPlayer.width()) * 4
+        );
+    } else {
+        videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
+        videoTexture2.cleanup(resourceSystem);
+        videoTexture2.createResources(
+            resourceSystem, vulkanContext.getDevice(),
+            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+            static_cast<uint32_t>(videoPlayer2.width()),
+            static_cast<uint32_t>(videoPlayer2.height())
+        );
+        cpuFramePool2.resize(
+            static_cast<uint32_t>(videoPlayer2.width()),
+            static_cast<uint32_t>(videoPlayer2.height()),
+            static_cast<uint32_t>(videoPlayer2.width()) * 4
+        );
+    }
+}
+
+// Recarga un slot completo desde una ruta dada.
+bool Application::reloadVideoSlot(int slot, const std::string& path) {
+    if (slot == 0) {
+        videoSourcePath = path;
+        videoRenderer.reset();
+        videoPlayer.shutdown();
+
+        glm::ivec2 screenSize = getScreenSize();
+        if (!videoPlayer.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadVideoSlot(0) failed: " << path << '\n';
+            isReloadingVideo = false;
+            return false;
+        }
+
+        videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
+        rebuildVideoTexture(0);
+        updateAllDescriptorSets();
+
+        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
+        videoRandomizer.elapsedSeconds = 0.0f;
+        videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
+        videoSubsystemInitialized = videoTexture.isReady();
+    } else {
+        videoSourcePath2 = path;
+        videoRenderer2.reset();
+        videoPlayer2.shutdown();
+
+        glm::ivec2 screenSize = getScreenSize();
+        if (!videoPlayer2.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadVideoSlot(1) failed: " << path << '\n';
+            isReloadingVideo = false;
+            return false;
+        }
+
+        videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
+        rebuildVideoTexture(1);
+        updateAllDescriptorSets();
+
+        videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+        videoRandomizer2.elapsedSeconds = 0.0f;
+        videoRandomizer2.currentVideoDuration = videoPlayer2.durationSeconds();
+        videoSubsystemInitialized2 = videoTexture2.isReady();
+    }
+    isReloadingVideo = false;
+    return true;
+}
+
+void Application::saveState() const {
+    JsonSerializer::save(visualControlsPath, parameterRegistry);
+    ControlState::save(
+        controlStatePath,
+        static_cast<const VideoRandomizerState&>(videoRandomizer),
+        static_cast<const VideoRandomizerState2&>(videoRandomizer2),
+        allowDimensionChangeRecreation,
+        oscSystem,
+        selectedVideoAsset,
+        selectedVideoAsset2
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+
 Application::Application() {
     VisualControlsRegistry::build(parameterRegistry, visualControls);
 }
@@ -19,137 +154,135 @@ Application::~Application() {
 }
 
 void Application::run() {
-    // Initialize SDL
     window.initSDL();
     window.createMainWindow("Vulkan", WIDTH, HEIGHT);
     window.createUiWindow("Controls", 420, 420);
 
-    // Initialize Vulkan
     initVulkan();
-    
-    // Initialize swapchain and rendering
     initSwapchain();
     initRenderPass();
-    
-    // Initialize descriptor sets (must be before pipelines)
+
     descriptorSetManager.createLayout(vulkanContext.getDevice());
     descriptorSetManager.createPool(vulkanContext.getDevice());
-    
-    // Initialize buffers and resources
     uniformBufferManager.createBuffers(resourceSystem, vulkanContext.getDevice());
 
-    // Load control state before video init so selectedVideoFolder is respected
+    // Cargar estado antes del vídeo para que selectedVideoFolder sea correcto
     JsonSerializer::load(visualControlsPath, parameterRegistry);
-    ControlState::load(controlStatePath, videoRandomizer, videoRandomizer2,
-                       allowDimensionChangeRecreation, oscSystem,
-                       selectedVideoAsset, selectedVideoAsset2);
+    ControlState::load(
+        controlStatePath,
+        videoRandomizer,
+        videoRandomizer2,
+        allowDimensionChangeRecreation,
+        oscSystem,
+        selectedVideoAsset,
+        selectedVideoAsset2
+    );
 
-    // Initialize video
     initVideo();
 
-    // Initialize descriptor sets (after video texture is ready)
     descriptorSetManager.createSets(vulkanContext.getDevice());
-
-    // Update descriptor sets with video texture and uniform buffers
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        descriptorSetManager.updateSet(vulkanContext.getDevice(), i,
-                                       uniformBufferManager.getBuffers()[i],
-                                       const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-                                       const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()));
+        descriptorSetManager.updateSet(
+            vulkanContext.getDevice(), i,
+            uniformBufferManager.getBuffers()[i],
+            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+        );
     }
-    
-    // Initialize pipelines (after descriptor sets are ready)
-    initPipelines();
 
-    // Update fullscreen descriptor sets (UBO + 1 sampler) - must be after initPipelines()
+    initPipelines();
     updateFullscreenDescriptorSets();
     initFramebuffers();
-    
-    // Initialize UI
     initUI();
-
-    // Initialize NLE
     initNLE();
-
-    // Initialize multi-pass pipeline (after video is ready)
     initMultiPassPipeline();
-
-    // Initialize MIDI
     initMidi();
-
-    // Initialize OSC
     initOsc();
-
-    // Initialize Audio
     initAudio();
-
-    // Initialize command buffers
     initCommandBuffers();
 
-    // Initialize frame system
-    frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT, vulkanContext.getSwapchainImageCount());
-    std::cout << "[Application] FrameSystem initialized successfully" << std::endl;
-    
-    // Set start time
-    startTime = std::chrono::steady_clock::now();
-    lastControlSaveTime = startTime;
-    lastFrameTimestamp = startTime;
-    lastRandomJumpTime = startTime;
+    frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
+                     vulkanContext.getSwapchainImageCount());
+    std::cout << "[Application] FrameSystem initialized\n";
+
+    const auto now   = std::chrono::steady_clock::now();
+    startTime        = now;
+    lastControlSaveTime  = now;
+    lastFrameTimestamp   = now;
+    lastRandomJumpTime   = now;
     initializationComplete = true;
 
-    // Run main loop
     mainLoop();
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Vulkan init helpers (sin cambios funcionales, solo limpieza menor)
+// ─────────────────────────────────────────────────────────────────────────────
+
 void Application::initVulkan() {
 #ifdef NDEBUG
-    bool enableValidation = false;
+    constexpr bool enableValidation = false;
 #else
-    bool enableValidation = true;
+    constexpr bool enableValidation = true;
 #endif
-    
     vulkanContext.init(window.getMainWindow(), enableValidation);
     vulkanContext.createSurface(window.getMainWindow());
     vulkanContext.createCommandPool();
-    
     resourceSystem.init(vulkanContext.getDevice(), vulkanContext.getPhysicalDevice());
 }
 
 void Application::initSwapchain() {
-    uint32_t width, height;
-    window.getDrawableSize(width, height);
-    vulkanContext.createSwapchain(width, height);
+    uint32_t w, h;
+    window.getDrawableSize(w, h);
+    vulkanContext.createSwapchain(w, h);
 }
 
 void Application::initRenderPass() {
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = vulkanContext.getSwapchainImageFormat();
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    VkAttachmentDescription color{};
+    color.format         = vulkanContext.getSwapchainImageFormat();
+    color.samples        = VK_SAMPLE_COUNT_1_BIT;
+    color.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    color.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+    color.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+    color.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkAttachmentReference colorRef{ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
 
     VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pColorAttachments    = &colorRef;
 
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
+    VkRenderPassCreateInfo info{};
+    info.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    info.attachmentCount = 1;
+    info.pAttachments    = &color;
+    info.subpassCount    = 1;
+    info.pSubpasses      = &subpass;
 
-    if (vkCreateRenderPass(vulkanContext.getDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+    if (vkCreateRenderPass(vulkanContext.getDevice(), &info, nullptr, &renderPass) != VK_SUCCESS)
         throw std::runtime_error("failed to create render pass");
+}
+
+void Application::initFramebuffers() {
+    const auto& views = vulkanContext.getSwapchainImageViews();
+    swapchainFramebuffers.resize(views.size());
+    const auto ext = vulkanContext.getSwapchainExtent();
+
+    for (size_t i = 0; i < views.size(); ++i) {
+        VkFramebufferCreateInfo info{};
+        info.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        info.renderPass      = renderPass;
+        info.attachmentCount = 1;
+        info.pAttachments    = &views[i];
+        info.width           = ext.width;
+        info.height          = ext.height;
+        info.layers          = 1;
+
+        if (vkCreateFramebuffer(vulkanContext.getDevice(), &info, nullptr, &swapchainFramebuffers[i]) != VK_SUCCESS)
+            throw std::runtime_error("failed to create framebuffer");
     }
 }
 
@@ -346,1187 +479,643 @@ void Application::initPipelines() {
     }
 }
 
-void Application::initFramebuffers() {
-    const auto& swapchainImageViews = vulkanContext.getSwapchainImageViews();
-    swapchainFramebuffers.resize(swapchainImageViews.size());
+void Application::updateFullscreenDescriptorSets() {
+    if (fullscreenDescriptorSets.size() != MAX_FRAMES_IN_FLIGHT) {
+        return; // Descriptor sets not yet created
+    }
 
-    for (size_t i = 0; i < swapchainImageViews.size(); ++i) {
-        VkImageView attachments[] = {swapchainImageViews[i]};
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBufferManager.getBuffers()[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(GlobalParamsUBO);
 
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = vulkanContext.getSwapchainExtent().width;
-        framebufferInfo.height = vulkanContext.getSwapchainExtent().height;
-        framebufferInfo.layers = 1;
+        VkWriteDescriptorSet uboWrite{};
+        uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uboWrite.dstSet = fullscreenDescriptorSets[i];
+        uboWrite.dstBinding = 0;
+        uboWrite.dstArrayElement = 0;
+        uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboWrite.descriptorCount = 1;
+        uboWrite.pBufferInfo = &bufferInfo;
 
-        if (vkCreateFramebuffer(vulkanContext.getDevice(), &framebufferInfo, nullptr, &swapchainFramebuffers[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create framebuffer");
-        }
+        vkUpdateDescriptorSets(vulkanContext.getDevice(), 1, &uboWrite, 0, nullptr);
+        // Binding 1 (inputTexture) lo actualiza execute() cada frame
+        // apuntando al output final del multipass pipeline
     }
 }
 
 void Application::initCommandBuffers() {
-    // Allocate command buffers for each frame
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = vulkanContext.getCommandPool();
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+    VkCommandBufferAllocateInfo info{};
+    info.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    info.commandPool        = vulkanContext.getCommandPool();
+    info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    info.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-    if (vkAllocateCommandBuffers(vulkanContext.getDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(vulkanContext.getDevice(), &info, commandBuffers.data()) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate command buffers");
-    }
-    
-    // Assign command buffers to FrameSystem's frame contexts
-    for (size_t i = 0; i < commandBuffers.size(); ++i) {
-        // FrameSystem will manage these internally
-    }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Video init
+// ─────────────────────────────────────────────────────────────────────────────
+
 void Application::initVideo() {
-    std::cout << "[Application] initVideo() called" << std::endl;
+    std::cout << "[Application] initVideo()\n";
     videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
+    glm::ivec2 screenSize = getScreenSize();
+
+    // ── Slot 0 ──────────────────────────────────────────────────────────────
     const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
     if (!assets.empty()) {
-        if (selectedVideoAsset < 0 || selectedVideoAsset >= static_cast<int>(assets.size())) {
-            selectedVideoAsset = 0;
-        }
-        videoSourcePath = assets[selectedVideoAsset].metadata.path;
+        selectedVideoAsset = std::clamp(selectedVideoAsset, 0, (int)assets.size() - 1);
+        videoSourcePath    = assets[selectedVideoAsset].metadata.path;
     }
-    
-    // Initialize video player
-    int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-    int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-    
-    if (!videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-        std::cerr << "[Application] Failed to initialize video player" << std::endl;
+
+    if (!videoPlayer.initialize(videoSourcePath, screenSize.x, screenSize.y)) {
+        std::cerr << "[Application] Failed to initialize video player 1\n";
         return;
     }
     videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-    
-    // Initialize CPU frame pool with initial video resolution
-    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()), 
-                       static_cast<uint32_t>(videoPlayer.height()),
-                       static_cast<uint32_t>(videoPlayer.width()) * 4);
-    
-    // Create video texture resources
+    cpuFramePool.resize(videoPlayer.width(), videoPlayer.height(), videoPlayer.width() * 4);
     videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                 vulkanContext.getCommandPool(),
-                                 vulkanContext.getGraphicsQueue(),
-                                 static_cast<uint32_t>(videoPlayer.width()),
-                                 static_cast<uint32_t>(videoPlayer.height()));
-
+                                 vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                 videoPlayer.width(), videoPlayer.height());
     videoSubsystemInitialized = videoTexture.isReady();
-
-    // Initialize video renderer with CPU frame pool
-    if (videoSubsystemInitialized) {
+    if (videoSubsystemInitialized)
         videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-    }
 
-    // Initialize video 2 (dual source)
+    // ── Slot 1 ──────────────────────────────────────────────────────────────
     const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
     if (!assets2.empty()) {
-        if (selectedVideoAsset2 < 0 || selectedVideoAsset2 >= static_cast<int>(assets2.size())) {
-            selectedVideoAsset2 = 0;
-        }
-        videoSourcePath2 = assets2[selectedVideoAsset2].metadata.path;
+        selectedVideoAsset2 = std::clamp(selectedVideoAsset2, 0, (int)assets2.size() - 1);
+        videoSourcePath2    = assets2[selectedVideoAsset2].metadata.path;
     } else if (!assets.empty()) {
-        // Fallback: use same folder as video 1 but different asset if possible
         selectedVideoAsset2 = (assets.size() > 1) ? 1 : 0;
-        videoSourcePath2 = assets[selectedVideoAsset2].metadata.path;
+        videoSourcePath2    = assets[selectedVideoAsset2].metadata.path;
     }
 
-    std::cout << "[Application] About to initialize video player 2 with: " << videoSourcePath2 << std::endl;
-    if (!videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-        std::cerr << "[Application] ERROR: Failed to initialize video player 2 with: " << videoSourcePath2 << std::endl;
+    if (!videoPlayer2.initialize(videoSourcePath2, screenSize.x, screenSize.y)) {
+        std::cerr << "[Application] Failed to initialize video player 2: " << videoSourcePath2 << '\n';
         return;
     }
-    std::cout << "[Application] Video player 2 initialized: " << videoSourcePath2 << ", isReady=" << videoPlayer2.isReady() << std::endl;
     videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-
-    cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                         static_cast<uint32_t>(videoPlayer2.height()),
-                         static_cast<uint32_t>(videoPlayer2.width()) * 4);
-
+    cpuFramePool2.resize(videoPlayer2.width(), videoPlayer2.height(), videoPlayer2.width() * 4);
     videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                  vulkanContext.getCommandPool(),
-                                  vulkanContext.getGraphicsQueue(),
-                                  static_cast<uint32_t>(videoPlayer2.width()),
-                                  static_cast<uint32_t>(videoPlayer2.height()));
-
+                                  vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                  videoPlayer2.width(), videoPlayer2.height());
     videoSubsystemInitialized2 = videoTexture2.isReady();
-
-    if (videoSubsystemInitialized2) {
+    if (videoSubsystemInitialized2)
         videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-    }
+
+    std::cout << "[Application] initVideo() done — v1=" << videoSubsystemInitialized
+              << " v2=" << videoSubsystemInitialized2 << '\n';
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Subsystem init
+// ─────────────────────────────────────────────────────────────────────────────
+
 void Application::initUI() {
-    if (!uiSystem.initialize(window.getUiWindow(), window.getUiRenderer())) {
+    if (!uiSystem.initialize(window.getUiWindow(), window.getUiRenderer()))
         throw std::runtime_error("failed to initialize UI system");
-    }
 }
 
 void Application::initNLE() {
-    // Initialize NLE components
     g_project_state.active_file = videoSourcePath;
-
     renderWorker = std::make_unique<RenderWorker>();
     renderWorker->on_render_complete = [this](std::shared_ptr<RenderJob> job) {
-        std::cout << "[Render] Completed, output at: " << job->output_file << std::endl;
+        std::cout << "[Render] Completed: " << job->output_file << '\n';
         playbackClock.resume();
-
         if (job->do_swap) {
-            std::lock_guard<std::mutex> lock(completedRenderJobsMutex);
+            std::lock_guard lock(completedRenderJobsMutex);
             completedRenderJobs.push(job);
-            std::cout << "[Render] Queued NLE reload for version " << job->version << std::endl;
         }
     };
-}
-
-void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job) {
-    if (!job || !renderWorker) {
-        return;
-    }
-
-    const bool reloadVideo1 = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1);
-    if (reloadVideo1) {
-        // Reload video 1 directly by path
-        videoRenderer.reset();
-        videoPlayer.shutdown();
-        renderWorker->perform_atomic_swap(job);
-        int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-        int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-        if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-            videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-            vkDeviceWaitIdle(vulkanContext.getDevice());
-            videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-            videoTexture.cleanup(resourceSystem);
-            videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                         vulkanContext.getCommandPool(),
-                                         vulkanContext.getGraphicsQueue(),
-                                         static_cast<uint32_t>(videoPlayer.width()),
-                                         static_cast<uint32_t>(videoPlayer.height()));
-            cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                                static_cast<uint32_t>(videoPlayer.height()),
-                                static_cast<uint32_t>(videoPlayer.width()) * 4);
-            multiPassPipeline.updateDescriptorSets(
-                uniformBufferManager.getBuffers(),
-                videoTexture.getImageView(),
-                videoTexture.getPrevImageView(),
-                videoTexture.getSampler(),
-                videoTexture.getSampler(),
-                videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler());
-            videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-            std::cout << "[Render] Auto-reloaded Video 1: " << videoSourcePath << std::endl;
-        }
-    } else {
-        // Reload video 2 directly by path
-        videoRenderer2.reset();
-        videoPlayer2.shutdown();
-        renderWorker->perform_atomic_swap(job);
-        int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-        int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-        if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-            videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-            vkDeviceWaitIdle(vulkanContext.getDevice());
-            videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-            videoTexture2.cleanup(resourceSystem);
-            videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                          vulkanContext.getCommandPool(),
-                                          vulkanContext.getGraphicsQueue(),
-                                          static_cast<uint32_t>(videoPlayer2.width()),
-                                          static_cast<uint32_t>(videoPlayer2.height()));
-            cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                                 static_cast<uint32_t>(videoPlayer2.height()),
-                                 static_cast<uint32_t>(videoPlayer2.width()) * 4);
-            multiPassPipeline.updateDescriptorSets(
-                uniformBufferManager.getBuffers(),
-                videoTexture.getImageView(),
-                videoTexture.getPrevImageView(),
-                videoTexture.getSampler(),
-                videoTexture.getSampler(),
-                videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler());
-            videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-            std::cout << "[Render] Auto-reloaded Video 2: " << videoSourcePath2 << std::endl;
-        }
-    }
 }
 
 void Application::initMidi() {
     if (!midiSystem.initialize()) {
-        std::cerr << "[Application] Failed to initialize MIDI system" << std::endl;
+        std::cerr << "[Application] Failed to initialize MIDI\n";
         return;
     }
-
-    // Set up MIDI event callback to apply to visual controls
     midiSystem.setEventCallback([this](const MidiMessage& msg) {
         midiSystem.applyToVisualControls(msg, visualControls);
     });
-
     midiSystem.setTriggerCallback([this](const std::string& action) {
         handleOscTrigger(action);
     });
 
-    // Try to open the first available MIDI port
-    unsigned int portCount = midiSystem.getPortCount();
-    if (portCount > 0) {
-        std::cout << "[Application] Found " << portCount << " MIDI port(s)" << std::endl;
-        for (unsigned int i = 0; i < portCount; ++i) {
-            std::cout << "[Application]   Port " << i << ": " << midiSystem.getAvailablePorts()[i] << std::endl;
-        }
-        // Open first port by default (can be changed via UI)
-        if (midiSystem.openPort(0)) {
-            std::cout << "[Application] MIDI port 0 opened successfully" << std::endl;
-        }
-    } else {
-        std::cout << "[Application] No MIDI ports detected" << std::endl;
-    }
+    const unsigned int n = midiSystem.getPortCount();
+    std::cout << "[Application] MIDI ports: " << n << '\n';
+    for (unsigned int i = 0; i < n; ++i)
+        std::cout << "  [" << i << "] " << midiSystem.getAvailablePorts()[i] << '\n';
+    if (n > 0 && midiSystem.openPort(0))
+        std::cout << "[Application] MIDI port 0 opened\n";
 }
 
 void Application::initOsc() {
     if (!oscSystem.initialize(9000)) {
-        std::cerr << "[Application] Failed to initialize OSC system" << std::endl;
+        std::cerr << "[Application] Failed to initialize OSC\n";
         return;
     }
-
-    // Set up OSC event callback to apply to visual controls
     oscSystem.setEventCallback([this](const OscMessage& msg) {
         oscSystem.applyToVisualControls(msg, visualControls);
     });
-
-    // Set up OSC trigger callback for button actions
     oscSystem.setTriggerCallback([this](const std::string& action) {
         handleOscTrigger(action);
     });
+    oscSystem.onMappingsChanged = [this]() { saveState(); };
 
-    // Auto-save control state whenever OSC mappings change
-    oscSystem.onMappingsChanged = [this]() {
-        JsonSerializer::save(visualControlsPath, parameterRegistry);
-        ControlState::save(controlStatePath, videoRandomizer, videoRandomizer2,
-                           allowDimensionChangeRecreation, oscSystem,
-                           selectedVideoAsset, selectedVideoAsset2);
-    };
-
-    // Start OSC listener
-    if (oscSystem.start()) {
-        std::cout << "[Application] OSC system started on port 9000" << std::endl;
-    } else {
-        std::cerr << "[Application] Failed to start OSC listener" << std::endl;
-    }
+    if (oscSystem.start())
+        std::cout << "[Application] OSC started on port 9000\n";
+    else
+        std::cerr << "[Application] Failed to start OSC\n";
 }
 
 void Application::initAudio() {
     if (!audioSystem.initialize()) {
-        std::cerr << "[Application] Failed to initialize Audio system" << std::endl;
+        std::cerr << "[Application] Failed to initialize Audio\n";
+        return;
+    }
+    if (audioSystem.startStream())
+        std::cout << "[Application] Audio started\n";
+    else
+        std::cerr << "[Application] Failed to start audio stream\n";
+}
+
+void Application::initMultiPassPipeline() {
+    if (!videoSubsystemInitialized) {
+        std::cout << "[Application] Skipping MultiPassPipeline — video not initialized\n";
         return;
     }
 
-    // Start audio stream
-    if (audioSystem.startStream()) {
-        std::cout << "[Application] Audio system started successfully" << std::endl;
+    const auto  ext         = vulkanContext.getSwapchainExtent();
+    const bool  has2        = videoTexture2.isReady();
+    uint32_t    queueFamily = 0; // TODO: obtener de VulkanContext
+
+    if (!multiPassPipeline.initialize(
+            vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
+            vulkanContext.getGraphicsQueue(), queueFamily,
+            ext, vulkanContext.getSwapchainImageFormat(),
+            videoTexture.getSampler(), videoTexture.getSampler(),
+            videoTexture.getImageView(), videoTexture.getImageView(),
+            has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
+            has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+            uniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
+    {
+        std::cerr << "[Application] Failed to initialize MultiPassPipeline\n";
+        return;
+    }
+
+    // Sincronizar con vistas correctas (prev ≠ current)
+    multiPassPipeline.updateDescriptorSets(
+        uniformBufferManager.getBuffers(),
+        videoTexture.getImageView(), videoTexture.getPrevImageView(),
+        videoTexture.getSampler(),   videoTexture.getSampler(),
+        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+    );
+
+    std::cout << "[Application] MultiPassPipeline initialized\n";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Video randomizer helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+int Application::pickNextVideoIndex(const std::vector<VideoAsset>& assets) {
+    return pickNextIndex(assets, videoRandomizer, selectedVideoAsset);
+}
+
+int Application::pickNextVideoIndex2(const std::vector<VideoAsset>& assets) {
+    return pickNextIndex(assets, videoRandomizer2, selectedVideoAsset2);
+}
+
+bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets) {
+    selectedVideoAsset = newIndex;
+    transitionActive   = false;
+    return reloadVideoSlot(0, assets[newIndex].metadata.path);
+}
+
+bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset>& assets) {
+    selectedVideoAsset2 = newIndex;
+    transitionActive    = false;
+    return reloadVideoSlot(1, assets[newIndex].metadata.path);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render job completion
+// ─────────────────────────────────────────────────────────────────────────────
+
+void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job) {
+    if (!job || !renderWorker) return;
+
+    const int slot = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? 0 : 1;
+    if (slot == 0) {
+        videoRenderer.reset();
+        videoPlayer.shutdown();
+        renderWorker->perform_atomic_swap(job);
+        reloadVideoSlot(0, videoSourcePath);
+        std::cout << "[Render] Auto-reloaded video 1: " << videoSourcePath << '\n';
     } else {
-        std::cerr << "[Application] Failed to start audio stream" << std::endl;
+        videoRenderer2.reset();
+        videoPlayer2.shutdown();
+        renderWorker->perform_atomic_swap(job);
+        reloadVideoSlot(1, videoSourcePath2);
+        std::cout << "[Render] Auto-reloaded video 2: " << videoSourcePath2 << '\n';
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Video control helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+bool Application::canChangeVideo() const {
+    return !isReloadingVideo && !isReloadingVideo2 && !transitionActive;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OSC / Trigger dispatcher
+// ─────────────────────────────────────────────────────────────────────────────
 
 void Application::handleOscTrigger(const std::string& action) {
     if (action == "randomizeVideo") {
         if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-        if (assets.size() > 1) {
-            int newIndex = pickNextVideoIndex(assets);
-            reloadVideoAtIndex(newIndex, assets);
-        }
+        if (assets.size() > 1) reloadVideoAtIndex(pickNextVideoIndex(assets), assets);
         isReloadingVideo = false;
+
     } else if (action == "randomizeVideo2") {
         if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
-        if (assets.size() > 1) {
-            int newIndex = pickNextVideoIndex2(assets);
-            reloadVideoAtIndex2(newIndex, assets);
-        }
+        if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
         isReloadingVideo = false;
+
     } else if (action == "jumpRandom") {
-        if (videoSubsystemInitialized) {
-            double duration = videoPlayer.durationSeconds();
-            if (duration > 0) {
-                std::uniform_real_distribution<double> dist(0.0, duration);
-                videoPlayer.seekSeconds(dist(rng));
-            }
-        }
+        if (!videoSubsystemInitialized) return;
+        const double dur = videoPlayer.durationSeconds();
+        if (dur > 0) videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+
     } else if (action == "folderChanged") {
         if (!canChangeVideo()) return;
         videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-        videoRandomizer.shuffleQueue.clear();
-        videoRandomizer.currentShuffleIndex = 0;
-        videoRandomizer2.shuffleQueue.clear();
-        videoRandomizer2.currentShuffleIndex = 0;
+        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
+        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
         if (!assets.empty()) {
             selectedVideoAsset = 0;
-            videoSourcePath = assets[0].metadata.path;
-            videoRenderer.reset();
-            videoPlayer.shutdown();
-            int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-            int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-            if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-                vkDeviceWaitIdle(vulkanContext.getDevice());
-                videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-                videoTexture.cleanup(resourceSystem);
-                videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                             vulkanContext.getCommandPool(),
-                                             vulkanContext.getGraphicsQueue(),
-                                             static_cast<uint32_t>(videoPlayer.width()),
-                                             static_cast<uint32_t>(videoPlayer.height()));
-                cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                                   static_cast<uint32_t>(videoPlayer.height()),
-                                   static_cast<uint32_t>(videoPlayer.width()) * 4);
-                multiPassPipeline.updateDescriptorSets(
-                    uniformBufferManager.getBuffers(),
-                    videoTexture.getImageView(),
-                    videoTexture.getPrevImageView(),
-                    videoTexture.getSampler(),
-                    videoTexture.getSampler(),
-                    videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                    videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler()
-                );
-            }
+            reloadVideoSlot(0, assets[0].metadata.path);
         }
         isReloadingVideo = false;
+
     } else if (action == "applyChanges") {
-        // Visual controls are applied through uniform buffer updates
         controlsDirty = true;
     }
 }
 
-void Application::initMultiPassPipeline() {
-    if (!videoSubsystemInitialized) {
-        std::cout << "[Application] Skipping MultiPassPipeline - video not initialized" << std::endl;
-        return;
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Resize handler
+// ─────────────────────────────────────────────────────────────────────────────
 
-    auto extent = vulkanContext.getSwapchainExtent();
-    VkFormat colorFormat = vulkanContext.getSwapchainImageFormat();
+void Application::handleWindowResize(uint32_t width, uint32_t height) {
+    vkDeviceWaitIdle(vulkanContext.getDevice());
+    frameSystem.cleanup();
 
-    // Get queue family index from VulkanContext
-    uint32_t queueFamilyIndex = 0; // TODO: Get from VulkanContext properly
+    for (auto fb : swapchainFramebuffers)
+        vkDestroyFramebuffer(vulkanContext.getDevice(), fb, nullptr);
+    swapchainFramebuffers.clear();
 
-    if (!multiPassPipeline.initialize(
-        vulkanContext.getPhysicalDevice(),
-        vulkanContext.getDevice(),
-        vulkanContext.getGraphicsQueue(),
-        queueFamilyIndex,
-        extent,
-        colorFormat,
-        videoTexture.getSampler(),
-        videoTexture.getSampler(), // Use same sampler for prev
-        videoTexture.getImageView(),
-        videoTexture.getImageView(), // Use same view for prev
-        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler(),
-        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        uniformBufferManager.getBuffers(),
-        UniformBufferManager::getBufferSize() // Use consistent size from UniformBufferManager
-    )) {
-        std::cerr << "[Application] Failed to initialize MultiPassPipeline" << std::endl;
-        return;
-    }
-
-    // Update descriptor sets with correct texture bindings
-    multiPassPipeline.updateDescriptorSets(
-        uniformBufferManager.getBuffers(),
-        videoTexture.getImageView(),
-        videoTexture.getImageView(), // Use same for prev
-        videoTexture.getSampler(),
-        videoTexture.getSampler(),   // Use same for prev
-        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler()
-    );
-
-    std::cout << "[Application] MultiPassPipeline initialized successfully" << std::endl;
-}
-
-int Application::pickNextVideoIndex(const std::vector<VideoAsset>& assets) {
-    if (assets.size() <= 1) return 0;
-
-    if (videoRandomizer.useShuffleMode) {
-        if (videoRandomizer.shuffleQueue.empty() ||
-            videoRandomizer.currentShuffleIndex >= static_cast<int>(videoRandomizer.shuffleQueue.size())) {
-            videoRandomizer.shuffleQueue.clear();
-            for (size_t i = 0; i < assets.size(); ++i) {
-                videoRandomizer.shuffleQueue.push_back(static_cast<int>(i));
-            }
-            std::shuffle(videoRandomizer.shuffleQueue.begin(), videoRandomizer.shuffleQueue.end(), rng);
-            videoRandomizer.currentShuffleIndex = 0;
-        }
-        int newIndex = videoRandomizer.shuffleQueue[videoRandomizer.currentShuffleIndex];
-        videoRandomizer.currentShuffleIndex++;
-        return newIndex;
-    } else {
-        std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
-        int newIndex;
-        do {
-            newIndex = dist(rng);
-        } while (newIndex == selectedVideoAsset);
-        return newIndex;
-    }
-}
-
-int Application::pickNextVideoIndex2(const std::vector<VideoAsset>& assets) {
-    if (assets.size() <= 1) return 0;
-
-    if (videoRandomizer2.useShuffleMode) {
-        if (videoRandomizer2.shuffleQueue.empty() ||
-            videoRandomizer2.currentShuffleIndex >= static_cast<int>(videoRandomizer2.shuffleQueue.size())) {
-            videoRandomizer2.shuffleQueue.clear();
-            for (size_t i = 0; i < assets.size(); ++i) {
-                videoRandomizer2.shuffleQueue.push_back(static_cast<int>(i));
-            }
-            std::shuffle(videoRandomizer2.shuffleQueue.begin(), videoRandomizer2.shuffleQueue.end(), rng);
-            videoRandomizer2.currentShuffleIndex = 0;
-        }
-        int newIndex = videoRandomizer2.shuffleQueue[videoRandomizer2.currentShuffleIndex];
-        videoRandomizer2.currentShuffleIndex++;
-        return newIndex;
-    } else {
-        std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
-        int newIndex;
-        do {
-            newIndex = dist(rng);
-        } while (newIndex == selectedVideoAsset2);
-        return newIndex;
-    }
-}
-
-bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets) {
-    selectedVideoAsset = newIndex;
-    videoSourcePath = assets[newIndex].metadata.path;
-
-    transitionActive = false;
-
-    videoRenderer.reset();
-    videoPlayer.shutdown();
-    int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-    int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-    if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-        videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-        vkDeviceWaitIdle(vulkanContext.getDevice());
+    // Destroy slot textures
+    if (videoSubsystemInitialized) {
         videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture.cleanup(resourceSystem);
-        videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                     vulkanContext.getCommandPool(),
-                                     vulkanContext.getGraphicsQueue(),
-                                     static_cast<uint32_t>(videoPlayer.width()),
-                                     static_cast<uint32_t>(videoPlayer.height()));
-
-        cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                           static_cast<uint32_t>(videoPlayer.height()),
-                           static_cast<uint32_t>(videoPlayer.width()) * 4);
-
-        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-            descriptorSetManager.updateSet(
-                vulkanContext.getDevice(), i,
-                uniformBufferManager.getBuffers()[i],
-                const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-                const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
-            );
-        }
-        updateFullscreenDescriptorSets();
-
-        multiPassPipeline.updateDescriptorSets(
-            uniformBufferManager.getBuffers(),
-            videoTexture.getImageView(),
-            videoTexture.getPrevImageView(),
-            videoTexture.getSampler(),
-            videoTexture.getSampler(),
-            videoTexture2.getImageView(),
-            videoTexture2.getSampler()
-        );
-
-        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-        videoRandomizer.elapsedSeconds = 0.0f;
-        videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
-        isReloadingVideo = false;
-        return true;
     }
-    isReloadingVideo = false;
-    return false;
-}
-
-bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset>& assets) {
-    selectedVideoAsset2 = newIndex;
-    videoSourcePath2 = assets[newIndex].metadata.path;
-
-    transitionActive = false;
-
-    videoRenderer2.reset();
-    videoPlayer2.shutdown();
-    int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-    int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-    if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-        videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-        vkDeviceWaitIdle(vulkanContext.getDevice());
+    if (videoSubsystemInitialized2) {
         videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture2.cleanup(resourceSystem);
-        videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                     vulkanContext.getCommandPool(),
-                                     vulkanContext.getGraphicsQueue(),
-                                     static_cast<uint32_t>(videoPlayer2.width()),
-                                     static_cast<uint32_t>(videoPlayer2.height()));
-
-        cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                           static_cast<uint32_t>(videoPlayer2.height()),
-                           static_cast<uint32_t>(videoPlayer2.width()) * 4);
-
-        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-            descriptorSetManager.updateSet(
-                vulkanContext.getDevice(), i,
-                uniformBufferManager.getBuffers()[i],
-                const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-                const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
-            );
-        }
-        updateFullscreenDescriptorSets();
-
-        multiPassPipeline.updateDescriptorSets(
-            uniformBufferManager.getBuffers(),
-            videoTexture.getImageView(),
-            videoTexture.getPrevImageView(),
-            videoTexture.getSampler(),
-            videoTexture.getSampler(),
-            videoTexture2.getImageView(),
-            videoTexture2.getSampler()
-        );
-
-        videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-        videoRandomizer2.elapsedSeconds = 0.0f;
-        videoRandomizer2.currentVideoDuration = videoPlayer2.durationSeconds();
-        isReloadingVideo = false;
-        return true;
     }
-    isReloadingVideo = false;
-    return false;
+
+    vulkanContext.recreateSwapchain(width, height);
+
+    // Recreate slot textures
+    if (videoSubsystemInitialized) {
+        videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                    vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                    videoPlayer.width(), videoPlayer.height());
+    }
+    if (videoSubsystemInitialized2) {
+        videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+                                     vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                     videoPlayer2.width(), videoPlayer2.height());
+    }
+
+    updateAllDescriptorSets();
+    initFramebuffers();
+
+    frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
+                     vulkanContext.getSwapchainImageCount());
+    frameSystem.resetCurrentFrame();
+    frameSystem.waitForAllFences();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main loop
+// ─────────────────────────────────────────────────────────────────────────────
 
 void Application::mainLoop() {
     while (running) {
-        // Handle SDL events
+        // ── Eventos SDL ─────────────────────────────────────────────────────
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            // Pass event to UI system
             uiSystem.processEvent(event);
 
-            if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
-                const SDL_Keycode key = event.key.keysym.sym;
-                if (key == SDLK_1 || key == SDLK_KP_1) {
-                    handleOscTrigger("randomizeVideo");
-                } else if (key == SDLK_2 || key == SDLK_KP_2) {
-                    handleOscTrigger("randomizeVideo2");
+            if (event.type == SDL_QUIT) { running = false; break; }
+
+            if (event.type == SDL_KEYDOWN && !event.key.repeat) {
+                switch (event.key.keysym.sym) {
+                    case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizeVideo");  break;
+                    case SDLK_2: case SDLK_KP_2: handleOscTrigger("randomizeVideo2"); break;
                 }
             }
 
-            // Handle window close (both SDL_QUIT and window close event)
-            if (event.type == SDL_QUIT) {
-                running = false;
-                break;
-            }
-
-            // Handle window resize
             if (event.type == SDL_WINDOWEVENT) {
-                SDL_Window* sourceWindow = SDL_GetWindowFromID(event.window.windowID);
-                if (sourceWindow == window.getMainWindow() &&
-                    event.window.event == SDL_WINDOWEVENT_CLOSE) {
-                    running = false;
-                    break;
-                }
-                if (sourceWindow == window.getUiWindow() &&
-                    event.window.event == SDL_WINDOWEVENT_CLOSE) {
-                    running = false;
-                    break;
-                }
-                if (sourceWindow == window.getMainWindow() &&
-                    (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-                     event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
-                    initializationComplete) {
+                SDL_Window* src = SDL_GetWindowFromID(event.window.windowID);
+                const auto  ev  = event.window.event;
+
+                if (ev == SDL_WINDOWEVENT_CLOSE) { running = false; break; }
+
+                if (src == window.getMainWindow() && initializationComplete &&
+                    (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
+                {
                     window.resetResizeFlag();
-                    uint32_t width, height;
-                    window.getDrawableSize(width, height);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-
-                    // 1. Stop frame system first
-                    frameSystem.cleanup();
-
-                    // 2. Destroy swapchain-dependent GPU resources
-                    for (auto framebuffer : swapchainFramebuffers) {
-                        vkDestroyFramebuffer(vulkanContext.getDevice(), framebuffer, nullptr);
-                    }
-                    swapchainFramebuffers.clear();
-
-                    if (videoSubsystemInitialized) {
-                        vkDeviceWaitIdle(vulkanContext.getDevice());
-                        videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-                        videoTexture.cleanup(resourceSystem);  // Destroy staging ring
-                    }
-                    if (videoSubsystemInitialized2) {
-                        vkDeviceWaitIdle(vulkanContext.getDevice());
-                        videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-                        videoTexture2.cleanup(resourceSystem);
-                    }
-
-                    // 3. Recreate swapchain
-                    vulkanContext.recreateSwapchain(width, height);
-
-                    // 4. Recreate video texture resources
-                    if (videoSubsystemInitialized) {
-                        videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                     vulkanContext.getCommandPool(),
-                                                     vulkanContext.getGraphicsQueue(),
-                                                     static_cast<uint32_t>(videoPlayer.width()),
-                                                     static_cast<uint32_t>(videoPlayer.height()));
-                    }
-                    if (videoSubsystemInitialized2) {
-                        videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                    vulkanContext.getCommandPool(),
-                                                    vulkanContext.getGraphicsQueue(),
-                                                    static_cast<uint32_t>(videoPlayer2.width()),
-                                                    static_cast<uint32_t>(videoPlayer2.height()));
-                    }
-
-                    // Update multipass descriptor sets with new video texture handles
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler()
-                    );
-
-                    // 5. Recreate framebuffers
-                    initFramebuffers();
-
-                    // 6. Update descriptor sets with video texture and uniform buffers
-                    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-                        descriptorSetManager.updateSet(vulkanContext.getDevice(), i,
-                                                       uniformBufferManager.getBuffers()[i],
-                                                       videoSubsystemInitialized ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()) : nullptr,
-                                                       videoSubsystemInitialized ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()) : nullptr);
-                    }
-                    if (videoSubsystemInitialized) updateFullscreenDescriptorSets();
-
-                    // 7. Restart frame system last
-                    frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT, vulkanContext.getSwapchainImageCount());
-                    frameSystem.resetCurrentFrame();
-
-                    // Wait for all fences to be signaled before resuming
-                    frameSystem.waitForAllFences();
+                    uint32_t w, h;
+                    window.getDrawableSize(w, h);
+                    handleWindowResize(w, h);
                 }
             }
         }
+        if (!running) break;
 
-        if (!running) {
-            break;
+        // ── Begin frame ─────────────────────────────────────────────────────
+        uint32_t    imageIndex;
+        VkResult    result;
+        FrameContext* frame = frameSystem.beginFrame(vulkanContext.getSwapchain(), imageIndex, result);
+
+        if (!frame) {
+            if (result == VK_ERROR_OUT_OF_DATE_KHR) continue;
+            throw std::runtime_error("failed to acquire swapchain image");
         }
 
-        // Begin frame
-        uint32_t imageIndex;
-        VkResult result;
-        FrameContext& frame = frameSystem.beginFrame(vulkanContext.getSwapchain(), imageIndex, result);
-        
-        if (result != VK_SUCCESS) {
-            if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-                continue;
-            } else {
-                throw std::runtime_error("failed to acquire swapchain image");
-            }
-        }
-        
-        // Calculate delta time
-        auto now = std::chrono::steady_clock::now();
-        float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
-        lastFrameTimestamp = now;
+        // ── Delta time ──────────────────────────────────────────────────────
+        const auto now       = std::chrono::steady_clock::now();
+        const float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
+        lastFrameTimestamp   = now;
 
-        // Check for completed renders that need swapping/reloading
-        std::shared_ptr<RenderJob> jobToFinalize;
+        // ── Render jobs pendientes ───────────────────────────────────────────
         {
-            std::lock_guard<std::mutex> lock(completedRenderJobsMutex);
-            if (!completedRenderJobs.empty()) {
-                jobToFinalize = completedRenderJobs.front();
+            std::lock_guard lock(completedRenderJobsMutex);
+            while (!completedRenderJobs.empty()) {
+                handleCompletedRenderJob(completedRenderJobs.front());
                 completedRenderJobs.pop();
             }
         }
 
-        if (jobToFinalize) {
-            handleCompletedRenderJob(jobToFinalize);
-        }
-
         transitionActive = false;
 
-        // Update auto-randomize colors with smooth interpolation
-        if (visualControls.color.autoRandomizeColors) {
-            visualControls.color.colorRandomizeElapsed += deltaTime;
-            
-            if (visualControls.color.colorRandomizeElapsed >= visualControls.color.colorRandomizeInterval) {
-                // Generate new target colors
-                std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
-                std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
-                std::uniform_real_distribution<float> valDist(0.7f, 1.0f);
-                
-                float primaryHue = hueDist(rng);
-                float primarySat = satDist(rng);
-                float primaryVal = valDist(rng);
-                float secondaryHue = fmod(primaryHue + 180.0f, 360.0f);
-                
-                auto hsvToRgb = [](float h, float s, float v) -> glm::vec3 {
-                    float c = v * s;
-                    float x = c * (1.0f - fabs(fmod(h / 60.0f, 2.0f) - 1.0f));
-                    float m = v - c;
-                    float r, g, b;
-                    if (h < 60.0f) { r = c; g = x; b = 0; }
-                    else if (h < 120.0f) { r = x; g = c; b = 0; }
-                    else if (h < 180.0f) { r = 0; g = c; b = x; }
-                    else if (h < 240.0f) { r = 0; g = x; b = c; }
-                    else if (h < 300.0f) { r = x; g = 0; b = c; }
-                    else { r = c; g = 0; b = x; }
-                    return glm::vec3(r + m, g + m, b + m);
-                };
-                
-                visualControls.color.primaryColorTarget = glm::vec4(hsvToRgb(primaryHue, primarySat, primaryVal), 1.0f);
-                visualControls.color.secondaryColorTarget = glm::vec4(hsvToRgb(secondaryHue, primarySat, primaryVal), 1.0f);
-                visualControls.color.colorRandomizeElapsed = 0.0f;
-            }
-            
-            // Smooth interpolation towards target colors
-            float lerpSpeed = 2.0f * deltaTime; // Adjust speed factor as needed
-            visualControls.color.primaryColor = glm::mix(visualControls.color.primaryColor, visualControls.color.primaryColorTarget, lerpSpeed);
-            visualControls.color.secondaryColor = glm::mix(visualControls.color.secondaryColor, visualControls.color.secondaryColorTarget, lerpSpeed);
-        }
+        // ── Auto-randomize colors ────────────────────────────────────────────
+        tickAutoColors(deltaTime);
 
-        // Update auto-randomize
-        if (videoRandomizer.autoRandomize && videoSubsystemInitialized) {
-            videoRandomizer.elapsedSeconds += deltaTime;
-            float targetInterval = (videoRandomizer.useVideoDuration && videoRandomizer.currentVideoDuration > 0.0f)
-                ? videoRandomizer.currentVideoDuration
-                : videoRandomizer.intervalSeconds;
+        // ── Auto-randomize videos ────────────────────────────────────────────
+        tickAutoRandomize(deltaTime, now);
 
-            if (videoRandomizer.elapsedSeconds >= targetInterval) {
-                if (!canChangeVideo()) {
-                    videoRandomizer.elapsedSeconds = 0.0f;
-                } else {
-                    // Trigger random video change
-                    const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-                    if (assets.size() > 1) {
-                        int newIndex = pickNextVideoIndex(assets);
-                        reloadVideoAtIndex(newIndex, assets);
-                    }
-                    isReloadingVideo = false;
-                }
-            }
-        }
-
-        // Update auto-randomize for Video 2
-        if (videoRandomizer2.autoRandomize && videoSubsystemInitialized && visualControls.playback.enableDualVideo) {
-            videoRandomizer2.elapsedSeconds += deltaTime;
-            float targetInterval = (videoRandomizer2.useVideoDuration && videoRandomizer2.currentVideoDuration > 0.0f)
-                ? videoRandomizer2.currentVideoDuration
-                : videoRandomizer2.intervalSeconds;
-
-            if (videoRandomizer2.elapsedSeconds >= targetInterval) {
-                if (!canChangeVideo()) {
-                    videoRandomizer2.elapsedSeconds = 0.0f;
-                } else {
-                    // Trigger random video change for Video 2
-                    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
-                    if (assets2.size() > 1) {
-                        int newIndex = pickNextVideoIndex2(assets2);
-                        reloadVideoAtIndex2(newIndex, assets2);
-                    }
-                    isReloadingVideo = false;
-                }
-            }
-        }
-
-        // Update auto random jump interval
-        if (visualControls.playback.enableRandomJumpInterval && visualControls.playback.randomVideoStart && videoSubsystemInitialized) {
-            auto timeSinceLastJump = std::chrono::duration<float>(now - lastRandomJumpTime).count();
-            if (timeSinceLastJump >= visualControls.playback.randomJumpInterval) {
-                // Perform random jump within full video range (0% to 100%)
-                double duration = videoPlayer.durationSeconds();
-                if (duration > 0) {
-                    std::uniform_real_distribution<double> dist(0.0, duration);
-                    videoPlayer.seekSeconds(dist(rng));
+        // ── Auto random jump ─────────────────────────────────────────────────
+        if (visualControls.playback.enableRandomJumpInterval &&
+            visualControls.playback.randomVideoStart && videoSubsystemInitialized)
+        {
+            float elapsed = std::chrono::duration<float>(now - lastRandomJumpTime).count();
+            if (elapsed >= visualControls.playback.randomJumpInterval) {
+                const double dur = videoPlayer.durationSeconds();
+                if (dur > 0) {
+                    videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
                     lastRandomJumpTime = now;
                 }
             }
         }
 
-        // Update MIDI system
+        // ── Actualizar subsistemas ───────────────────────────────────────────
         midiSystem.update();
-
-        // Update OSC system
         oscSystem.update();
+        updateUniformBuffer(frame->frameIndex);
 
-        // Update uniform buffer
-        updateUniformBuffer(frame.frameIndex);
+        if (videoSubsystemInitialized)  videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
+        if (videoSubsystemInitialized2) videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
+        if (videoRenderer)  videoRenderer->update(deltaTime, frame->frameIndex);
+        if (videoRenderer2) videoRenderer2->update(deltaTime, frame->frameIndex);
 
-        // Update video playback rate
-        if (videoSubsystemInitialized) {
-            videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
-        }
-        if (videoSubsystemInitialized2) {
-            videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
-        }
-
-        // Update video texture
-        if (videoRenderer) {
-            videoRenderer->update(deltaTime, frame.frameIndex);
-        }
-        if (videoRenderer2) {
-            videoRenderer2->update(deltaTime, frame.frameIndex);
-        }
-
-        // Render UI
+        // ── UI ───────────────────────────────────────────────────────────────
         UIDiagnostics diag;
-        diag.lastFrameFrameIndex = frame.frameIndex;
-        diag.lastFrameImageIndex = frame.swapchainImageIndex;
-        diag.swapchainWidth = vulkanContext.getSwapchainExtent().width;
-        diag.swapchainHeight = vulkanContext.getSwapchainExtent().height;
-        diag.currentMode = visualControls.playback.activeMode;
-        diag.videoReady = videoSubsystemInitialized && videoTexture.isReady();
-        diag.videoWidth = videoTexture.getWidth();
-        diag.videoHeight = videoTexture.getHeight();
-        diag.animationTime = debugAnimationTime;
-        diag.animationDelta = debugAnimationDelta;
-        diag.animationElapsedSeconds = debugAnimationElapsedSeconds;
-        
-        UICallbacks callbacks;
-        callbacks.onControlsChanged = [this]() { controlsDirty = true; };
-        callbacks.onApplyChanges = [this]() {
-            if (!canChangeVideo()) return;
-            // Reload the video that was modified based on NLE Editor selection
-            if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) {
-                // Reload video 1 directly by path
-                videoRenderer.reset();
-                videoPlayer.shutdown();
-                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-                if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-                    videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-                    videoTexture.cleanup(resourceSystem);
-                    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                 vulkanContext.getCommandPool(),
-                                                 vulkanContext.getGraphicsQueue(),
-                                                 static_cast<uint32_t>(videoPlayer.width()),
-                                                 static_cast<uint32_t>(videoPlayer.height()));
-                    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                                        static_cast<uint32_t>(videoPlayer.height()),
-                                        static_cast<uint32_t>(videoPlayer.width()) * 4);
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture2.getSampler());
-                    videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-                }
-            } else {
-                // Reload video 2 directly by path
-                videoRenderer2.reset();
-                videoPlayer2.shutdown();
-                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-                if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-                    videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-                    videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-                    videoTexture2.cleanup(resourceSystem);
-                    videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                 vulkanContext.getCommandPool(),
-                                                 vulkanContext.getGraphicsQueue(),
-                                                 static_cast<uint32_t>(videoPlayer2.width()),
-                                                 static_cast<uint32_t>(videoPlayer2.height()));
-                    cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                                         static_cast<uint32_t>(videoPlayer2.height()),
-                                         static_cast<uint32_t>(videoPlayer2.width()) * 4);
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture2.getSampler());
-                    videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-                }
-            }
-            isReloadingVideo = false;
-        };
-        callbacks.onFolderChanged = [this]() {
-            if (!canChangeVideo()) return;
-            videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-            videoRandomizer.shuffleQueue.clear();
-            videoRandomizer.currentShuffleIndex = 0;
-            videoRandomizer2.shuffleQueue.clear();
-            videoRandomizer2.currentShuffleIndex = 0;
-            if (!assets.empty()) {
-                selectedVideoAsset = 0;
-                videoSourcePath = assets[0].metadata.path;
-                videoRenderer.reset();
-                videoPlayer.shutdown();
-                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-                if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-                    videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-                    videoTexture.cleanup(resourceSystem);
-                    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                 vulkanContext.getCommandPool(),
-                                                 vulkanContext.getGraphicsQueue(),
-                                                 static_cast<uint32_t>(videoPlayer.width()),
-                                                 static_cast<uint32_t>(videoPlayer.height()));
-                    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                                       static_cast<uint32_t>(videoPlayer.height()),
-                                       static_cast<uint32_t>(videoPlayer.width()) * 4);
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler());
-                }
-            }
-            isReloadingVideo = false;
-        };
-        callbacks.onRandomizeVideo = [this]() {
-            if (!canChangeVideo()) return;
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-            if (assets.size() > 1) {
-                int newIndex = pickNextVideoIndex(assets);
-                reloadVideoAtIndex(newIndex, assets);
-            }
-            isReloadingVideo = false;
-        };
-        callbacks.onJumpRandom = [this]() {
-            if (videoSubsystemInitialized) {
-                double duration = videoPlayer.durationSeconds();
-                if (duration > 0) {
-                    std::uniform_real_distribution<double> dist(0.0, duration);
-                    videoPlayer.seekSeconds(dist(rng));
-                }
-            }
-        };
-        callbacks.onRandomizeVideo2 = [this]() {
-            if (!canChangeVideo()) return;
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
-            if (assets.size() > 1) {
-                int newIndex = pickNextVideoIndex2(assets);
-                reloadVideoAtIndex2(newIndex, assets);
-            }
-            isReloadingVideo = false;
-        };
-        callbacks.onReloadVideo = [this](const std::string& path) {
-            if (!canChangeVideo()) return;
-            videoSourcePath = path;
-            videoRenderer.reset();
-            videoPlayer.shutdown();
-            int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-            int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-            if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-                vkDeviceWaitIdle(vulkanContext.getDevice());
-                videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-                videoTexture.cleanup(resourceSystem);  // Destroy staging ring
-                videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                             vulkanContext.getCommandPool(),
-                                             vulkanContext.getGraphicsQueue(),
-                                             static_cast<uint32_t>(videoPlayer.width()),
-                                             static_cast<uint32_t>(videoPlayer.height()));
+        diag.lastFrameFrameIndex       = frame->frameIndex;
+        diag.lastFrameImageIndex       = frame->swapchainImageIndex;
+        diag.swapchainWidth            = vulkanContext.getSwapchainExtent().width;
+        diag.swapchainHeight           = vulkanContext.getSwapchainExtent().height;
+        diag.currentMode               = visualControls.playback.activeMode;
+        diag.videoReady                = videoSubsystemInitialized && videoTexture.isReady();
+        diag.videoWidth                = videoTexture.getWidth();
+        diag.videoHeight               = videoTexture.getHeight();
+        diag.animationTime             = debugAnimationTime;
+        diag.animationDelta            = debugAnimationDelta;
+        diag.animationElapsedSeconds   = debugAnimationElapsedSeconds;
 
-                // Resize CPU frame pool to new resolution
-                cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                                   static_cast<uint32_t>(videoPlayer.height()),
-                                   static_cast<uint32_t>(videoPlayer.width()) * 4);
+        UICallbacks callbacks = buildUICallbacks();
+        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2,
+                        videoPlayer, videoPlayer2, videoRegistry,
+                        selectedVideoAsset, selectedVideoAsset2,
+                        transitionDuration, transitionDuration2,
+                        allowDimensionChangeRecreation, controlsDirty,
+                        rng, diag, callbacks, midiSystem, oscSystem, audioSystem,
+                        videoSourcePath, videoSourcePath2);
 
-                // Update descriptor sets with new textures
-                for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-                    descriptorSetManager.updateSet(
-                        vulkanContext.getDevice(), i,
-                        uniformBufferManager.getBuffers()[i],
-                        const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-                        const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
-                    );
-                }
-                updateFullscreenDescriptorSets();
+        // ── Command buffer ───────────────────────────────────────────────────
+        recordCommandBuffer(commandBuffers[frame->frameIndex], *frame);
 
-                // Update multipass descriptor sets with new textures
-                multiPassPipeline.updateDescriptorSets(
-                    uniformBufferManager.getBuffers(),
-                    videoTexture.getImageView(),
-                    videoTexture.getPrevImageView(),
-                    videoTexture.getSampler(),
-                    videoTexture.getSampler(),
-                    videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                    videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler()
-                );
+        // ── Submit ───────────────────────────────────────────────────────────
+        auto renderFinished = frameSystem.getRenderFinishedSemaphore(frame->swapchainImageIndex)
+                                         .value_or(VK_NULL_HANDLE);
+        if (renderFinished == VK_NULL_HANDLE)
+            throw std::runtime_error("invalid renderFinished semaphore");
 
-                videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-                videoRandomizer.elapsedSeconds = 0.0f;
-                videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
-            }
-            isReloadingVideo = false;
-        };
+        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkSubmitInfo submit{};
+        submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit.waitSemaphoreCount   = 1;
+        submit.pWaitSemaphores      = &frame->imageAvailableSemaphore;
+        submit.pWaitDstStageMask    = &waitStage;
+        submit.commandBufferCount   = 1;
+        submit.pCommandBuffers      = &commandBuffers[frame->frameIndex];
+        submit.signalSemaphoreCount = 1;
+        submit.pSignalSemaphores    = &renderFinished;
 
-        callbacks.onFolderChanged2 = [this]() {
-            if (!canChangeVideo()) return;
-            videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideo2Folder);
-            const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
-            videoRandomizer.shuffleQueue.clear();
-            videoRandomizer.currentShuffleIndex = 0;
-            videoRandomizer2.shuffleQueue.clear();
-            videoRandomizer2.currentShuffleIndex = 0;
-            if (!assets.empty()) {
-                selectedVideoAsset2 = 0;
-                videoSourcePath2 = assets[0].metadata.path;
-                videoRenderer2.reset();
-                videoPlayer2.shutdown();
-                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-                if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-                    videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-                    videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-                    videoTexture2.cleanup(resourceSystem);
-                    videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                 vulkanContext.getCommandPool(),
-                                                 vulkanContext.getGraphicsQueue(),
-                                                 static_cast<uint32_t>(videoPlayer2.width()),
-                                                 static_cast<uint32_t>(videoPlayer2.height()));
-                    cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                                         static_cast<uint32_t>(videoPlayer2.height()),
-                                         static_cast<uint32_t>(videoPlayer2.width()) * 4);
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler());
-                }
-            }
-            isReloadingVideo = false;
-        };
-
-        callbacks.onReloadVideo2 = [this](const std::string& path) {
-            if (!canChangeVideo()) return;
-            std::cout << "[Application] onReloadVideo2 called with: " << path << std::endl;
-            videoSourcePath2 = path;
-            videoRenderer2.reset();
-            videoPlayer2.shutdown();
-            int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-            int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-            std::cout << "[Application] Initializing video player 2 with: " << videoSourcePath2 << std::endl;
-            if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-                std::cout << "[Application] Video player 2 initialized successfully, isReady=" << videoPlayer2.isReady() << std::endl;
-                videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-                vkDeviceWaitIdle(vulkanContext.getDevice());
-                videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-                videoTexture2.cleanup(resourceSystem);
-                videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                             vulkanContext.getCommandPool(),
-                                             vulkanContext.getGraphicsQueue(),
-                                             static_cast<uint32_t>(videoPlayer2.width()),
-                                             static_cast<uint32_t>(videoPlayer2.height()));
-                cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                                   static_cast<uint32_t>(videoPlayer2.height()),
-                                   static_cast<uint32_t>(videoPlayer2.width()) * 4);
-                multiPassPipeline.updateDescriptorSets(
-                    uniformBufferManager.getBuffers(),
-                    videoTexture.getImageView(),
-                    videoTexture.getPrevImageView(),
-                    videoTexture.getSampler(),
-                    videoTexture.getSampler(),
-                    videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                    videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler()
-                );
-                videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-            }
-            isReloadingVideo = false;
-        };
-
-        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoPlayer, videoPlayer2, videoRegistry,
-                       selectedVideoAsset, selectedVideoAsset2, transitionDuration, transitionDuration2, allowDimensionChangeRecreation,
-                       controlsDirty, rng, diag, callbacks, midiSystem, oscSystem, audioSystem, videoSourcePath, videoSourcePath2);
-        
-        // Record command buffer
-        recordCommandBuffer(commandBuffers[frame.frameIndex], frame);
-
-        // Submit command buffer
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        VkSemaphore renderFinishedSemaphore = frameSystem.getRenderFinishedSemaphore(frame.swapchainImageIndex);
-
-        // Use frame's imageAvailableSemaphore for waiting (it gets signaled by vkAcquireNextImageKHR)
-        VkSemaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
-        VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
-        VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffers[frame.frameIndex];
-
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
-
-        vkResetFences(vulkanContext.getDevice(), 1, &frame.inFlightFence);
-
-        if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submitInfo, frame.inFlightFence) != VK_SUCCESS) {
+        if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, frame->inFlightFence) != VK_SUCCESS)
             throw std::runtime_error("failed to submit draw command buffer");
-        }
 
-        // Present swapchain
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        // ── Present ──────────────────────────────────────────────────────────
+        VkSwapchainKHR sc = vulkanContext.getSwapchain();
+        VkPresentInfoKHR present{};
+        present.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present.waitSemaphoreCount = 1;
+        present.pWaitSemaphores    = &renderFinished;
+        present.swapchainCount     = 1;
+        present.pSwapchains        = &sc;
+        present.pImageIndices      = &frame->swapchainImageIndex;
 
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
-
-        VkSwapchainKHR swapChains[] = {vulkanContext.getSwapchain()};
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-        presentInfo.pImageIndices = &frame.swapchainImageIndex;
-
-        VkResult presentResult = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &presentInfo);
-
-        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
-            // Handle resize
+        const VkResult pr = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &present);
+        if (pr == VK_ERROR_OUT_OF_DATE_KHR || pr == VK_SUBOPTIMAL_KHR)
             window.resetResizeFlag();
-        }
 
-        // Submit frame
         frameSystem.endFrame();
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tick helpers (extraídos del mainLoop)
+// ─────────────────────────────────────────────────────────────────────────────
+
+void Application::tickAutoColors(float dt) {
+    auto& c = visualControls.color;
+    if (!c.autoRandomizeColors) return;
+
+    c.colorRandomizeElapsed += dt;
+    if (c.colorRandomizeElapsed >= c.colorRandomizeInterval) {
+        std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
+        std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
+        std::uniform_real_distribution<float> valDist(0.7f, 1.0f);
+
+        auto hsvToRgb = [](float h, float s, float v) -> glm::vec3 {
+            float c2 = v * s, x = c2 * (1.f - std::fabs(std::fmod(h / 60.f, 2.f) - 1.f)), m = v - c2;
+            float r, g, b;
+            if      (h < 60)  { r=c2; g=x;  b=0;  }
+            else if (h < 120) { r=x;  g=c2; b=0;  }
+            else if (h < 180) { r=0;  g=c2; b=x;  }
+            else if (h < 240) { r=0;  g=x;  b=c2; }
+            else if (h < 300) { r=x;  g=0;  b=c2; }
+            else              { r=c2; g=0;  b=x;  }
+            return { r+m, g+m, b+m };
+        };
+
+        float ph = hueDist(rng), ps = satDist(rng), pv = valDist(rng);
+        c.primaryColorTarget   = glm::vec4(hsvToRgb(ph, ps, pv), 1.f);
+        c.secondaryColorTarget = glm::vec4(hsvToRgb(std::fmod(ph + 180.f, 360.f), ps, pv), 1.f);
+        c.colorRandomizeElapsed = 0.f;
+    }
+
+    float t = 2.f * dt;
+    c.primaryColor   = glm::mix(c.primaryColor,   c.primaryColorTarget,   t);
+    c.secondaryColor = glm::mix(c.secondaryColor, c.secondaryColorTarget, t);
+}
+
+void Application::tickAutoRandomize(float dt,
+                                    const std::chrono::steady_clock::time_point& /*now*/)
+{
+    auto tick = [&](bool enabled, bool initialized,
+                    auto& rz, int slot,
+                    const std::string& folder) {
+        if (!enabled || !initialized) return;
+        rz.elapsedSeconds += dt;
+        float target = (rz.useVideoDuration && rz.currentVideoDuration > 0.f)
+                       ? rz.currentVideoDuration : rz.intervalSeconds;
+        if (rz.elapsedSeconds < target) return;
+        if (!canChangeVideo()) { rz.elapsedSeconds = 0.f; return; }
+
+        const auto& assets = videoRegistry.getFilteredAssets(folder);
+        if (assets.size() > 1) {
+            int idx = (slot == 0) ? pickNextVideoIndex(assets) : pickNextVideoIndex2(assets);
+            if (slot == 0) reloadVideoAtIndex(idx, assets);
+            else           reloadVideoAtIndex2(idx, assets);
+        }
+        isReloadingVideo = false;
+    };
+
+    tick(videoRandomizer.autoRandomize,  videoSubsystemInitialized,
+         videoRandomizer,  0, visualControls.playback.selectedVideoFolder);
+
+    tick(videoRandomizer2.autoRandomize && visualControls.playback.enableDualVideo,
+         videoSubsystemInitialized,
+         videoRandomizer2, 1, visualControls.playback.selectedVideo2Folder);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI callbacks — centralizado
+// ─────────────────────────────────────────────────────────────────────────────
+
+UICallbacks Application::buildUICallbacks() {
+    UICallbacks cb;
+
+    cb.onControlsChanged = [this]() { controlsDirty = true; };
+
+    cb.onApplyChanges = [this]() {
+        if (!canChangeVideo()) return;
+        const int slot = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? 0 : 1;
+        reloadVideoSlot(slot, (slot == 0) ? videoSourcePath : videoSourcePath2);
+    };
+
+    cb.onFolderChanged = [this]() {
+        if (!canChangeVideo()) return;
+        videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
+        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
+        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
+        if (!assets.empty()) { selectedVideoAsset = 0; reloadVideoSlot(0, assets[0].metadata.path); }
+        isReloadingVideo = false;
+    };
+
+    cb.onFolderChanged2 = [this]() {
+        if (!canChangeVideo()) return;
+        videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideo2Folder);
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
+        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
+        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
+        if (!assets.empty()) { selectedVideoAsset2 = 0; reloadVideoSlot(1, assets[0].metadata.path); }
+        isReloadingVideo = false;
+    };
+
+    cb.onRandomizeVideo = [this]() {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
+        if (assets.size() > 1) reloadVideoAtIndex(pickNextVideoIndex(assets), assets);
+        isReloadingVideo = false;
+    };
+
+    cb.onRandomizeVideo2 = [this]() {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
+        if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
+        isReloadingVideo = false;
+    };
+
+    cb.onJumpRandom = [this]() {
+        if (!videoSubsystemInitialized) return;
+        const double dur = videoPlayer.durationSeconds();
+        if (dur > 0) videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+    };
+
+    cb.onReloadVideo  = [this](const std::string& path) {
+        if (!canChangeVideo()) return;
+        reloadVideoSlot(0, path);
+    };
+    cb.onReloadVideo2 = [this](const std::string& path) {
+        if (!canChangeVideo()) return;
+        reloadVideoSlot(1, path);
+    };
+
+    return cb;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Uniform buffer
+// ─────────────────────────────────────────────────────────────────────────────
 
 void Application::updateUniformBuffer(uint32_t frameIndex) {
     GlobalParamsUBO ubo{};
@@ -1880,180 +1469,96 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }
 
-void Application::updateFullscreenDescriptorSets() {
-    if (fullscreenDescriptorSets.size() != MAX_FRAMES_IN_FLIGHT) {
-        return; // Descriptor sets not yet created
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Record command buffer
+// ─────────────────────────────────────────────────────────────────────────────
 
-    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBufferManager.getBuffers()[i];
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(GlobalParamsUBO);
+void Application::recordCommandBuffer(VkCommandBuffer cmd, FrameContext& frame) {
+    VkCommandBufferBeginInfo begin{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    if (vkBeginCommandBuffer(cmd, &begin) != VK_SUCCESS)
+        throw std::runtime_error("failed to begin command buffer");
 
-        VkWriteDescriptorSet uboWrite{};
-        uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        uboWrite.dstSet = fullscreenDescriptorSets[i];
-        uboWrite.dstBinding = 0;
-        uboWrite.dstArrayElement = 0;
-        uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboWrite.descriptorCount = 1;
-        uboWrite.pBufferInfo = &bufferInfo;
+    videoTexture.recordPendingUpload(cmd, frame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (videoSubsystemInitialized2 && videoTexture2.isReady())
+        videoTexture2.recordPendingUpload(cmd, frame.frameIndex, vulkanContext.getGraphicsQueue());
 
-        vkUpdateDescriptorSets(vulkanContext.getDevice(), 1, &uboWrite, 0, nullptr);
-        // Binding 1 (inputTexture) lo actualiza execute() cada frame
-        // apuntando al output final del multipass pipeline
-    }
-}
-
-void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, FrameContext& frame) {
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer");
-    }
-
-    // Record video texture uploads
-    videoTexture.recordPendingUpload(commandBuffer, frame.frameIndex, vulkanContext.getGraphicsQueue());
-    if (videoSubsystemInitialized2 && videoTexture2.isReady()) {
-        videoTexture2.recordPendingUpload(commandBuffer, frame.frameIndex, vulkanContext.getGraphicsQueue());
-    }
-
-    // Execute multi-pass pipeline
     if (videoSubsystemInitialized) {
-        VkDescriptorSet descriptorSet = descriptorSetManager.getSet(frame.frameIndex);
-        VkDescriptorSet fullscreenDescriptorSet = fullscreenDescriptorSets[frame.frameIndex];
         multiPassPipeline.execute(
-            commandBuffer,
-            frame.frameIndex,
-            descriptorSet,
-            renderPass,
-            swapchainFramebuffers,
-            frame.swapchainImageIndex,
-            fullscreenPipeline,
-            pipelineLayout,
-            fullscreenDescriptorSet,
-            vulkanContext.getSwapchainExtent(),
-            swapchainSampler
+            cmd, frame.frameIndex,
+            descriptorSetManager.getSet(frame.frameIndex),
+            renderPass, swapchainFramebuffers, frame.swapchainImageIndex,
+            fullscreenPipeline, pipelineLayout,
+            fullscreenDescriptorSets[frame.frameIndex],
+            vulkanContext.getSwapchainExtent(), swapchainSampler
         );
     } else {
-        // Fallback to fullscreen pipeline if video not initialized
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapchainFramebuffers[frame.swapchainImageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = vulkanContext.getSwapchainExtent();
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
+        // Fallback negro cuando no hay vídeo
+        VkClearValue clear{ .color = {0.f, 0.f, 0.f, 1.f} };
+        const auto ext = vulkanContext.getSwapchainExtent();
+        VkRenderPassBeginInfo rp{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+        rp.renderPass        = renderPass;
+        rp.framebuffer       = swapchainFramebuffers[frame.swapchainImageIndex];
+        rp.renderArea.extent = ext;
+        rp.clearValueCount   = 1;
+        rp.pClearValues      = &clear;
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
-        VkDescriptorSet descriptorSet = fullscreenDescriptorSets[frame.frameIndex];
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-                               0, 1, &descriptorSet, 0, nullptr);
+        vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
+        VkDescriptorSet ds = fullscreenDescriptorSets[frame.frameIndex];
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &ds, 0, nullptr);
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(vulkanContext.getSwapchainExtent().width);
-        viewport.height = static_cast<float>(vulkanContext.getSwapchainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = vulkanContext.getSwapchainExtent();
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-        vkCmdEndRenderPass(commandBuffer);
+        VkViewport vp{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
+        VkRect2D   sc{ {0,0}, ext };
+        vkCmdSetViewport(cmd, 0, 1, &vp);
+        vkCmdSetScissor(cmd, 0, 1, &sc);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdEndRenderPass(cmd);
     }
 
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to end recording command buffer");
-    }
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS)
+        throw std::runtime_error("failed to end command buffer");
 }
 
-void Application::cleanup() {
-    if (!initializationComplete) {
-        return;
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Cleanup
+// ─────────────────────────────────────────────────────────────────────────────
 
+void Application::cleanup() {
+    if (!initializationComplete) return;
     vkDeviceWaitIdle(vulkanContext.getDevice());
 
-    // Save control state
-    JsonSerializer::save(visualControlsPath, parameterRegistry);
-    ControlState::save(controlStatePath, videoRandomizer, videoRandomizer2,
-                       allowDimensionChangeRecreation, oscSystem,
-                       selectedVideoAsset, selectedVideoAsset2);
-
-    // Shutdown UI
+    saveState();
     uiSystem.shutdown();
-
-    // Cleanup frame system (semaphores and fences)
     frameSystem.cleanup();
 
-    // Cleanup video
     videoPlayer.shutdown();
     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-    videoTexture.cleanup(resourceSystem);  // Destroy staging ring
-
-    // Cleanup video 2
+    videoTexture.cleanup(resourceSystem);
     videoPlayer2.shutdown();
     videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
     videoTexture2.cleanup(resourceSystem);
 
-    // Cleanup uniform buffers
     uniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
-
-    // Cleanup descriptor sets
     descriptorSetManager.destroy(vulkanContext.getDevice());
-
-    // Cleanup multipass pipeline
     multiPassPipeline.cleanup();
 
-    // Cleanup pipelines
-    if (fullscreenPipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(vulkanContext.getDevice(), fullscreenPipeline, nullptr);
-    }
-    if (pipelineLayout != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(vulkanContext.getDevice(), pipelineLayout, nullptr);
-    }
+    // Shutdown audio/MIDI/OSC systems before ResourceSystem cleanup
+    audioSystem.shutdown();
+    midiSystem.shutdown();
+    oscSystem.shutdown();
 
-    // Cleanup fullscreen descriptor resources
-    if (fullscreenDescriptorPool != VK_NULL_HANDLE) {
-        vkDestroyDescriptorPool(vulkanContext.getDevice(), fullscreenDescriptorPool, nullptr);
-    }
-    if (fullscreenDescriptorSetLayout != VK_NULL_HANDLE) {
-        vkDestroyDescriptorSetLayout(vulkanContext.getDevice(), fullscreenDescriptorSetLayout, nullptr);
-    }
+    if (fullscreenPipeline          != VK_NULL_HANDLE) vkDestroyPipeline           (vulkanContext.getDevice(), fullscreenPipeline,          nullptr);
+    if (pipelineLayout              != VK_NULL_HANDLE) vkDestroyPipelineLayout      (vulkanContext.getDevice(), pipelineLayout,              nullptr);
+    if (fullscreenDescriptorPool    != VK_NULL_HANDLE) vkDestroyDescriptorPool      (vulkanContext.getDevice(), fullscreenDescriptorPool,    nullptr);
+    if (fullscreenDescriptorSetLayout != VK_NULL_HANDLE) vkDestroyDescriptorSetLayout(vulkanContext.getDevice(), fullscreenDescriptorSetLayout, nullptr);
+    if (swapchainSampler            != VK_NULL_HANDLE) vkDestroySampler             (vulkanContext.getDevice(), swapchainSampler,            nullptr);
+    if (renderPass                  != VK_NULL_HANDLE) vkDestroyRenderPass          (vulkanContext.getDevice(), renderPass,                  nullptr);
 
-    // Cleanup swapchain sampler
-    if (swapchainSampler != VK_NULL_HANDLE) {
-        vkDestroySampler(vulkanContext.getDevice(), swapchainSampler, nullptr);
-    }
+    for (auto fb : swapchainFramebuffers)
+        vkDestroyFramebuffer(vulkanContext.getDevice(), fb, nullptr);
 
-    // Cleanup framebuffers
-    for (auto framebuffer : swapchainFramebuffers) {
-        vkDestroyFramebuffer(vulkanContext.getDevice(), framebuffer, nullptr);
-    }
-
-    // Cleanup render pass
-    if (renderPass != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(vulkanContext.getDevice(), renderPass, nullptr);
-    }
-
-    // Cleanup vertex buffer
-    if (vertexBufferHandle.type != ResourceType::Unknown) {
+    if (vertexBufferHandle.type != ResourceType::Unknown)
         resourceSystem.destroy(vertexBufferHandle);
-    }
 
-    // Cleanup resource system (frees MemoryAllocator blocks)
     resourceSystem.cleanup();
-
-    // VulkanContext will clean up its own resources in its destructor
 }

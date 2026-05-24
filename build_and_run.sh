@@ -2,42 +2,69 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_DIR="$SCRIPT_DIR/build"
+SHADERS_DIR="$SCRIPT_DIR/shaders"
 
-mkdir -p "$SCRIPT_DIR/build"
-shaders_dir="$SCRIPT_DIR/shaders"
+mkdir -p "$BUILD_DIR"
 
+# Detect glslc
 if ! command -v glslc >/dev/null 2>&1; then
-    echo "[build_and_run] error: glslc not found, shader compilation is required" >&2
+    echo "[build_and_run] error: glslc not found (Vulkan SDK required)" >&2
     exit 1
 fi
 
-echo "[build_and_run] Compiling triangle.vert..."
-glslc "$shaders_dir/triangle.vert" -o "$shaders_dir/triangle.vert.spv"
-echo "[build_and_run] Compiling triangle.frag..."
-glslc "$shaders_dir/triangle.frag" -o "$shaders_dir/triangle.frag.spv"
-echo "[build_and_run] Compiling present.vert..."
-glslc "$shaders_dir/present.vert" -o "$shaders_dir/present.vert.spv"
-echo "[build_and_run] Compiling present.frag..."
-glslc "$shaders_dir/present.frag" -o "$shaders_dir/present.frag.spv"
-echo "[build_and_run] Compiling fullscreen.vert..."
-glslc "$shaders_dir/fullscreen.vert" -o "$shaders_dir/fullscreen.vert.spv"
-echo "[build_and_run] Compiling fullscreen.frag..."
-glslc "$shaders_dir/fullscreen.frag" -o "$shaders_dir/fullscreen.frag.spv"
-echo "[build_and_run] Compiling pass_a_base.frag..."
-glslc "$shaders_dir/pass_a_base.frag" -o "$shaders_dir/pass_a_base.frag.spv"
-echo "[build_and_run] Compiling pass_b_spatial.frag..."
-glslc "$shaders_dir/pass_b_spatial.frag" -o "$shaders_dir/pass_b_spatial.frag.spv"
-echo "[build_and_run] Compiling pass_c_detail.frag..."
-glslc "$shaders_dir/pass_c_detail.frag" -o "$shaders_dir/pass_c_detail.frag.spv"
-echo "[build_and_run] Compiling pass_d_temporal.frag..."
-glslc "$shaders_dir/pass_d_temporal.frag" -o "$shaders_dir/pass_d_temporal.frag.spv"
-echo "[build_and_run] Compiling pass_e_degradation.frag..."
-glslc "$shaders_dir/pass_e_degradation.frag" -o "$shaders_dir/pass_e_degradation.frag.spv"
-echo "[build_and_run] Compiling pass_f_color.frag..."
-glslc "$shaders_dir/pass_f_color.frag" -o "$shaders_dir/pass_f_color.frag.spv"
-echo "[build_and_run] Compiling pass_g_output.frag..."
-glslc "$shaders_dir/pass_g_output.frag" -o "$shaders_dir/pass_g_output.frag.spv"
-echo "[build_and_run] All shaders compiled successfully."
-cmake -S "$SCRIPT_DIR" -B "$SCRIPT_DIR/build"
-cmake --build "$SCRIPT_DIR/build" -j$(nproc)
-SDL_VIDEODRIVER=wayland "$SCRIPT_DIR/build/app"
+echo "[build_and_run] Compiling shaders..."
+
+# Shader list (single source of truth)
+shaders=(
+  "triangle.vert"
+  "triangle.frag"
+  "present.vert"
+  "present.frag"
+  "fullscreen.vert"
+  "fullscreen.frag"
+  "pass_a_base.frag"
+  "pass_b_spatial.frag"
+  "pass_c_detail.frag"
+  "pass_d_temporal.frag"
+  "pass_e_degradation.frag"
+  "pass_f_color.frag"
+  "pass_g_output.frag"
+)
+
+# Compile shaders only if needed
+for shader in "${shaders[@]}"; do
+    src="$SHADERS_DIR/$shader"
+    out="$SHADERS_DIR/$shader.spv"
+
+    if [[ ! -f "$src" ]]; then
+        echo "[build_and_run] warning: missing shader $src"
+        continue
+    fi
+
+    if [[ "$src" -nt "$out" ]]; then
+        echo "[build_and_run] compiling $shader"
+        glslc "$src" -o "$out"
+    else
+        echo "[build_and_run] up-to-date $shader"
+    fi
+done
+
+echo "[build_and_run] Configuring CMake..."
+cmake -S "$SCRIPT_DIR" -B "$BUILD_DIR"
+
+echo "[build_and_run] Building..."
+cmake --build "$BUILD_DIR" --parallel
+
+# Optional execution control
+RUN_APP="${RUN_APP:-1}"
+SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-}"
+
+if [[ "$RUN_APP" == "1" ]]; then
+    echo "[build_and_run] Running application..."
+    if [[ -n "$SDL_VIDEODRIVER" ]]; then
+        SDL_VIDEODRIVER="$SDL_VIDEODRIVER" "$BUILD_DIR/app"
+    else
+        "$BUILD_DIR/app"
+    fi
+fi

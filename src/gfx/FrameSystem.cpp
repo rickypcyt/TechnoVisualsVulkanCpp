@@ -1,76 +1,106 @@
+// gfx/FrameSystem.cpp
 #include "gfx/FrameSystem.h"
 #include <stdexcept>
 #include <iostream>
+#include <cassert>
 
-void FrameSystem::init(VkDevice deviceHandle, uint32_t frameCount, uint32_t swapchainImageCount) {
-    if (frameCount == 0) {
-        throw std::runtime_error("FrameSystem initialized with zero frames");
-    }
-    if (swapchainImageCount == 0) {
-        throw std::runtime_error("FrameSystem initialized with zero swapchain images");
-    }
+// ─── RAII ────────────────────────────────────────────────────────────────────
 
-    device = deviceHandle;
-    maxFrames = frameCount;
-    currentFrame = 0;
-    frameContexts.resize(maxFrames);
-
-    VkFenceCreateInfo fenceInfo{};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    VkSemaphoreCreateInfo semaphoreInfo{};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    for (uint32_t i = 0; i < maxFrames; ++i) {
-        FrameContext ctx{};
-        ctx.frameIndex = i;
-
-        if (vkCreateFence(device, &fenceInfo, nullptr, &ctx.inFlightFence) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create fence for frame system");
-        }
-
-        // Create imageAvailable semaphore for this frame
-        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &ctx.imageAvailableSemaphore) != VK_SUCCESS) {
-            vkDestroyFence(device, ctx.inFlightFence, nullptr);
-            throw std::runtime_error("failed to create image available semaphore");
-        }
-
-        frameContexts[i] = ctx;
-    }
-
-    // Create renderFinished semaphores for each swapchain image
-    renderFinishedSemaphores.resize(swapchainImageCount);
-    for (uint32_t i = 0; i < swapchainImageCount; ++i) {
-        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create render finished semaphore");
-        }
-    }
-
-    imagesInFlight.resize(swapchainImageCount, VK_NULL_HANDLE);
-
-    std::cout << "[FrameSystem] Initialized with " << maxFrames << " frames and " << swapchainImageCount << " swapchain image semaphores" << std::endl;
+FrameSystem::~FrameSystem() {
+    cleanup();
 }
 
-FrameContext& FrameSystem::beginFrame(VkSwapchainKHR swapchain, uint32_t& imageIndex, VkResult& result) {
-    if (frameContexts.empty()) {
-        throw std::runtime_error("FrameSystem::beginFrame called with no frames initialized");
-    }
-    if (currentFrame >= frameContexts.size()) {
-        throw std::runtime_error("FrameSystem::beginFrame currentFrame out of bounds");
-    }
+FrameSystem::FrameSystem(FrameSystem&& other) noexcept
+    : m_device(other.m_device)
+    , m_maxFrames(other.m_maxFrames)
+    , m_currentFrame(other.m_currentFrame)
+    , m_frameContexts(std::move(other.m_frameContexts))
+    , m_renderFinishedSemaphores(std::move(other.m_renderFinishedSemaphores))
+    , m_imagesInFlight(std::move(other.m_imagesInFlight))
+{
+    other.m_device       = VK_NULL_HANDLE;
+    other.m_maxFrames    = 0;
+    other.m_currentFrame = 0;
+}
 
-    FrameContext& frame = frameContexts[currentFrame];
-
-    if (frame.inFlightFence == VK_NULL_HANDLE || frame.imageAvailableSemaphore == VK_NULL_HANDLE) {
-        throw std::runtime_error("FrameContext not properly initialized");
+FrameSystem& FrameSystem::operator=(FrameSystem&& other) noexcept {
+    if (this != &other) {
+        cleanup();
+        m_device                   = other.m_device;
+        m_maxFrames                = other.m_maxFrames;
+        m_currentFrame             = other.m_currentFrame;
+        m_frameContexts            = std::move(other.m_frameContexts);
+        m_renderFinishedSemaphores = std::move(other.m_renderFinishedSemaphores);
+        m_imagesInFlight           = std::move(other.m_imagesInFlight);
+        other.m_device             = VK_NULL_HANDLE;
+        other.m_maxFrames          = 0;
+        other.m_currentFrame       = 0;
     }
+    return *this;
+}
 
-    // Wait for previous frame to complete
-    vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+// ─── Init / Cleanup ──────────────────────────────────────────────────────────
+
+void FrameSystem::init(VkDevice device, uint32_t frameCount, uint32_t swapchainImageCount) {
+    if (device == VK_NULL_HANDLE)
+        throw std::invalid_argument("FrameSystem::init — null device handle");
+    if (frameCount == 0)
+        throw std::invalid_argument("FrameSystem::init — frameCount must be > 0");
+    if (swapchainImageCount == 0)
+        throw std::invalid_argument("FrameSystem::init — swapchainImageCount must be > 0");
+
+    std::lock_guard lock(m_mutex);
+
+    if (m_device != VK_NULL_HANDLE)
+        throw std::logic_error("FrameSystem::init — already initialized; call cleanup() first");
+
+    m_device       = device;
+    m_maxFrames    = frameCount;
+    m_currentFrame = 0;
+
+    createFrameSyncObjects(frameCount);
+    createSwapchainSemaphores(swapchainImageCount);
+    m_imagesInFlight.assign(swapchainImageCount, VK_NULL_HANDLE);
+
+    std::cout << "[FrameSystem] Initialized — frames: " << m_maxFrames
+              << ", swapchain images: " << swapchainImageCount << '\n';
+}
+
+void FrameSystem::cleanup() {
+    std::lock_guard lock(m_mutex);
+
+    if (m_device == VK_NULL_HANDLE)
+        return;
+
+    destroyFrameSyncObjects();
+    destroySwapchainSemaphores();
+
+    m_imagesInFlight.clear();
+    m_device       = VK_NULL_HANDLE;
+    m_maxFrames    = 0;
+    m_currentFrame = 0;
+}
+
+// ─── Frame lifecycle ─────────────────────────────────────────────────────────
+
+FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
+                                       uint32_t&      imageIndex,
+                                       VkResult&      result)
+{
+    std::lock_guard lock(m_mutex);
+
+    if (m_device == VK_NULL_HANDLE)
+        throw std::logic_error("FrameSystem::beginFrame — not initialized");
+    if (swapchain == VK_NULL_HANDLE)
+        throw std::invalid_argument("FrameSystem::beginFrame — null swapchain");
+
+    FrameContext& frame = m_frameContexts[m_currentFrame];
+
+    // Wait for previous use of this frame slot
+    vkWaitForFences(m_device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
 
     result = vkAcquireNextImageKHR(
-        device,
+        m_device,
         swapchain,
         UINT64_MAX,
         frame.imageAvailableSemaphore,
@@ -78,113 +108,157 @@ FrameContext& FrameSystem::beginFrame(VkSwapchainKHR swapchain, uint32_t& imageI
         &imageIndex
     );
 
-    if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) {
-        // Ensure imagesInFlight is large enough
-        if (imageIndex >= imagesInFlight.size()) {
-            imagesInFlight.resize(imageIndex + 1, VK_NULL_HANDLE);
-        }
-
-        // Wait for previous owner of this image
-        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-            vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-        }
-
-        imagesInFlight[imageIndex] = frame.inFlightFence;
-        frame.swapchainImageIndex = imageIndex;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        // Caller must recreate swapchain; do NOT reset fence yet
+        return nullptr;
     }
 
-    return frame;
+    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+        throw std::runtime_error("FrameSystem::beginFrame — vkAcquireNextImageKHR failed");
+
+    // Grow tracking array if swapchain was recreated with more images
+    if (imageIndex >= m_imagesInFlight.size())
+        m_imagesInFlight.resize(imageIndex + 1, VK_NULL_HANDLE);
+
+    // Wait for any previous frame still using this swapchain image
+    if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+        vkWaitForFences(m_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+
+    // Reset fence only when we're about to submit work
+    vkResetFences(m_device, 1, &frame.inFlightFence);
+
+    m_imagesInFlight[imageIndex] = frame.inFlightFence;
+    frame.swapchainImageIndex    = imageIndex;
+
+    return &frame;
 }
 
 void FrameSystem::endFrame() {
-    if (maxFrames == 0) {
-        return;
-    }
-    currentFrame = (currentFrame + 1) % maxFrames;
+    std::lock_guard lock(m_mutex);
+    if (m_maxFrames == 0) return;
+    m_currentFrame = (m_currentFrame + 1) % m_maxFrames;
 }
 
-void FrameSystem::resizeSwapchainImages(size_t count) {
-    // Destroy old renderFinished semaphores
-    for (auto semaphore : renderFinishedSemaphores) {
-        if (semaphore != VK_NULL_HANDLE) {
-            vkDestroySemaphore(device, semaphore, nullptr);
-        }
-    }
+// ─── Resize / recreate ───────────────────────────────────────────────────────
 
-    // Create new renderFinished semaphores
-    VkSemaphoreCreateInfo semaphoreInfo{};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    renderFinishedSemaphores.resize(count);
+void FrameSystem::resizeSwapchainImages(uint32_t count) {
+    if (count == 0)
+        throw std::invalid_argument("FrameSystem::resizeSwapchainImages — count must be > 0");
 
-    for (uint32_t i = 0; i < count; ++i) {
-        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create render finished semaphore during resize");
-        }
-    }
+    std::lock_guard lock(m_mutex);
 
-    imagesInFlight.assign(count, VK_NULL_HANDLE);
-}
-
-VkFence FrameSystem::getFence(uint32_t frameIndex) {
-    if (frameIndex >= frameContexts.size()) {
-        return VK_NULL_HANDLE;
-    }
-    return frameContexts[frameIndex].inFlightFence;
-}
-
-VkSemaphore FrameSystem::getRenderFinishedSemaphore(uint32_t swapchainImageIndex) const {
-    if (swapchainImageIndex >= renderFinishedSemaphores.size()) {
-        return VK_NULL_HANDLE;
-    }
-    return renderFinishedSemaphores[swapchainImageIndex];
-}
-
-void FrameSystem::resetCurrentFrame() {
-    currentFrame = 0;
-}
-
-void FrameSystem::cleanup() {
-    for (auto& frame : frameContexts) {
-        if (frame.inFlightFence != VK_NULL_HANDLE) {
-            vkDestroyFence(device, frame.inFlightFence, nullptr);
-            frame.inFlightFence = VK_NULL_HANDLE;
-        }
-        if (frame.imageAvailableSemaphore != VK_NULL_HANDLE) {
-            vkDestroySemaphore(device, frame.imageAvailableSemaphore, nullptr);
-            frame.imageAvailableSemaphore = VK_NULL_HANDLE;
-        }
-    }
-
-    for (auto semaphore : renderFinishedSemaphores) {
-        if (semaphore != VK_NULL_HANDLE) {
-            vkDestroySemaphore(device, semaphore, nullptr);
-        }
-    }
-
-    frameContexts.clear();
-    imagesInFlight.clear();
-    renderFinishedSemaphores.clear();
-    device = VK_NULL_HANDLE;
-    maxFrames = 0;
-    currentFrame = 0;
+    destroySwapchainSemaphores();
+    createSwapchainSemaphores(count);
+    m_imagesInFlight.assign(count, VK_NULL_HANDLE);
 }
 
 void FrameSystem::waitForAllFences() {
-    for (auto& frame : frameContexts) {
-        if (frame.inFlightFence != VK_NULL_HANDLE) {
-            vkWaitForFences(device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
-        }
+    std::lock_guard lock(m_mutex);
+
+    for (auto& frame : m_frameContexts) {
+        if (frame.inFlightFence != VK_NULL_HANDLE)
+            vkWaitForFences(m_device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
     }
 }
 
 void FrameSystem::recreateSemaphores() {
+    // Wait idle before touching semaphores
     waitForAllFences();
 
-    uint32_t savedMaxFrames = maxFrames;
-    uint32_t savedSwapchainImageCount = static_cast<uint32_t>(renderFinishedSemaphores.size());
-    VkDevice savedDevice = device;
+    std::lock_guard lock(m_mutex);
 
-    cleanup();
+    // Recreate per-frame imageAvailable semaphores
+    VkSemaphoreCreateInfo si{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    for (auto& frame : m_frameContexts) {
+        if (frame.imageAvailableSemaphore != VK_NULL_HANDLE) {
+            vkDestroySemaphore(m_device, frame.imageAvailableSemaphore, nullptr);
+            frame.imageAvailableSemaphore = VK_NULL_HANDLE;
+        }
+        if (vkCreateSemaphore(m_device, &si, nullptr, &frame.imageAvailableSemaphore) != VK_SUCCESS)
+            throw std::runtime_error("FrameSystem::recreateSemaphores — imageAvailable failed");
+    }
 
-    init(savedDevice, savedMaxFrames, savedSwapchainImageCount);
+    // Recreate renderFinished semaphores
+    const auto count = static_cast<uint32_t>(m_renderFinishedSemaphores.size());
+    destroySwapchainSemaphores();
+    createSwapchainSemaphores(count);
+}
+
+void FrameSystem::resetCurrentFrame() {
+    std::lock_guard lock(m_mutex);
+    m_currentFrame = 0;
+}
+
+// ─── Getters ─────────────────────────────────────────────────────────────────
+
+std::optional<VkFence> FrameSystem::getFence(uint32_t frameIndex) const {
+    std::lock_guard lock(m_mutex);
+    if (frameIndex >= m_frameContexts.size())
+        return std::nullopt;
+    return m_frameContexts[frameIndex].inFlightFence;
+}
+
+std::optional<VkSemaphore> FrameSystem::getRenderFinishedSemaphore(uint32_t swapchainImageIndex) const {
+    std::lock_guard lock(m_mutex);
+    if (swapchainImageIndex >= m_renderFinishedSemaphores.size())
+        return std::nullopt;
+    return m_renderFinishedSemaphores[swapchainImageIndex];
+}
+
+// ─── Private helpers ─────────────────────────────────────────────────────────
+
+void FrameSystem::createFrameSyncObjects(uint32_t frameCount) {
+    VkFenceCreateInfo fi{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+    fi.flags = VK_FENCE_CREATE_SIGNALED_BIT;   // Pre-signaled so first wait doesn't block
+
+    VkSemaphoreCreateInfo si{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+
+    m_frameContexts.resize(frameCount);
+    for (uint32_t i = 0; i < frameCount; ++i) {
+        FrameContext& ctx = m_frameContexts[i];
+        ctx.frameIndex = i;
+
+        if (vkCreateFence(m_device, &fi, nullptr, &ctx.inFlightFence) != VK_SUCCESS)
+            throw std::runtime_error("FrameSystem — failed to create inFlightFence");
+
+        if (vkCreateSemaphore(m_device, &si, nullptr, &ctx.imageAvailableSemaphore) != VK_SUCCESS) {
+            vkDestroyFence(m_device, ctx.inFlightFence, nullptr);
+            ctx.inFlightFence = VK_NULL_HANDLE;
+            throw std::runtime_error("FrameSystem — failed to create imageAvailableSemaphore");
+        }
+    }
+}
+
+void FrameSystem::createSwapchainSemaphores(uint32_t count) {
+    VkSemaphoreCreateInfo si{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    m_renderFinishedSemaphores.resize(count);
+
+    for (uint32_t i = 0; i < count; ++i) {
+        if (vkCreateSemaphore(m_device, &si, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS)
+            throw std::runtime_error("FrameSystem — failed to create renderFinishedSemaphore");
+    }
+}
+
+void FrameSystem::destroyFrameSyncObjects() {
+    for (auto& frame : m_frameContexts) {
+        if (frame.inFlightFence != VK_NULL_HANDLE) {
+            vkDestroyFence(m_device, frame.inFlightFence, nullptr);
+            frame.inFlightFence = VK_NULL_HANDLE;
+        }
+        if (frame.imageAvailableSemaphore != VK_NULL_HANDLE) {
+            vkDestroySemaphore(m_device, frame.imageAvailableSemaphore, nullptr);
+            frame.imageAvailableSemaphore = VK_NULL_HANDLE;
+        }
+    }
+    m_frameContexts.clear();
+}
+
+void FrameSystem::destroySwapchainSemaphores() {
+    for (auto& sem : m_renderFinishedSemaphores) {
+        if (sem != VK_NULL_HANDLE) {
+            vkDestroySemaphore(m_device, sem, nullptr);
+            sem = VK_NULL_HANDLE;
+        }
+    }
+    m_renderFinishedSemaphores.clear();
 }

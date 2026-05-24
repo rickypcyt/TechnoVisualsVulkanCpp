@@ -215,19 +215,7 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/mutex \
  /usr/include/c++/16.1.1/bits/std_mutex.h \
  /usr/include/c++/16.1.1/bits/unique_lock.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../core/Window.h \
- /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
- /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h \
- /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h \
- /usr/include/SDL2/close_code.h /usr/include/SDL2/SDL_config_unix.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/limits.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/syslimits.h \
- /usr/include/limits.h /usr/include/bits/posix1_lim.h \
- /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
- /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
- /usr/include/bits/uio_lim.h /usr/include/c++/16.1.1/stdlib.h \
- /usr/include/string.h /usr/include/strings.h /usr/include/inttypes.h \
- /usr/include/c++/16.1.1/math.h /usr/include/c++/16.1.1/cmath \
+ /usr/include/c++/16.1.1/random /usr/include/c++/16.1.1/cmath \
  /usr/include/math.h /usr/include/bits/math-vector.h \
  /usr/include/bits/libm-simd-decl-stubs.h \
  /usr/include/bits/flt-eval-method.h /usr/include/bits/fp-logb.h \
@@ -247,12 +235,159 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/tr1/poly_hermite.tcc \
  /usr/include/c++/16.1.1/tr1/poly_laguerre.tcc \
  /usr/include/c++/16.1.1/tr1/riemann_zeta.tcc \
+ /usr/include/c++/16.1.1/bits/random.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
+ /usr/include/c++/16.1.1/bits/random.tcc /usr/include/c++/16.1.1/numeric \
+ /usr/include/c++/16.1.1/bits/stl_numeric.h \
+ /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
+ /usr/include/c++/16.1.1/algorithm \
+ /usr/include/c++/16.1.1/bits/ranges_algo.h \
+ /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
+ /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
+ /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
+ /usr/include/assert.h /usr/include/glm/simd/platform.h \
+ /usr/include/c++/16.1.1/climits \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/limits.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/syslimits.h \
+ /usr/include/limits.h /usr/include/bits/posix1_lim.h \
+ /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
+ /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
+ /usr/include/bits/uio_lim.h /usr/include/c++/16.1.1/cfloat \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/float.h \
- /usr/include/SDL2/SDL_assert.h /usr/include/SDL2/SDL_atomic.h \
- /usr/include/SDL2/SDL_audio.h /usr/include/SDL2/SDL_error.h \
- /usr/include/SDL2/SDL_endian.h /usr/include/SDL2/SDL_mutex.h \
- /usr/include/SDL2/SDL_thread.h /usr/include/SDL2/SDL_rwops.h \
- /usr/include/SDL2/SDL_clipboard.h /usr/include/SDL2/SDL_cpuinfo.h \
+ /usr/include/glm/fwd.hpp /usr/include/glm/detail/qualifier.hpp \
+ /usr/include/glm/detail/setup.hpp /usr/include/glm/vec2.hpp \
+ /usr/include/glm/ext/vector_bool2.hpp \
+ /usr/include/glm/detail/type_vec2.hpp \
+ /usr/include/glm/detail/type_vec2.inl \
+ /usr/include/glm/detail/compute_vector_relational.hpp \
+ /usr/include/glm/ext/vector_bool2_precision.hpp \
+ /usr/include/glm/ext/vector_float2.hpp \
+ /usr/include/glm/ext/vector_float2_precision.hpp \
+ /usr/include/glm/ext/vector_double2.hpp \
+ /usr/include/glm/ext/vector_double2_precision.hpp \
+ /usr/include/glm/ext/vector_int2.hpp \
+ /usr/include/glm/ext/vector_int2_sized.hpp \
+ /usr/include/glm/ext/scalar_int_sized.hpp \
+ /usr/include/glm/detail/setup.hpp /usr/include/glm/ext/vector_uint2.hpp \
+ /usr/include/glm/ext/vector_uint2_sized.hpp \
+ /usr/include/glm/ext/scalar_uint_sized.hpp /usr/include/glm/vec3.hpp \
+ /usr/include/glm/ext/vector_bool3.hpp \
+ /usr/include/glm/detail/type_vec3.hpp \
+ /usr/include/glm/detail/type_vec3.inl \
+ /usr/include/glm/detail/compute_vector_decl.hpp \
+ /usr/include/c++/16.1.1/functional \
+ /usr/include/c++/16.1.1/bits/std_function.h \
+ /usr/include/c++/16.1.1/unordered_map \
+ /usr/include/c++/16.1.1/bits/unordered_map.h \
+ /usr/include/c++/16.1.1/bits/hashtable.h \
+ /usr/include/c++/16.1.1/bits/hashtable_policy.h \
+ /usr/include/c++/16.1.1/bits/node_handle.h \
+ /usr/include/c++/16.1.1/bits/binders.h \
+ /usr/include/glm/detail/_vectorize.hpp \
+ /usr/include/glm/ext/vector_bool3_precision.hpp \
+ /usr/include/glm/ext/vector_float3.hpp \
+ /usr/include/glm/ext/vector_float3_precision.hpp \
+ /usr/include/glm/ext/vector_double3.hpp \
+ /usr/include/glm/ext/vector_double3_precision.hpp \
+ /usr/include/glm/ext/vector_int3.hpp \
+ /usr/include/glm/ext/vector_int3_sized.hpp \
+ /usr/include/glm/ext/vector_uint3.hpp \
+ /usr/include/glm/ext/vector_uint3_sized.hpp /usr/include/glm/vec4.hpp \
+ /usr/include/glm/ext/vector_bool4.hpp \
+ /usr/include/glm/detail/type_vec4.hpp \
+ /usr/include/glm/detail/type_vec4.inl \
+ /usr/include/glm/ext/vector_bool4_precision.hpp \
+ /usr/include/glm/ext/vector_float4.hpp \
+ /usr/include/glm/ext/vector_float4_precision.hpp \
+ /usr/include/glm/ext/vector_double4.hpp \
+ /usr/include/glm/ext/vector_double4_precision.hpp \
+ /usr/include/glm/ext/vector_int4.hpp \
+ /usr/include/glm/ext/vector_int4_sized.hpp \
+ /usr/include/glm/ext/vector_uint4.hpp \
+ /usr/include/glm/ext/vector_uint4_sized.hpp /usr/include/glm/mat2x2.hpp \
+ /usr/include/glm/ext/matrix_double2x2.hpp \
+ /usr/include/glm/detail/type_mat2x2.hpp \
+ /usr/include/glm/detail/type_mat2x2.inl /usr/include/glm/matrix.hpp \
+ /usr/include/glm/mat2x3.hpp /usr/include/glm/ext/matrix_double2x3.hpp \
+ /usr/include/glm/detail/type_mat2x3.hpp \
+ /usr/include/glm/detail/type_mat2x3.inl \
+ /usr/include/glm/ext/matrix_double2x3_precision.hpp \
+ /usr/include/glm/ext/matrix_float2x3.hpp \
+ /usr/include/glm/ext/matrix_float2x3_precision.hpp \
+ /usr/include/glm/mat2x4.hpp /usr/include/glm/ext/matrix_double2x4.hpp \
+ /usr/include/glm/detail/type_mat2x4.hpp \
+ /usr/include/glm/detail/type_mat2x4.inl \
+ /usr/include/glm/ext/matrix_double2x4_precision.hpp \
+ /usr/include/glm/ext/matrix_float2x4.hpp \
+ /usr/include/glm/ext/matrix_float2x4_precision.hpp \
+ /usr/include/glm/mat3x2.hpp /usr/include/glm/ext/matrix_double3x2.hpp \
+ /usr/include/glm/detail/type_mat3x2.hpp \
+ /usr/include/glm/detail/type_mat3x2.inl \
+ /usr/include/glm/ext/matrix_double3x2_precision.hpp \
+ /usr/include/glm/ext/matrix_float3x2.hpp \
+ /usr/include/glm/ext/matrix_float3x2_precision.hpp \
+ /usr/include/glm/mat3x3.hpp /usr/include/glm/ext/matrix_double3x3.hpp \
+ /usr/include/glm/detail/type_mat3x3.hpp \
+ /usr/include/glm/detail/type_mat3x3.inl /usr/include/glm/common.hpp \
+ /usr/include/glm/detail/func_common.inl \
+ /usr/include/glm/vector_relational.hpp \
+ /usr/include/glm/detail/func_vector_relational.inl \
+ /usr/include/glm/detail/compute_common.hpp \
+ /usr/include/glm/detail/type_vec1.hpp \
+ /usr/include/glm/detail/type_vec1.inl \
+ /usr/include/glm/ext/matrix_double3x3_precision.hpp \
+ /usr/include/glm/ext/matrix_float3x3.hpp \
+ /usr/include/glm/ext/matrix_float3x3_precision.hpp \
+ /usr/include/glm/mat3x4.hpp /usr/include/glm/ext/matrix_double3x4.hpp \
+ /usr/include/glm/detail/type_mat3x4.hpp \
+ /usr/include/glm/detail/type_mat3x4.inl \
+ /usr/include/glm/ext/matrix_double3x4_precision.hpp \
+ /usr/include/glm/ext/matrix_float3x4.hpp \
+ /usr/include/glm/ext/matrix_float3x4_precision.hpp \
+ /usr/include/glm/mat4x2.hpp /usr/include/glm/ext/matrix_double4x2.hpp \
+ /usr/include/glm/detail/type_mat4x2.hpp \
+ /usr/include/glm/detail/type_mat4x2.inl \
+ /usr/include/glm/ext/matrix_double4x2_precision.hpp \
+ /usr/include/glm/ext/matrix_float4x2.hpp \
+ /usr/include/glm/ext/matrix_float4x2_precision.hpp \
+ /usr/include/glm/mat4x3.hpp /usr/include/glm/ext/matrix_double4x3.hpp \
+ /usr/include/glm/detail/type_mat4x3.hpp \
+ /usr/include/glm/detail/type_mat4x3.inl \
+ /usr/include/glm/ext/matrix_double4x3_precision.hpp \
+ /usr/include/glm/ext/matrix_float4x3.hpp \
+ /usr/include/glm/ext/matrix_float4x3_precision.hpp \
+ /usr/include/glm/mat4x4.hpp /usr/include/glm/ext/matrix_double4x4.hpp \
+ /usr/include/glm/detail/type_mat4x4.hpp \
+ /usr/include/glm/detail/type_mat4x4.inl /usr/include/glm/geometric.hpp \
+ /usr/include/glm/detail/func_geometric.inl \
+ /usr/include/glm/exponential.hpp \
+ /usr/include/glm/detail/func_exponential.inl \
+ /usr/include/glm/ext/matrix_double4x4_precision.hpp \
+ /usr/include/glm/ext/matrix_float4x4.hpp \
+ /usr/include/glm/ext/matrix_float4x4_precision.hpp \
+ /usr/include/glm/detail/func_matrix.inl \
+ /usr/include/glm/ext/matrix_double2x2_precision.hpp \
+ /usr/include/glm/ext/matrix_float2x2.hpp \
+ /usr/include/glm/ext/matrix_float2x2_precision.hpp \
+ /usr/include/glm/trigonometric.hpp \
+ /usr/include/glm/detail/func_trigonometric.inl \
+ /usr/include/glm/packing.hpp /usr/include/glm/detail/func_packing.inl \
+ /usr/include/glm/detail/type_half.hpp \
+ /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
+ /usr/include/glm/detail/func_integer.inl \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../core/Window.h \
+ /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
+ /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h \
+ /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h \
+ /usr/include/SDL2/close_code.h /usr/include/SDL2/SDL_config_unix.h \
+ /usr/include/c++/16.1.1/stdlib.h /usr/include/string.h \
+ /usr/include/strings.h /usr/include/inttypes.h \
+ /usr/include/c++/16.1.1/math.h /usr/include/SDL2/SDL_assert.h \
+ /usr/include/SDL2/SDL_atomic.h /usr/include/SDL2/SDL_audio.h \
+ /usr/include/SDL2/SDL_error.h /usr/include/SDL2/SDL_endian.h \
+ /usr/include/SDL2/SDL_mutex.h /usr/include/SDL2/SDL_thread.h \
+ /usr/include/SDL2/SDL_rwops.h /usr/include/SDL2/SDL_clipboard.h \
+ /usr/include/SDL2/SDL_cpuinfo.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/immintrin.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/x86gprintrin.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/ia32intrin.h \
@@ -403,7 +538,6 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/../gfx/FrameSystem.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoTexture.h \
  /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
- /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
  /usr/include/c++/16.1.1/cstring \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoPlayer.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/../app/ProjectState.h \
@@ -444,139 +578,13 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/iomanip \
  /usr/include/c++/16.1.1/bits/quoted_string.h \
  /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
- /usr/include/c++/16.1.1/bits/fs_ops.h /usr/include/c++/16.1.1/algorithm \
- /usr/include/c++/16.1.1/bits/ranges_algo.h \
- /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/16.1.1/bits/fs_ops.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRenderer.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/CpuFramePool.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/FrameLayout.h \
  /usr/include/c++/16.1.1/iostream \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/UniformBufferManager.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/GlobalUBO.h \
- /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
- /usr/include/glm/detail/setup.hpp /usr/include/glm/simd/platform.h \
- /usr/include/c++/16.1.1/climits /usr/include/c++/16.1.1/cfloat \
- /usr/include/glm/fwd.hpp /usr/include/glm/detail/qualifier.hpp \
- /usr/include/glm/detail/setup.hpp /usr/include/glm/vec2.hpp \
- /usr/include/glm/ext/vector_bool2.hpp \
- /usr/include/glm/detail/type_vec2.hpp \
- /usr/include/glm/detail/type_vec2.inl \
- /usr/include/glm/detail/compute_vector_relational.hpp \
- /usr/include/glm/ext/vector_bool2_precision.hpp \
- /usr/include/glm/ext/vector_float2.hpp \
- /usr/include/glm/ext/vector_float2_precision.hpp \
- /usr/include/glm/ext/vector_double2.hpp \
- /usr/include/glm/ext/vector_double2_precision.hpp \
- /usr/include/glm/ext/vector_int2.hpp \
- /usr/include/glm/ext/vector_int2_sized.hpp \
- /usr/include/glm/ext/scalar_int_sized.hpp \
- /usr/include/glm/detail/setup.hpp /usr/include/glm/ext/vector_uint2.hpp \
- /usr/include/glm/ext/vector_uint2_sized.hpp \
- /usr/include/glm/ext/scalar_uint_sized.hpp /usr/include/glm/vec3.hpp \
- /usr/include/glm/ext/vector_bool3.hpp \
- /usr/include/glm/detail/type_vec3.hpp \
- /usr/include/glm/detail/type_vec3.inl \
- /usr/include/glm/detail/compute_vector_decl.hpp \
- /usr/include/c++/16.1.1/functional \
- /usr/include/c++/16.1.1/bits/std_function.h \
- /usr/include/c++/16.1.1/unordered_map \
- /usr/include/c++/16.1.1/bits/unordered_map.h \
- /usr/include/c++/16.1.1/bits/hashtable.h \
- /usr/include/c++/16.1.1/bits/hashtable_policy.h \
- /usr/include/c++/16.1.1/bits/node_handle.h \
- /usr/include/c++/16.1.1/bits/binders.h \
- /usr/include/glm/detail/_vectorize.hpp \
- /usr/include/glm/ext/vector_bool3_precision.hpp \
- /usr/include/glm/ext/vector_float3.hpp \
- /usr/include/glm/ext/vector_float3_precision.hpp \
- /usr/include/glm/ext/vector_double3.hpp \
- /usr/include/glm/ext/vector_double3_precision.hpp \
- /usr/include/glm/ext/vector_int3.hpp \
- /usr/include/glm/ext/vector_int3_sized.hpp \
- /usr/include/glm/ext/vector_uint3.hpp \
- /usr/include/glm/ext/vector_uint3_sized.hpp /usr/include/glm/vec4.hpp \
- /usr/include/glm/ext/vector_bool4.hpp \
- /usr/include/glm/detail/type_vec4.hpp \
- /usr/include/glm/detail/type_vec4.inl \
- /usr/include/glm/ext/vector_bool4_precision.hpp \
- /usr/include/glm/ext/vector_float4.hpp \
- /usr/include/glm/ext/vector_float4_precision.hpp \
- /usr/include/glm/ext/vector_double4.hpp \
- /usr/include/glm/ext/vector_double4_precision.hpp \
- /usr/include/glm/ext/vector_int4.hpp \
- /usr/include/glm/ext/vector_int4_sized.hpp \
- /usr/include/glm/ext/vector_uint4.hpp \
- /usr/include/glm/ext/vector_uint4_sized.hpp /usr/include/glm/mat2x2.hpp \
- /usr/include/glm/ext/matrix_double2x2.hpp \
- /usr/include/glm/detail/type_mat2x2.hpp \
- /usr/include/glm/detail/type_mat2x2.inl /usr/include/glm/matrix.hpp \
- /usr/include/glm/mat2x3.hpp /usr/include/glm/ext/matrix_double2x3.hpp \
- /usr/include/glm/detail/type_mat2x3.hpp \
- /usr/include/glm/detail/type_mat2x3.inl \
- /usr/include/glm/ext/matrix_double2x3_precision.hpp \
- /usr/include/glm/ext/matrix_float2x3.hpp \
- /usr/include/glm/ext/matrix_float2x3_precision.hpp \
- /usr/include/glm/mat2x4.hpp /usr/include/glm/ext/matrix_double2x4.hpp \
- /usr/include/glm/detail/type_mat2x4.hpp \
- /usr/include/glm/detail/type_mat2x4.inl \
- /usr/include/glm/ext/matrix_double2x4_precision.hpp \
- /usr/include/glm/ext/matrix_float2x4.hpp \
- /usr/include/glm/ext/matrix_float2x4_precision.hpp \
- /usr/include/glm/mat3x2.hpp /usr/include/glm/ext/matrix_double3x2.hpp \
- /usr/include/glm/detail/type_mat3x2.hpp \
- /usr/include/glm/detail/type_mat3x2.inl \
- /usr/include/glm/ext/matrix_double3x2_precision.hpp \
- /usr/include/glm/ext/matrix_float3x2.hpp \
- /usr/include/glm/ext/matrix_float3x2_precision.hpp \
- /usr/include/glm/mat3x3.hpp /usr/include/glm/ext/matrix_double3x3.hpp \
- /usr/include/glm/detail/type_mat3x3.hpp \
- /usr/include/glm/detail/type_mat3x3.inl /usr/include/glm/common.hpp \
- /usr/include/glm/detail/func_common.inl \
- /usr/include/glm/vector_relational.hpp \
- /usr/include/glm/detail/func_vector_relational.inl \
- /usr/include/glm/detail/compute_common.hpp \
- /usr/include/glm/detail/type_vec1.hpp \
- /usr/include/glm/detail/type_vec1.inl \
- /usr/include/glm/ext/matrix_double3x3_precision.hpp \
- /usr/include/glm/ext/matrix_float3x3.hpp \
- /usr/include/glm/ext/matrix_float3x3_precision.hpp \
- /usr/include/glm/mat3x4.hpp /usr/include/glm/ext/matrix_double3x4.hpp \
- /usr/include/glm/detail/type_mat3x4.hpp \
- /usr/include/glm/detail/type_mat3x4.inl \
- /usr/include/glm/ext/matrix_double3x4_precision.hpp \
- /usr/include/glm/ext/matrix_float3x4.hpp \
- /usr/include/glm/ext/matrix_float3x4_precision.hpp \
- /usr/include/glm/mat4x2.hpp /usr/include/glm/ext/matrix_double4x2.hpp \
- /usr/include/glm/detail/type_mat4x2.hpp \
- /usr/include/glm/detail/type_mat4x2.inl \
- /usr/include/glm/ext/matrix_double4x2_precision.hpp \
- /usr/include/glm/ext/matrix_float4x2.hpp \
- /usr/include/glm/ext/matrix_float4x2_precision.hpp \
- /usr/include/glm/mat4x3.hpp /usr/include/glm/ext/matrix_double4x3.hpp \
- /usr/include/glm/detail/type_mat4x3.hpp \
- /usr/include/glm/detail/type_mat4x3.inl \
- /usr/include/glm/ext/matrix_double4x3_precision.hpp \
- /usr/include/glm/ext/matrix_float4x3.hpp \
- /usr/include/glm/ext/matrix_float4x3_precision.hpp \
- /usr/include/glm/mat4x4.hpp /usr/include/glm/ext/matrix_double4x4.hpp \
- /usr/include/glm/detail/type_mat4x4.hpp \
- /usr/include/glm/detail/type_mat4x4.inl /usr/include/glm/geometric.hpp \
- /usr/include/glm/detail/func_geometric.inl \
- /usr/include/glm/exponential.hpp \
- /usr/include/glm/detail/func_exponential.inl \
- /usr/include/glm/ext/matrix_double4x4_precision.hpp \
- /usr/include/glm/ext/matrix_float4x4.hpp \
- /usr/include/glm/ext/matrix_float4x4_precision.hpp \
- /usr/include/glm/detail/func_matrix.inl \
- /usr/include/glm/ext/matrix_double2x2_precision.hpp \
- /usr/include/glm/ext/matrix_float2x2.hpp \
- /usr/include/glm/ext/matrix_float2x2_precision.hpp \
- /usr/include/glm/trigonometric.hpp \
- /usr/include/glm/detail/func_trigonometric.inl \
- /usr/include/glm/packing.hpp /usr/include/glm/detail/func_packing.inl \
- /usr/include/glm/detail/type_half.hpp \
- /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
- /usr/include/glm/detail/func_integer.inl \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/../ubo_layout.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/DescriptorSetManager.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/ShaderCompiler.h \
@@ -613,11 +621,6 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/bits/types/struct_sigstack.h /usr/include/bits/sigthread.h \
  /usr/include/bits/signal_ext.h /usr/include/bits/types/idtype_t.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/UISystem.h \
- /usr/include/c++/16.1.1/random /usr/include/c++/16.1.1/bits/random.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
- /usr/include/c++/16.1.1/bits/random.tcc /usr/include/c++/16.1.1/numeric \
- /usr/include/c++/16.1.1/bits/stl_numeric.h \
- /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/VisualControls.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/ControlState.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/MidiSystem.h \

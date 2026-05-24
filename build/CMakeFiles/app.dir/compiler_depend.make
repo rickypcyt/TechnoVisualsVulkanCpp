@@ -1765,7 +1765,6 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: /home/ricky/coding/proyects/vulkanc
   /usr/include/c++/16.1.1/bits/max_size_type.h \
   /usr/include/c++/16.1.1/bits/memory_resource.h \
   /usr/include/c++/16.1.1/bits/memoryfwd.h \
-  /usr/include/c++/16.1.1/bits/monostate.h \
   /usr/include/c++/16.1.1/bits/move.h \
   /usr/include/c++/16.1.1/bits/nested_exception.h \
   /usr/include/c++/16.1.1/bits/new_allocator.h \
@@ -1776,7 +1775,6 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: /home/ricky/coding/proyects/vulkanc
   /usr/include/c++/16.1.1/bits/ostream.tcc \
   /usr/include/c++/16.1.1/bits/ostream_insert.h \
   /usr/include/c++/16.1.1/bits/ostream_print.h \
-  /usr/include/c++/16.1.1/bits/parse_numbers.h \
   /usr/include/c++/16.1.1/bits/postypes.h \
   /usr/include/c++/16.1.1/bits/predefined_ops.h \
   /usr/include/c++/16.1.1/bits/ptr_traits.h \
@@ -1875,7 +1873,6 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: /home/ricky/coding/proyects/vulkanc
   /usr/include/c++/16.1.1/typeinfo \
   /usr/include/c++/16.1.1/unordered_map \
   /usr/include/c++/16.1.1/utility \
-  /usr/include/c++/16.1.1/variant \
   /usr/include/c++/16.1.1/vector \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
@@ -2213,7 +2210,6 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o: /home/ricky/coding/proyects/vulkancp
   /usr/include/c++/16.1.1/bits/max_size_type.h \
   /usr/include/c++/16.1.1/bits/memory_resource.h \
   /usr/include/c++/16.1.1/bits/memoryfwd.h \
-  /usr/include/c++/16.1.1/bits/monostate.h \
   /usr/include/c++/16.1.1/bits/move.h \
   /usr/include/c++/16.1.1/bits/nested_exception.h \
   /usr/include/c++/16.1.1/bits/new_allocator.h \
@@ -2341,7 +2337,6 @@ CMakeFiles/app.dir/src/app/OscSystem.cpp.o: /home/ricky/coding/proyects/vulkancp
   /usr/include/c++/16.1.1/type_traits \
   /usr/include/c++/16.1.1/typeinfo \
   /usr/include/c++/16.1.1/unordered_map \
-  /usr/include/c++/16.1.1/variant \
   /usr/include/c++/16.1.1/vector \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
@@ -4373,14 +4368,12 @@ CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o: /home/rick
   /usr/include/c++/16.1.1/bits/max_size_type.h \
   /usr/include/c++/16.1.1/bits/memory_resource.h \
   /usr/include/c++/16.1.1/bits/memoryfwd.h \
-  /usr/include/c++/16.1.1/bits/monostate.h \
   /usr/include/c++/16.1.1/bits/move.h \
   /usr/include/c++/16.1.1/bits/new_allocator.h \
   /usr/include/c++/16.1.1/bits/new_except.h \
   /usr/include/c++/16.1.1/bits/new_throw.h \
   /usr/include/c++/16.1.1/bits/node_handle.h \
   /usr/include/c++/16.1.1/bits/ostream_insert.h \
-  /usr/include/c++/16.1.1/bits/parse_numbers.h \
   /usr/include/c++/16.1.1/bits/postypes.h \
   /usr/include/c++/16.1.1/bits/predefined_ops.h \
   /usr/include/c++/16.1.1/bits/ptr_traits.h \
@@ -4459,7 +4452,6 @@ CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o: /home/rick
   /usr/include/c++/16.1.1/type_traits \
   /usr/include/c++/16.1.1/typeinfo \
   /usr/include/c++/16.1.1/unordered_map \
-  /usr/include/c++/16.1.1/variant \
   /usr/include/c++/16.1.1/vector \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -6590,6 +6582,7 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
+  /usr/include/assert.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
   /usr/include/bits/cpu-set.h \
@@ -6661,10 +6654,12 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/basic_string.tcc \
   /usr/include/c++/16.1.1/bits/char_traits.h \
   /usr/include/c++/16.1.1/bits/charconv.h \
+  /usr/include/c++/16.1.1/bits/chrono.h \
   /usr/include/c++/16.1.1/bits/concept_check.h \
   /usr/include/c++/16.1.1/bits/cpp_type_traits.h \
   /usr/include/c++/16.1.1/bits/cxxabi_forced.h \
   /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
+  /usr/include/c++/16.1.1/bits/enable_special_members.h \
   /usr/include/c++/16.1.1/bits/erase_if.h \
   /usr/include/c++/16.1.1/bits/exception.h \
   /usr/include/c++/16.1.1/bits/exception_defines.h \
@@ -6693,6 +6688,7 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/ostream.tcc \
   /usr/include/c++/16.1.1/bits/ostream_insert.h \
   /usr/include/c++/16.1.1/bits/ostream_print.h \
+  /usr/include/c++/16.1.1/bits/parse_numbers.h \
   /usr/include/c++/16.1.1/bits/postypes.h \
   /usr/include/c++/16.1.1/bits/predefined_ops.h \
   /usr/include/c++/16.1.1/bits/ptr_traits.h \
@@ -6702,6 +6698,7 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/ranges_util.h \
   /usr/include/c++/16.1.1/bits/requires_hosted.h \
   /usr/include/c++/16.1.1/bits/std_abs.h \
+  /usr/include/c++/16.1.1/bits/std_mutex.h \
   /usr/include/c++/16.1.1/bits/stdexcept_except.h \
   /usr/include/c++/16.1.1/bits/stdexcept_throw.h \
   /usr/include/c++/16.1.1/bits/stdexcept_throwfwd.h \
@@ -6719,19 +6716,23 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
   /usr/include/c++/16.1.1/bits/string_view.tcc \
   /usr/include/c++/16.1.1/bits/stringfwd.h \
+  /usr/include/c++/16.1.1/bits/unique_lock.h \
   /usr/include/c++/16.1.1/bits/uses_allocator.h \
   /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
   /usr/include/c++/16.1.1/bits/utility.h \
   /usr/include/c++/16.1.1/bits/vector.tcc \
   /usr/include/c++/16.1.1/bits/version.h \
+  /usr/include/c++/16.1.1/cassert \
   /usr/include/c++/16.1.1/cctype \
   /usr/include/c++/16.1.1/cerrno \
   /usr/include/c++/16.1.1/clocale \
   /usr/include/c++/16.1.1/compare \
   /usr/include/c++/16.1.1/concepts \
   /usr/include/c++/16.1.1/cstddef \
+  /usr/include/c++/16.1.1/cstdint \
   /usr/include/c++/16.1.1/cstdio \
   /usr/include/c++/16.1.1/cstdlib \
+  /usr/include/c++/16.1.1/ctime \
   /usr/include/c++/16.1.1/cwchar \
   /usr/include/c++/16.1.1/cwctype \
   /usr/include/c++/16.1.1/debug/assertions.h \
@@ -6748,10 +6749,13 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/iostream \
   /usr/include/c++/16.1.1/istream \
   /usr/include/c++/16.1.1/limits \
+  /usr/include/c++/16.1.1/mutex \
   /usr/include/c++/16.1.1/new \
   /usr/include/c++/16.1.1/numbers \
+  /usr/include/c++/16.1.1/optional \
   /usr/include/c++/16.1.1/ostream \
   /usr/include/c++/16.1.1/pstl/pstl_config.h \
+  /usr/include/c++/16.1.1/ratio \
   /usr/include/c++/16.1.1/stdexcept \
   /usr/include/c++/16.1.1/streambuf \
   /usr/include/c++/16.1.1/string \
@@ -14452,8 +14456,6 @@ _deps/nlohmann_json-src/include/nlohmann/detail/iterators/iteration_proxy.hpp:
 
 /usr/include/c++/16.1.1/bits/exception_defines.h:
 
-/usr/include/c++/16.1.1/variant:
-
 /usr/include/c++/16.1.1/backward/auto_ptr.h:
 
 /usr/lib/libsodium.so.26:
@@ -15306,10 +15308,6 @@ _deps/nlohmann_json-src/include/nlohmann/ordered_map.hpp:
 
 /usr/lib/libXfixes.so.3:
 
-/usr/lib/libtheoraenc.so.2:
-
-/usr/lib/libavformat.so:
-
 /usr/lib32/libthai.so.0:
 
 /usr/lib/libbrotlidec.so.1:
@@ -15427,3 +15425,7 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o:
 /usr/lib/libswresample.so:
 
 /usr/lib/libswscale.so:
+
+/usr/lib/libavformat.so:
+
+/usr/lib/libtheoraenc.so.2:

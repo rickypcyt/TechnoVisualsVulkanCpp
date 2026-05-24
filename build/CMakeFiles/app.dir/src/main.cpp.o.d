@@ -392,82 +392,17 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/mutex \
  /usr/include/c++/16.1.1/bits/std_mutex.h \
  /usr/include/c++/16.1.1/bits/unique_lock.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../core/Window.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../core/VulkanContext.h \
- /usr/include/vulkan/vulkan.h /usr/include/vulkan/vk_platform.h \
- /usr/include/vulkan/vulkan_core.h \
- /usr/include/vk_video/vulkan_video_codec_h264std.h \
- /usr/include/vk_video/vulkan_video_codecs_common.h \
- /usr/include/vk_video/vulkan_video_codec_h264std_encode.h \
- /usr/include/vk_video/vulkan_video_codec_h264std.h \
- /usr/include/vk_video/vulkan_video_codec_h265std.h \
- /usr/include/vk_video/vulkan_video_codec_h265std_encode.h \
- /usr/include/vk_video/vulkan_video_codec_h265std.h \
- /usr/include/vk_video/vulkan_video_codec_h264std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_h265std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_av1std.h \
- /usr/include/vk_video/vulkan_video_codec_av1std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_av1std.h \
- /usr/include/vk_video/vulkan_video_codec_av1std_encode.h \
- /usr/include/vk_video/vulkan_video_codec_vp9std.h \
- /usr/include/vk_video/vulkan_video_codec_vp9std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_vp9std.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../gfx/ResourceSystem.h \
- /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../gfx/FrameSystem.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoTexture.h \
- /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
- /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
- /usr/include/c++/16.1.1/cstring \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoPlayer.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/../app/ProjectState.h \
- /usr/include/c++/16.1.1/atomic /usr/include/libavcodec/avcodec.h \
- /usr/include/libavutil/samplefmt.h /usr/include/libavutil/attributes.h \
- /usr/include/libavutil/avutil.h /usr/include/libavutil/common.h \
- /usr/include/libavutil/attributes.h /usr/include/libavutil/error.h \
- /usr/include/libavutil/macros.h /usr/include/libavutil/avconfig.h \
- /usr/include/libavutil/version.h /usr/include/libavutil/mem.h \
- /usr/include/libavutil/rational.h /usr/include/libavutil/mathematics.h \
- /usr/include/libavutil/intfloat.h /usr/include/libavutil/log.h \
- /usr/include/libavutil/pixfmt.h /usr/include/libavutil/buffer.h \
- /usr/include/libavutil/channel_layout.h /usr/include/libavutil/dict.h \
- /usr/include/libavutil/frame.h /usr/include/libavutil/avutil.h \
- /usr/include/libavutil/buffer.h /usr/include/libavutil/channel_layout.h \
- /usr/include/libavutil/dict.h /usr/include/libavutil/samplefmt.h \
- /usr/include/libavutil/log.h /usr/include/libavutil/pixfmt.h \
- /usr/include/libavutil/rational.h /usr/include/libavcodec/codec.h \
- /usr/include/libavutil/hwcontext.h /usr/include/libavutil/frame.h \
- /usr/include/libavcodec/codec_id.h \
- /usr/include/libavcodec/version_major.h \
- /usr/include/libavcodec/version_major.h \
- /usr/include/libavcodec/codec_id.h /usr/include/libavcodec/defs.h \
- /usr/include/libavcodec/packet.h /usr/include/libavutil/version.h \
- /usr/include/libavcodec/version.h /usr/include/libavcodec/codec_desc.h \
- /usr/include/libavcodec/codec_par.h /usr/include/libavformat/avformat.h \
- /usr/include/libavcodec/codec_par.h /usr/include/libavcodec/defs.h \
- /usr/include/libavcodec/packet.h /usr/include/libavformat/avio.h \
- /usr/include/libavformat/version_major.h \
- /usr/include/libavformat/version.h \
- /usr/include/libavformat/version_major.h /usr/include/libavcodec/codec.h \
- /usr/include/libswscale/swscale.h \
- /usr/include/libswscale/version_major.h \
- /usr/include/libswscale/version.h /usr/include/libavutil/imgutils.h \
- /usr/include/libavutil/pixdesc.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRegistry.h \
- /usr/include/c++/16.1.1/filesystem /usr/include/c++/16.1.1/bits/fs_fwd.h \
- /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/iomanip \
- /usr/include/c++/16.1.1/bits/quoted_string.h \
- /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
- /usr/include/c++/16.1.1/bits/fs_ops.h /usr/include/c++/16.1.1/algorithm \
+ /usr/include/c++/16.1.1/random /usr/include/c++/16.1.1/bits/random.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
+ /usr/include/c++/16.1.1/bits/random.tcc /usr/include/c++/16.1.1/numeric \
+ /usr/include/c++/16.1.1/bits/stl_numeric.h \
+ /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
+ /usr/include/c++/16.1.1/algorithm \
  /usr/include/c++/16.1.1/bits/ranges_algo.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRenderer.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/CpuFramePool.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/FrameLayout.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../render/UniformBufferManager.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../render/GlobalUBO.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
- /usr/include/glm/detail/setup.hpp /usr/include/glm/simd/platform.h \
+ /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
+ /usr/include/assert.h /usr/include/glm/simd/platform.h \
  /usr/include/c++/16.1.1/climits /usr/include/c++/16.1.1/cfloat \
  /usr/include/glm/fwd.hpp /usr/include/glm/detail/qualifier.hpp \
  /usr/include/glm/detail/setup.hpp /usr/include/glm/vec2.hpp \
@@ -590,6 +525,77 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
  /usr/include/glm/detail/func_integer.inl \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../core/Window.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../core/VulkanContext.h \
+ /usr/include/vulkan/vulkan.h /usr/include/vulkan/vk_platform.h \
+ /usr/include/vulkan/vulkan_core.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std.h \
+ /usr/include/vk_video/vulkan_video_codecs_common.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std_encode.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std_encode.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std_encode.h \
+ /usr/include/vk_video/vulkan_video_codec_vp9std.h \
+ /usr/include/vk_video/vulkan_video_codec_vp9std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_vp9std.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../gfx/ResourceSystem.h \
+ /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../gfx/FrameSystem.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoTexture.h \
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
+ /usr/include/c++/16.1.1/cstring \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoPlayer.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/../app/ProjectState.h \
+ /usr/include/c++/16.1.1/atomic /usr/include/libavcodec/avcodec.h \
+ /usr/include/libavutil/samplefmt.h /usr/include/libavutil/attributes.h \
+ /usr/include/libavutil/avutil.h /usr/include/libavutil/common.h \
+ /usr/include/libavutil/attributes.h /usr/include/libavutil/error.h \
+ /usr/include/libavutil/macros.h /usr/include/libavutil/avconfig.h \
+ /usr/include/libavutil/version.h /usr/include/libavutil/mem.h \
+ /usr/include/libavutil/rational.h /usr/include/libavutil/mathematics.h \
+ /usr/include/libavutil/intfloat.h /usr/include/libavutil/log.h \
+ /usr/include/libavutil/pixfmt.h /usr/include/libavutil/buffer.h \
+ /usr/include/libavutil/channel_layout.h /usr/include/libavutil/dict.h \
+ /usr/include/libavutil/frame.h /usr/include/libavutil/avutil.h \
+ /usr/include/libavutil/buffer.h /usr/include/libavutil/channel_layout.h \
+ /usr/include/libavutil/dict.h /usr/include/libavutil/samplefmt.h \
+ /usr/include/libavutil/log.h /usr/include/libavutil/pixfmt.h \
+ /usr/include/libavutil/rational.h /usr/include/libavcodec/codec.h \
+ /usr/include/libavutil/hwcontext.h /usr/include/libavutil/frame.h \
+ /usr/include/libavcodec/codec_id.h \
+ /usr/include/libavcodec/version_major.h \
+ /usr/include/libavcodec/version_major.h \
+ /usr/include/libavcodec/codec_id.h /usr/include/libavcodec/defs.h \
+ /usr/include/libavcodec/packet.h /usr/include/libavutil/version.h \
+ /usr/include/libavcodec/version.h /usr/include/libavcodec/codec_desc.h \
+ /usr/include/libavcodec/codec_par.h /usr/include/libavformat/avformat.h \
+ /usr/include/libavcodec/codec_par.h /usr/include/libavcodec/defs.h \
+ /usr/include/libavcodec/packet.h /usr/include/libavformat/avio.h \
+ /usr/include/libavformat/version_major.h \
+ /usr/include/libavformat/version.h \
+ /usr/include/libavformat/version_major.h /usr/include/libavcodec/codec.h \
+ /usr/include/libswscale/swscale.h \
+ /usr/include/libswscale/version_major.h \
+ /usr/include/libswscale/version.h /usr/include/libavutil/imgutils.h \
+ /usr/include/libavutil/pixdesc.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRegistry.h \
+ /usr/include/c++/16.1.1/filesystem /usr/include/c++/16.1.1/bits/fs_fwd.h \
+ /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/iomanip \
+ /usr/include/c++/16.1.1/bits/quoted_string.h \
+ /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
+ /usr/include/c++/16.1.1/bits/fs_ops.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRenderer.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/CpuFramePool.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/FrameLayout.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../render/UniformBufferManager.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../render/GlobalUBO.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/../ubo_layout.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/DescriptorSetManager.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/ShaderCompiler.h \
@@ -611,11 +617,6 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_multimap.h /usr/include/sys/wait.h \
  /usr/include/bits/types/idtype_t.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/UISystem.h \
- /usr/include/c++/16.1.1/random /usr/include/c++/16.1.1/bits/random.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
- /usr/include/c++/16.1.1/bits/random.tcc /usr/include/c++/16.1.1/numeric \
- /usr/include/c++/16.1.1/bits/stl_numeric.h \
- /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/VisualControls.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/ControlState.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/MidiSystem.h \

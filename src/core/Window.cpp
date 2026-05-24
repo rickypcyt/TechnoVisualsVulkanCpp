@@ -13,6 +13,7 @@ void Window::initSDL() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         throw std::runtime_error(std::string("failed to initialize SDL: ") + SDL_GetError());
     }
+    sdlInitialized = true;
 }
 
 void Window::createMainWindow(const std::string& title, int width, int height) {
@@ -46,6 +47,7 @@ void Window::createUiWindow(const std::string& title, int width, int height) {
 
     uiRenderer = SDL_CreateRenderer(uiWindow, -1, SDL_RENDERER_ACCELERATED);
     if (!uiRenderer) {
+        std::cerr << "[Window] failed to create accelerated renderer: " << SDL_GetError() << ", falling back to software renderer" << std::endl;
         uiRenderer = SDL_CreateRenderer(uiWindow, -1, 0);
     }
 
@@ -74,6 +76,10 @@ void Window::destroy() {
         SDL_DestroyWindow(window);
         window = nullptr;
     }
+    if (sdlInitialized) {
+        SDL_Quit();
+        sdlInitialized = false;
+    }
 }
 
 bool Window::pollEvents() {
@@ -81,7 +87,6 @@ bool Window::pollEvents() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
             closeRequested = true;
-            return false;
         }
         
         if (event.type == SDL_WINDOWEVENT) {
@@ -90,13 +95,12 @@ bool Window::pollEvents() {
                 (event.window.event == SDL_WINDOWEVENT_RESIZED || 
                  event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
                 resizePending = true;
-                resizeStableFrames = 0;
             }
         }
     }
     
     handleResizeHint();
-    return true;
+    return !closeRequested;
 }
 
 void Window::handleResizeHint() {
@@ -110,32 +114,29 @@ void Window::handleResizeHint() {
 
     if (drawableWidth == 0 || drawableHeight == 0) {
         framebufferResized = false;
+        resizePending = false;
+        lastDrawableWidth = 0;
+        lastDrawableHeight = 0;
         return;
     }
 
     uint32_t currentWidth = static_cast<uint32_t>(drawableWidth);
     uint32_t currentHeight = static_cast<uint32_t>(drawableHeight);
     
-    if (currentWidth == lastDrawableWidth && currentHeight == lastDrawableHeight) {
-        if (++resizeStableFrames >= RESIZE_STABILITY_THRESHOLD) {
-            framebufferResized = true;
-            resizePending = false;
-        }
-    } else {
-        resizeStableFrames = 0;
+    if (currentWidth != lastDrawableWidth || currentHeight != lastDrawableHeight) {
         lastDrawableWidth = currentWidth;
         lastDrawableHeight = currentHeight;
+        framebufferResized = true;
     }
+    resizePending = false;
 }
 
 void Window::getDrawableSize(uint32_t& width, uint32_t& height) const {
+    int drawableWidth = 0;
+    int drawableHeight = 0;
     if (window) {
-        int drawableWidth = 0;
-        int drawableHeight = 0;
         SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
-        if (drawableWidth > 0 && drawableHeight > 0) {
-            width = static_cast<uint32_t>(drawableWidth);
-            height = static_cast<uint32_t>(drawableHeight);
-        }
     }
+    width = drawableWidth > 0 ? static_cast<uint32_t>(drawableWidth) : 0;
+    height = drawableHeight > 0 ? static_cast<uint32_t>(drawableHeight) : 0;
 }

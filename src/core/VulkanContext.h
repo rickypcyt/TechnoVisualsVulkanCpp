@@ -9,8 +9,8 @@
 class VulkanContext {
 public:
     struct QueueFamilyIndices {
-        uint32_t graphicsFamily = 0;
-        uint32_t presentFamily = 0;
+        uint32_t graphicsFamily = UINT32_MAX;
+        uint32_t presentFamily = UINT32_MAX;
         bool graphicsFamilyFound = false;
         bool presentFamilyFound = false;
     };
@@ -83,22 +83,25 @@ private:
     // Validation
     bool enableValidationLayers = false;
     VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+    
+    // Frame synchronization
+    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
     // Helper functions
     void createVulkanInstance(SDL_Window* window);
     void setupDebugMessenger();
     void destroyDebugMessenger();
-    void pickPhysicalDevice();
+    void pickPhysicalDevice(VkSurfaceKHR surface);
     void createLogicalDevice();
     void createImageViews();
     void createSwapchainSemaphores();
     void destroySwapchainSemaphores();
 
     // Device selection helpers
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-    bool isDeviceSuitable(VkPhysicalDevice device);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
     VkExtent2D chooseSwapchainExtent(const SwapChainSupportDetails& support, uint32_t width, uint32_t height);
     std::vector<const char*> getRequiredExtensions(SDL_Window* window);
     bool checkValidationLayerSupport();

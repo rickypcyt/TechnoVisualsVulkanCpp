@@ -38,11 +38,10 @@ private:
     SDL_Window* window = nullptr;
     SDL_Window* uiWindow = nullptr;
     SDL_Renderer* uiRenderer = nullptr;
+    bool sdlInitialized = false;
     bool closeRequested = false;
     bool resizePending = false;
     bool framebufferResized = false;
-    uint32_t resizeStableFrames = 0;
-    static constexpr uint32_t RESIZE_STABILITY_THRESHOLD = 2;
     mutable uint32_t lastDrawableWidth = 0;
     mutable uint32_t lastDrawableHeight = 0;
 };

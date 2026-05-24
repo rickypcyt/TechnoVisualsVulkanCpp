@@ -56,11 +56,15 @@ void VulkanContext::createSurface(SDL_Window* window) {
         throw std::runtime_error(std::string("failed to create surface: ") + SDL_GetError());
     }
     
-    pickPhysicalDevice();
+    pickPhysicalDevice(surface);
     createLogicalDevice();
 }
 
 void VulkanContext::createCommandPool() {
+    if (!queueFamilyIndices.graphicsFamilyFound || queueFamilyIndices.graphicsFamily == UINT32_MAX) {
+        throw std::runtime_error("cannot create command pool: invalid graphics queue family");
+    }
+
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -74,7 +78,14 @@ void VulkanContext::createCommandPool() {
 }
 
 void VulkanContext::createSwapchain(uint32_t width, uint32_t height) {
-    auto support = querySwapChainSupport(physicalDevice);
+    auto support = querySwapChainSupport(physicalDevice, surface);
+
+    if (support.formats.empty()) {
+        throw std::runtime_error("no swapchain formats available");
+    }
+    if (support.presentModes.empty()) {
+        throw std::runtime_error("no swapchain present modes available");
+    }
 
     VkSurfaceFormatKHR surfaceFormat = support.formats[0];
     VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -123,6 +134,7 @@ void VulkanContext::createSwapchain(uint32_t width, uint32_t height) {
 }
 
 void VulkanContext::cleanupSwapchain() {
+    vkDeviceWaitIdle(device);
     destroySwapchainSemaphores();
     
     for (auto imageView : swapchainImageViews) {
@@ -210,7 +222,7 @@ void VulkanContext::destroyDebugMessenger() {
     debugMessenger = VK_NULL_HANDLE;
 }
 
-void VulkanContext::pickPhysicalDevice() {
+void VulkanContext::pickPhysicalDevice(VkSurfaceKHR surface) {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -223,26 +235,80 @@ void VulkanContext::pickPhysicalDevice() {
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
-    for (const auto& device : devices) {
-        if (isDeviceSuitable(device)) {
-            physicalDevice = device;
-            queueFamilyIndices = findQueueFamilies(device);
+    // List all available GPUs
+    for (uint32_t i = 0; i < deviceCount; ++i) {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(devices[i], &props);
+        const char* typeStr = "Unknown";
+        switch (props.deviceType) {
+            case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: typeStr = "Integrated"; break;
+            case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: typeStr = "Discrete"; break;
+            case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: typeStr = "Virtual"; break;
+            case VK_PHYSICAL_DEVICE_TYPE_CPU: typeStr = "CPU"; break;
+            default: typeStr = "Other"; break;
+        }
+        std::cout << "[VulkanContext]   [" << i << "] " << props.deviceName << " (" << typeStr << ")" << std::endl;
+    }
 
+    // Check for manual GPU selection via environment variable
+    const char* gpuIndexEnv = std::getenv("VULKAN_GPU_INDEX");
+    if (gpuIndexEnv != nullptr) {
+        uint32_t selectedIndex = std::stoi(gpuIndexEnv);
+        if (selectedIndex < deviceCount && isDeviceSuitable(devices[selectedIndex], surface)) {
+            physicalDevice = devices[selectedIndex];
+            queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
             VkPhysicalDeviceProperties props;
-            vkGetPhysicalDeviceProperties(device, &props);
-            std::cout << "[VulkanContext] Selected GPU: " << props.deviceName << std::endl;
+            vkGetPhysicalDeviceProperties(physicalDevice, &props);
+            std::cout << "[VulkanContext] Manually selected GPU [" << selectedIndex << "]: " << props.deviceName << std::endl;
             std::cout << "[VulkanContext] Graphics queue family: " << queueFamilyIndices.graphicsFamily << std::endl;
             std::cout << "[VulkanContext] Present queue family: " << queueFamilyIndices.presentFamily << std::endl;
-            break;
+            return;
+        } else {
+            std::cerr << "[VulkanContext] Warning: Invalid GPU index " << selectedIndex << " or device not suitable, using automatic selection" << std::endl;
         }
     }
 
-    if (physicalDevice == VK_NULL_HANDLE) {
-        throw std::runtime_error("failed to find a suitable GPU!");
+    // First pass: try to find a discrete GPU
+    for (const auto& device : devices) {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(device, &props);
+        
+        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && isDeviceSuitable(device, surface)) {
+            physicalDevice = device;
+            queueFamilyIndices = findQueueFamilies(device, surface);
+            std::cout << "[VulkanContext] Selected GPU: " << props.deviceName << " (Discrete)" << std::endl;
+            std::cout << "[VulkanContext] Graphics queue family: " << queueFamilyIndices.graphicsFamily << std::endl;
+            std::cout << "[VulkanContext] Present queue family: " << queueFamilyIndices.presentFamily << std::endl;
+            return;
+        }
     }
+
+    // Second pass: fallback to any suitable GPU (integrated, etc.)
+    for (const auto& device : devices) {
+        if (isDeviceSuitable(device, surface)) {
+            physicalDevice = device;
+            queueFamilyIndices = findQueueFamilies(device, surface);
+
+            VkPhysicalDeviceProperties props;
+            vkGetPhysicalDeviceProperties(device, &props);
+            std::cout << "[VulkanContext] Selected GPU: " << props.deviceName << " (Fallback)" << std::endl;
+            std::cout << "[VulkanContext] Graphics queue family: " << queueFamilyIndices.graphicsFamily << std::endl;
+            std::cout << "[VulkanContext] Present queue family: " << queueFamilyIndices.presentFamily << std::endl;
+            return;
+        }
+    }
+
+    throw std::runtime_error("failed to find a suitable GPU!");
 }
 
 void VulkanContext::createLogicalDevice() {
+    if (!queueFamilyIndices.graphicsFamilyFound || queueFamilyIndices.graphicsFamily == UINT32_MAX) {
+        throw std::runtime_error("cannot create logical device: invalid graphics queue family");
+    }
+    if (!queueFamilyIndices.presentFamilyFound || queueFamilyIndices.presentFamily == UINT32_MAX) {
+        throw std::runtime_error("cannot create logical device: invalid present queue family");
+    }
+
     float priority = 1.0f;
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -310,7 +376,7 @@ void VulkanContext::createImageViews() {
 void VulkanContext::createSwapchainSemaphores() {
     destroySwapchainSemaphores();
 
-    swapchainRenderSemaphores.resize(swapchainImages.size(), VK_NULL_HANDLE);
+    swapchainRenderSemaphores.resize(MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
 
     VkSemaphoreCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -332,7 +398,7 @@ void VulkanContext::destroySwapchainSemaphores() {
     swapchainRenderSemaphores.clear();
 }
 
-VulkanContext::QueueFamilyIndices VulkanContext::findQueueFamilies(VkPhysicalDevice device) {
+VulkanContext::QueueFamilyIndices VulkanContext::findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -384,8 +450,8 @@ bool VulkanContext::checkDeviceExtensionSupport(VkPhysicalDevice device) {
     return required.empty();
 }
 
-bool VulkanContext::isDeviceSuitable(VkPhysicalDevice device) {
-    QueueFamilyIndices indices = findQueueFamilies(device);
+bool VulkanContext::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+    QueueFamilyIndices indices = findQueueFamilies(device, surface);
 
     if (!indices.graphicsFamilyFound || !indices.presentFamilyFound) {
         return false;
@@ -401,27 +467,34 @@ bool VulkanContext::isDeviceSuitable(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures supportedFeatures;
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-    if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && supportedFeatures.geometryShader) {
-        return true;
+    bool isDiscrete = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+    if (isDiscrete) {
+        std::cout << "[VulkanContext] Device is discrete GPU" << std::endl;
+    } else {
+        std::cout << "[VulkanContext] Device is integrated or other GPU type" << std::endl;
     }
 
-    return false;
+    return true;
 }
 
-VulkanContext::SwapChainSupportDetails VulkanContext::querySwapChainSupport(VkPhysicalDevice device) {
+VulkanContext::SwapChainSupportDetails VulkanContext::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
     SwapChainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-    details.formats.resize(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+    if (formatCount != 0) {
+        details.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+    }
 
     uint32_t presentModeCount;
     vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-    details.presentModes.resize(presentModeCount);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+    if (presentModeCount != 0) {
+        details.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+    }
 
     return details;
 }

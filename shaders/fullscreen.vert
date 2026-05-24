@@ -19,8 +19,5 @@ void main() {
     // Base UV from NDC
     vec2 baseUV = pos * 0.5 + 0.5;
 
-    // Vulkan Y-flip safety (common requirement depending on render target origin)
-    baseUV.y = 1.0 - baseUV.y;
-
     uv = baseUV;
 }
