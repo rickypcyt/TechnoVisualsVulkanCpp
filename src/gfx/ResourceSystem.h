@@ -1,6 +1,9 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <stdexcept>
+#include <vector>
+#include <unordered_set>
+#include <iostream>
 #include "gfx/MemoryAllocator.h"
 
 enum class ResourceType {
@@ -67,7 +70,16 @@ public:
     void cleanup();
 
 private:
+    void validateMemoryProperties(VkMemoryPropertyFlags required, VkMemoryPropertyFlags actual, const char* resourceType);
+    void validateImageFormatUsage(VkFormat format, VkImageUsageFlags usage);
+    void trackResource(const ResourceHandle& handle);
+    void untrackResource(const ResourceHandle& handle);
+    
     VkDevice device = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     MemoryAllocator allocator;
+    
+    // Resource tracking for safe cleanup
+    std::unordered_set<VkBuffer> trackedBuffers;
+    std::unordered_set<VkImage> trackedImages;
 };

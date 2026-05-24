@@ -8,6 +8,7 @@
 #include <thread>
 #include <condition_variable>
 #include <chrono>
+#include <cmath>
 #include <sstream>
 #include <queue>
 #include <future>
@@ -462,9 +463,19 @@ private:
     std::string build_filter_from_job(std::shared_ptr<RenderJob> job) {
         std::string filter;
         bool first = true;
+        constexpr float EPSILON = 1e-6f;
 
-        // FPS interpolation - PRIMERO (only if explicitly set)
+        // Speed (setpts) - PRIMERO (must come before fps interpolation)
+        // setpts modifies timestamps, interpolation should operate on adjusted timing
+        if (std::abs(job->speed - 1.0f) > EPSILON) {
+            // Canonical form: setpts=PTS/speed (e.g., 0.5x speed = PTS/0.5 = 2.0*PTS)
+            filter += "setpts=PTS/" + std::to_string(job->speed);
+            first = false;
+        }
+
+        // FPS interpolation - SEGUNDO (only if explicitly set)
         if (job->fps > 0) {
+            if (!first) filter += ",";
             if (job->render_mode == RenderMode::PREVIEW) {
                 // Preview mode: simple fps duplication (much faster)
                 filter += "fps=" + std::to_string(job->fps);
@@ -472,16 +483,6 @@ private:
                 // Export mode: use expensive minterpolate (optical flow)
                 filter += "minterpolate=fps=" + std::to_string(job->fps);
             }
-            first = false;
-        }
-
-        // Speed (setpts) - SEGUNDO
-        if (job->speed != 1.0f) {
-            if (!first) filter += ",";
-            // Invert speed for setpts: lower speed value = slower video = higher setpts value
-            // setpts formula: 1.0/speed * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
-            float setpts_value = 1.0f / job->speed;
-            filter += "setpts=" + std::to_string(setpts_value) + "*PTS";
             first = false;
         }
 

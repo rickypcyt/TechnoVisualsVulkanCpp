@@ -14,7 +14,7 @@ MemoryAllocation MemoryAllocator::allocate(VkDeviceSize size, VkDeviceSize align
     for (size_t i = 0; i < blocks.size(); ++i) {
         if (blocks[i].memoryTypeIndex != memoryTypeIndex) continue;
         
-        auto alloc = allocateFromBlock(blocks[i], size, alignment);
+        auto alloc = allocateFromBlock(blocks[i], size, alignment, properties);
         if (alloc.memory != VK_NULL_HANDLE) {
             alloc.blockIndex = static_cast<uint32_t>(i);
             return alloc;
@@ -82,7 +82,7 @@ void MemoryAllocator::cleanup() {
     physicalDevice = VK_NULL_HANDLE;
 }
 
-MemoryAllocation MemoryAllocator::allocateFromBlock(MemoryBlock& block, VkDeviceSize size, VkDeviceSize alignment) {
+MemoryAllocation MemoryAllocator::allocateFromBlock(MemoryBlock& block, VkDeviceSize size, VkDeviceSize alignment, VkMemoryPropertyFlags properties) {
     for (auto it = block.freeList.begin(); it != block.freeList.end(); ++it) {
         VkDeviceSize alignedOffset = alignUp(it->offset, alignment);
         VkDeviceSize padding = alignedOffset - it->offset;
@@ -91,7 +91,9 @@ MemoryAllocation MemoryAllocator::allocateFromBlock(MemoryBlock& block, VkDevice
             MemoryAllocation alloc{
                 block.memory,
                 alignedOffset,
-                size
+                size,
+                UINT32_MAX,
+                properties
             };
             
             // Adjust free range
@@ -127,6 +129,7 @@ void MemoryAllocator::createBlock(VkDeviceSize size, uint32_t memoryTypeIndex, V
     block.size = size;
     block.used = 0;
     block.memoryTypeIndex = memoryTypeIndex;
+    block.properties = properties;
     block.freeList.push_back(FreeRange{0, size});
     
     blocks.push_back(block);

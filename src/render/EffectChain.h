@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <sstream>
+#include <cmath>
 
 // Effect node structure representing FFmpeg filters as C++ objects
 struct EffectChain {
@@ -11,8 +12,6 @@ struct EffectChain {
     int target_fps = 0;  // 0 = original, otherwise target fps
     bool interpolate = false;
     
-    // Scale flags (not used, always original resolution)
-    std::string scale_flags = "lanczos";
     
     // Additional effects can be added here
     bool grayscale = false;
@@ -25,32 +24,23 @@ struct EffectChain {
         std::stringstream filter;
         bool first = true;
         
-        // Frame rate interpolation
+        // Speed adjustment (setpts) - must come before minterpolate
+        // setpts modifies timestamps, interpolation should operate on adjusted timing
+        if (slow_factor != 1.0f) {
+            // Canonical form: setpts=PTS/factor (e.g., 0.5x speed = PTS/0.5 = 2.0*PTS)
+            filter << "setpts=PTS/" << slow_factor;
+            first = false;
+        }
+        
+        // Frame rate interpolation (minterpolate) - operates on adjusted timestamps
         if (interpolate && target_fps > 0) {
             if (!first) filter << ",";
             filter << "minterpolate=fps=" << target_fps;
             first = false;
         }
         
-        // Speed adjustment (setpts)
-        if (slow_factor != 1.0f) {
-            if (!first) filter << ",";
-            // Invert slow_factor for setpts: lower value = slower video = higher setpts value
-            // setpts formula: 1.0/slow_factor * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
-            float setpts_value = 1.0f / slow_factor;
-            filter << "setpts=" << setpts_value << "*PTS";
-            first = false;
-        }
-        
-        // Scale - always use original resolution
-        
-        // Color adjustments
-        if (grayscale) {
-            if (!first) filter << ",";
-            filter << "format=gray";
-            first = false;
-        }
-        
+        // Color adjustments (eq) - must come before format=gray
+        // eq operates on color channels, format=gray removes chroma
         if (brightness != 0.0f || contrast != 1.0f || saturation != 1.0f) {
             if (!first) filter << ",";
             filter << "eq=brightness=" << brightness 
@@ -59,24 +49,31 @@ struct EffectChain {
             first = false;
         }
         
+        // Grayscale conversion (format=gray) - final color transformation
+        if (grayscale) {
+            if (!first) filter << ",";
+            filter << "format=gray";
+            first = false;
+        }
+        
         return filter.str();
     }
     
     // Check if any effects are active
     bool hasEffects() const {
-        return slow_factor != 1.0f || 
+        constexpr float EPSILON = 1e-6f;
+        return std::abs(slow_factor - 1.0f) > EPSILON || 
                (interpolate && target_fps > 0) ||
                grayscale ||
-               brightness != 0.0f ||
-               contrast != 1.0f ||
-               saturation != 1.0f;
+               std::abs(brightness - 0.0f) > EPSILON ||
+               std::abs(contrast - 1.0f) > EPSILON ||
+               std::abs(saturation - 1.0f) > EPSILON;
     }
     
     void reset() {
         slow_factor = 1.0f;
         target_fps = 0;
         interpolate = false;
-        scale_flags = "lanczos";
         grayscale = false;
         brightness = 0.0f;
         contrast = 1.0f;

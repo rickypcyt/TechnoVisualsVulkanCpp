@@ -3,6 +3,7 @@
 #include "EffectNode.h"
 #include <string>
 #include <sstream>
+#include <cmath>
 
 // FiltergraphCompiler formal - compila ProjectState a FFmpeg filtergraph
 class FiltergraphCompiler {
@@ -72,37 +73,39 @@ private:
     static std::string build_effects_filter(const EffectChain& effects) {
         std::stringstream filter;
         bool first = true;
+        constexpr float EPSILON = 1e-6f;
         
-        // Frame rate interpolation (minterpolate)
+        // Speed adjustment (setpts) - must come before minterpolate
+        // setpts modifies timestamps, interpolation should operate on adjusted timing
+        if (std::abs(effects.slow_factor - 1.0f) > EPSILON) {
+            // Canonical form: setpts=PTS/factor (e.g., 0.5x speed = PTS/0.5 = 2.0*PTS)
+            filter << "setpts=PTS/" << effects.slow_factor;
+            first = false;
+        }
+        
+        // Frame rate interpolation (minterpolate) - operates on adjusted timestamps
         if (effects.interpolate && effects.target_fps > 0) {
+            if (!first) filter << ",";
             filter << "minterpolate=fps=" << effects.target_fps;
             first = false;
         }
         
-        // Speed adjustment (setpts)
-        if (effects.slow_factor != 1.0f) {
-            if (!first) filter << ",";
-            // Invert slow_factor for setpts: lower value = slower video = higher setpts value
-            // setpts formula: 1.0/slow_factor * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
-            float setpts_value = 1.0f / effects.slow_factor;
-            filter << "setpts=" << setpts_value << "*PTS";
-            first = false;
-        }
-        
-        // Scale - always use original resolution
-        
-        // Color adjustments
-        if (effects.grayscale) {
-            if (!first) filter << ",";
-            filter << "format=gray";
-            first = false;
-        }
-        
-        if (effects.brightness != 0.0f || effects.contrast != 1.0f || effects.saturation != 1.0f) {
+        // Color adjustments (eq) - must come before format=gray
+        // eq operates on color channels, format=gray removes chroma
+        if (std::abs(effects.brightness - 0.0f) > EPSILON || 
+            std::abs(effects.contrast - 1.0f) > EPSILON || 
+            std::abs(effects.saturation - 1.0f) > EPSILON) {
             if (!first) filter << ",";
             filter << "eq=brightness=" << effects.brightness
                    << ":contrast=" << effects.contrast
                    << ":saturation=" << effects.saturation;
+            first = false;
+        }
+        
+        // Grayscale conversion (format=gray) - final color transformation
+        if (effects.grayscale) {
+            if (!first) filter << ",";
+            filter << "format=gray";
             first = false;
         }
         

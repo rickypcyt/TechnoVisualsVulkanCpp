@@ -227,12 +227,13 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: \
  /usr/include/c++/16.1.1/typeinfo \
  /usr/include/c++/16.1.1/bits/nested_exception.h \
  /usr/include/c++/16.1.1/bits/stdexcept_except.h \
- /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
- /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
- /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
- /usr/include/c++/16.1.1/cstring \
- /home/ricky/coding/proyects/vulkancpp/src/video/../video/CpuFramePool.h \
- /home/ricky/coding/proyects/vulkancpp/src/video/../video/FrameLayout.h \
+ /usr/include/c++/16.1.1/unordered_set \
+ /usr/include/c++/16.1.1/bits/unordered_set.h \
+ /usr/include/c++/16.1.1/bits/hashtable.h \
+ /usr/include/c++/16.1.1/bits/hashtable_policy.h \
+ /usr/include/c++/16.1.1/ext/aligned_buffer.h \
+ /usr/include/c++/16.1.1/bits/enable_special_members.h \
+ /usr/include/c++/16.1.1/bits/node_handle.h \
  /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/ostream \
  /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
  /usr/include/c++/16.1.1/bits/ios_base.h \
@@ -257,4 +258,10 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: \
  /usr/include/c++/16.1.1/bits/basic_ios.tcc \
  /usr/include/c++/16.1.1/bits/ostream_print.h \
  /usr/include/c++/16.1.1/bits/ostream.tcc /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/bits/istream.tcc
+ /usr/include/c++/16.1.1/bits/istream.tcc \
+ /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.h \
+ /home/ricky/coding/proyects/vulkancpp/src/video/StagingRing.h \
+ /usr/include/c++/16.1.1/cassert /usr/include/assert.h \
+ /usr/include/c++/16.1.1/cstring \
+ /home/ricky/coding/proyects/vulkancpp/src/video/../video/CpuFramePool.h \
+ /home/ricky/coding/proyects/vulkancpp/src/video/../video/FrameLayout.h

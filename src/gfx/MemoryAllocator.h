@@ -8,6 +8,7 @@ struct MemoryAllocation {
     VkDeviceSize offset = 0;
     VkDeviceSize size = 0;
     uint32_t blockIndex = UINT32_MAX;
+    VkMemoryPropertyFlags properties = 0;
 };
 
 struct FreeRange {
@@ -21,6 +22,7 @@ struct MemoryBlock {
     VkDeviceSize used = 0;
     std::vector<FreeRange> freeList;
     uint32_t memoryTypeIndex = 0;
+    VkMemoryPropertyFlags properties = 0;
     void* mappedData = nullptr;
 };
 
@@ -37,7 +39,7 @@ public:
     void cleanup();
 
 private:
-    MemoryAllocation allocateFromBlock(MemoryBlock& block, VkDeviceSize size, VkDeviceSize alignment);
+    MemoryAllocation allocateFromBlock(MemoryBlock& block, VkDeviceSize size, VkDeviceSize alignment, VkMemoryPropertyFlags properties);
     void createBlock(VkDeviceSize size, uint32_t memoryTypeIndex, VkMemoryPropertyFlags properties);
     void mergeFreeRanges(std::vector<FreeRange>& freeList);
     static VkDeviceSize alignUp(VkDeviceSize value, VkDeviceSize alignment);

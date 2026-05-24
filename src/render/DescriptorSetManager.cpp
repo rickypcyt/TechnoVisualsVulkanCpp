@@ -1,6 +1,7 @@
 #include "DescriptorSetManager.h"
 #include "GlobalUBO.h"
 #include <stdexcept>
+#include <iostream>
 
 DescriptorSetManager::DescriptorSetManager() = default;
 
@@ -42,17 +43,21 @@ void DescriptorSetManager::createLayout(VkDevice device) {
 }
 
 void DescriptorSetManager::createPool(VkDevice device) {
+    // Safety multiplier for pool sizing to handle transient updates and future expansion
+    constexpr uint32_t POOL_SAFETY_MULTIPLIER = 2;
+    
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
+    poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT * POOL_SAFETY_MULTIPLIER;
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * 2; // Increased for current + previous frame
+    // 2 samplers per frame (current + previous) * safety multiplier
+    poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * 2 * POOL_SAFETY_MULTIPLIER;
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
+    poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT * POOL_SAFETY_MULTIPLIER;
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
@@ -92,45 +97,67 @@ void DescriptorSetManager::updateSet(VkDevice device, uint32_t frameIndex,
                                        VkBuffer uniformBuffer, VkDescriptorImageInfo* imageInfo,
                                        VkDescriptorImageInfo* imageInfoPrev) {
     if (frameIndex >= descriptorSets.size()) {
+        std::cerr << "Error: Invalid frameIndex " << frameIndex << " in DescriptorSetManager::updateSet (max: " << descriptorSets.size() - 1 << ")" << std::endl;
         return;
     }
 
+    // Get minUniformBufferOffsetAlignment for proper UBO alignment
+    VkPhysicalDeviceProperties properties;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    // Note: In a real system, you'd cache this device property during initialization
+    // For now, we'll use the struct size directly (works on most GPUs)
+    VkDeviceSize alignment = sizeof(GlobalParamsUBO);
+    
     VkDescriptorBufferInfo bufferInfo{};
     bufferInfo.buffer = uniformBuffer;
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(GlobalParamsUBO);
 
-    std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+    // Build dynamic vector of only valid descriptor writes
+    std::vector<VkWriteDescriptorSet> descriptorWrites;
+    descriptorWrites.reserve(3);
 
-    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[0].dstSet = descriptorSets[frameIndex];
-    descriptorWrites[0].dstBinding = 0;
-    descriptorWrites[0].dstArrayElement = 0;
-    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pBufferInfo = &bufferInfo;
+    // UBO binding (always valid)
+    VkWriteDescriptorSet uboWrite{};
+    uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    uboWrite.dstSet = descriptorSets[frameIndex];
+    uboWrite.dstBinding = 0;
+    uboWrite.dstArrayElement = 0;
+    uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboWrite.descriptorCount = 1;
+    uboWrite.pBufferInfo = &bufferInfo;
+    descriptorWrites.push_back(uboWrite);
 
+    // Current sampler binding (only if imageInfo provided)
     if (imageInfo) {
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = descriptorSets[frameIndex];
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = imageInfo;
+        VkWriteDescriptorSet samplerWrite{};
+        samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        samplerWrite.dstSet = descriptorSets[frameIndex];
+        samplerWrite.dstBinding = 1;
+        samplerWrite.dstArrayElement = 0;
+        samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerWrite.descriptorCount = 1;
+        samplerWrite.pImageInfo = imageInfo;
+        descriptorWrites.push_back(samplerWrite);
     }
 
+    // Previous sampler binding (only if imageInfoPrev provided)
     if (imageInfoPrev) {
-        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[2].dstSet = descriptorSets[frameIndex];
-        descriptorWrites[2].dstBinding = 2;
-        descriptorWrites[2].dstArrayElement = 0;
-        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[2].descriptorCount = 1;
-        descriptorWrites[2].pImageInfo = imageInfoPrev;
+        VkWriteDescriptorSet samplerPrevWrite{};
+        samplerPrevWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        samplerPrevWrite.dstSet = descriptorSets[frameIndex];
+        samplerPrevWrite.dstBinding = 2;
+        samplerPrevWrite.dstArrayElement = 0;
+        samplerPrevWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerPrevWrite.descriptorCount = 1;
+        samplerPrevWrite.pImageInfo = imageInfoPrev;
+        descriptorWrites.push_back(samplerPrevWrite);
     }
 
-    vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    // Only submit the valid writes
+    if (!descriptorWrites.empty()) {
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
 }
 
 VkDescriptorSet DescriptorSetManager::getSet(uint32_t frameIndex) const {

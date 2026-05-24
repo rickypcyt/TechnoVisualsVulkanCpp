@@ -4,6 +4,8 @@
 #include <vector>
 #include <variant>
 #include <memory>
+#include <cmath>
+#include <algorithm>
 
 // Unified EffectSpec - representación única para Vulkan + FFmpeg
 // Esto es lo que convierte tu proyecto en un NLE serio
@@ -12,7 +14,6 @@ enum class EffectType {
     SCALE,
     SPEED,
     FPS,
-    COLOR,
     POSTFX,
     GRAYSCALE,
     BRIGHTNESS,
@@ -46,12 +47,24 @@ struct EffectNode {
         auto it = params.find(key);
         if (it != params.end()) {
             if constexpr (std::is_same_v<T, float>) {
+                if (!std::holds_alternative<float>(it->second)) {
+                    return default_value;
+                }
                 return std::get<float>(it->second);
             } else if constexpr (std::is_same_v<T, int>) {
+                if (!std::holds_alternative<int>(it->second)) {
+                    return default_value;
+                }
                 return std::get<int>(it->second);
             } else if constexpr (std::is_same_v<T, bool>) {
+                if (!std::holds_alternative<bool>(it->second)) {
+                    return default_value;
+                }
                 return std::get<bool>(it->second);
             } else if constexpr (std::is_same_v<T, std::string>) {
+                if (!std::holds_alternative<std::string>(it->second)) {
+                    return default_value;
+                }
                 return std::get<std::string>(it->second);
             }
         }
@@ -101,27 +114,137 @@ struct VulkanEffectParams {
     float gamma = 1.0f;
     float speed = 1.0f;
     int target_fps = 0;
+    // Temporal effects
+    bool flip_horizontal = false;
+    bool flip_vertical = false;
+    int rotation_degrees = 0;
+    int crop_x = 0;
+    int crop_y = 0;
+    int crop_width = 0;
+    int crop_height = 0;
 };
 
 class EffectCompiler {
 public:
     // Compile to FFmpeg filtergraph
     static std::string compile_to_ffmpeg(const EffectGraph& graph) {
-        std::string filter;
-        bool first = true;
+        // Collect all enabled filters with their priority for correct ordering
+        struct FilterEntry {
+            std::string filter;
+            int priority;  // Lower = earlier in pipeline
+        };
+        std::vector<FilterEntry> filters;
+        
+        // Aggregate color correction params (brightness, contrast, saturation, hue, gamma)
+        float brightness = 0.0f, contrast = 1.0f, saturation = 1.0f, hue = 0.0f, gamma = 1.0f;
+        bool has_color_correction = false;
+        constexpr float EPSILON = 1e-6f;
         
         for (const auto& node : graph.get_nodes()) {
             if (!node->enabled) continue;
             
+            // Collect color correction params
+            switch (node->type) {
+                case EffectType::BRIGHTNESS:
+                    brightness = node->get_param<float>("value", 0.0f);
+                    has_color_correction = true;
+                    continue;
+                case EffectType::CONTRAST:
+                    contrast = node->get_param<float>("value", 1.0f);
+                    has_color_correction = true;
+                    continue;
+                case EffectType::SATURATION:
+                    saturation = node->get_param<float>("value", 1.0f);
+                    has_color_correction = true;
+                    continue;
+                case EffectType::HUE_SHIFT:
+                    hue = node->get_param<float>("degrees", 0.0f);
+                    has_color_correction = true;
+                    continue;
+                case EffectType::GAMMA:
+                    gamma = node->get_param<float>("value", 1.0f);
+                    has_color_correction = true;
+                    continue;
+                default:
+                    break;
+            }
+            
             std::string node_filter = compile_node_to_ffmpeg(node);
             if (!node_filter.empty()) {
-                if (!first) filter += ",";
-                filter += node_filter;
-                first = false;
+                int priority = 100;
+                // Determine filter priority for correct ordering
+                switch (node->type) {
+                    case EffectType::SPEED:
+                        priority = 0;  // setpts must come first
+                        break;
+                    case EffectType::FPS:
+                        priority = 1;  // minterpolate after setpts
+                        break;
+                    case EffectType::GRAYSCALE:
+                        priority = 3;  // format=gray last
+                        break;
+                    case EffectType::SCALE:
+                        priority = 4;
+                        break;
+                    case EffectType::FLIP:
+                    case EffectType::ROTATE:
+                    case EffectType::CROP:
+                        priority = 5;
+                        break;
+                    default:
+                        priority = 50;
+                        break;
+                }
+                filters.push_back({node_filter, priority});
             }
         }
         
-        return filter;
+        // Add aggregated color correction filter
+        if (has_color_correction) {
+            std::string eq_filter = "eq=";
+            bool first_param = true;
+            if (std::abs(brightness - 0.0f) > EPSILON) {
+                eq_filter += "brightness=" + std::to_string(brightness);
+                first_param = false;
+            }
+            if (std::abs(contrast - 1.0f) > EPSILON) {
+                if (!first_param) eq_filter += ":";
+                eq_filter += "contrast=" + std::to_string(contrast);
+                first_param = false;
+            }
+            if (std::abs(saturation - 1.0f) > EPSILON) {
+                if (!first_param) eq_filter += ":";
+                eq_filter += "saturation=" + std::to_string(saturation);
+                first_param = false;
+            }
+            if (std::abs(hue - 0.0f) > EPSILON) {
+                if (!first_param) eq_filter += ":";
+                eq_filter += "hue=" + std::to_string(hue);
+                first_param = false;
+            }
+            if (std::abs(gamma - 1.0f) > EPSILON) {
+                if (!first_param) eq_filter += ":";
+                eq_filter += "gamma=" + std::to_string(gamma);
+            }
+            filters.push_back({eq_filter, 2});
+        }
+        
+        // Sort by priority
+        std::sort(filters.begin(), filters.end(), 
+            [](const FilterEntry& a, const FilterEntry& b) {
+                return a.priority < b.priority;
+            });
+        
+        // Build filter string
+        std::string result;
+        bool first = true;
+        for (const auto& entry : filters) {
+            if (!first) result += ",";
+            result += entry.filter;
+            first = false;
+        }
+        
+        return result;
     }
     
     // Compile to Vulkan shader parameters (returns struct with values)
@@ -149,6 +272,19 @@ public:
                     break;
                 case EffectType::GAMMA:
                     params.gamma = node->get_param<float>("value", 1.0f);
+                    break;
+                case EffectType::FLIP:
+                    params.flip_horizontal = node->get_param<bool>("horizontal", false);
+                    params.flip_vertical = node->get_param<bool>("vertical", false);
+                    break;
+                case EffectType::ROTATE:
+                    params.rotation_degrees = node->get_param<int>("degrees", 0);
+                    break;
+                case EffectType::CROP:
+                    params.crop_x = node->get_param<int>("x", 0);
+                    params.crop_y = node->get_param<int>("y", 0);
+                    params.crop_width = node->get_param<int>("width", 0);
+                    params.crop_height = node->get_param<int>("height", 0);
                     break;
                 case EffectType::SCALE:
                     // Scale not used - always original resolution
@@ -182,11 +318,10 @@ private:
             }
             case EffectType::SPEED: {
                 float factor = node->get_param<float>("factor", 1.0f);
-                if (factor != 1.0f) {
-                    // Invert factor for setpts: lower value = slower video = higher setpts value
-                    // setpts formula: 1.0/factor * PTS (e.g., 0.5x speed = 2.0*PTS, 2.0x speed = 0.5*PTS)
-                    float setpts_value = 1.0f / factor;
-                    return "setpts=" + std::to_string(setpts_value) + "*PTS";
+                constexpr float EPSILON = 1e-6f;
+                if (std::abs(factor - 1.0f) > EPSILON) {
+                    // Canonical form: setpts=PTS/factor (e.g., 0.5x speed = PTS/0.5 = 2.0*PTS)
+                    return "setpts=PTS/" + std::to_string(factor);
                 }
                 break;
             }
@@ -206,14 +341,45 @@ private:
             }
             case EffectType::BRIGHTNESS:
             case EffectType::CONTRAST:
-            case EffectType::SATURATION: {
-                float b = node->get_param<float>("brightness", 0.0f);
-                float c = node->get_param<float>("contrast", 1.0f);
-                float s = node->get_param<float>("saturation", 1.0f);
-                if (b != 0.0f || c != 1.0f || s != 1.0f) {
-                    return "eq=brightness=" + std::to_string(b) +
-                           ":contrast=" + std::to_string(c) +
-                           ":saturation=" + std::to_string(s);
+            case EffectType::SATURATION:
+            case EffectType::HUE_SHIFT:
+            case EffectType::GAMMA: {
+                // Aggregate all color correction params from individual nodes
+                // This requires a two-pass approach: first collect all color nodes, then merge
+                // For now, return empty and handle aggregation at graph level
+                break;
+            }
+            case EffectType::FLIP: {
+                bool h = node->get_param<bool>("horizontal", false);
+                bool v = node->get_param<bool>("vertical", false);
+                if (h && v) {
+                    return "hflip,vflip";
+                } else if (h) {
+                    return "hflip";
+                } else if (v) {
+                    return "vflip";
+                }
+                break;
+            }
+            case EffectType::ROTATE: {
+                int degrees = node->get_param<int>("degrees", 0);
+                if (degrees == 90) {
+                    return "transpose=clock";
+                } else if (degrees == 180) {
+                    return "transpose=clock,transpose=clock";
+                } else if (degrees == 270) {
+                    return "transpose=cclock";
+                }
+                break;
+            }
+            case EffectType::CROP: {
+                int x = node->get_param<int>("x", 0);
+                int y = node->get_param<int>("y", 0);
+                int w = node->get_param<int>("width", 0);
+                int h = node->get_param<int>("height", 0);
+                if (w > 0 && h > 0) {
+                    return "crop=" + std::to_string(w) + ":" + std::to_string(h) + 
+                           ":" + std::to_string(x) + ":" + std::to_string(y);
                 }
                 break;
             }
@@ -253,12 +419,19 @@ public:
         return node;
     }
     
-    static std::shared_ptr<EffectNode> create_color_grade(float brightness, float contrast, float saturation) {
-        auto node = std::make_shared<EffectNode>(EffectType::COLOR);
-        node->set_param("brightness", brightness);
-        node->set_param("contrast", contrast);
-        node->set_param("saturation", saturation);
-        return node;
+    // Create combined color grade (creates 3 separate nodes)
+    static std::vector<std::shared_ptr<EffectNode>> create_color_grade(float brightness, float contrast, float saturation) {
+        std::vector<std::shared_ptr<EffectNode>> nodes;
+        if (brightness != 0.0f) {
+            nodes.push_back(create_brightness(brightness));
+        }
+        if (contrast != 1.0f) {
+            nodes.push_back(create_contrast(contrast));
+        }
+        if (saturation != 1.0f) {
+            nodes.push_back(create_saturation(saturation));
+        }
+        return nodes;
     }
     
     static std::shared_ptr<EffectNode> create_brightness(float value) {
@@ -276,6 +449,40 @@ public:
     static std::shared_ptr<EffectNode> create_saturation(float value) {
         auto node = std::make_shared<EffectNode>(EffectType::SATURATION);
         node->set_param("value", value);
+        return node;
+    }
+    
+    static std::shared_ptr<EffectNode> create_hue_shift(float degrees) {
+        auto node = std::make_shared<EffectNode>(EffectType::HUE_SHIFT);
+        node->set_param("degrees", degrees);
+        return node;
+    }
+    
+    static std::shared_ptr<EffectNode> create_gamma(float value) {
+        auto node = std::make_shared<EffectNode>(EffectType::GAMMA);
+        node->set_param("value", value);
+        return node;
+    }
+    
+    static std::shared_ptr<EffectNode> create_flip(bool horizontal = false, bool vertical = false) {
+        auto node = std::make_shared<EffectNode>(EffectType::FLIP);
+        node->set_param("horizontal", horizontal);
+        node->set_param("vertical", vertical);
+        return node;
+    }
+    
+    static std::shared_ptr<EffectNode> create_rotate(int degrees) {
+        auto node = std::make_shared<EffectNode>(EffectType::ROTATE);
+        node->set_param("degrees", degrees);
+        return node;
+    }
+    
+    static std::shared_ptr<EffectNode> create_crop(int x, int y, int width, int height) {
+        auto node = std::make_shared<EffectNode>(EffectType::CROP);
+        node->set_param("x", x);
+        node->set_param("y", y);
+        node->set_param("width", width);
+        node->set_param("height", height);
         return node;
     }
 };
