@@ -166,6 +166,12 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float fxaaQualityEdgeThreshold;
     float fxaaQualityEdgeThresholdMin;
 
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+    float cameraRotation;
+    int enableCameraMovement;
+
     int enableGrid;
     int gridMode;
     int gridCount;
@@ -176,6 +182,9 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float gridLineWidth;
     float gridLineIntensity;
     vec3 gridLineColor;
+
+    vec3 rgbOverlay;
+    int enableRgbOverlay;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler2D inputTexture;
