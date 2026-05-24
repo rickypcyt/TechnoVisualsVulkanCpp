@@ -38,8 +38,7 @@ tests/midiout: \
   /usr/lib32/libasound.so.2 \
   /usr/lib/libasound.so.2 \
   /usr/lib/ld-linux-x86-64.so.2 \
-  /usr/lib32/libpipewire-0.3.so.0 \
-  /usr/lib/libpipewire-0.3.so.0
+  /usr/lib/libdb-5.3.so
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o:
 
@@ -119,6 +118,4 @@ librtmidi.so.6.0.0:
 
 /usr/lib/ld-linux-x86-64.so.2:
 
-/usr/lib32/libpipewire-0.3.so.0:
-
-/usr/lib/libpipewire-0.3.so.0:
+/usr/lib/libdb-5.3.so:

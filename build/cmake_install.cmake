@@ -46,6 +46,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/cmake_install.cmake")
   include("/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build/cmake_install.cmake")
+  include("/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build/cmake_install.cmake")
 
 endif()
 

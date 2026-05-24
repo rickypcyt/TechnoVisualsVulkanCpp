@@ -639,6 +639,11 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/fftw3.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/PlaybackClock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterRegistry.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterDescriptor.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterType.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.h \
  /usr/include/glm/gtc/matrix_transform.hpp \
  /usr/include/glm/ext/matrix_projection.hpp \
  /usr/include/glm/gtc/constants.hpp \

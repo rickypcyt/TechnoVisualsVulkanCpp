@@ -9,6 +9,11 @@ app: \
   CMakeFiles/app.dir/src/app/MidiSystem.cpp.o \
   CMakeFiles/app.dir/src/app/OscSystem.cpp.o \
   CMakeFiles/app.dir/src/app/AudioSystem.cpp.o \
+  CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o \
+  CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o \
+  CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o \
+  CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o \
+  CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o \
   CMakeFiles/app.dir/src/core/Window.cpp.o \
   CMakeFiles/app.dir/src/core/VulkanContext.cpp.o \
   CMakeFiles/app.dir/src/video/VideoStaging.cpp.o \
@@ -290,6 +295,16 @@ CMakeFiles/app.dir/src/app/MidiSystem.cpp.o:
 CMakeFiles/app.dir/src/app/OscSystem.cpp.o:
 
 CMakeFiles/app.dir/src/app/AudioSystem.cpp.o:
+
+CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o:
+
+CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o:
+
+CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o:
+
+CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o:
+
+CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o:
 
 CMakeFiles/app.dir/src/core/Window.cpp.o:
 

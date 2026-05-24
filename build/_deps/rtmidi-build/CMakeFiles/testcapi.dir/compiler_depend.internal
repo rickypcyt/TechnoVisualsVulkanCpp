@@ -49,13 +49,12 @@ _deps/rtmidi-build/tests/testcapi
  /usr/lib/libasound.so.2
  /usr/lib/libc.so.6
  /usr/lib/libc_nonshared.a
+ /usr/lib/libdb-5.3.so
  /usr/lib/libjack.so.0
  /usr/lib/libm.so.6
- /usr/lib/libpipewire-0.3.so.0
  /usr/lib/libstdc++.so.6
  /usr/lib32/libasound.so.2
  /usr/lib32/libm.so.6
- /usr/lib32/libpipewire-0.3.so.0
  /usr/lib32/libstdc++.so.6
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/CMakeFiles/testcapi.dir/tests/testcapi.c.o
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/librtmidi.so.6.0.0

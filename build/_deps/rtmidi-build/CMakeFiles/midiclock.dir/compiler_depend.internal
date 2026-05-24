@@ -231,12 +231,11 @@ _deps/rtmidi-build/tests/midiclock
  /usr/lib/libasound.so.2
  /usr/lib/libc.so.6
  /usr/lib/libc_nonshared.a
+ /usr/lib/libdb-5.3.so
  /usr/lib/libjack.so.0
  /usr/lib/libm.so.6
  /usr/lib/libmvec.so.1
- /usr/lib/libpipewire-0.3.so.0
  /usr/lib32/libasound.so.2
- /usr/lib32/libpipewire-0.3.so.0
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/CMakeFiles/midiclock.dir/tests/midiclock.cpp.o
  /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/librtmidi.so.6.0.0
 

@@ -1,4 +1,6 @@
 #include "Application.h"
+#include "parameters/VisualControlsRegistry.h"
+#include "parameters/JsonSerializer.h"
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
@@ -8,7 +10,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <random>
 
-Application::Application() = default;
+Application::Application() {
+    VisualControlsRegistry::build(parameterRegistry, visualControls);
+}
 
 Application::~Application() {
     cleanup();
@@ -35,7 +39,8 @@ void Application::run() {
     uniformBufferManager.createBuffers(resourceSystem, vulkanContext.getDevice());
 
     // Load control state before video init so selectedVideoFolder is respected
-    ControlState::load(controlStatePath, visualControls, videoRandomizer, videoRandomizer2,
+    JsonSerializer::load(visualControlsPath, parameterRegistry);
+    ControlState::load(controlStatePath, videoRandomizer, videoRandomizer2,
                        allowDimensionChangeRecreation, midiSystem, oscSystem,
                        selectedVideoAsset, selectedVideoAsset2);
 
@@ -604,7 +609,8 @@ void Application::initOsc() {
 
     // Auto-save control state whenever OSC mappings change
     oscSystem.onMappingsChanged = [this]() {
-        ControlState::save(controlStatePath, visualControls, videoRandomizer, videoRandomizer2,
+        JsonSerializer::save(visualControlsPath, parameterRegistry);
+        ControlState::save(controlStatePath, videoRandomizer, videoRandomizer2,
                            allowDimensionChangeRecreation, midiSystem, oscSystem,
                            selectedVideoAsset, selectedVideoAsset2);
     };
@@ -1980,7 +1986,8 @@ void Application::cleanup() {
     vkDeviceWaitIdle(vulkanContext.getDevice());
 
     // Save control state
-    ControlState::save(controlStatePath, visualControls, videoRandomizer, videoRandomizer2,
+    JsonSerializer::save(visualControlsPath, parameterRegistry);
+    ControlState::save(controlStatePath, videoRandomizer, videoRandomizer2,
                        allowDimensionChangeRecreation, midiSystem, oscSystem,
                        selectedVideoAsset, selectedVideoAsset2);
 

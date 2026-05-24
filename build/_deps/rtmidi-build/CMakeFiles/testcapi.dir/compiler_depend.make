@@ -47,13 +47,12 @@ _deps/rtmidi-build/tests/testcapi: /usr/lib/Scrt1.o \
   /usr/lib/libasound.so.2 \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
+  /usr/lib/libdb-5.3.so \
   /usr/lib/libjack.so.0 \
   /usr/lib/libm.so.6 \
-  /usr/lib/libpipewire-0.3.so.0 \
   /usr/lib/libstdc++.so.6 \
   /usr/lib32/libasound.so.2 \
   /usr/lib32/libm.so.6 \
-  /usr/lib32/libpipewire-0.3.so.0 \
   /usr/lib32/libstdc++.so.6 \
   _deps/rtmidi-build/CMakeFiles/testcapi.dir/tests/testcapi.c.o \
   _deps/rtmidi-build/librtmidi.so.6.0.0
@@ -85,13 +84,13 @@ _deps/rtmidi-build/CMakeFiles/testcapi.dir/tests/testcapi.c.o:
 
 /usr/lib/libatomic_asneeded.so:
 
+/usr/lib/libdb-5.3.so:
+
 /usr/lib/libatomic.so:
 
 /usr/lib/crtn.o:
 
 /usr/lib/crti.o:
-
-/usr/lib32/libpipewire-0.3.so.0:
 
 /usr/lib/Scrt1.o:
 
@@ -102,8 +101,6 @@ _deps/rtmidi-build/CMakeFiles/testcapi.dir/tests/testcapi.c.o:
 /usr/include/bits/types/FILE.h:
 
 /usr/include/gnu/stubs-64.h:
-
-/usr/lib/libpipewire-0.3.so.0:
 
 /usr/include/bits/time64.h:
 

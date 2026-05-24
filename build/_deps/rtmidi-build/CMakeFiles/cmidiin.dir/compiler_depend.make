@@ -221,12 +221,11 @@ _deps/rtmidi-build/tests/cmidiin: /usr/lib/Scrt1.o \
   /usr/lib/libasound.so.2 \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
+  /usr/lib/libdb-5.3.so \
   /usr/lib/libjack.so.0 \
   /usr/lib/libm.so.6 \
   /usr/lib/libmvec.so.1 \
-  /usr/lib/libpipewire-0.3.so.0 \
   /usr/lib32/libasound.so.2 \
-  /usr/lib32/libpipewire-0.3.so.0 \
   _deps/rtmidi-build/CMakeFiles/cmidiin.dir/tests/cmidiin.cpp.o \
   _deps/rtmidi-build/librtmidi.so.6.0.0
 
@@ -485,8 +484,6 @@ _deps/rtmidi-src/tests/cmidiin.cpp:
 
 /usr/include/bits/time64.h:
 
-/usr/lib32/libpipewire-0.3.so.0:
-
 /usr/include/bits/byteswap.h:
 
 _deps/rtmidi-src/RtMidi.h:
@@ -595,6 +592,8 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/include/c++/16.1.1/bits/stl_construct.h:
 
+/usr/lib/libdb-5.3.so:
+
 /usr/include/c++/16.1.1/bits/allocator.h:
 
 /usr/include/c++/16.1.1/bits/nested_exception.h:
@@ -634,8 +633,6 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/include/c++/16.1.1/bits/locale_classes.tcc:
 
 /usr/include/c++/16.1.1/bits/locale_facets.h:
-
-/usr/lib/libpipewire-0.3.so.0:
 
 /usr/lib/libstdc++.so:
 

@@ -343,6 +343,10 @@ FETCHCONTENT_SOURCE_DIR_BOOST_MATH:PATH=
 FETCHCONTENT_SOURCE_DIR_KFR:PATH=
 
 //When not empty, overrides where to find pre-populated content
+// for nlohmann_json
+FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON:PATH=
+
+//When not empty, overrides where to find pre-populated content
 // for rtmidi
 FETCHCONTENT_SOURCE_DIR_RTMIDI:PATH=
 
@@ -354,6 +358,9 @@ FETCHCONTENT_UPDATES_DISCONNECTED_BOOST_MATH:BOOL=OFF
 
 //Enables UPDATE_DISCONNECTED behavior just for population of kfr
 FETCHCONTENT_UPDATES_DISCONNECTED_KFR:BOOL=OFF
+
+//Enables UPDATE_DISCONNECTED behavior just for population of nlohmann_json
+FETCHCONTENT_UPDATES_DISCONNECTED_NLOHMANN_JSON:BOOL=OFF
 
 //Enables UPDATE_DISCONNECTED behavior just for population of rtmidi
 FETCHCONTENT_UPDATES_DISCONNECTED_RTMIDI:BOOL=OFF
@@ -369,6 +376,36 @@ GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
 //Path to a library.
 JACK_LIB:FILEPATH=/usr/lib/libjack.so
+
+//Build the unit tests when BUILD_TESTING is enabled.
+JSON_BuildTests:BOOL=OFF
+
+//Enable CI build targets.
+JSON_CI:BOOL=OFF
+
+//Use extended diagnostic messages.
+JSON_Diagnostics:BOOL=OFF
+
+//Disable default integer enum serialization.
+JSON_DisableEnumSerialization:BOOL=OFF
+
+//Place use-defined string literals in the global namespace.
+JSON_GlobalUDLs:BOOL=ON
+
+//Enable implicit conversions.
+JSON_ImplicitConversions:BOOL=ON
+
+//Install CMake targets during install step.
+JSON_Install:BOOL=OFF
+
+//Enable legacy discarded value comparison.
+JSON_LegacyDiscardedValueComparison:BOOL=OFF
+
+//Use non-amalgamated version of the library.
+JSON_MultipleHeaders:BOOL=ON
+
+//Include as system headers (skip for clang-tidy).
+JSON_SystemInclude:BOOL=OFF
 
 KFR_DEBUG_INSTALL_SUFFIX:STRING=/debug
 
@@ -521,6 +558,15 @@ kfr_IS_TOP_LEVEL:STATIC=OFF
 
 //Value Computed by CMake
 kfr_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src
+
+//Value Computed by CMake
+nlohmann_json_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build
+
+//Value Computed by CMake
+nlohmann_json_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+nlohmann_json_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src
 
 //Path to a library.
 pkgcfg_lib_FFMPEG_avcodec:FILEPATH=/usr/lib/libavcodec.so
@@ -712,7 +758,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=9
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -914,7 +960,7 @@ LIBLO_STATIC_LIBS:INTERNAL=
 LIBLO_STATIC_LIBS_L:INTERNAL=
 LIBLO_STATIC_LIBS_OTHER:INTERNAL=
 LIBLO_STATIC_LIBS_PATHS:INTERNAL=
-LIBLO_VERSION:INTERNAL=0.34
+LIBLO_VERSION:INTERNAL=0.35
 LIBLO_liblo_INCLUDEDIR:INTERNAL=
 LIBLO_liblo_LIBDIR:INTERNAL=
 LIBLO_liblo_PREFIX:INTERNAL=
@@ -925,6 +971,7 @@ MAKECOMMAND-ADVANCED:INTERNAL=1
 MEMORYCHECK_COMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MEMORYCHECK_SUPPRESSIONS_FILE
 MEMORYCHECK_SUPPRESSIONS_FILE-ADVANCED:INTERNAL=1
+NLOHMANN_JSON_CONFIG_INSTALL_DIR:INTERNAL=share/cmake/nlohmann_json
 //ADVANCED property for variable: PKG_CONFIG_ARGN
 PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
@@ -999,9 +1046,9 @@ __pkg_config_checked_FFTW:INTERNAL=1
 __pkg_config_checked_LIBLO:INTERNAL=1
 __pkg_config_checked_PORTAUDIO:INTERNAL=1
 __pkg_config_checked_jack:INTERNAL=1
-jack_CFLAGS:INTERNAL=-I/usr/include;-D_REENTRANT
+jack_CFLAGS:INTERNAL=-I/usr/include
 jack_CFLAGS_I:INTERNAL=
-jack_CFLAGS_OTHER:INTERNAL=-D_REENTRANT
+jack_CFLAGS_OTHER:INTERNAL=
 jack_FOUND:INTERNAL=1
 jack_INCLUDEDIR:INTERNAL=/usr/include
 jack_INCLUDE_DIRS:INTERNAL=/usr/include
@@ -1016,9 +1063,9 @@ jack_LIBS_OTHER:INTERNAL=
 jack_LIBS_PATHS:INTERNAL=
 jack_MODULE_NAME:INTERNAL=jack
 jack_PREFIX:INTERNAL=/usr
-jack_STATIC_CFLAGS:INTERNAL=-I/usr/include;-D_REENTRANT
+jack_STATIC_CFLAGS:INTERNAL=-I/usr/include
 jack_STATIC_CFLAGS_I:INTERNAL=
-jack_STATIC_CFLAGS_OTHER:INTERNAL=-D_REENTRANT
+jack_STATIC_CFLAGS_OTHER:INTERNAL=
 jack_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
 jack_STATIC_LDFLAGS:INTERNAL=-L/usr/lib;-ljack
 jack_STATIC_LDFLAGS_OTHER:INTERNAL=
@@ -1029,7 +1076,7 @@ jack_STATIC_LIBS:INTERNAL=
 jack_STATIC_LIBS_L:INTERNAL=
 jack_STATIC_LIBS_OTHER:INTERNAL=
 jack_STATIC_LIBS_PATHS:INTERNAL=
-jack_VERSION:INTERNAL=3.1604.0
+jack_VERSION:INTERNAL=1.9.22
 jack_jack_INCLUDEDIR:INTERNAL=
 jack_jack_LIBDIR:INTERNAL=
 jack_jack_PREFIX:INTERNAL=

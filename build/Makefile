@@ -929,6 +929,126 @@ src/app/UISystem.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/UISystem.cpp.s
 .PHONY : src/app/UISystem.cpp.s
 
+src/app/parameters/JsonSerializer.o: src/app/parameters/JsonSerializer.cpp.o
+.PHONY : src/app/parameters/JsonSerializer.o
+
+# target to build an object file
+src/app/parameters/JsonSerializer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o
+.PHONY : src/app/parameters/JsonSerializer.cpp.o
+
+src/app/parameters/JsonSerializer.i: src/app/parameters/JsonSerializer.cpp.i
+.PHONY : src/app/parameters/JsonSerializer.i
+
+# target to preprocess a source file
+src/app/parameters/JsonSerializer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.i
+.PHONY : src/app/parameters/JsonSerializer.cpp.i
+
+src/app/parameters/JsonSerializer.s: src/app/parameters/JsonSerializer.cpp.s
+.PHONY : src/app/parameters/JsonSerializer.s
+
+# target to generate assembly for a file
+src/app/parameters/JsonSerializer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.s
+.PHONY : src/app/parameters/JsonSerializer.cpp.s
+
+src/app/parameters/MidiBindingSystem.o: src/app/parameters/MidiBindingSystem.cpp.o
+.PHONY : src/app/parameters/MidiBindingSystem.o
+
+# target to build an object file
+src/app/parameters/MidiBindingSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o
+.PHONY : src/app/parameters/MidiBindingSystem.cpp.o
+
+src/app/parameters/MidiBindingSystem.i: src/app/parameters/MidiBindingSystem.cpp.i
+.PHONY : src/app/parameters/MidiBindingSystem.i
+
+# target to preprocess a source file
+src/app/parameters/MidiBindingSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.i
+.PHONY : src/app/parameters/MidiBindingSystem.cpp.i
+
+src/app/parameters/MidiBindingSystem.s: src/app/parameters/MidiBindingSystem.cpp.s
+.PHONY : src/app/parameters/MidiBindingSystem.s
+
+# target to generate assembly for a file
+src/app/parameters/MidiBindingSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.s
+.PHONY : src/app/parameters/MidiBindingSystem.cpp.s
+
+src/app/parameters/ParameterRegistry.o: src/app/parameters/ParameterRegistry.cpp.o
+.PHONY : src/app/parameters/ParameterRegistry.o
+
+# target to build an object file
+src/app/parameters/ParameterRegistry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o
+.PHONY : src/app/parameters/ParameterRegistry.cpp.o
+
+src/app/parameters/ParameterRegistry.i: src/app/parameters/ParameterRegistry.cpp.i
+.PHONY : src/app/parameters/ParameterRegistry.i
+
+# target to preprocess a source file
+src/app/parameters/ParameterRegistry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.i
+.PHONY : src/app/parameters/ParameterRegistry.cpp.i
+
+src/app/parameters/ParameterRegistry.s: src/app/parameters/ParameterRegistry.cpp.s
+.PHONY : src/app/parameters/ParameterRegistry.s
+
+# target to generate assembly for a file
+src/app/parameters/ParameterRegistry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.s
+.PHONY : src/app/parameters/ParameterRegistry.cpp.s
+
+src/app/parameters/PresetMorpher.o: src/app/parameters/PresetMorpher.cpp.o
+.PHONY : src/app/parameters/PresetMorpher.o
+
+# target to build an object file
+src/app/parameters/PresetMorpher.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o
+.PHONY : src/app/parameters/PresetMorpher.cpp.o
+
+src/app/parameters/PresetMorpher.i: src/app/parameters/PresetMorpher.cpp.i
+.PHONY : src/app/parameters/PresetMorpher.i
+
+# target to preprocess a source file
+src/app/parameters/PresetMorpher.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.i
+.PHONY : src/app/parameters/PresetMorpher.cpp.i
+
+src/app/parameters/PresetMorpher.s: src/app/parameters/PresetMorpher.cpp.s
+.PHONY : src/app/parameters/PresetMorpher.s
+
+# target to generate assembly for a file
+src/app/parameters/PresetMorpher.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.s
+.PHONY : src/app/parameters/PresetMorpher.cpp.s
+
+src/app/parameters/VisualControlsRegistry.o: src/app/parameters/VisualControlsRegistry.cpp.o
+.PHONY : src/app/parameters/VisualControlsRegistry.o
+
+# target to build an object file
+src/app/parameters/VisualControlsRegistry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o
+.PHONY : src/app/parameters/VisualControlsRegistry.cpp.o
+
+src/app/parameters/VisualControlsRegistry.i: src/app/parameters/VisualControlsRegistry.cpp.i
+.PHONY : src/app/parameters/VisualControlsRegistry.i
+
+# target to preprocess a source file
+src/app/parameters/VisualControlsRegistry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.i
+.PHONY : src/app/parameters/VisualControlsRegistry.cpp.i
+
+src/app/parameters/VisualControlsRegistry.s: src/app/parameters/VisualControlsRegistry.cpp.s
+.PHONY : src/app/parameters/VisualControlsRegistry.s
+
+# target to generate assembly for a file
+src/app/parameters/VisualControlsRegistry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.s
+.PHONY : src/app/parameters/VisualControlsRegistry.cpp.s
+
 src/core/VulkanContext.o: src/core/VulkanContext.cpp.o
 .PHONY : src/core/VulkanContext.o
 
@@ -1535,6 +1655,21 @@ help:
 	@echo "... src/app/UISystem.o"
 	@echo "... src/app/UISystem.i"
 	@echo "... src/app/UISystem.s"
+	@echo "... src/app/parameters/JsonSerializer.o"
+	@echo "... src/app/parameters/JsonSerializer.i"
+	@echo "... src/app/parameters/JsonSerializer.s"
+	@echo "... src/app/parameters/MidiBindingSystem.o"
+	@echo "... src/app/parameters/MidiBindingSystem.i"
+	@echo "... src/app/parameters/MidiBindingSystem.s"
+	@echo "... src/app/parameters/ParameterRegistry.o"
+	@echo "... src/app/parameters/ParameterRegistry.i"
+	@echo "... src/app/parameters/ParameterRegistry.s"
+	@echo "... src/app/parameters/PresetMorpher.o"
+	@echo "... src/app/parameters/PresetMorpher.i"
+	@echo "... src/app/parameters/PresetMorpher.s"
+	@echo "... src/app/parameters/VisualControlsRegistry.o"
+	@echo "... src/app/parameters/VisualControlsRegistry.i"
+	@echo "... src/app/parameters/VisualControlsRegistry.s"
 	@echo "... src/core/VulkanContext.o"
 	@echo "... src/core/VulkanContext.i"
 	@echo "... src/core/VulkanContext.s"

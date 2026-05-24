@@ -30,6 +30,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(kfr)
 
+# nlohmann/json for parameter serialization
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 # liblo for OSC support
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBLO REQUIRED liblo)
@@ -63,6 +71,11 @@ add_executable(app
     src/app/MidiSystem.cpp
     src/app/OscSystem.cpp
     src/app/AudioSystem.cpp
+    src/app/parameters/ParameterRegistry.cpp
+    src/app/parameters/VisualControlsRegistry.cpp
+    src/app/parameters/JsonSerializer.cpp
+    src/app/parameters/MidiBindingSystem.cpp
+    src/app/parameters/PresetMorpher.cpp
     src/core/Window.cpp
     src/core/VulkanContext.cpp
     src/video/VideoStaging.cpp
@@ -90,7 +103,7 @@ add_executable(app
 
 add_dependencies(app gen_ubo)
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include)
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include ${nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(app
     Vulkan::Vulkan

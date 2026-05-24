@@ -251,12 +251,11 @@ _deps/rtmidi-build/tests/qmidiin: /usr/lib/Scrt1.o \
   /usr/lib/libasound.so.2 \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
+  /usr/lib/libdb-5.3.so \
   /usr/lib/libjack.so.0 \
   /usr/lib/libm.so.6 \
   /usr/lib/libmvec.so.1 \
-  /usr/lib/libpipewire-0.3.so.0 \
   /usr/lib32/libasound.so.2 \
-  /usr/lib32/libpipewire-0.3.so.0 \
   _deps/rtmidi-build/CMakeFiles/qmidiin.dir/tests/qmidiin.cpp.o \
   _deps/rtmidi-build/librtmidi.so.6.0.0
 
@@ -563,8 +562,6 @@ _deps/rtmidi-src/tests/qmidiin.cpp:
 
 /usr/include/bits/time64.h:
 
-/usr/lib32/libpipewire-0.3.so.0:
-
 /usr/include/bits/byteswap.h:
 
 /usr/lib/libgcc_s.so.1:
@@ -733,6 +730,8 @@ _deps/rtmidi-src/RtMidi.h:
 
 /usr/include/c++/16.1.1/backward/binders.h:
 
+/usr/lib/libdb-5.3.so:
+
 /usr/include/c++/16.1.1/bits/allocator.h:
 
 /usr/include/bits/types/struct_sigstack.h:
@@ -764,8 +763,6 @@ _deps/rtmidi-src/RtMidi.h:
 /usr/include/c++/16.1.1/bits/locale_classes.tcc:
 
 /usr/include/c++/16.1.1/bits/locale_facets.h:
-
-/usr/lib/libpipewire-0.3.so.0:
 
 /usr/lib/libstdc++.so:
 

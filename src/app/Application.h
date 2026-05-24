@@ -30,6 +30,7 @@
 #include "../render/EffectChain.h"
 #include "../render/Export.h"
 #include "../render/RenderJob.h"
+#include "../app/parameters/ParameterRegistry.h"
 
 // Define VideoRandomizerState since it's only forward-declared in UISystem.h
 struct VideoRandomizerState {
@@ -124,7 +125,9 @@ private:
     MidiSystem midiSystem;
     OscSystem oscSystem;
     AudioSystem audioSystem;
+    ParameterRegistry parameterRegistry;
     std::string controlStatePath = "controls_state.cfg";
+    std::string visualControlsPath = "visual_controls.json";
     bool controlsDirty = false;
     bool allowDimensionChangeRecreation = false;
     float transitionDuration = 1.0f;

@@ -636,4 +636,7 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/c++/16.1.1/complex /usr/local/include/portaudio.h \
  /usr/include/fftw3.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/PlaybackClock.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h
+ /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterRegistry.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterDescriptor.h \
+ /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterType.h

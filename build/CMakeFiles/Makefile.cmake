@@ -22,6 +22,10 @@ set(CMAKE_MAKEFILE_DEPENDS
   "_deps/kfr-src/src/audio/CMakeLists.txt"
   "_deps/kfr-src/src/dsp/CMakeLists.txt"
   "_deps/kfr-src/src/io/CMakeLists.txt"
+  "_deps/nlohmann_json-src/CMakeLists.txt"
+  "_deps/nlohmann_json-src/cmake/config.cmake.in"
+  "_deps/nlohmann_json-src/cmake/nlohmann_jsonConfigVersion.cmake.in"
+  "_deps/nlohmann_json-src/cmake/pkg-config.pc.in"
   "_deps/rtmidi-src/CMakeLists.txt"
   "_deps/rtmidi-src/cmake/RtMidi-config.cmake.in"
   "_deps/rtmidi-src/cmake/RtMidiConfigUninstall.cmake.in"
@@ -68,6 +72,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/usr/share/cmake/Modules/Compiler/GNU-CXX.cmake"
   "/usr/share/cmake/Modules/Compiler/GNU.cmake"
   "/usr/share/cmake/Modules/DartConfiguration.tcl.in"
+  "/usr/share/cmake/Modules/ExternalProject.cmake"
   "/usr/share/cmake/Modules/ExternalProject/shared_internal_commands.cmake"
   "/usr/share/cmake/Modules/FeatureSummary.cmake"
   "/usr/share/cmake/Modules/FetchContent.cmake"
@@ -113,6 +118,7 @@ set(CMAKE_MAKEFILE_OUTPUTS
 set(CMAKE_MAKEFILE_PRODUCTS
   "_deps/rtmidi-subbuild/CMakeLists.txt"
   "_deps/kfr-subbuild/CMakeLists.txt"
+  "_deps/nlohmann_json-subbuild/CMakeLists.txt"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   "_deps/rtmidi-build/DartConfiguration.tcl"
   "_deps/rtmidi-build/CMakeFiles/CTestScript.cmake"
@@ -130,6 +136,10 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "_deps/boost_math-build/test/CMakeFiles/CMakeDirectoryInformation.cmake"
   "_deps/kfr-build/src/io/CMakeFiles/CMakeDirectoryInformation.cmake"
   "_deps/kfr-build/src/audio/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "_deps/nlohmann_json-build/nlohmann_json.pc"
+  "_deps/nlohmann_json-build/nlohmann_jsonConfigVersion.cmake"
+  "_deps/nlohmann_json-build/nlohmann_jsonConfig.cmake"
+  "_deps/nlohmann_json-build/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
 # Dependency information for all targets:

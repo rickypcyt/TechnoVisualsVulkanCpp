@@ -170,10 +170,80 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/app/AudioSystem.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ricky/coding/proyects/vulkancpp/src/app/AudioSystem.cpp -o CMakeFiles/app.dir/src/app/AudioSystem.cpp.s
 
+CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.cpp
+CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o -MF CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o.d -o CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.cpp
+
+CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.cpp > CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.i
+
+CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.cpp -o CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.s
+
+CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.cpp
+CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o -MF CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o.d -o CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.cpp
+
+CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.cpp > CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.i
+
+CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.cpp -o CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.s
+
+CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.cpp
+CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o -MF CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o.d -o CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.cpp
+
+CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.cpp > CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.i
+
+CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.cpp -o CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.s
+
+CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/app/parameters/MidiBindingSystem.cpp
+CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o -MF CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o.d -o CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/app/parameters/MidiBindingSystem.cpp
+
+CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ricky/coding/proyects/vulkancpp/src/app/parameters/MidiBindingSystem.cpp > CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.i
+
+CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ricky/coding/proyects/vulkancpp/src/app/parameters/MidiBindingSystem.cpp -o CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.s
+
+CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/app/parameters/PresetMorpher.cpp
+CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o -MF CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o.d -o CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/app/parameters/PresetMorpher.cpp
+
+CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ricky/coding/proyects/vulkancpp/src/app/parameters/PresetMorpher.cpp > CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.i
+
+CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ricky/coding/proyects/vulkancpp/src/app/parameters/PresetMorpher.cpp -o CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.s
+
 CMakeFiles/app.dir/src/core/Window.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/core/Window.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/core/Window.cpp
 CMakeFiles/app.dir/src/core/Window.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/app.dir/src/core/Window.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/app.dir/src/core/Window.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/core/Window.cpp.o -MF CMakeFiles/app.dir/src/core/Window.cpp.o.d -o CMakeFiles/app.dir/src/core/Window.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/core/Window.cpp
 
 CMakeFiles/app.dir/src/core/Window.cpp.i: cmake_force
@@ -187,7 +257,7 @@ CMakeFiles/app.dir/src/core/Window.cpp.s: cmake_force
 CMakeFiles/app.dir/src/core/VulkanContext.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/core/VulkanContext.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/core/VulkanContext.cpp
 CMakeFiles/app.dir/src/core/VulkanContext.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/app.dir/src/core/VulkanContext.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/app.dir/src/core/VulkanContext.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/core/VulkanContext.cpp.o -MF CMakeFiles/app.dir/src/core/VulkanContext.cpp.o.d -o CMakeFiles/app.dir/src/core/VulkanContext.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/core/VulkanContext.cpp
 
 CMakeFiles/app.dir/src/core/VulkanContext.cpp.i: cmake_force
@@ -201,7 +271,7 @@ CMakeFiles/app.dir/src/core/VulkanContext.cpp.s: cmake_force
 CMakeFiles/app.dir/src/video/VideoStaging.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/video/VideoStaging.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoStaging.cpp
 CMakeFiles/app.dir/src/video/VideoStaging.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/app.dir/src/video/VideoStaging.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/app.dir/src/video/VideoStaging.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/video/VideoStaging.cpp.o -MF CMakeFiles/app.dir/src/video/VideoStaging.cpp.o.d -o CMakeFiles/app.dir/src/video/VideoStaging.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/video/VideoStaging.cpp
 
 CMakeFiles/app.dir/src/video/VideoStaging.cpp.i: cmake_force
@@ -215,7 +285,7 @@ CMakeFiles/app.dir/src/video/VideoStaging.cpp.s: cmake_force
 CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.cpp
 CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o -MF CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o.d -o CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/video/VideoPlayer.cpp
 
 CMakeFiles/app.dir/src/video/VideoPlayer.cpp.i: cmake_force
@@ -229,7 +299,7 @@ CMakeFiles/app.dir/src/video/VideoPlayer.cpp.s: cmake_force
 CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.cpp
 CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o -MF CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o.d -o CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/video/VideoRegistry.cpp
 
 CMakeFiles/app.dir/src/video/VideoRegistry.cpp.i: cmake_force
@@ -243,7 +313,7 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.s: cmake_force
 CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.cpp
 CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/app.dir/src/video/VideoTexture.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/app.dir/src/video/VideoTexture.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/video/VideoTexture.cpp.o -MF CMakeFiles/app.dir/src/video/VideoTexture.cpp.o.d -o CMakeFiles/app.dir/src/video/VideoTexture.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/video/VideoTexture.cpp
 
 CMakeFiles/app.dir/src/video/VideoTexture.cpp.i: cmake_force
@@ -257,7 +327,7 @@ CMakeFiles/app.dir/src/video/VideoTexture.cpp.s: cmake_force
 CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.cpp
 CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o -MF CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o.d -o CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/video/VideoRenderer.cpp
 
 CMakeFiles/app.dir/src/video/VideoRenderer.cpp.i: cmake_force
@@ -271,7 +341,7 @@ CMakeFiles/app.dir/src/video/VideoRenderer.cpp.s: cmake_force
 CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/render/MultiPassPipeline.cpp
 CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o -MF CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o.d -o CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/render/MultiPassPipeline.cpp
 
 CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.i: cmake_force
@@ -285,7 +355,7 @@ CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.s: cmake_force
 CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/render/ShaderCompiler.cpp
 CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o -MF CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o.d -o CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/render/ShaderCompiler.cpp
 
 CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.i: cmake_force
@@ -299,7 +369,7 @@ CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.s: cmake_force
 CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.cpp
 CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o -MF CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o.d -o CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/render/UniformBufferManager.cpp
 
 CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.i: cmake_force
@@ -313,7 +383,7 @@ CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.s: cmake_force
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.cpp
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o -MF CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o.d -o CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/render/DescriptorSetManager.cpp
 
 CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.i: cmake_force
@@ -327,7 +397,7 @@ CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.s: cmake_force
 CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.cpp
 CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o -MF CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o.d -o CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/gfx/FrameSystem.cpp
 
 CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.i: cmake_force
@@ -341,7 +411,7 @@ CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.s: cmake_force
 CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.cpp
 CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o -MF CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o.d -o CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/gfx/MemoryAllocator.cpp
 
 CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.i: cmake_force
@@ -355,7 +425,7 @@ CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.s: cmake_force
 CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.cpp
 CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o -MF CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o.d -o CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o -c /home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.cpp
 
 CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.i: cmake_force
@@ -369,7 +439,7 @@ CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.cpp
 CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.cpp
 
 CMakeFiles/app.dir/third_party/imgui/imgui.cpp.i: cmake_force
@@ -383,7 +453,7 @@ CMakeFiles/app.dir/third_party/imgui/imgui.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_demo.cpp
 CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_demo.cpp
 
 CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.i: cmake_force
@@ -397,7 +467,7 @@ CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_draw.cpp
 CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_draw.cpp
 
 CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.i: cmake_force
@@ -411,7 +481,7 @@ CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_tables.cpp
 CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_tables.cpp
 
 CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.i: cmake_force
@@ -425,7 +495,7 @@ CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_widgets.cpp
 CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_widgets.cpp
 
 CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.i: cmake_force
@@ -439,7 +509,7 @@ CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp
 
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.i: cmake_force
@@ -453,7 +523,7 @@ CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.s: cmake_force
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o: /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o: CMakeFiles/app.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o -MF CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o.d -o CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o -c /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp
 
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.i: cmake_force
@@ -473,6 +543,11 @@ app_OBJECTS = \
 "CMakeFiles/app.dir/src/app/MidiSystem.cpp.o" \
 "CMakeFiles/app.dir/src/app/OscSystem.cpp.o" \
 "CMakeFiles/app.dir/src/app/AudioSystem.cpp.o" \
+"CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o" \
+"CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o" \
+"CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o" \
+"CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o" \
+"CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o" \
 "CMakeFiles/app.dir/src/core/Window.cpp.o" \
 "CMakeFiles/app.dir/src/core/VulkanContext.cpp.o" \
 "CMakeFiles/app.dir/src/video/VideoStaging.cpp.o" \
@@ -505,6 +580,11 @@ app: CMakeFiles/app.dir/src/app/ControlState.cpp.o
 app: CMakeFiles/app.dir/src/app/MidiSystem.cpp.o
 app: CMakeFiles/app.dir/src/app/OscSystem.cpp.o
 app: CMakeFiles/app.dir/src/app/AudioSystem.cpp.o
+app: CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o
+app: CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o
+app: CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o
+app: CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o
+app: CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o
 app: CMakeFiles/app.dir/src/core/Window.cpp.o
 app: CMakeFiles/app.dir/src/core/VulkanContext.cpp.o
 app: CMakeFiles/app.dir/src/video/VideoStaging.cpp.o
@@ -538,7 +618,7 @@ app: /usr/lib/libswscale.so
 app: /usr/lib/libswresample.so
 app: /usr/lib/libavutil.so
 app: CMakeFiles/app.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Linking CXX executable app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Linking CXX executable app"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/app.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
