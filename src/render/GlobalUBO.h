@@ -408,6 +408,10 @@ struct GlobalParamsUBO {
     alignas(4) int gridRows;
     alignas(4) int gridColumns;
     alignas(4) int gridMirrorCells;
+    alignas(4) int gridShowLines;
+    alignas(4) float gridLineWidth;
+    alignas(4) float gridLineIntensity;
+    alignas(16) glm::vec3 gridLineColor;
 
     // Final RGB overlay
     alignas(16) glm::vec3 rgbOverlay;
@@ -628,6 +632,10 @@ struct GlobalUBO {
     alignas(4) int gridRows;
     alignas(4) int gridColumns;
     alignas(4) int gridMirrorCells;
+    alignas(4) int gridShowLines;
+    alignas(4) float gridLineWidth;
+    alignas(4) float gridLineIntensity;
+    alignas(16) glm::vec3 gridLineColor;
 
     // --- Final RGB overlay ---
     alignas(16) glm::vec3 rgbOverlay;

@@ -65,6 +65,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float cameraZoom; float cameraPanX; float cameraPanY; float cameraRotation; int enableCameraMovement;
 
     int enableGrid; int gridMode; int gridCount; int gridRows; int gridColumns; int gridMirrorCells;
+    int gridShowLines; float gridLineWidth; float gridLineIntensity; vec3 gridLineColor;
     vec3 rgbOverlay; int enableRgbOverlay;
 } ubo;
 
@@ -82,33 +83,80 @@ float hash21(vec2 p) {
 float luminance(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 
 vec2 applyGrid(vec2 p) {
+    if (ubo.enableGrid != 1) return p;
+    
     vec2 uvGrid = p;
-    if (ubo.enableGrid == 1) {
+    
+    if (ubo.gridMode == 0 && ubo.gridCount > 1) {
+        // Vertical: divide screen into vertical strips
+        float x = uvGrid.x * float(ubo.gridCount);
+        uvGrid.x = fract(x);
+        if (ubo.gridMirrorCells == 1 && (int(floor(x)) % 2) != 0) {
+            uvGrid.x = 1.0 - uvGrid.x;
+        }
+    } else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
+        // Horizontal: divide screen into horizontal strips
+        float y = uvGrid.y * float(ubo.gridCount);
+        uvGrid.y = fract(y);
+        if (ubo.gridMirrorCells == 1 && (int(floor(y)) % 2) != 0) {
+            uvGrid.y = 1.0 - uvGrid.y;
+        }
+    } else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
+        // Matrix: divide screen into grid
+        vec2 gridSize = vec2(float(ubo.gridColumns), float(ubo.gridRows));
+        vec2 scaled = uvGrid * gridSize;
+        vec2 cell = floor(scaled);
+        vec2 f = fract(scaled);
+        if (ubo.gridMirrorCells == 1) {
+            if ((int(mod(cell.x, 2.0)) != 0)) f.x = 1.0 - f.x;
+            if ((int(mod(cell.y, 2.0)) != 0)) f.y = 1.0 - f.y;
+        }
+        uvGrid = f;
+    }
+    
+    return clamp(uvGrid, 0.0, 1.0);
+}
+
+vec3 applyGridOverlay(vec2 uv, vec3 color) {
+    if (ubo.enableGrid == 1 && ubo.gridShowLines == 1) {
+        float lineStrength = 0.0;
+        float lineWidth = clamp(ubo.gridLineWidth, 0.0001, 0.1);
+        
         if (ubo.gridMode == 0 && ubo.gridCount > 1) {
-            float x = uvGrid.x * float(ubo.gridCount);
-            uvGrid.x = fract(x);
-            if (ubo.gridMirrorCells == 1 && int(floor(x)) % 2 != 0) {
-                uvGrid.x = 1.0 - uvGrid.x;
-            }
+            // Vertical lines
+            float cellWidth = 1.0 / float(ubo.gridCount);
+            float cellPos = fract(uv.x / cellWidth);
+            lineStrength = smoothstep(1.0 - lineWidth, 1.0, cellPos) + 
+                          smoothstep(lineWidth, 0.0, cellPos);
         } else if (ubo.gridMode == 1 && ubo.gridCount > 1) {
-            float y = uvGrid.y * float(ubo.gridCount);
-            uvGrid.y = fract(y);
-            if (ubo.gridMirrorCells == 1 && int(floor(y)) % 2 != 0) {
-                uvGrid.y = 1.0 - uvGrid.y;
-            }
+            // Horizontal lines
+            float cellHeight = 1.0 / float(ubo.gridCount);
+            float cellPos = fract(uv.y / cellHeight);
+            lineStrength = smoothstep(1.0 - lineWidth, 1.0, cellPos) + 
+                          smoothstep(lineWidth, 0.0, cellPos);
         } else if (ubo.gridMode == 2 && ubo.gridRows > 0 && ubo.gridColumns > 0) {
-            vec2 gridSize = vec2(float(ubo.gridColumns), float(ubo.gridRows));
-            vec2 scaled = uvGrid * gridSize;
-            vec2 cell = floor(scaled);
-            vec2 f = fract(scaled);
-            if (ubo.gridMirrorCells == 1) {
-                if (int(mod(cell.x, 2.0)) != 0) f.x = 1.0 - f.x;
-                if (int(mod(cell.y, 2.0)) != 0) f.y = 1.0 - f.y;
-            }
-            uvGrid = f;
+            // Matrix grid (both vertical and horizontal lines)
+            float cellWidth = 1.0 / float(ubo.gridColumns);
+            float cellHeight = 1.0 / float(ubo.gridRows);
+            
+            float cellX = fract(uv.x / cellWidth);
+            float cellY = fract(uv.y / cellHeight);
+            
+            float lineX = smoothstep(1.0 - lineWidth, 1.0, cellX) + 
+                         smoothstep(lineWidth, 0.0, cellX);
+            float lineY = smoothstep(1.0 - lineWidth, 1.0, cellY) + 
+                         smoothstep(lineWidth, 0.0, cellY);
+            
+            lineStrength = max(lineX, lineY);
+        }
+        
+        if (lineStrength > 0.0) {
+            float intensity = clamp(ubo.gridLineIntensity, 0.0, 1.0);
+            vec3 lineColor = clamp(ubo.gridLineColor, 0.0, 1.0);
+            color = mix(color, lineColor, lineStrength * intensity);
         }
     }
-    return clamp(uvGrid, 0.0, 1.0);
+    return color;
 }
 
 vec3 sampleInput(vec2 p) {
@@ -194,10 +242,11 @@ void main() {
     float timeScale = max(ubo.slowMotionFactor, 0.1);
     float t = ubo.time / timeScale;
     vec2 centered = uv * 2.0 - 1.0;
+    vec2 gridUV = applyGrid(uv);
 
     // Base samples
     vec3 color = sampleInput(uv);
-    vec3 procColor = texture(proceduralTex, uv).rgb;
+    vec3 procColor = texture(proceduralTex, gridUV).rgb;
 
     // BLOOM (cheap): bright mask -> blur -> add
     if (ubo.enablePostBloom == 1 && ubo.bloomIntensity > 0.0001) {
@@ -210,11 +259,11 @@ void main() {
     // ANALOG scanlines / mask
     if (ubo.enableAnalog == 1) {
         if (ubo.analogScanlineFocus > 0.0001) {
-            float scan = 0.4 + 0.6 * sin((uv.y + sin(t * 0.01) * 0.01) * PI * 400.0);
+            float scan = 0.4 + 0.6 * sin((gridUV.y + sin(t * 0.01) * 0.01) * PI * 400.0);
             color *= mix(1.0, scan, ubo.analogScanlineFocus);
         }
         if (ubo.analogMaskBalance > 0.0001) {
-            float mask = (0.7 + 0.3 * sin(uv.x * PI * 960.0)) * (0.7 + 0.3 * cos(uv.y * PI * 540.0));
+            float mask = (0.7 + 0.3 * sin(gridUV.x * PI * 960.0)) * (0.7 + 0.3 * cos(gridUV.y * PI * 540.0));
             color *= mix(1.0, mask, ubo.analogMaskBalance);
         }
     }
@@ -222,7 +271,7 @@ void main() {
     // CRT scanline mask
     if (ubo.enablePostScanMask == 1) {
         float scanlineFreq = 240.0 * (ubo.resolution.y / 480.0);
-        float scan = 0.5 + 0.5 * sin((uv.y + t * 0.2) * PI * scanlineFreq);
+        float scan = 0.5 + 0.5 * sin((gridUV.y + t * 0.2) * PI * scanlineFreq);
         color *= mix(1.0, scan, clamp(ubo.crtScanlineIntensity, 0.0, 1.0));
     }
 
@@ -305,6 +354,9 @@ void main() {
     if (ubo.enableRgbOverlay == 1) {
         color *= clamp(ubo.rgbOverlay, 0.0, 2.0);
     }
+
+    // Grid overlay (visible lines)
+    color = applyGridOverlay(uv, color);
 
     outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }

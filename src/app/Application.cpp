@@ -1683,6 +1683,10 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.gridRows = visualControls.gridRows;
     ubo.gridColumns = visualControls.gridColumns;
     ubo.gridMirrorCells = visualControls.gridMirrorCells ? 1 : 0;
+    ubo.gridShowLines = visualControls.gridShowLines ? 1 : 0;
+    ubo.gridLineWidth = visualControls.gridLineWidth;
+    ubo.gridLineIntensity = visualControls.gridLineIntensity;
+    ubo.gridLineColor = visualControls.gridLineColor;
 
     // Camera movement
     ubo.cameraZoom = visualControls.cameraZoom;

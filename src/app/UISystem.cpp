@@ -1030,6 +1030,14 @@ void UISystem::drawVJayExtra(VisualControls& c, bool& controlsDirty, std::mt1993
         // Vertical or Horizontal mode: show count
         changed |= ImGui::SliderInt("Count", &c.gridCount, 2, 8);
     }
+
+    changed |= ImGui::Checkbox("Mirror cells", &c.gridMirrorCells);
+    changed |= ImGui::Checkbox("Show grid lines", &c.gridShowLines);
+    ImGui::BeginDisabled(!c.gridShowLines);
+    changed |= ImGui::SliderFloat("Line width", &c.gridLineWidth, 0.0001f, 0.05f);
+    changed |= ImGui::SliderFloat("Line intensity", &c.gridLineIntensity, 0.0f, 1.0f);
+    changed |= ImGui::ColorEdit3("Line color", &c.gridLineColor[0]);
+    ImGui::EndDisabled();
     ImGui::EndDisabled();
 
     ImGui::End();
@@ -2815,6 +2823,12 @@ void UISystem::drawVJayExtraContent(
     if (controls.gridMirrorCells) {
         ImGui::TextDisabled("Alternate cells mirrored for seamless edges");
     }
+    changed |= ImGui::Checkbox("Show grid lines", &controls.gridShowLines);
+    ImGui::BeginDisabled(!controls.gridShowLines);
+    changed |= ImGui::SliderFloat("Line width", &controls.gridLineWidth, 0.0001f, 0.05f, "%.4f");
+    changed |= ImGui::SliderFloat("Line intensity", &controls.gridLineIntensity, 0.0f, 1.0f, "%.2f");
+    changed |= ImGui::ColorEdit3("Line color", &controls.gridLineColor[0]);
+    ImGui::EndDisabled();
     ImGui::EndDisabled();
 
     ImGui::Separator();

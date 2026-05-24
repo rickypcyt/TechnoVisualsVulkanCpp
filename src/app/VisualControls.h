@@ -214,12 +214,16 @@ struct VisualControls {
     float fxaaQualityEdgeThreshold = 0.125f;
     float fxaaQualityEdgeThresholdMin = 0.0625f;
     // Grid / Mirroring
-    bool  enableGrid             = false;
+    bool  enableGrid             = true;  // Enabled by default to show the effect
     int   gridMode              = 0;  // 0 = vertical, 1 = horizontal, 2 = matrix
     int   gridCount             = 2;  // Number of grid cells (for vertical/horizontal)
     int   gridRows              = 2;  // Number of rows (for matrix mode)
     int   gridColumns           = 2;  // Number of columns (for matrix mode)
     bool  gridMirrorCells       = false; // Mirror alternate cells so edges line up seamlessly
+    bool  gridShowLines         = false;  // Show visible grid lines overlay (disabled by default)
+    float gridLineWidth         = 0.002f; // Width of grid lines
+    float gridLineIntensity     = 0.5f;  // Intensity/brightness of grid lines
+    glm::vec3 gridLineColor      = glm::vec3(1.0f); // Color of grid lines
 
     // Camera movement (2D layer camera)
     float cameraZoom            = 1.0f;   // 1.0 = no zoom, >1 = zoom in, <1 = zoom out

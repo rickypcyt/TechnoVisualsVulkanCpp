@@ -352,6 +352,7 @@ void ControlState::load(
     loaded.enableEdgeDetect         = readBool (kv, "enableEdgeDetect",         loaded.enableEdgeDetect);
     loaded.enableCameraMovement     = readBool (kv, "enableCameraMovement",     loaded.enableCameraMovement);
     loaded.gridMirrorCells          = readBool (kv, "gridMirrorCells",          loaded.gridMirrorCells);
+    loaded.gridShowLines            = readBool (kv, "gridShowLines",            loaded.gridShowLines);
     loaded.pixelateAmount           = readFloat(kv, "pixelateAmount",           loaded.pixelateAmount);
     loaded.strobeSpeed              = readFloat(kv, "strobeSpeed",              loaded.strobeSpeed);
     loaded.thresholdLevel           = readFloat(kv, "thresholdLevel",           loaded.thresholdLevel);
@@ -360,6 +361,9 @@ void ControlState::load(
     loaded.posterizeLevels          = readFloat(kv, "posterizeLevels",          loaded.posterizeLevels);
     loaded.zoomPulseAmount          = readFloat(kv, "zoomPulseAmount",          loaded.zoomPulseAmount);
     loaded.rgbShiftAmount           = readFloat(kv, "rgbShiftAmount",           loaded.rgbShiftAmount);
+    loaded.gridLineWidth            = readFloat(kv, "gridLineWidth",            loaded.gridLineWidth);
+    loaded.gridLineIntensity        = readFloat(kv, "gridLineIntensity",        loaded.gridLineIntensity);
+    loaded.gridLineColor            = readVec3 (kv, "gridLineColor",            loaded.gridLineColor);
     loaded.fxaaQualitySubpix        = readFloat(kv, "fxaaQualitySubpix",        loaded.fxaaQualitySubpix);
     loaded.fxaaQualityEdgeThreshold = readFloat(kv, "fxaaQualityEdgeThreshold", loaded.fxaaQualityEdgeThreshold);
     loaded.fxaaQualityEdgeThresholdMin = readFloat(kv, "fxaaQualityEdgeThresholdMin", loaded.fxaaQualityEdgeThresholdMin);
@@ -607,6 +611,7 @@ void ControlState::save(
     wb("enableEdgeDetect",         c.enableEdgeDetect);
     wb("enableCameraMovement",     c.enableCameraMovement);
     wb("gridMirrorCells",          c.gridMirrorCells);
+    wb("gridShowLines",            c.gridShowLines);
     wf("pixelateAmount",           c.pixelateAmount);
     wf("strobeSpeed",              c.strobeSpeed);
     wf("thresholdLevel",           c.thresholdLevel);
@@ -615,6 +620,9 @@ void ControlState::save(
     wf("posterizeLevels",          c.posterizeLevels);
     wf("zoomPulseAmount",          c.zoomPulseAmount);
     wf("rgbShiftAmount",           c.rgbShiftAmount);
+    wf("gridLineWidth",            c.gridLineWidth);
+    wf("gridLineIntensity",        c.gridLineIntensity);
+    wv3("gridLineColor",           c.gridLineColor);
     wf("fxaaQualitySubpix",        c.fxaaQualitySubpix);
     wf("fxaaQualityEdgeThreshold", c.fxaaQualityEdgeThreshold);
     wf("fxaaQualityEdgeThresholdMin", c.fxaaQualityEdgeThresholdMin);

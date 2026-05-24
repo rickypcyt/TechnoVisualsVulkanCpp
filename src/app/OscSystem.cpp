@@ -1,6 +1,7 @@
 #include "OscSystem.h"
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -117,7 +118,14 @@ static const ParameterRange DEFAULT_PARAMETER_RANGES[] = {
     {"cameraZoom", 0.5f, 2.0f},
     {"rgbOverlayR", 0.0f, 2.0f},
     {"rgbOverlayG", 0.0f, 2.0f},
-    {"rgbOverlayB", 0.0f, 2.0f}
+    {"rgbOverlayB", 0.0f, 2.0f},
+    // Grid / Mirroring
+    {"enableGrid", 0.0f, 1.0f},
+    {"gridMode", 0.0f, 2.0f},
+    {"gridCount", 1.0f, 8.0f},
+    {"gridRows", 1.0f, 8.0f},
+    {"gridColumns", 1.0f, 8.0f},
+    {"gridMirrorCells", 0.0f, 1.0f}
 };
 
 static const std::pair<const char*, const char*> DEFAULT_TRIGGER_ACTIONS[] = {
@@ -662,4 +670,23 @@ void OscSystem::applyMapping(const OscMessage& message, VisualControls& controls
     else if (name == "rgbOverlayG") controls.rgbOverlay.g = mappedValue;
     else if (name == "rgbOverlayB") controls.rgbOverlay.b = mappedValue;
     else if (name == "enableRgbOverlay") controls.enableRgbOverlay = (mappedValue > 0.5f);
+    // Grid / Mirroring
+    else if (name == "enableGrid") controls.enableGrid = (mappedValue > 0.5f);
+    else if (name == "gridMode") {
+        int mode = static_cast<int>(mappedValue + 0.5f);
+        controls.gridMode = std::clamp(mode, 0, 2);
+    }
+    else if (name == "gridCount") {
+        int count = static_cast<int>(mappedValue + 0.5f);
+        controls.gridCount = std::clamp(count, 1, 8);
+    }
+    else if (name == "gridRows") {
+        int rows = static_cast<int>(mappedValue + 0.5f);
+        controls.gridRows = std::clamp(rows, 1, 8);
+    }
+    else if (name == "gridColumns") {
+        int cols = static_cast<int>(mappedValue + 0.5f);
+        controls.gridColumns = std::clamp(cols, 1, 8);
+    }
+    else if (name == "gridMirrorCells") controls.gridMirrorCells = (mappedValue > 0.5f);
 }
