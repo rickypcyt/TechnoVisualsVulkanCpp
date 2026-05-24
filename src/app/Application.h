@@ -3,6 +3,8 @@
 #include <memory>
 #include <chrono>
 #include <deque>
+#include <queue>
+#include <mutex>
 #include "../core/Window.h"
 #include "../core/VulkanContext.h"
 #include "../gfx/ResourceSystem.h"
@@ -84,7 +86,6 @@ private:
     int selectedVideoAsset = -1;
     bool videoSubsystemInitialized = false;
     bool isReloadingVideo = false;
-    bool pendingNLEReload = false;
     std::chrono::steady_clock::time_point lastVideoChangeTime = std::chrono::steady_clock::now();
     const std::chrono::milliseconds videoChangeCooldown{500};
 
@@ -159,6 +160,9 @@ private:
     // Command buffers
     std::vector<VkCommandBuffer> commandBuffers;
 
+    std::mutex completedRenderJobsMutex;
+    std::queue<std::shared_ptr<RenderJob>> completedRenderJobs;
+
     // Initialization methods
     void initVulkan();
     void initSwapchain();
@@ -174,6 +178,7 @@ private:
     void initMidi();
     void initOsc();
     void initAudio();
+    void handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job);
 
     // OSC trigger action handlers
     void handleOscTrigger(const std::string& action);

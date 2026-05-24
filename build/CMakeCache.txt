@@ -538,6 +538,9 @@ pkgcfg_lib_FFMPEG_swresample:FILEPATH=/usr/lib/libswresample.so
 pkgcfg_lib_FFMPEG_swscale:FILEPATH=/usr/lib/libswscale.so
 
 //Path to a library.
+pkgcfg_lib_FFTW_fftw3f:FILEPATH=/usr/lib/libfftw3f.so
+
+//Path to a library.
 pkgcfg_lib_LIBLO_lo:FILEPATH=/usr/lib/liblo.so
 
 //Path to a library.
@@ -822,6 +825,41 @@ FFMPEG_libswscale_LIBDIR:INTERNAL=/usr/lib
 FFMPEG_libswscale_MODULE_NAME:INTERNAL=libswscale
 FFMPEG_libswscale_PREFIX:INTERNAL=/usr
 FFMPEG_libswscale_VERSION:INTERNAL=9.5.101
+FFTW_CFLAGS:INTERNAL=-I/usr/include
+FFTW_CFLAGS_I:INTERNAL=
+FFTW_CFLAGS_OTHER:INTERNAL=
+FFTW_FOUND:INTERNAL=1
+FFTW_INCLUDEDIR:INTERNAL=/usr/include
+FFTW_INCLUDE_DIRS:INTERNAL=/usr/include
+FFTW_LDFLAGS:INTERNAL=-L/usr/lib;-lfftw3f
+FFTW_LDFLAGS_OTHER:INTERNAL=
+FFTW_LIBDIR:INTERNAL=/usr/lib
+FFTW_LIBRARIES:INTERNAL=fftw3f
+FFTW_LIBRARY_DIRS:INTERNAL=/usr/lib
+FFTW_LIBS:INTERNAL=
+FFTW_LIBS_L:INTERNAL=
+FFTW_LIBS_OTHER:INTERNAL=
+FFTW_LIBS_PATHS:INTERNAL=
+FFTW_MODULE_NAME:INTERNAL=fftw3f
+FFTW_PREFIX:INTERNAL=/usr
+FFTW_STATIC_CFLAGS:INTERNAL=-I/usr/include
+FFTW_STATIC_CFLAGS_I:INTERNAL=
+FFTW_STATIC_CFLAGS_OTHER:INTERNAL=
+FFTW_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
+FFTW_STATIC_LDFLAGS:INTERNAL=-L/usr/lib;-lfftw3f;-lm
+FFTW_STATIC_LDFLAGS_OTHER:INTERNAL=
+FFTW_STATIC_LIBDIR:INTERNAL=
+FFTW_STATIC_LIBRARIES:INTERNAL=fftw3f;m
+FFTW_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib
+FFTW_STATIC_LIBS:INTERNAL=
+FFTW_STATIC_LIBS_L:INTERNAL=
+FFTW_STATIC_LIBS_OTHER:INTERNAL=
+FFTW_STATIC_LIBS_PATHS:INTERNAL=
+FFTW_VERSION:INTERNAL=3.3.11
+FFTW_fftw3f_INCLUDEDIR:INTERNAL=
+FFTW_fftw3f_LIBDIR:INTERNAL=
+FFTW_fftw3f_PREFIX:INTERNAL=
+FFTW_fftw3f_VERSION:INTERNAL=
 //Details about finding ALSA
 FIND_PACKAGE_MESSAGE_DETAILS_ALSA:INTERNAL=[/usr/lib/libasound.so][/usr/include][v1.2.15.3()]
 //Details about finding PkgConfig
@@ -952,10 +990,12 @@ _Python3_INTERPRETER_SIGNATURE:INTERNAL=5da1bc9426cdb93bc62bc48997978eb2
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 __pkg_config_arguments_FFMPEG:INTERNAL=REQUIRED;IMPORTED_TARGET;libavformat;libavcodec;libavutil;libswscale;libswresample
+__pkg_config_arguments_FFTW:INTERNAL=REQUIRED;fftw3f
 __pkg_config_arguments_LIBLO:INTERNAL=REQUIRED;liblo
 __pkg_config_arguments_PORTAUDIO:INTERNAL=REQUIRED;portaudio-2.0
 __pkg_config_arguments_jack:INTERNAL=jack
 __pkg_config_checked_FFMPEG:INTERNAL=1
+__pkg_config_checked_FFTW:INTERNAL=1
 __pkg_config_checked_LIBLO:INTERNAL=1
 __pkg_config_checked_PORTAUDIO:INTERNAL=1
 __pkg_config_checked_jack:INTERNAL=1
@@ -1004,6 +1044,8 @@ pkgcfg_lib_FFMPEG_avutil-ADVANCED:INTERNAL=1
 pkgcfg_lib_FFMPEG_swresample-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_FFMPEG_swscale
 pkgcfg_lib_FFMPEG_swscale-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_FFTW_fftw3f
+pkgcfg_lib_FFTW_fftw3f-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_LIBLO_lo
 pkgcfg_lib_LIBLO_lo-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_PORTAUDIO_asound

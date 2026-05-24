@@ -24,6 +24,7 @@ struct GlobalParamsUBO {
     alignas(4) float bass;
     alignas(4) float mid;
     alignas(4) float high;
+    alignas(4) float audioReactiveDrive;
 
     // Audio reactivity tuning
     alignas(4) float audioWarpResponse;

@@ -80,6 +80,44 @@ vec3 blendTwoVideos(vec3 a, vec3 b, int mode, float t) {
     return mix(a, b, t);
 }
 
+vec3 blendProceduralMode(vec3 base, vec3 layer, int mode) {
+    if (mode == 0) {
+        // Add
+        return clamp(base + layer, 0.0, 1.5);
+    } else if (mode == 1) {
+        // Screen
+        return clamp(1.0 - (1.0 - base) * (1.0 - layer), 0.0, 1.0);
+    } else if (mode == 2) {
+        // Multiply
+        return clamp(base * layer, 0.0, 1.0);
+    } else if (mode == 3) {
+        // Overlay
+        vec3 low = 2.0 * base * layer;
+        vec3 high = 1.0 - 2.0 * (1.0 - base) * (1.0 - layer);
+        return clamp(mix(low, high, step(vec3(0.5), base)), 0.0, 1.0);
+    } else if (mode == 4) {
+        // Difference
+        return clamp(abs(base - layer), 0.0, 1.0);
+    } else if (mode == 5) {
+        // Soft Light
+        vec3 low = 2.0 * base * layer + base * base * (1.0 - 2.0 * layer);
+        vec3 high = sqrt(clamp(base, vec3(0.0), vec3(1.0))) * (2.0 * layer - 1.0) + 2.0 * base * (1.0 - layer);
+        return clamp(mix(low, high, step(vec3(0.5), layer)), 0.0, 1.0);
+    }
+    return mix(base, layer, 0.5);
+}
+
+vec3 applyProceduralBlend(vec3 base, vec3 layer, int mode, float amount) {
+    float mixAmount = clamp(amount, 0.0, 2.0);
+    vec3 blended = blendProceduralMode(base, layer, mode);
+    vec3 result = mix(base, blended, min(mixAmount, 1.0));
+    if (mixAmount > 1.0) {
+        float extra = mixAmount - 1.0;
+        result = mix(result, blended, clamp(extra, 0.0, 1.0));
+    }
+    return result;
+}
+
 vec3 sharpen3x3(vec2 p, float amount) {
     vec2 t = 1.0 / max(ubo.resolution, vec2(1.0));
     vec3 c  = sampleVideo(p);
@@ -92,34 +130,56 @@ vec3 sharpen3x3(vec2 p, float amount) {
 }
 
 vec3 renderMode0(vec2 st) {
-    return mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, clamp(ubo.colorBlend, 0.0, 1.0));
+    vec2 centered = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+    float halfSize = 0.35;
+    float edgeWidth = 0.03;
+
+    float box = max(abs(centered.x), abs(centered.y));
+    float fill = smoothstep(halfSize, halfSize - edgeWidth, box);
+    float border = smoothstep(halfSize + edgeWidth, halfSize, box) - fill;
+
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bassInfluence = clamp(ubo.bass * drive, 0.0, 1.0);
+    float midInfluence = clamp(ubo.mid * drive, 0.0, 1.0);
+    float highInfluence = clamp(ubo.high * drive, 0.0, 1.0);
+    float energyInfluence = clamp(ubo.energy * drive * 0.8, 0.0, 1.0);
+
+    float colorLerp = clamp(0.2f + 0.5f * energyInfluence + 0.3f * midInfluence, 0.0f, 1.0f);
+
+    vec3 bg = mix(ubo.secondaryColor.rgb * 0.1, ubo.primaryColor.rgb * 0.05, energyInfluence);
+    vec3 square = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, colorLerp);
+    vec3 borderColor = mix(square, vec3(1.0), highInfluence * 0.5);
+
+    square *= 0.8 + 0.4 * bassInfluence;
+    borderColor *= 0.7 + 0.3 * highInfluence;
+
+    vec3 color = bg;
+    color = mix(color, borderColor, border);
+    color = mix(color, square, fill);
+    return color;
 }
 
 vec3 renderMode1(vec2 st) {
-    vec2 centered = st - 0.5;
-    float r = length(centered);
-    float a = atan(centered.y, centered.x);
+    vec2 centered = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bassResponse = clamp(ubo.bass * drive, 0.0, 1.0);
+    float energyResponse = clamp(ubo.energy * drive, 0.0, 1.0);
+    float radius = 0.25 + 0.35 * (0.6 * bassResponse + 0.4 * energyResponse);
+    float dist = length(centered);
 
-    float spin = ubo.time * (1.0 + ubo.bass * 4.0 + ubo.energy * 2.0);
-    float arms = 3.0 + floor(clamp(ubo.mid, 0.0, 1.0) * 6.0);
-    float phase = a * arms + r * 25.0 - spin * 3.0;
+    float core = smoothstep(radius, radius - 0.02, dist);
+    float rim = smoothstep(radius + 0.05, radius, dist) - core;
 
-    float thickness = 0.15 + ubo.energy * 0.25;
-    float spiral = smoothstep(thickness, 0.0, abs(sin(phase)));
-    float ring = smoothstep(0.05, 0.0, abs(r - (0.2 + ubo.bass * 0.3) - fract(ubo.time * 0.5) * 0.4));
+    float hueShift = clamp(ubo.mid * drive, 0.0, 1.0);
+    float bodyMix = clamp(ubo.colorBlend + hueShift * 0.3, 0.0, 1.0);
+    vec3 bodyColor = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, bodyMix);
+    vec3 rimColor = mix(ubo.secondaryColor.rgb, vec3(1.0, 0.9, 0.8), clamp(ubo.high * drive, 0.0, 1.0));
 
-    vec3 spiralColor = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb,
-                           0.5 + 0.5 * sin(ubo.time * 2.0 + r * 15.0));
-    vec3 ringColor = ubo.secondaryColor.rgb * (0.5 + ubo.high * 0.8);
-
+    float glow = exp(-dist * (3.0 - bassResponse)) * (0.35 + energyResponse * 0.65);
     vec3 color = vec3(0.0);
-    color = mix(color, ringColor, ring * 0.6);
-    color = mix(color, spiralColor, spiral);
-
-    float glow = exp(-r * 8.0) * (0.4 + ubo.bass * 0.6);
-    color += ubo.primaryColor.rgb * glow;
-    color *= 1.0 - smoothstep(0.48, 0.7, r);
-
+    color = mix(color, rimColor, rim);
+    color = mix(color, bodyColor, core);
+    color += glow * ubo.primaryColor.rgb;
     return clamp(color, 0.0, 1.0);
 }
 
@@ -142,8 +202,15 @@ void main() {
     vec3 videoColor = blendTwoVideos(video1Color, video2Color, ubo.video2BlendMode, v2Mix);
 
     vec4 procColor = dispatchMode(ubo.mode, procUV);
+    vec3 compositedProcedural = procColor.rgb;
+    if (ubo.enableBlending == 1) {
+        compositedProcedural = applyProceduralBlend(procColor.rgb, videoColor,
+                                                   ubo.blendModeProcedural,
+                                                   ubo.blendProceduralMix);
+    }
 
-    vec3 color = mix(procColor.rgb, videoColor, clamp(ubo.videoMix * ubo.videoAvailable, 0.0, 1.0));
+    float videoMixAmount = clamp(ubo.videoMix * ubo.videoAvailable, 0.0, 1.0);
+    vec3 color = mix(compositedProcedural, videoColor, videoMixAmount);
 
     if (ubo.enableSharpen == 1 && ubo.sharpenAmount > 0.0001) {
         color = mix(color, sharpen3x3(uv, ubo.sharpenAmount), clamp(ubo.casAmount + ubo.unsharpMask, 0.0, 1.0));

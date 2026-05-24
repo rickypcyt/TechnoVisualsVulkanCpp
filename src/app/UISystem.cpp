@@ -33,6 +33,8 @@ struct VideoRandomizerState {
     int currentShuffleIndex = 0; // New: current position in shuffle queue
 };
 
+static const char* BLEND_ITEMS = "Add\0Screen\0Multiply\0Overlay\0Difference\0Soft Light\0";
+
 // VideoRandomizerState2 definition
 struct VideoRandomizerState2 {
     bool autoRandomize = false;
@@ -658,6 +660,8 @@ void UISystem::drawProceduralControls(
     changed |= ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
     changed |= ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
     changed |= ImGui::SliderFloat("High",   &controls.high,   0.0f, 1.0f);
+    changed |= ImGui::SliderFloat("High gain boost", &controls.audioHighGain, 0.5f, 4.0f, "%.2fx");
+    changed |= ImGui::SliderFloat("Procedural audio drive", &controls.audioReactiveDrive, 0.5f, 3.0f, "%.2fx");
 
     ImGui::Separator();
     ImGui::Text("Video");
@@ -940,10 +944,8 @@ void UISystem::drawVJayBasics(VisualControls& c, bool& controlsDirty, std::mt199
         changed |= ImGui::SliderFloat("Buffer corruption", &c.glitchBufferCorruption,0,1,"%.2f");
     )
     VJAY_SECTION("7","Compositing & blending", enableBlending,
-        changed |= ImGui::Combo("Procedural blend",&c.blendModeProcedural,BLEND_ITEMS);
         changed |= ImGui::Combo("Video blend",     &c.blendModeVideo,     BLEND_ITEMS);
         changed |= ImGui::Combo("Feedback blend",  &c.blendModeFeedback,  BLEND_ITEMS);
-        changed |= ImGui::SliderFloat("Procedural mix",&c.blendProceduralMix,0,2,"%.2f");
         changed |= ImGui::SliderFloat("Video mix",     &c.blendVideoMix,    0,2,"%.2f");
         changed |= ImGui::SliderFloat("Feedback mix",  &c.blendFeedbackMix, 0,2,"%.2f");
     )
@@ -2189,6 +2191,11 @@ void UISystem::drawVideoContent(
     ImGui::Separator();
     ImGui::Text("Playback");
     changed |= ImGui::SliderFloat("Video Mix",   &controls.videoMix,         0.0f, 1.0f);
+    ImGui::Indent();
+    ImGui::TextDisabled("Blend vs. procedural");
+    changed |= ImGui::Combo("##VideoProceduralBlend", &controls.blendModeProcedural, BLEND_ITEMS);
+    changed |= ImGui::SliderFloat("Procedural Mix##Video", &controls.blendProceduralMix, 0.0f, 2.0f, "%.2f");
+    ImGui::Unindent();
     changed |= ImGui::SliderFloat("Video speed", &controls.videoPlaybackRate, 0.1f, 5.0f, "%.2fx");
 
     ImGui::Separator();
@@ -2701,10 +2708,8 @@ void UISystem::drawVJayBasicsContent(
     changed |= ImGui::Checkbox("On##Blending", &controls.enableBlending);
     ImGui::Separator();
     ImGui::BeginDisabled(!controls.enableBlending);
-    changed |= ImGui::Combo("Procedural blend",&controls.blendModeProcedural,BLEND_ITEMS);
     changed |= ImGui::Combo("Video blend",     &controls.blendModeVideo,     BLEND_ITEMS);
     changed |= ImGui::Combo("Feedback blend",  &controls.blendModeFeedback,  BLEND_ITEMS);
-    changed |= ImGui::SliderFloat("Procedural mix",&controls.blendProceduralMix,0,2,"%.2f");
     changed |= ImGui::SliderFloat("Video mix",     &controls.blendVideoMix,    0,2,"%.2f");
     changed |= ImGui::SliderFloat("Feedback mix",  &controls.blendFeedbackMix, 0,2,"%.2f");
     ImGui::EndDisabled();
@@ -3469,6 +3474,8 @@ void UISystem::drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& c
     ImGui::SliderFloat("Bass",   &controls.bass,   0.0f, 1.0f);
     ImGui::SliderFloat("Mid",    &controls.mid,    0.0f, 1.0f);
     ImGui::SliderFloat("High",   &controls.high,   0.0f, 1.0f);
+    ImGui::SliderFloat("High gain boost", &controls.audioHighGain, 0.5f, 4.0f, "%.2fx");
+    ImGui::SliderFloat("Procedural audio drive", &controls.audioReactiveDrive, 0.5f, 3.0f, "%.2fx");
     
     ImGui::Separator();
 

@@ -211,7 +211,10 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/bits/unicode.h \
  /usr/include/c++/16.1.1/bits/unicode-data.h \
  /usr/include/c++/16.1.1/deque /usr/include/c++/16.1.1/bits/stl_deque.h \
- /usr/include/c++/16.1.1/bits/deque.tcc \
+ /usr/include/c++/16.1.1/bits/deque.tcc /usr/include/c++/16.1.1/queue \
+ /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/mutex \
+ /usr/include/c++/16.1.1/bits/std_mutex.h \
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../core/Window.h \
  /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
  /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h \
@@ -581,16 +584,14 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/EffectChain.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/../app/Timeline.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/RenderJob.h \
- /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/std_mutex.h \
- /usr/include/c++/16.1.1/bits/unique_lock.h \
  /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
  /usr/include/c++/16.1.1/bits/std_thread.h \
  /usr/include/c++/16.1.1/semaphore \
  /usr/include/c++/16.1.1/bits/semaphore_base.h \
  /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
  /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
- /usr/include/c++/16.1.1/condition_variable /usr/include/c++/16.1.1/queue \
- /usr/include/c++/16.1.1/bits/stl_queue.h /usr/include/c++/16.1.1/future \
+ /usr/include/c++/16.1.1/condition_variable \
+ /usr/include/c++/16.1.1/future \
  /usr/include/c++/16.1.1/bits/atomic_futex.h /usr/include/c++/16.1.1/map \
  /usr/include/c++/16.1.1/bits/stl_tree.h \
  /usr/include/c++/16.1.1/bits/stl_map.h \
@@ -634,7 +635,8 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/lo/lo_errors.h /usr/include/lo/lo_lowlevel.h \
  /usr/include/lo/lo_serverthread.h /usr/include/lo/lo_macros.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/AudioSystem.h \
- /usr/local/include/portaudio.h /usr/include/c++/16.1.1/complex \
+ /usr/include/c++/16.1.1/complex /usr/local/include/portaudio.h \
+ /usr/include/fftw3.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/PlaybackClock.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/Export.h \
  /usr/include/glm/gtc/matrix_transform.hpp \

@@ -337,6 +337,8 @@ void ControlState::load(
     loaded.audioGlitchResponse     = readFloat(kv, "audioGlitchResponse",     loaded.audioGlitchResponse);
     loaded.audioBeatSync           = readFloat(kv, "audioBeatSync",           loaded.audioBeatSync);
     loaded.audioLfoRate            = readFloat(kv, "audioLfoRate",            loaded.audioLfoRate);
+    loaded.audioHighGain           = readFloat(kv, "audioHighGain",           loaded.audioHighGain);
+    loaded.audioReactiveDrive      = readFloat(kv, "audioReactiveDrive",      loaded.audioReactiveDrive);
     loaded.temporalInterpolation   = readFloat(kv, "temporalInterpolation",   loaded.temporalInterpolation);
     loaded.temporalBlendStrength   = readFloat(kv, "temporalBlendStrength",   loaded.temporalBlendStrength);
     loaded.slowMotionFactor        = readFloat(kv, "slowMotionFactor",        loaded.slowMotionFactor);
@@ -598,6 +600,8 @@ void ControlState::save(
     wf("audioGlitchResponse",     c.audioGlitchResponse);
     wf("audioBeatSync",           c.audioBeatSync);
     wf("audioLfoRate",            c.audioLfoRate);
+    wf("audioHighGain",           c.audioHighGain);
+    wf("audioReactiveDrive",      c.audioReactiveDrive);
     wf("temporalInterpolation",   c.temporalInterpolation);
     wf("temporalBlendStrength",   c.temporalBlendStrength);
     wf("slowMotionFactor",        c.slowMotionFactor);

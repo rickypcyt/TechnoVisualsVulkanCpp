@@ -1,91 +1,128 @@
-#ifndef AUDIOSYSTEM_H
-#define AUDIOSYSTEM_H
+// AudioSystem.h
+#pragma once
 
-#include <portaudio.h>
-#include <vector>
 #include <atomic>
-#include <memory>
+#include <thread>
+#include <vector>
 #include <complex>
+#include <mutex>
+#include <condition_variable>
+#include <portaudio.h>
+#include <fftw3.h>
 
 class AudioSystem {
 public:
-    static constexpr int FFT_SIZE = 512;
-    static constexpr int SAMPLE_RATE = 44100;
-
     AudioSystem();
     ~AudioSystem();
 
     bool initialize();
+    bool start();
+    void stop();
     void shutdown();
-    
-    bool startStream();
-    void stopStream();
-    
-    float getRMS() const { return rmsLevel.load(); }
-    bool isRunning() const { return streamRunning.load(); }
-    
-    void listDevices();
-    
-    // Device selection
-    std::vector<std::string> getInputDeviceNames();
-    int getInputDeviceIndex() const { return inputDeviceIndex; }
-    bool setInputDevice(int deviceIndex);
 
-    // FFT data access
+    float getRMS() const { return rmsDb.load(); }
+
+    float getSubBass() const { return smoothedSubBass.load(); }
+    float getKick() const { return smoothedKick.load(); }
+    float getBass() const { return smoothedBass.load(); }
+    float getMid() const { return smoothedMid.load(); }
+    float getHigh() const { return smoothedHigh.load(); }
+
+    bool kickDetected() const { return kickPeak.load(); }
+
+    // Compatibility methods
+    bool startStream() { return start(); }
+    void stopStream() { stop(); }
+    bool isRunning() const { return running.load(); }
+
     const std::vector<float>& getFFTMagnitudes() const { return fftMagnitudes; }
-    float getSubBass() const { return subBassLevel.load(); }
-    float getKick() const { return kickLevel.load(); }
-    float getBass() const { return bassLevel.load(); }
-    float getMid() const { return midLevel.load(); }
-    float getHigh() const { return highLevel.load(); }
-    
-    // Smoothed band levels (for visuals)
+
     float getSmoothedSubBass() const { return smoothedSubBass.load(); }
     float getSmoothedKick() const { return smoothedKick.load(); }
     float getSmoothedBass() const { return smoothedBass.load(); }
     float getSmoothedMid() const { return smoothedMid.load(); }
     float getSmoothedHigh() const { return smoothedHigh.load(); }
 
+    std::vector<std::string> getInputDeviceNames();
+    int getInputDeviceIndex() const { return inputDevice; }
+    bool setInputDevice(int deviceIndex);
+
 private:
-    static int audioCallback(const void* inputBuffer, void* outputBuffer,
-                           unsigned long framesPerBuffer,
-                           const PaStreamCallbackTimeInfo* timeInfo,
-                           PaStreamCallbackFlags statusFlags,
-                           void* userData);
+    static constexpr int FFT_SIZE = 2048;
+    static constexpr int HOP_SIZE = FFT_SIZE / 2;
+    static constexpr int CHANNELS = 1;
 
-    bool tryOpenStream(PaStreamParameters& inputParams, double sampleRate,
-                       unsigned long framesPerBuffer);
+    static constexpr float ATTACK  = 0.20f;
+    static constexpr float RELEASE = 0.92f;
 
-    void processFFT(const float* samples, size_t count);
-    void calculateBands();
-    void performFFT(std::vector<std::complex<float>>& data);
+    static constexpr float KICK_THRESHOLD = 0.005f;
 
     PaStream* stream = nullptr;
-    std::atomic<float> rmsLevel{0.0f};
-    std::atomic<bool> streamRunning{false};
-    int inputDeviceIndex = -1;
+    int inputDevice = paNoDevice;
 
-    // FFT processing
-    std::vector<float> audioBuffer;
+    double sampleRate = 44100.0;
+
+    std::atomic<bool> running = false;
+
+    // Ring buffer
+    std::vector<float> ringBuffer;
+    size_t writeIndex = 0;
+
+    std::mutex ringMutex;
+    std::condition_variable cv;
+
+    // DSP thread
+    std::thread dspThread;
+
+    // FFT
+    fftwf_complex* fftOut = nullptr;
+    float* fftIn = nullptr;
+    fftwf_plan fftPlan = nullptr;
+
+    std::vector<float> window;
     std::vector<float> fftMagnitudes;
-    std::vector<std::complex<float>> fftComplex;
-    
-    // Band levels (optimized for techno)
-    std::atomic<float> subBassLevel{0.0f};  // 30-60 Hz (sub-bass rumble)
-    std::atomic<float> kickLevel{0.0f};     // 60-150 Hz (kick drum)
-    std::atomic<float> bassLevel{0.0f};     // 150-300 Hz (bass body)
-    std::atomic<float> midLevel{0.0f};      // 300-4000 Hz (percussion/mids)
-    std::atomic<float> highLevel{0.0f};     // 4000+ Hz (hi-hats/snares)
-    
-    // Smoothed band levels (exponential smoothing)
-    std::atomic<float> smoothedSubBass{0.0f};
-    std::atomic<float> smoothedKick{0.0f};
-    std::atomic<float> smoothedBass{0.0f};
-    std::atomic<float> smoothedMid{0.0f};
-    std::atomic<float> smoothedHigh{0.0f};
-    
-    // Smoothing factor (0.0-1.0, lower = faster reaction for techno transients)
-    static constexpr float SMOOTHING_FACTOR = 0.75f;
-};
+    std::vector<float> fftFrame;
 
-#endif // AUDIOSYSTEM_H
+    // Metrics
+    std::atomic<float> rmsDb = -90.0f;
+
+    std::atomic<float> subBass{0};
+    std::atomic<float> kick{0};
+    std::atomic<float> bass{0};
+    std::atomic<float> mid{0};
+    std::atomic<float> high{0};
+
+    std::atomic<float> smoothedSubBass{0};
+    std::atomic<float> smoothedKick{0};
+    std::atomic<float> smoothedBass{0};
+    std::atomic<float> smoothedMid{0};
+    std::atomic<float> smoothedHigh{0};
+
+    std::atomic<bool> kickPeak{false};
+
+    float previousKick = 0.0f;
+
+private:
+    bool openStream();
+
+    static int audioCallback(
+        const void* input,
+        void* output,
+        unsigned long frameCount,
+        const PaStreamCallbackTimeInfo* timeInfo,
+        PaStreamCallbackFlags statusFlags,
+        void* userData
+    );
+
+    void dspLoop();
+
+    void processFFT();
+    void calculateBands();
+
+    void applyEnvelope(
+        float input,
+        std::atomic<float>& output
+    );
+
+    int hzToBin(float hz) const;
+};

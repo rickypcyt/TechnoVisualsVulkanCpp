@@ -16,6 +16,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float bass;
     float mid;
     float high;
+    float audioReactiveDrive;
     float audioWarpResponse;
     float audioFeedbackResponse;
     float audioBlurResponse;

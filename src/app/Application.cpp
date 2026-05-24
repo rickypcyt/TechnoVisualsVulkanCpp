@@ -476,12 +476,83 @@ void Application::initNLE() {
         std::cout << "[Render] Completed, output at: " << job->output_file << std::endl;
         playbackClock.resume();
 
-        // Set flag to trigger reload on main thread (Vulkan ops must be on main thread)
         if (job->do_swap) {
-            pendingNLEReload = true;
-            std::cout << "[Render] Pending NLE reload flagged" << std::endl;
+            std::lock_guard<std::mutex> lock(completedRenderJobsMutex);
+            completedRenderJobs.push(job);
+            std::cout << "[Render] Queued NLE reload for version " << job->version << std::endl;
         }
     };
+}
+
+void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job) {
+    if (!job || !renderWorker) {
+        return;
+    }
+
+    const bool reloadVideo1 = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1);
+    if (reloadVideo1) {
+        // Reload video 1 directly by path
+        videoRenderer.reset();
+        videoPlayer.shutdown();
+        renderWorker->perform_atomic_swap(job);
+        int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+        int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+        if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
+            videoPlayer.setAutoScale(visualControls.autoScaleVideo);
+            vkDeviceWaitIdle(vulkanContext.getDevice());
+            videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+            videoTexture.cleanup(resourceSystem);
+            videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                         vulkanContext.getCommandPool(),
+                                         vulkanContext.getGraphicsQueue(),
+                                         static_cast<uint32_t>(videoPlayer.width()),
+                                         static_cast<uint32_t>(videoPlayer.height()));
+            cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
+                                static_cast<uint32_t>(videoPlayer.height()),
+                                static_cast<uint32_t>(videoPlayer.width()) * 4);
+            multiPassPipeline.updateDescriptorSets(
+                uniformBufferManager.getBuffers(),
+                videoTexture.getImageView(),
+                videoTexture.getPrevImageView(),
+                videoTexture.getSampler(),
+                videoTexture.getSampler(),
+                videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
+                videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler());
+            videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
+            std::cout << "[Render] Auto-reloaded Video 1: " << videoSourcePath << std::endl;
+        }
+    } else {
+        // Reload video 2 directly by path
+        videoRenderer2.reset();
+        videoPlayer2.shutdown();
+        renderWorker->perform_atomic_swap(job);
+        int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
+        int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
+        if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
+            videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
+            vkDeviceWaitIdle(vulkanContext.getDevice());
+            videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
+            videoTexture2.cleanup(resourceSystem);
+            videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+                                          vulkanContext.getCommandPool(),
+                                          vulkanContext.getGraphicsQueue(),
+                                          static_cast<uint32_t>(videoPlayer2.width()),
+                                          static_cast<uint32_t>(videoPlayer2.height()));
+            cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
+                                 static_cast<uint32_t>(videoPlayer2.height()),
+                                 static_cast<uint32_t>(videoPlayer2.width()) * 4);
+            multiPassPipeline.updateDescriptorSets(
+                uniformBufferManager.getBuffers(),
+                videoTexture.getImageView(),
+                videoTexture.getPrevImageView(),
+                videoTexture.getSampler(),
+                videoTexture.getSampler(),
+                videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
+                videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture.getSampler());
+            videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+            std::cout << "[Render] Auto-reloaded Video 2: " << videoSourcePath2 << std::endl;
+        }
+    }
 }
 
 void Application::initMidi() {
@@ -978,70 +1049,18 @@ void Application::mainLoop() {
         float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
         lastFrameTimestamp = now;
 
-        // Check for pending NLE reload (from background thread)
-        if (pendingNLEReload) {
-            pendingNLEReload = false;
-            if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) {
-                // Reload video 1 directly by path
-                videoRenderer.reset();
-                videoPlayer.shutdown();
-                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-                if (videoPlayer.initialize(videoSourcePath, screenW, screenH)) {
-                    videoPlayer.setAutoScale(visualControls.autoScaleVideo);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-                    videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-                    videoTexture.cleanup(resourceSystem);
-                    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                 vulkanContext.getCommandPool(),
-                                                 vulkanContext.getGraphicsQueue(),
-                                                 static_cast<uint32_t>(videoPlayer.width()),
-                                                 static_cast<uint32_t>(videoPlayer.height()));
-                    cpuFramePool.resize(static_cast<uint32_t>(videoPlayer.width()),
-                                        static_cast<uint32_t>(videoPlayer.height()),
-                                        static_cast<uint32_t>(videoPlayer.width()) * 4);
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture2.getSampler());
-                    videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-                    std::cout << "[Render] Auto-reloaded Video 1: " << videoSourcePath << std::endl;
-                }
-            } else {
-                // Reload video 2 directly by path
-                videoRenderer2.reset();
-                videoPlayer2.shutdown();
-                int screenW = static_cast<int>(vulkanContext.getSwapchainExtent().width);
-                int screenH = static_cast<int>(vulkanContext.getSwapchainExtent().height);
-                if (videoPlayer2.initialize(videoSourcePath2, screenW, screenH)) {
-                    videoPlayer2.setAutoScale(visualControls.autoScaleVideo);
-                    vkDeviceWaitIdle(vulkanContext.getDevice());
-                    videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-                    videoTexture2.cleanup(resourceSystem);
-                    videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                                 vulkanContext.getCommandPool(),
-                                                 vulkanContext.getGraphicsQueue(),
-                                                 static_cast<uint32_t>(videoPlayer2.width()),
-                                                 static_cast<uint32_t>(videoPlayer2.height()));
-                    cpuFramePool2.resize(static_cast<uint32_t>(videoPlayer2.width()),
-                                         static_cast<uint32_t>(videoPlayer2.height()),
-                                         static_cast<uint32_t>(videoPlayer2.width()) * 4);
-                    multiPassPipeline.updateDescriptorSets(
-                        uniformBufferManager.getBuffers(),
-                        videoTexture.getImageView(),
-                        videoTexture.getPrevImageView(),
-                        videoTexture.getSampler(),
-                        videoTexture.getSampler(),
-                        videoTexture2.isReady() ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                        videoTexture2.isReady() ? videoTexture2.getSampler() : videoTexture2.getSampler());
-                    videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-                    std::cout << "[Render] Auto-reloaded Video 2: " << videoSourcePath2 << std::endl;
-                }
+        // Check for completed renders that need swapping/reloading
+        std::shared_ptr<RenderJob> jobToFinalize;
+        {
+            std::lock_guard<std::mutex> lock(completedRenderJobsMutex);
+            if (!completedRenderJobs.empty()) {
+                jobToFinalize = completedRenderJobs.front();
+                completedRenderJobs.pop();
             }
+        }
+
+        if (jobToFinalize) {
+            handleCompletedRenderJob(jobToFinalize);
         }
 
         transitionActive = false;
@@ -1546,10 +1565,11 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
         return (gamma != 1.0f) ? std::pow(scaled, gamma) : scaled;
     };
 
-    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS(),           5.0f, 0.85f);
-    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass(),  7.0f, 0.90f);
-    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid(),   8.0f, 0.95f);
-    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh(),  9.0f, 1.00f);
+    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS(),           0.05f, 0.85f);
+    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass(),  5.0f, 0.90f);
+    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid(),   3.0f, 0.95f);
+    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh(),  3.0f, 1.00f);
+    liveHigh = std::clamp(liveHigh * visualControls.audioHighGain, 0.0f, 1.0f);
 
     auto& reactive = visualControls.audioReactiveRuntime;
     reactive.enabled = visualControls.enableAudioReactive;
@@ -1593,6 +1613,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     ubo.bass = visualControls.bass;
     ubo.mid = visualControls.mid;
     ubo.high = visualControls.high;
+    ubo.audioReactiveDrive = visualControls.audioReactiveDrive;
     
     // Audio reactivity parameters
     ubo.audioWarpResponse = visualControls.audioWarpResponse;

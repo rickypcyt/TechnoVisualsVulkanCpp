@@ -458,6 +458,7 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/fftw3.h \
   /usr/include/glm/common.hpp \
   /usr/include/glm/detail/_fixes.hpp \
   /usr/include/glm/detail/_vectorize.hpp \
@@ -941,7 +942,6 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/bits/wctype-wchar.h \
   /usr/include/bits/wordsize.h \
   /usr/include/c++/16.1.1/atomic \
-  /usr/include/c++/16.1.1/backward/auto_ptr.h \
   /usr/include/c++/16.1.1/backward/binders.h \
   /usr/include/c++/16.1.1/bit \
   /usr/include/c++/16.1.1/bits/align.h \
@@ -950,6 +950,7 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/allocator.h \
   /usr/include/c++/16.1.1/bits/atomic_base.h \
   /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
+  /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
   /usr/include/c++/16.1.1/bits/atomic_wait.h \
   /usr/include/c++/16.1.1/bits/basic_ios.h \
   /usr/include/c++/16.1.1/bits/basic_ios.tcc \
@@ -957,6 +958,7 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/basic_string.tcc \
   /usr/include/c++/16.1.1/bits/char_traits.h \
   /usr/include/c++/16.1.1/bits/charconv.h \
+  /usr/include/c++/16.1.1/bits/chrono.h \
   /usr/include/c++/16.1.1/bits/concept_check.h \
   /usr/include/c++/16.1.1/bits/cpp_type_traits.h \
   /usr/include/c++/16.1.1/bits/cxxabi_forced.h \
@@ -989,23 +991,24 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/ostream.tcc \
   /usr/include/c++/16.1.1/bits/ostream_insert.h \
   /usr/include/c++/16.1.1/bits/ostream_print.h \
+  /usr/include/c++/16.1.1/bits/parse_numbers.h \
   /usr/include/c++/16.1.1/bits/postypes.h \
   /usr/include/c++/16.1.1/bits/predefined_ops.h \
   /usr/include/c++/16.1.1/bits/ptr_traits.h \
   /usr/include/c++/16.1.1/bits/range_access.h \
-  /usr/include/c++/16.1.1/bits/ranges_algobase.h \
   /usr/include/c++/16.1.1/bits/ranges_base.h \
   /usr/include/c++/16.1.1/bits/ranges_cmp.h \
-  /usr/include/c++/16.1.1/bits/ranges_uninitialized.h \
   /usr/include/c++/16.1.1/bits/ranges_util.h \
   /usr/include/c++/16.1.1/bits/refwrap.h \
   /usr/include/c++/16.1.1/bits/requires_hosted.h \
+  /usr/include/c++/16.1.1/bits/semaphore_base.h \
   /usr/include/c++/16.1.1/bits/shared_ptr.h \
-  /usr/include/c++/16.1.1/bits/shared_ptr_atomic.h \
   /usr/include/c++/16.1.1/bits/shared_ptr_base.h \
   /usr/include/c++/16.1.1/bits/specfun.h \
   /usr/include/c++/16.1.1/bits/sstream.tcc \
   /usr/include/c++/16.1.1/bits/std_abs.h \
+  /usr/include/c++/16.1.1/bits/std_mutex.h \
+  /usr/include/c++/16.1.1/bits/std_thread.h \
   /usr/include/c++/16.1.1/bits/stdexcept_except.h \
   /usr/include/c++/16.1.1/bits/stdexcept_throw.h \
   /usr/include/c++/16.1.1/bits/stdexcept_throwfwd.h \
@@ -1017,14 +1020,14 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/16.1.1/bits/stl_iterator_base_types.h \
   /usr/include/c++/16.1.1/bits/stl_pair.h \
-  /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h \
-  /usr/include/c++/16.1.1/bits/stl_tempbuf.h \
   /usr/include/c++/16.1.1/bits/stl_uninitialized.h \
   /usr/include/c++/16.1.1/bits/stl_vector.h \
   /usr/include/c++/16.1.1/bits/streambuf.tcc \
   /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
   /usr/include/c++/16.1.1/bits/string_view.tcc \
   /usr/include/c++/16.1.1/bits/stringfwd.h \
+  /usr/include/c++/16.1.1/bits/this_thread_sleep.h \
+  /usr/include/c++/16.1.1/bits/unique_lock.h \
   /usr/include/c++/16.1.1/bits/unique_ptr.h \
   /usr/include/c++/16.1.1/bits/uses_allocator.h \
   /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
@@ -1038,11 +1041,13 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/compare \
   /usr/include/c++/16.1.1/complex \
   /usr/include/c++/16.1.1/concepts \
+  /usr/include/c++/16.1.1/condition_variable \
   /usr/include/c++/16.1.1/cstddef \
   /usr/include/c++/16.1.1/cstdint \
   /usr/include/c++/16.1.1/cstdio \
   /usr/include/c++/16.1.1/cstdlib \
   /usr/include/c++/16.1.1/cstring \
+  /usr/include/c++/16.1.1/ctime \
   /usr/include/c++/16.1.1/cwchar \
   /usr/include/c++/16.1.1/cwctype \
   /usr/include/c++/16.1.1/debug/assertions.h \
@@ -1061,19 +1066,21 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/c++/16.1.1/iostream \
   /usr/include/c++/16.1.1/istream \
   /usr/include/c++/16.1.1/limits \
-  /usr/include/c++/16.1.1/memory \
+  /usr/include/c++/16.1.1/mutex \
   /usr/include/c++/16.1.1/new \
   /usr/include/c++/16.1.1/numbers \
   /usr/include/c++/16.1.1/ostream \
-  /usr/include/c++/16.1.1/pstl/execution_defs.h \
-  /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
   /usr/include/c++/16.1.1/pstl/pstl_config.h \
+  /usr/include/c++/16.1.1/ratio \
+  /usr/include/c++/16.1.1/semaphore \
   /usr/include/c++/16.1.1/sstream \
   /usr/include/c++/16.1.1/stdexcept \
+  /usr/include/c++/16.1.1/stop_token \
   /usr/include/c++/16.1.1/streambuf \
   /usr/include/c++/16.1.1/string \
   /usr/include/c++/16.1.1/string_view \
   /usr/include/c++/16.1.1/system_error \
+  /usr/include/c++/16.1.1/thread \
   /usr/include/c++/16.1.1/tr1/bessel_function.tcc \
   /usr/include/c++/16.1.1/tr1/beta_function.tcc \
   /usr/include/c++/16.1.1/tr1/ell_integral.tcc \
@@ -1106,6 +1113,7 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/fftw3.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/linux/errno.h \
@@ -1126,6 +1134,7 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: /home/ricky/coding/proyects/vulkan
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
+  /usr/include/sys/time.h \
   /usr/include/sys/types.h \
   /usr/include/time.h \
   /usr/include/wchar.h \
@@ -2961,6 +2970,7 @@ CMakeFiles/app.dir/src/app/UISystem.cpp.o: /home/ricky/coding/proyects/vulkancpp
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/fftw3.h \
   /usr/include/glm/common.hpp \
   /usr/include/glm/detail/_fixes.hpp \
   /usr/include/glm/detail/_vectorize.hpp \
@@ -5308,6 +5318,7 @@ CMakeFiles/app.dir/src/main.cpp.o: /home/ricky/coding/proyects/vulkancpp/src/mai
   /usr/include/execinfo.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/fftw3.h \
   /usr/include/glm/common.hpp \
   /usr/include/glm/detail/_fixes.hpp \
   /usr/include/glm/detail/_vectorize.hpp \
@@ -10341,6 +10352,7 @@ app: /usr/lib/Scrt1.o \
   /usr/lib/libatomic.so \
   /usr/lib/libatomic_asneeded.so \
   /usr/lib/libc.so \
+  /usr/lib/libfftw3f.so \
   /usr/lib/libgcc_s.so \
   /usr/lib/libgcc_s.so.1 \
   /usr/lib/liblo.so \
@@ -10646,11 +10658,7 @@ CMakeFiles/app.dir/src/app/Application.cpp.o:
 
 /usr/lib32/libtheoradec.so.2:
 
-/usr/include/glm/ext/matrix_float4x3_precision.hpp:
-
-/usr/include/endian.h:
-
-/usr/include/glm/gtc/quaternion.hpp:
+/usr/lib32/libtasn1.so.6:
 
 CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o:
 
@@ -11032,6 +11040,14 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/lib32/libfreetype.so.6:
 
+/usr/include/fftw3.h:
+
+/usr/include/limits.h:
+
+/usr/include/sys/socket.h:
+
+/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp:
+
 /usr/include/glm/detail/type_mat2x3.hpp:
 
 /usr/lib/libjxl_cms.so.0.11:
@@ -11297,8 +11313,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/include/bits/socket.h:
 
 /usr/include/SDL2/SDL_endian.h:
-
-/usr/lib32/libtasn1.so.6:
 
 /usr/include/c++/16.1.1/mutex:
 
@@ -11642,6 +11656,10 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/c++/16.1.1/bit:
 
+/usr/lib32/libgmodule-2.0.so.0:
+
+/usr/include/SDL2/SDL_syswm.h:
+
 /usr/include/bits/getopt_posix.h:
 
 /usr/include/SDL2/SDL_log.h:
@@ -11758,10 +11776,6 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 
 /usr/include/bits/types/__sigset_t.h:
 
-/usr/lib/libicuuc.so.78:
-
-/home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h:
-
 /usr/include/c++/16.1.1/bits/random.h:
 
 /usr/lib32/libharfbuzz.so.0:
@@ -11833,6 +11847,16 @@ CMakeFiles/app.dir/src/core/Window.cpp.o:
 /usr/include/c++/16.1.1/bits/atomic_timed_wait.h:
 
 /usr/include/bits/types/struct_sched_param.h:
+
+/usr/include/endian.h:
+
+/usr/include/glm/ext/matrix_float4x3_precision.hpp:
+
+/usr/include/glm/gtc/quaternion.hpp:
+
+/home/ricky/coding/proyects/vulkancpp/src/gfx/ResourceSystem.h:
+
+/usr/lib/libicuuc.so.78:
 
 /usr/include/c++/16.1.1/bits/locale_classes.h:
 
@@ -12258,16 +12282,6 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 
 /usr/include/libswscale/version_major.h:
 
-/usr/include/limits.h:
-
-/usr/include/sys/socket.h:
-
-/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp:
-
-/usr/include/SDL2/SDL_syswm.h:
-
-/usr/lib32/libgmodule-2.0.so.0:
-
 /usr/include/linux/errno.h:
 
 /usr/include/libavutil/rational.h:
@@ -12329,6 +12343,8 @@ _deps/rtmidi-build/librtmidi.so.6.0.0:
 /usr/include/c++/16.1.1/bits/basic_ios.tcc:
 
 /usr/include/sys/select.h:
+
+/usr/lib/libfftw3f.so:
 
 /usr/include/sys/time.h:
 

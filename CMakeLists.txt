@@ -37,6 +37,9 @@ pkg_check_modules(LIBLO REQUIRED liblo)
 # PortAudio for audio I/O
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 
+# FFTW3 for FFT processing
+pkg_check_modules(FFTW REQUIRED fftw3f)
+
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 
@@ -87,7 +90,7 @@ add_executable(app
 
 add_dependencies(app gen_ubo)
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include)
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include)
 
 target_link_libraries(app
     Vulkan::Vulkan
@@ -98,4 +101,5 @@ target_link_libraries(app
     kfr
     ${LIBLO_LIBRARIES}
     ${PORTAUDIO_LIBRARIES}
+    ${FFTW_LIBRARIES}
 )

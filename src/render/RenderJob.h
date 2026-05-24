@@ -390,12 +390,10 @@ private:
                             
                             if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                                 if (!job->cancelled) {
-                                    // Atomic swap: temp -> final
-                                    perform_atomic_swap(job);
                                     job->status = RenderJob::Status::COMPLETED;
 
                                     // Notify callback that render completed
-                                    // Pass the complete job so callback can check do_swap flag
+                                    // Pass the complete job so callback can handle swap on the main thread
                                     if (on_render_complete) {
                                         on_render_complete(job);
                                     }

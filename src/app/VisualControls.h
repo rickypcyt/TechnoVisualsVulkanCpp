@@ -150,6 +150,8 @@ struct VisualControls {
     float audioGlitchResponse = 0.5f;
     float audioBeatSync = 1.0f;
     float audioLfoRate = 0.5f;
+    float audioHighGain = 1.0f;
+    float audioReactiveDrive = 1.0f;
 
     struct AudioReactiveRuntime {
         bool enabled = false;
