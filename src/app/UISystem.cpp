@@ -306,6 +306,21 @@ double effectivePlaybackRate(const VisualControls& c, double clipFps) {
 
 // ── Randomizers ───────────────────────────────────────────────────────────────
 
+void randomizePostFxControls(VisualControls& c, std::mt19937& rng) {
+    auto rr = [&](float lo, float hi){ return randFloat(rng, lo, hi); };
+    auto u  = [&](){ return randFloat(rng, 0.f, 1.f); };
+    if (c.post.enablePostCrtCurvature) { c.post.crtCurvature = rr(0,0.6f); c.post.crtHorizontalCurvature = rr(0,0.6f); }
+    if (c.post.enablePostScanMask)     { c.post.crtScanlineIntensity = u(); c.post.crtMaskIntensity = u(); }
+    if (c.post.enablePostVignette)     { c.post.crtVignette = u(); }
+    if (c.post.enablePostFishEye)      { c.post.crtFishEye = rr(-1,1); }
+    if (c.post.enablePostBloom)        { c.post.bloomIntensity = rr(0,2); c.post.bloomThreshold = u(); }
+    if (c.post.enablePostAberration)   { c.post.aberrationAmount = rr(-0.05f,0.05f); }
+    if (c.post.enablePostGrain)        { c.post.grainStrength = rr(0,0.5f); }
+    if (c.post.enablePostBend)         { c.fx.bendAmount = randFloat(rng, 0.f, 0.4f); }
+    if (c.post.enablePostGlitch)       { c.fx.glitchAmount = u(); }
+    if (c.post.enablePostColorBalance) { c.color.colorBalance = {rr(0,2),rr(0,2),rr(0,2)}; }
+}
+
 void randomizeVJayExtraControls(VisualControls& c, std::mt19937& rng) {
     if (c.fx.enablePixelate)    c.fx.pixelateAmount  = randFloat(rng, 0.f, 1.f);
     if (c.fx.enableStrobe)      c.fx.strobeSpeed     = randFloat(rng, 0.f, 20.f);
@@ -542,7 +557,8 @@ void UISystem::drawPreviewContent(
     const UIDiagnostics&  diag,
     const UICallbacks&    callbacks,
     const std::string&    video1Path,
-    const std::string&    video2Path)
+    const std::string&    video2Path,
+    std::mt19937&         rng)
 {
     float deltaTime = ImGui::GetIO().DeltaTime;
     updatePreviewSlot(previewSlotVideo1, deltaTime);
@@ -694,20 +710,6 @@ void UISystem::drawPreviewContent(
         ImGui::Text("%dx%d  %.2f fps  %.1f s",
                     meta.width, meta.height, meta.fps, meta.duration);
 
-        // ── Per-slot sliders ──
-        if (slotIndex == 0) {
-            changed |= ImGui::SliderFloat("Mix",   &controls.playback.videoMix,          0.f, 1.f);
-            ImGui::Separator();
-            changed |= ImGui::Combo("Blend mode", &controls.blending.blendModeProcedural, BLEND_ITEMS);
-            changed |= ImGui::SliderFloat("Blend amount", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
-        } else {
-            ImGui::BeginDisabled(!controls.playback.enableDualVideo);
-            changed |= ImGui::SliderFloat("Mix",   &controls.playback.video2Mix,          0.f, 1.f);
-            changed |= ImGui::Combo("Blend mode", &controls.playback.video2BlendMode,
-                                    "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
-            ImGui::EndDisabled();
-        }
-
         bool confirmClick = ImGui::Button("Enviar a escena");
         ImGui::SameLine();
         if (slotIndex == 0)
@@ -755,6 +757,58 @@ void UISystem::drawPreviewContent(
     ImGui::PushStyleColor(ImGuiCol_Text, {0.4f, 0.7f, 1.0f, 1.0f});
     ImGui::Text("🎬 MIX 2: %s", video2Path.empty() ? "(vacío)" : baseName(video2Path).c_str());
     ImGui::PopStyleColor();
+
+    // ── Video Mix sliders + Blend mode (always on top) ──
+    changed |= ImGui::SliderFloat("Mix V1", &controls.playback.videoMix, 0.f, 1.f);
+    changed |= ImGui::Combo("Blend mode V1", &controls.blending.blendModeProcedural, BLEND_ITEMS);
+    changed |= ImGui::SliderFloat("Blend amount V1", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    changed |= ImGui::SliderFloat("Mix V2", &controls.playback.video2Mix, 0.f, 1.f);
+    changed |= ImGui::Combo("Blend mode V2", &controls.playback.video2BlendMode,
+                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
+    ImGui::EndDisabled();
+    ImGui::Separator();
+
+    // ── Favorite tools (always on top) ──
+    changed |= ImGui::SliderFloat("Brightness", &controls.color.gradeBrightness, -1.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Contrast", &controls.color.gradeContrast, 0.0f, 2.0f, "%.2f");
+    changed |= ImGui::Checkbox("RGB Shift", &controls.fx.enableRGBShift);
+    if (controls.fx.enableRGBShift) {
+        changed |= ImGui::SliderFloat("RGB Shift amount", &controls.fx.rgbShiftAmount, 0.0f, 0.1f, "%.3f");
+    }
+    changed |= ImGui::Checkbox("Threshold", &controls.fx.enableThreshold);
+    if (controls.fx.enableThreshold) {
+        changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
+    }
+    changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
+    if (controls.grid.enabled) {
+        changed |= ImGui::Combo("Grid mode", &controls.grid.mode, "Vertical\0Horizontal\0Matrix\0");
+        if (controls.grid.mode == 2) {
+            changed |= ImGui::SliderInt("Rows",    &controls.grid.rows,    1, 8);
+            changed |= ImGui::SliderInt("Columns", &controls.grid.columns, 1, 8);
+        } else {
+            changed |= ImGui::SliderInt("Grid count", &controls.grid.count, 1, 8);
+        }
+        changed |= ImGui::Checkbox("Mirror cells",  &controls.grid.mirrorCells);
+        changed |= ImGui::Checkbox("Show grid lines", &controls.grid.showLines);
+    }
+    ImGui::Separator();
+
+    // ── Quick randomizers ──
+    if (ImGui::Button("Randomize Post FX")) {
+        randomizePostFxControls(controls, rng);
+        changed = controlsDirty = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Randomize VJAY Basics")) {
+        randomizeVJayBasicsControls(controls, rng);
+        changed = controlsDirty = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Randomize VJAY Extra")) {
+        randomizeVJayExtraControls(controls, rng);
+        changed = controlsDirty = true;
+    }
     ImGui::Separator();
 
     // ── ROW 1: preview images stacked vertically ──
@@ -1054,7 +1108,7 @@ void UISystem::drawMainNavbar(
         if (ImGui::BeginTabItem("Preview")) {
             drawPreviewContent(controls, registry, selAsset, selAsset2,
                 randomizer, randomizer2, transDur, transDur2,
-                controlsDirty, diag, callbacks, video1Path, video2Path);
+                controlsDirty, diag, callbacks, video1Path, video2Path, rng);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Diagnostics")) {
@@ -1222,18 +1276,7 @@ void UISystem::drawPostFxContent(VisualControls& c, bool& controlsDirty, std::mt
     };
 
     if (ImGui::Button("Randomize Post FX")) {
-        auto rr = [&](float lo, float hi){ return randFloat(rng, lo, hi); };
-        auto u  = [&](){ return randFloat(rng, 0.f, 1.f); };
-        if (c.post.enablePostCrtCurvature) { c.post.crtCurvature = rr(0,0.6f); c.post.crtHorizontalCurvature = rr(0,0.6f); }
-        if (c.post.enablePostScanMask)     { c.post.crtScanlineIntensity = u(); c.post.crtMaskIntensity = u(); }
-        if (c.post.enablePostVignette)     { c.post.crtVignette = u(); }
-        if (c.post.enablePostFishEye)      { c.post.crtFishEye = rr(-1,1); }
-        if (c.post.enablePostBloom)        { c.post.bloomIntensity = rr(0,2); c.post.bloomThreshold = u(); }
-        if (c.post.enablePostAberration)   { c.post.aberrationAmount = rr(-0.05f,0.05f); }
-        if (c.post.enablePostGrain)        { c.post.grainStrength = rr(0,0.5f); }
-        if (c.post.enablePostBend)         { c.fx.bendAmount = randFloat(rng, 0.f, 0.4f); }
-        if (c.post.enablePostGlitch)       { c.fx.glitchAmount = u(); }
-        if (c.post.enablePostColorBalance) { c.color.colorBalance = {rr(0,2),rr(0,2),rr(0,2)}; }
+        randomizePostFxControls(c, rng);
         controlsDirty = true;
     }
     ImGui::SameLine();

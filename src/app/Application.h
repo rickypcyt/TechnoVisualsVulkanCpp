@@ -234,6 +234,12 @@ private:
 
     bool animationTimeInitialized = false;
 
+    // resize debounce (fixes tiling compositors like Hyprland)
+    bool resizePending = false;
+    std::chrono::steady_clock::time_point resizeDebounceTime;
+    uint32_t pendingResizeW = 0;
+    uint32_t pendingResizeH = 0;
+
     // video / control flags
     bool allowDimensionChangeRecreation = false;
     bool controlsDirty = false;

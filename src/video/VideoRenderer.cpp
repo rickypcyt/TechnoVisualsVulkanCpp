@@ -10,17 +10,23 @@ VideoRenderer::VideoRenderer(VideoPlayer& player, VideoTexture& texture, CpuFram
 
 void VideoRenderer::update(float deltaTime, uint32_t frameIndex) {
     if (!videoPlayer.isReady() || !videoTexture.isReady()) {
+        std::cout << "[VideoRenderer] Skip: playerReady=" << videoPlayer.isReady()
+                  << " textureReady=" << videoTexture.isReady() << std::endl;
         return;
     }
 
     accumulatedTime += deltaTime;
     
     double frameDuration = videoPlayer.frameDuration();
-    if (accumulatedTime < frameDuration) {
+    bool forceUpload = firstFrame;
+    if (!forceUpload && accumulatedTime < frameDuration) {
         return;
     }
 
-    accumulatedTime -= frameDuration;
+    if (!forceUpload) {
+        accumulatedTime -= frameDuration;
+    }
+    firstFrame = false;
 
     // Get CPU frame from pool
     CpuFrame& cpuFrame = cpuFramePool.acquireWriteFrame();
@@ -37,11 +43,17 @@ void VideoRenderer::update(float deltaTime, uint32_t frameIndex) {
         
         // Mark previous frame for upload
         videoTexture.getPendingUploadsPrev()[frameIndex] = true;
+
+        std::cout << "[VideoRenderer] Uploaded frame " << frameIndex
+                  << " " << outWidth << "x" << outHeight << std::endl;
+    } else {
+        std::cout << "[VideoRenderer] grabFrameInto FAILED for frame " << frameIndex << std::endl;
     }
 }
 
 void VideoRenderer::reset() {
     accumulatedTime = 0.0f;
+    firstFrame = true;
 }
 
 void VideoRenderer::resize(uint32_t width, uint32_t height) {

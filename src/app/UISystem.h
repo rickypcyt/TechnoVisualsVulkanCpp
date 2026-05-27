@@ -309,7 +309,8 @@ private:
         const UIDiagnostics&  diag,
         const UICallbacks&    callbacks,
         const std::string&    video1Path,
-        const std::string&    video2Path);
+        const std::string&    video2Path,
+        std::mt19937&         rng);
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;

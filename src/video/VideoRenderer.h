@@ -18,4 +18,5 @@ private:
     VideoTexture& videoTexture;
     CpuFramePool& cpuFramePool;
     double accumulatedTime = 0.0f;
+    bool firstFrame = true;
 };

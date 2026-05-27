@@ -67,6 +67,7 @@ void Application::rebuildVideoTexture(int slot) {
             static_cast<uint32_t>(videoPlayer.height()),
             static_cast<uint32_t>(videoPlayer.width()) * 4
         );
+        if (videoRenderer) videoRenderer->reset();
     } else {
         videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture2.cleanup(resourceSystem);
@@ -81,20 +82,12 @@ void Application::rebuildVideoTexture(int slot) {
             static_cast<uint32_t>(videoPlayer2.height()),
             static_cast<uint32_t>(videoPlayer2.width()) * 4
         );
+        if (videoRenderer2) videoRenderer2->reset();
     }
 }
 
 // Recarga un slot completo desde una ruta dada.
 bool Application::reloadVideoSlot(int slot, const std::string& path) {
-    // Skip if the same video is already loaded AND the player is ready
-    if (slot == 0 && path == videoSourcePath && videoSubsystemInitialized) {
-        std::cout << "[reloadVideoSlot] V1 already loaded and ready: " << path << "\n";
-        return true;
-    }
-    if (slot == 1 && path == videoSourcePath2 && videoSubsystemInitialized2) {
-        std::cout << "[reloadVideoSlot] V2 already loaded and ready: " << path << "\n";
-        return true;
-    }
     std::cout << "[reloadVideoSlot] Reloading slot " << slot << " with: " << path << "\n";
 
     // Restore per-video playback speed
@@ -947,11 +940,13 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
         videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
                                     vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
                                     videoPlayer.width(), videoPlayer.height());
+        if (videoRenderer) videoRenderer->reset();
     }
     if (videoSubsystemInitialized2) {
         videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
                                      vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
                                      videoPlayer2.width(), videoPlayer2.height());
+        if (videoRenderer2) videoRenderer2->reset();
     }
 
     updateAllDescriptorSets();
@@ -995,11 +990,22 @@ void Application::mainLoop() {
                     window.resetResizeFlag();
                     uint32_t w, h;
                     window.getDrawableSize(w, h);
-                    handleWindowResize(w, h);
+                    pendingResizeW = w;
+                    pendingResizeH = h;
+                    resizePending = true;
+                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(150);
                 }
             }
         }
         if (!running) break;
+
+        // ── Process debounced resize ──────────────────────────────────────────
+        if (resizePending) {
+            if (std::chrono::steady_clock::now() >= resizeDebounceTime) {
+                resizePending = false;
+                handleWindowResize(pendingResizeW, pendingResizeH);
+            }
+        }
 
         // ── Begin frame ─────────────────────────────────────────────────────
         uint32_t    imageIndex;
@@ -1644,6 +1650,9 @@ void Application::recordCommandBuffer(VkCommandBuffer cmd, FrameContext& frame) 
         videoTexture2.recordPendingUpload(cmd, frame.frameIndex, vulkanContext.getGraphicsQueue());
 
     if (videoSubsystemInitialized) {
+        std::cout << "[RecordCmd] Executing multipass for frame " << frame.frameIndex
+                  << " videoReady=" << videoTexture.isReady()
+                  << " video2Ready=" << videoTexture2.isReady() << std::endl;
         multiPassPipeline.execute(
             cmd, frame.frameIndex,
             descriptorSetManager.getSet(frame.frameIndex),
