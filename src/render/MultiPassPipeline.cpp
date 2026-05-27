@@ -740,10 +740,6 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
                                 VkRenderPass swapchainRenderPass, std::vector<VkFramebuffer>& swapchainFramebuffers,
                                 uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
                                 VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler) {
-    // Update intermediate texture descriptors before each frame
-    // This ensures passes B-F read from the correct intermediate textures
-    updateIntermediateDescriptors(frameIndex);
-
     auto ensureLayout = [&](VkImage image, VkImageLayout& currentLayout, VkImageLayout newLayout) {
         if (image == VK_NULL_HANDLE || currentLayout == newLayout) {
             currentLayout = newLayout;
@@ -852,9 +848,10 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
                           1, &copyRegion);
 
             ensureLayout(temporalHistory.image, temporalHistoryLayout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            // Return intermediate back to shader-read after copy so next pass can sample it
+            ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
-
-        ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        // For passes other than 3 the render pass finalLayout already transitions to SHADER_READ_ONLY_OPTIMAL
 
         // Ping-pong buffers
         currentBuffer = 1 - currentBuffer;

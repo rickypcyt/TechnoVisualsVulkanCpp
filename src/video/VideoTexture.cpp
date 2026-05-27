@@ -115,11 +115,6 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     descriptorInfoPrev.imageView = imageViewPrev;
     descriptorInfoPrev.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     currentLayoutPrev = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    pendingUploadsPrev.fill(false);
-
-    // Allocate CPU buffer for previous frame (dynamic size)
-    previousFrameData.resize(frameSize);
-    std::fill(previousFrameData.begin(), previousFrameData.end(), 0);
 
     ready = true;
     std::cout << "[VideoTexture] Resources created successfully" << std::endl;
@@ -159,8 +154,6 @@ void VideoTexture::destroy(ResourceSystem& resourceSystem, VkDevice device) {
     currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     currentLayoutPrev = VK_IMAGE_LAYOUT_UNDEFINED;
     pendingUploads.fill(false);
-    pendingUploadsPrev.fill(false);
-    previousFrameData.clear();
     frameSize = 0;
     width = 0;
     height = 0;
@@ -224,6 +217,15 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
         } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
             srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+            srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         }
 
         barrier.srcAccessMask = srcAccessMask;
@@ -241,10 +243,45 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
 
     // Upload to current frame texture
     if (pendingUploads[frameIndex]) {
+        // GPU→GPU copy: preserve old current frame as previous frame BEFORE overwriting
+        if (imageHandle.image != VK_NULL_HANDLE && imageHandlePrev.image != VK_NULL_HANDLE) {
+            transition(imageHandle.image,
+                       currentLayout,
+                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+            transition(imageHandlePrev.image,
+                       currentLayoutPrev,
+                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+            VkImageCopy copyRegion{};
+            copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copyRegion.srcSubresource.baseArrayLayer = 0;
+            copyRegion.srcSubresource.mipLevel = 0;
+            copyRegion.srcSubresource.layerCount = 1;
+            copyRegion.dstSubresource = copyRegion.srcSubresource;
+            copyRegion.extent = {width, height, 1};
+
+            vkCmdCopyImage(commandBuffer,
+                          imageHandle.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                          imageHandlePrev.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          1, &copyRegion);
+
+            transition(imageHandlePrev.image,
+                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT,
+                       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            currentLayoutPrev = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
+
         VkImageLayout startLayout = currentLayout;
         VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                             ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
-                                            : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                                            : VK_PIPELINE_STAGE_TRANSFER_BIT;
 
         transition(imageHandle.image,
                    startLayout,
@@ -280,61 +317,6 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
 
         currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         pendingUploads[frameIndex] = false;
-    }
-
-    // Upload to previous frame texture
-    if (pendingUploadsPrev[frameIndex] && !previousFrameData.empty()) {
-        VkImageLayout startLayout = currentLayoutPrev;
-        VkPipelineStageFlags srcStage = (startLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-                                            ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
-                                            : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-
-        transition(imageHandlePrev.image,
-                   startLayout,
-                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                   srcStage,
-                   VK_PIPELINE_STAGE_TRANSFER_BIT);
-
-        // Use staging ring for previous frame upload (same ring buffer, different slot)
-        stagingRing.upload(previousFrameData.data(), frameSize, frameIndex);
-
-        VkBufferImageCopy region{};
-        region.bufferOffset = 0;
-        region.bufferRowLength = 0;
-        region.bufferImageHeight = 0;
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = 0;
-        region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = 1;
-        region.imageOffset = {0, 0, 0};
-        region.imageExtent = {width, height, 1};
-
-        vkCmdCopyBufferToImage(
-            commandBuffer,
-            stagingRing.getSlot(frameIndex).buffer.buffer,
-            imageHandlePrev.image,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &region);
-
-        transition(
-            imageHandlePrev.image,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-
-        currentLayoutPrev = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        pendingUploadsPrev[frameIndex] = false;
-    }
-}
-
-void VideoTexture::uploadPreviousFrame(VkCommandBuffer commandBuffer, VkQueue graphicsQueue) {
-    // This is a simplified version - in the full implementation this would
-    // need proper command buffer recording and submission
-    if (!previousFrameData.empty()) {
-        // Will be uploaded via stagingRing in recordPendingUpload
-        pendingUploadsPrev.fill(true);
     }
 }
 

@@ -72,18 +72,10 @@ public:
     
     const std::array<bool, MAX_FRAMES_IN_FLIGHT>& getPendingUploads() const { return pendingUploads; }
     std::array<bool, MAX_FRAMES_IN_FLIGHT>& getPendingUploads() { return pendingUploads; }
-    const std::array<bool, MAX_FRAMES_IN_FLIGHT>& getPendingUploadsPrev() const { return pendingUploadsPrev; }
-    std::array<bool, MAX_FRAMES_IN_FLIGHT>& getPendingUploadsPrev() { return pendingUploadsPrev; }
-    
+
     void resetPendingUploads() {
         pendingUploads.fill(false);
-        pendingUploadsPrev.fill(false);
     }
-
-    // Previous frame management
-    const std::vector<uint8_t>& getPreviousFrameData() const { return previousFrameData; }
-    std::vector<uint8_t>& getPreviousFrameData() { return previousFrameData; }
-    void uploadPreviousFrame(VkCommandBuffer commandBuffer, VkQueue graphicsQueue);
 
 private:
     // GPU resources
@@ -112,12 +104,6 @@ private:
     StagingRing stagingRing;
     std::array<double, MAX_FRAMES_IN_FLIGHT> stagingTimestamps{};
     std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploads{};
-    std::array<bool, MAX_FRAMES_IN_FLIGHT> pendingUploadsPrev{};
-    
-    // Previous frame CPU buffer and staging
-    std::vector<uint8_t> previousFrameData;
-    ResourceHandle prevFrameStagingBuffer;
-    void* prevFrameStagingMapped = nullptr;
 
     // Helper functions
     void initializeVideoImage(VkDevice device, VkCommandPool commandPool, VkImage image, VkQueue graphicsQueue);

@@ -1862,9 +1862,6 @@ void Application::recordCommandBuffer(VkCommandBuffer cmd, FrameContext& frame) 
         videoTexture2.recordPendingUpload(cmd, frame.frameIndex, vulkanContext.getGraphicsQueue());
 
     if (videoSubsystemInitialized) {
-        std::cout << "[RecordCmd] Executing multipass for frame " << frame.frameIndex
-                  << " videoReady=" << videoTexture.isReady()
-                  << " video2Ready=" << videoTexture2.isReady() << std::endl;
         multiPassPipeline.execute(
             cmd, frame.frameIndex,
             descriptorSetManager.getSet(frame.frameIndex),
