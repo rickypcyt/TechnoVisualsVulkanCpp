@@ -4,6 +4,7 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <string>
 #include <complex>
 #include <mutex>
 #include <condition_variable>
@@ -20,7 +21,11 @@ public:
     void stop();
     void shutdown();
 
-    float getRMS() const { return rmsDb.load(); }
+    float getRMS() const {
+        // Convert stored dB back to linear amplitude (0..1)
+        float db = rmsDb.load();
+        return std::pow(10.0f, db / 20.0f);
+    }
 
     float getSubBass() const { return smoothedSubBass.load(); }
     float getKick() const { return smoothedKick.load(); }
@@ -44,8 +49,10 @@ public:
     float getSmoothedHigh() const { return smoothedHigh.load(); }
 
     std::vector<std::string> getInputDeviceNames();
-    int getInputDeviceIndex() const { return inputDevice; }
+    int getInputDeviceIndex() const { return pulseSourceIndex; }
     bool setInputDevice(int deviceIndex);
+    void refreshPulseAudioSources();
+    bool restartStream();
 
 private:
     static constexpr int FFT_SIZE = 2048;
@@ -61,6 +68,11 @@ private:
     int inputDevice = paNoDevice;
 
     double sampleRate = 44100.0;
+
+    // PulseAudio source listing (monitors, virtual mics, etc.)
+    std::vector<std::string> pulseSourceNames;
+    std::vector<std::string> pulseSourceIds;
+    int pulseSourceIndex = -1;
 
     std::atomic<bool> running = false;
 

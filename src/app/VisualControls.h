@@ -225,7 +225,10 @@ struct VisualControls {
         float glitchResponse = 0.5f;
         float beatSync = 1.0f;
         float lfoRate = 0.5f;
-        float highGain = 1.0f;
+        float inputGain = 1.0f;      // Master input volume
+        float bassGain = 1.0f;       // EQ gain for bass band
+        float midGain = 1.0f;        // EQ gain for mid band
+        float highGain = 1.0f;       // EQ gain for high band
         float reactiveDrive = 1.0f;
 
         bool enabled = true;
@@ -285,6 +288,15 @@ struct VisualControls {
         float lineIntensity = 0.5f;
         glm::vec3 lineColor = glm::vec3(1.0f);
     } grid;
+
+    // ============================================================================
+    // PARAMETER LOCKS (preserved during randomization)
+    // ============================================================================
+    struct Locks {
+        bool lockColorBalance = false;
+        bool lockThreshold    = false;
+        bool lockGrid         = false;
+    } locks;
 
     // ============================================================================
     // SYSTEM DOMAIN

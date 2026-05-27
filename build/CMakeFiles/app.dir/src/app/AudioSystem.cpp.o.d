@@ -212,4 +212,8 @@ CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: \
  /usr/include/c++/16.1.1/bits/align.h /usr/local/include/portaudio.h \
  /usr/include/fftw3.h /usr/include/c++/16.1.1/iostream \
  /usr/include/c++/16.1.1/cstring /usr/include/string.h \
- /usr/include/strings.h
+ /usr/include/strings.h /usr/include/unistd.h \
+ /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
+ /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
+ /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
+ /usr/include/linux/close_range.h

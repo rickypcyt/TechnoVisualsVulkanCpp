@@ -318,13 +318,13 @@ void randomizePostFxControls(VisualControls& c, std::mt19937& rng) {
     if (c.post.enablePostGrain)        { c.post.grainStrength = rr(0,0.5f); }
     if (c.post.enablePostBend)         { c.fx.bendAmount = randFloat(rng, 0.f, 0.4f); }
     if (c.post.enablePostGlitch)       { c.fx.glitchAmount = u(); }
-    if (c.post.enablePostColorBalance) { c.color.colorBalance = {rr(0,2),rr(0,2),rr(0,2)}; }
+    if (c.post.enablePostColorBalance && !c.locks.lockColorBalance) { c.color.colorBalance = {rr(0,2),rr(0,2),rr(0,2)}; }
 }
 
 void randomizeVJayExtraControls(VisualControls& c, std::mt19937& rng) {
     if (c.fx.enablePixelate)    c.fx.pixelateAmount  = randFloat(rng, 0.f, 1.f);
     if (c.fx.enableStrobe)      c.fx.strobeSpeed     = randFloat(rng, 0.f, 20.f);
-    if (c.fx.enableThreshold)   c.fx.thresholdLevel  = randFloat(rng, 0.f, 1.f);
+    if (c.fx.enableThreshold && !c.locks.lockThreshold)   c.fx.thresholdLevel  = randFloat(rng, 0.f, 1.f);
     if (c.fx.enableSlowZoom)    c.fx.slowZoomAmount  = randFloat(rng, 0.f, 1.f);
 
     if (c.fx.enableEdgeDetect) {
@@ -343,7 +343,7 @@ void randomizeVJayExtraControls(VisualControls& c, std::mt19937& rng) {
     if (c.fx.enableZoomPulse)c.fx.zoomPulseAmount = randFloat(rng, 0.f, 1.f);
     if (c.fx.enableRGBShift) c.fx.rgbShiftAmount  = randFloat(rng, 0.f, 0.1f);
 
-    if (c.grid.enabled) {
+    if (c.grid.enabled && !c.locks.lockGrid) {
         c.grid.mode = randInt(rng, 0, 2);
         if (c.grid.mode == 2) {
             c.grid.rows    = randInt(rng, 1, 8);
@@ -377,13 +377,6 @@ void randomizeVJayBasicsControls(VisualControls& c, std::mt19937& rng) {
         c.color.splitToneBalance     = u01() * 0.5f;
         c.color.splitToneShadows     = {u01(), u01(), u01()};
         c.color.splitToneHighlights  = {u01(), u01(), u01()};
-    }
-    if (c.temporal.enableFeedback) {
-        c.temporal.feedbackAmount       = u01();
-        c.temporal.trailStrength        = u01();
-        c.temporal.temporalAccumulation = u01();
-        c.temporal.feedbackDecay        = u01();
-        c.temporal.recursiveBlend       = u01();
     }
     if (c.fx.enableDistortion) {
         c.fx.uvWarpStrength    = rr(0.f, 0.5f);
@@ -420,10 +413,10 @@ void randomizeVJayBasicsControls(VisualControls& c, std::mt19937& rng) {
     if (c.blending.enableBlending) {
         c.blending.blendModeProcedural = ri(0, 5);
         c.blending.blendModeVideo      = ri(0, 5);
-        c.blending.blendModeFeedback   = ri(0, 5);
         c.blending.blendProceduralMix  = rr(0.f, 2.f);
         c.blending.blendVideoMix       = rr(0.f, 2.f);
-        c.blending.blendFeedbackMix    = rr(0.f, 2.f);
+        // blendModeFeedback / blendFeedbackMix intentionally skipped —
+        // they belong to "feedback blending" and are preserved here.
     }
     if (c.post.enableAnalog) {
         c.post.analogScanlineFocus        = u01();
@@ -746,6 +739,23 @@ void UISystem::drawPreviewContent(
     ImGui::Text("PREVIEW");
     ImGui::Separator();
 
+    // ── Quick randomizers (on top) ──
+    if (ImGui::Button("Randomize Post FX")) {
+        randomizePostFxControls(controls, rng);
+        changed = controlsDirty = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Randomize VJAY Basics")) {
+        randomizeVJayBasicsControls(controls, rng);
+        changed = controlsDirty = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Randomize VJAY Extra")) {
+        randomizeVJayExtraControls(controls, rng);
+        changed = controlsDirty = true;
+    }
+    ImGui::Separator();
+
     // ── Active renderer videos (always on top) ──
     auto baseName = [](const std::string& p) {
         size_t s = p.find_last_of("/\\");
@@ -770,17 +780,13 @@ void UISystem::drawPreviewContent(
     ImGui::Separator();
 
     // ── Favorite tools (always on top) ──
-    changed |= ImGui::SliderFloat("Brightness", &controls.color.gradeBrightness, -1.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Brightness", &controls.color.gradeBrightness, -0.5f, 0.5f, "%.2f");
     changed |= ImGui::SliderFloat("Contrast", &controls.color.gradeContrast, 0.0f, 2.0f, "%.2f");
-    changed |= ImGui::Checkbox("RGB Shift", &controls.fx.enableRGBShift);
-    if (controls.fx.enableRGBShift) {
-        changed |= ImGui::SliderFloat("RGB Shift amount", &controls.fx.rgbShiftAmount, 0.0f, 0.1f, "%.3f");
-    }
-    changed |= ImGui::Checkbox("Threshold", &controls.fx.enableThreshold);
-    if (controls.fx.enableThreshold) {
-        changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
-    }
     changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##lock_grid", &controls.locks.lockGrid)) changed = true;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock grid during randomize");
+    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockGrid ? "(locked)" : "(unlocked)");
     if (controls.grid.enabled) {
         changed |= ImGui::Combo("Grid mode", &controls.grid.mode, "Vertical\0Horizontal\0Matrix\0");
         if (controls.grid.mode == 2) {
@@ -794,20 +800,27 @@ void UISystem::drawPreviewContent(
     }
     ImGui::Separator();
 
-    // ── Quick randomizers ──
-    if (ImGui::Button("Randomize Post FX")) {
-        randomizePostFxControls(controls, rng);
-        changed = controlsDirty = true;
-    }
+    // ── Locked parameters ( preserved during randomization ) ──
+    ImGui::TextColored({1.f,0.85f,0.3f,1.f}, "Locked Parameters");
+
+    // RGB Mix
+    ImGui::Checkbox("Enable RGB Mix", &controls.post.enablePostColorBalance);
     ImGui::SameLine();
-    if (ImGui::Button("Randomize VJAY Basics")) {
-        randomizeVJayBasicsControls(controls, rng);
-        changed = controlsDirty = true;
+    if (ImGui::Checkbox("##lock_rgbmix", &controls.locks.lockColorBalance)) changed = true;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock RGB Mix during randomize");
+    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockColorBalance ? "(locked)" : "(unlocked)");
+    if (controls.post.enablePostColorBalance) {
+        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.color.colorBalance), 0.f, 2.f);
     }
+
+    // Threshold
+    ImGui::Checkbox("Enable Threshold", &controls.fx.enableThreshold);
     ImGui::SameLine();
-    if (ImGui::Button("Randomize VJAY Extra")) {
-        randomizeVJayExtraControls(controls, rng);
-        changed = controlsDirty = true;
+    if (ImGui::Checkbox("##lock_threshold", &controls.locks.lockThreshold)) changed = true;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock Threshold during randomize");
+    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockThreshold ? "(locked)" : "(unlocked)");
+    if (controls.fx.enableThreshold) {
+        changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
     }
     ImGui::Separator();
 
@@ -915,7 +928,8 @@ bool UISystem::loadPreview(VideoPreviewSlot& slot, const std::string& path) {
     slot.textureWidth = slot.textureHeight = 0;
     slot.frameAccumulator = 0.0f;
 
-    if (!slot.player->initialize(path, 640, 360)) {
+    // Limit preview decode to 480p to avoid wasting GPU/CPU on full-res frames
+    if (!slot.player->initialize(path, 854, 480)) {
         slot.lastError = "No se pudo abrir el video";
         slot.loadedPath.clear();
         return false;
@@ -1175,7 +1189,15 @@ void UISystem::drawProceduralControlsContent(
 
     ImGui::Separator();
     ImGui::Text("Audio-inspired inputs");
-    changed |= ImGui::SliderFloat("Tempo",  &controls.playback.tempo, 0.25f, 4.f);
+    if (controls.system.enableAudioReactive) {
+        float autoTempo = std::clamp(controls.audio.energy * 5.0f * controls.audio.reactiveDrive, 0.0f, 5.0f);
+        ImGui::BeginDisabled(true);
+        ImGui::SliderFloat("Tempo (auto)", &autoTempo, 0.0f, 5.0f, "%.2fx");
+        ImGui::EndDisabled();
+        ImGui::SameLine(); ImGui::TextDisabled("(energy driven)");
+    } else {
+        changed |= ImGui::SliderFloat("Tempo",  &controls.playback.tempo, 0.25f, 4.f);
+    }
     changed |= ImGui::Checkbox("Auto tempo LFO", &controls.playback.enableTempoLfo);
     if (controls.playback.enableTempoLfo) {
         changed |= ImGui::SliderFloat("LFO speed (Hz)", &controls.playback.tempoLfoSpeed, 0.05f, 4.f, "%.2f Hz");
@@ -1321,8 +1343,6 @@ void UISystem::drawPostFxContent(VisualControls& c, bool& controlsDirty, std::mt
         changed |= ImGui::SliderFloat("Bend Amount",&c.fx.bendAmount,0.f,0.5f,"%.2f");)
     PFX("Glitch wrapper",c.post.enablePostGlitch,
         changed |= ImGui::SliderFloat("Glitch Intensity",&c.fx.glitchAmount,0.f,1.f,"%.2f");)
-    PFX("RGB Mix##Toggle",c.post.enablePostColorBalance,
-        changed |= ImGui::SliderFloat3("RGB Mix",glm::value_ptr(c.color.colorBalance),0.f,2.f);)
 #undef PFX
 
     if (changed) controlsDirty = true;
@@ -1375,7 +1395,7 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
     ImGui::SameLine(); if (ImGui::Button("Reset"))        { reset();       changed = controlsDirty = true; }
 
     TOGGLED_SECTION("1. Color grading dinamico", c.color.enableColorGrading,
-        changed |= ImGui::SliderFloat("Brightness",        &c.color.gradeBrightness,  -1.f, 1.f,   "%.2f");
+        changed |= ImGui::SliderFloat("Brightness",        &c.color.gradeBrightness,  -0.5f, 0.5f,   "%.2f");
         changed |= ImGui::SliderFloat("Contrast",          &c.color.gradeContrast,     0.1f,2.5f,  "%.2f");
         changed |= ImGui::SliderFloat("Saturation",        &c.color.gradeSaturation,   0.f, 2.5f,  "%.2f");
         changed |= ImGui::SliderFloat("Hue shift",         &c.color.gradeHueShift,  -180.f,180.f,  "%.1f\xc2\xb0");
@@ -1504,7 +1524,11 @@ void UISystem::drawVJayExtraContent(VisualControls& c, bool& controlsDirty, std:
 
     ImGui::Separator();
     EXT("Grid overlay", c.grid.enabled,
-        changed |= ImGui::Combo("Grid mode", &c.grid.mode, "Vertical\0Horizontal\0Matrix\0");
+        if (ImGui::Checkbox("##lock_grid_ext", &c.locks.lockGrid)) changed = true;
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock grid during randomize");
+        ImGui::SameLine(); ImGui::TextDisabled(c.locks.lockGrid ? "(locked)" : "(unlocked)");
+        ImGui::SameLine(); ImGui::Text("Mode");
+        changed |= ImGui::Combo("##grid_mode", &c.grid.mode, "Vertical\0Horizontal\0Matrix\0");
         if (c.grid.mode == 2) {
             changed |= ImGui::SliderInt("Rows",    &c.grid.rows,    1, 8);
             changed |= ImGui::SliderInt("Columns", &c.grid.columns, 1, 8);
@@ -1939,7 +1963,17 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
 
     // Manual inputs
     ImGui::Text("Audio-inspired inputs");
-    ImGui::SliderFloat("Tempo",  &c.playback.tempo, 0.25f, 4.f);
+    if (c.system.enableAudioReactive) {
+        // Show auto-tempo as read-only when audio reactive is on
+        float autoTempo = c.runtime.audioReactive.enabled ?
+            std::clamp(c.audio.energy * 5.0f * c.audio.reactiveDrive, 0.0f, 5.0f) : c.playback.tempo;
+        ImGui::BeginDisabled(true);
+        ImGui::SliderFloat("Tempo (auto)", &autoTempo, 0.0f, 5.0f, "%.2fx");
+        ImGui::EndDisabled();
+        ImGui::SameLine(); ImGui::TextDisabled("(driven by energy)");
+    } else {
+        ImGui::SliderFloat("Tempo",  &c.playback.tempo, 0.25f, 4.f);
+    }
     ImGui::Checkbox("Auto tempo LFO", &c.playback.enableTempoLfo);
     if (c.playback.enableTempoLfo) {
         ImGui::SliderFloat("LFO speed (Hz)", &c.playback.tempoLfoSpeed, 0.05f, 4.f, "%.2f Hz");
@@ -1949,7 +1983,11 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
     ImGui::SliderFloat("Bass",   &c.audio.bass,          0.f,1.f);
     ImGui::SliderFloat("Mid",    &c.audio.mid,           0.f,1.f);
     ImGui::SliderFloat("High",   &c.audio.high,          0.f,1.f);
-    ImGui::SliderFloat("High gain boost",        &c.audio.highGain,      0.5f,4.f,"%.2fx");
+    ImGui::Text("EQ / Gain");
+    ImGui::SliderFloat("Input volume",  &c.audio.inputGain, 0.0f, 3.0f, "%.2fx");
+    ImGui::SliderFloat("Bass gain",     &c.audio.bassGain,  0.0f, 4.0f, "%.2fx");
+    ImGui::SliderFloat("Mid gain",      &c.audio.midGain,   0.0f, 4.0f, "%.2fx");
+    ImGui::SliderFloat("High gain",     &c.audio.highGain,  0.0f, 4.0f, "%.2fx");
     ImGui::SliderFloat("Procedural audio drive", &c.audio.reactiveDrive, 0.5f,3.f,"%.2fx");
     ImGui::Separator();
 
@@ -1965,6 +2003,14 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
 
     // Device selector
     ImGui::Text("Input Device:");
+    ImGui::SameLine();
+    if (ImGui::Button("Refresh")) {
+        audio.refreshPulseAudioSources();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Restart Stream")) {
+        audio.restartStream();
+    }
     auto devNames = audio.getInputDeviceNames();
     std::vector<int>          validIdx;
     std::vector<const char*>  validNames;
@@ -1989,22 +2035,89 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
     ImGui::Text("SubBass %.4f | Kick %.4f | Bass %.4f | Mid %.4f | High %.4f",
                 audio.getSmoothedSubBass(), audio.getSmoothedKick(),
                 audio.getSmoothedBass(),   audio.getSmoothedMid(), audio.getSmoothedHigh());
+    ImGui::TextColored({0,1,0.5f,1}, "Post-EQ (applied to visuals):");
+    ImGui::Text("Bass %.4f | Mid %.4f | High %.4f",
+                std::min(audio.getSmoothedBass()   * c.audio.bassGain, 1.0f),
+                std::min(audio.getSmoothedMid()    * c.audio.midGain,  1.0f),
+                std::min(audio.getSmoothedHigh()   * c.audio.highGain, 1.0f));
     ImGui::Separator();
 
-    // FFT
-    ImGui::Text("FFT Spectrum:");
+    // FFT Spectrum with dB Y-axis, log-spaced bars, and EQ gains applied
+    ImGui::Text("FFT Spectrum (20 Hz - 20 kHz) — dB scale (with EQ)");
     const auto& fft = audio.getFFTMagnitudes();
-    float maxM = 0.f;
-    for (float f : fft) maxM = std::max(maxM, f);
+    static std::vector<float> spectrumBars;
+    spectrumBars.resize(64);
+
+    // Helper: gain for a given frequency based on EQ sliders
+    auto freqGain = [&](float hz) -> float {
+        float bassFreq = 500.0f;
+        float midFreq  = 2000.0f;
+        if (hz < bassFreq) {
+            return c.audio.bassGain;
+        } else if (hz < midFreq) {
+            float t = (hz - bassFreq) / (midFreq - bassFreq);
+            return c.audio.bassGain * (1.0f - t) + c.audio.midGain * t;
+        } else {
+            float t = std::min(1.0f, (hz - midFreq) / 4000.0f);
+            return c.audio.midGain * (1.0f - t) + c.audio.highGain * t;
+        }
+    };
+
+    for (int b = 0; b < 64; ++b) {
+        float f0 = 20.0f * std::pow(20000.0f / 20.0f, (float)b / 64.0f);
+        float f1 = 20.0f * std::pow(20000.0f / 20.0f, (float)(b+1) / 64.0f);
+        float centerFreq = std::sqrt(f0 * f1); // geometric center for log scale
+        float binW = 48000.0f / 2048.0f;
+        int startBin = std::max(1, (int)(f0 / binW));
+        int endBin   = std::min((int)fft.size() - 1, (int)(f1 / binW));
+        if (endBin <= startBin) endBin = startBin + 1;
+        float peak = 0.0f;
+        for (int i = startBin; i <= endBin; ++i) {
+            peak = std::max(peak, fft[i]);
+        }
+        spectrumBars[b] = peak * freqGain(centerFreq) * c.audio.inputGain;
+    }
+
+    // Fixed dB scale: -60 dB to 0 dB
+    float dbMin = -60.0f;
+    float dbMax = 0.0f;
+    float dbRange = dbMax - dbMin;
+
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 p = ImGui::GetCursorScreenPos();
-    float bw = 200.f / (float)fft.size(), mh = 100.f;
-    for (int i = 0; i < (int)fft.size(); ++i) {
-        float nh = maxM > 0 ? (fft[i]/maxM)*mh : 0;
-        float t  = (float)i / fft.size();
-        dl->AddRectFilled({p.x+i*bw, p.y+mh-nh}, {p.x+(i+1)*bw-1, p.y+mh}, ImColor(t, 0.5f*(1-t), 1-t));
+    float availW = ImGui::GetContentRegionAvail().x;
+    float labelW = 50.0f;
+    float plotW = availW - labelW;
+    float barW = plotW / 64.0f;
+    float plotH = 200.0f;
+
+    // Draw dB grid lines (horizontal reference lines)
+    for (int db = (int)dbMin; db <= (int)dbMax; db += 10) {
+        float norm = (float)(db - dbMin) / dbRange;
+        float y = p.y + plotH - norm * plotH;
+        dl->AddLine({p.x + labelW, y}, {p.x + labelW + plotW, y}, IM_COL32(80, 80, 80, 80));
+        char dbLabel[16];
+        snprintf(dbLabel, sizeof(dbLabel), "%d dB", db);
+        dl->AddText({p.x, y - 6}, IM_COL32(180, 180, 180, 255), dbLabel);
     }
-    ImGui::Dummy({200, mh+5}); ImGui::Separator();
+
+    // Draw bars in dB
+    for (int i = 0; i < 64; ++i) {
+        float mag = spectrumBars[i];
+        float db = 20.0f * std::log10(mag + 1e-9f);
+        float clampedDb = std::clamp(db, dbMin, dbMax);
+        float norm = (clampedDb - dbMin) / dbRange;
+        float h = norm * plotH;
+        float hue = 0.33f + 0.5f * ((float)i / 64.0f);
+        ImU32 col = ImColor::HSV(hue, 0.8f, 1.0f);
+        dl->AddRectFilled({p.x + labelW + i*barW, p.y + plotH - h}, {p.x + labelW + (i+1)*barW - 1, p.y + plotH}, col);
+    }
+
+    // X-axis frequency labels
+    ImGui::Dummy({availW, plotH + 5});
+    ImGui::SetCursorScreenPos({p.x + labelW, p.y + plotH + 5});
+    ImGui::Text("20Hz        100Hz        500Hz        2kHz        20kHz");
+    ImGui::Separator();
 
     // Reactive state
     const auto& react = c.runtime.audioReactive;

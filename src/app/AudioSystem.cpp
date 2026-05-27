@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
+#include <unistd.h>
 
 AudioSystem::AudioSystem() {
     ringBuffer.resize(FFT_SIZE * 8, 0.0f);
@@ -66,6 +68,7 @@ bool AudioSystem::initialize() {
     std::cout << "[AudioSystem] Input device: " << dev->name
               << " Sample rate: " << sampleRate << std::endl;
 
+    refreshPulseAudioSources();
     return true;
 }
 
@@ -140,44 +143,159 @@ void AudioSystem::shutdown() {
     Pa_Terminate();
 }
 
-std::vector<std::string> AudioSystem::getInputDeviceNames() {
-    std::vector<std::string> names;
-    int numDevices = Pa_GetDeviceCount();
+void AudioSystem::refreshPulseAudioSources() {
+    pulseSourceNames.clear();
+    pulseSourceIds.clear();
 
-    for (int i = 0; i < numDevices; i++) {
-        const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
-        if (deviceInfo && deviceInfo->maxInputChannels > 0) {
-            names.push_back(deviceInfo->name);
+    auto parseTabLine = [](const char* line, std::string& outName) -> bool {
+        // Format: <number>\t<name>\t<driver>\t<spec>\t<state>
+        char buf[512];
+        strncpy(buf, line, sizeof(buf)-1);
+        buf[sizeof(buf)-1] = '\0';
+        char* tok = strtok(buf, "\t");
+        if (!tok) return false; // number
+        tok = strtok(nullptr, "\t");
+        if (!tok) return false; // name
+        outName = tok;
+        while (!outName.empty() && (outName.back() == '\n' || outName.back() == '\r'))
+            outName.pop_back();
+        return true;
+    };
+
+    // ── 1. Real input sources ─────────────────────────────────────────
+    FILE* fp = popen("pactl list short sources", "r");
+    if (fp) {
+        char line[512];
+        while (fgets(line, sizeof(line), fp)) {
+            std::string name;
+            if (parseTabLine(line, name)) {
+                pulseSourceIds.push_back(name);
+                pulseSourceNames.push_back(name);
+            }
         }
+        pclose(fp);
+    } else {
+        std::cerr << "[AudioSystem] Failed to query PulseAudio sources\n";
     }
 
-    return names;
+    // ── 2. Sink monitors (always add these, they are the key for system audio) ──
+    FILE* fsinks = popen("pactl list short sinks", "r");
+    if (fsinks) {
+        char line[512];
+        while (fgets(line, sizeof(line), fsinks)) {
+            std::string sinkName;
+            if (parseTabLine(line, sinkName)) {
+                std::string monitorId = sinkName + ".monitor";
+                // Only add if not already present
+                bool already = false;
+                for (const auto& id : pulseSourceIds) {
+                    if (id == monitorId) { already = true; break; }
+                }
+                if (!already) {
+                    pulseSourceIds.push_back(monitorId);
+                    pulseSourceNames.push_back("[Monitor] " + sinkName);
+                }
+            }
+        }
+        pclose(fsinks);
+    }
+
+    // ── 3. Determine current default source ─────────────────────────────
+    FILE* def = popen("pactl info | grep 'Default Source'", "r");
+    if (def) {
+        char defLine[256];
+        if (fgets(defLine, sizeof(defLine), def)) {
+            std::string defaultName;
+            char* colon = strchr(defLine, ':');
+            if (colon) {
+                defaultName = colon + 1;
+                while (!defaultName.empty() && (defaultName.front() == ' ' || defaultName.front() == '\t'))
+                    defaultName.erase(0, 1);
+                while (!defaultName.empty() && (defaultName.back() == '\n' || defaultName.back() == '\r'))
+                    defaultName.pop_back();
+            }
+            for (int i = 0; i < (int)pulseSourceIds.size(); ++i) {
+                if (pulseSourceIds[i] == defaultName) {
+                    pulseSourceIndex = i;
+                    break;
+                }
+            }
+        }
+        pclose(def);
+    }
+
+    std::cout << "[AudioSystem] Found " << pulseSourceNames.size()
+              << " PulseAudio sources (default idx=" << pulseSourceIndex << ")\n";
+}
+
+std::vector<std::string> AudioSystem::getInputDeviceNames() {
+    return pulseSourceNames;
 }
 
 bool AudioSystem::setInputDevice(int deviceIndex) {
-    if (deviceIndex < 0 || deviceIndex >= Pa_GetDeviceCount()) {
-        return false;
-    }
-
-    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
-    if (!deviceInfo || deviceInfo->maxInputChannels == 0) {
+    if (deviceIndex < 0 || deviceIndex >= (int)pulseSourceIds.size()) {
         return false;
     }
 
     bool wasRunning = running.load();
-
     if (wasRunning) {
         stop();
     }
 
-    inputDevice = deviceIndex;
-    sampleRate = deviceInfo->defaultSampleRate;
-
-    if (wasRunning) {
-        return start();
+    // Set the selected source as PulseAudio default
+    std::string cmd = "pactl set-default-source " + pulseSourceIds[deviceIndex];
+    int ret = system(cmd.c_str());
+    if (ret != 0) {
+        std::cerr << "[AudioSystem] Failed to set default source: " << pulseSourceIds[deviceIndex] << "\n";
+    } else {
+        std::cout << "[AudioSystem] Default source set to: " << pulseSourceIds[deviceIndex] << "\n";
     }
 
+    pulseSourceIndex = deviceIndex;
+
+    // Give PulseAudio time to propagate the new default
+    usleep(100000); // 100ms
+
+    // Re-query PortAudio default — with PulseAudio backend this now captures
+    // the newly selected default source.
+    inputDevice = Pa_GetDefaultInputDevice();
+    if (inputDevice != paNoDevice) {
+        const PaDeviceInfo* dev = Pa_GetDeviceInfo(inputDevice);
+        if (dev) {
+            sampleRate = dev->defaultSampleRate;
+            std::cout << "[AudioSystem] PortAudio default input: " << dev->name
+                      << " idx=" << inputDevice << " sr=" << sampleRate << "\n";
+        }
+    } else {
+        std::cerr << "[AudioSystem] Pa_GetDefaultInputDevice returned paNoDevice\n";
+    }
+
+    if (wasRunning) {
+        bool ok = start();
+        std::cout << "[AudioSystem] Stream restart after device change: " << (ok ? "OK" : "FAILED") << "\n";
+        return ok;
+    }
     return true;
+}
+
+bool AudioSystem::restartStream() {
+    bool wasRunning = running.load();
+    if (wasRunning) {
+        stop();
+    }
+    // Re-query default in case it changed externally
+    inputDevice = Pa_GetDefaultInputDevice();
+    if (inputDevice != paNoDevice) {
+        const PaDeviceInfo* dev = Pa_GetDeviceInfo(inputDevice);
+        if (dev) {
+            sampleRate = dev->defaultSampleRate;
+            std::cout << "[AudioSystem] Restart — using device: " << dev->name
+                      << " idx=" << inputDevice << " sr=" << sampleRate << "\n";
+        }
+    }
+    bool ok = start();
+    std::cout << "[AudioSystem] Manual restart: " << (ok ? "OK" : "FAILED") << "\n";
+    return ok;
 }
 
 int AudioSystem::audioCallback(
@@ -254,33 +372,27 @@ void AudioSystem::processFFT() {
 
     for (int i = 0; i < FFT_SIZE; i++) {
         float s = fftFrame[i];
-
         rms += s * s;
-
         fftIn[i] = s * window[i];
     }
 
     rms = std::sqrt(rms / FFT_SIZE);
-
-    float db =
-        20.0f * std::log10(rms + 1e-6f);
-
+    float db = 20.0f * std::log10(rms + 1e-6f);
     rmsDb.store(db);
 
     fftwf_execute(fftPlan);
 
+    // Magnitude spectrum — linear scale with Hanning-window compensation.
+    // Hanning attenuates by ~50% so we multiply by 2 to recover amplitude.
+    const float windowCompensation = 2.0f / FFT_SIZE;
     for (int i = 0; i < FFT_SIZE / 2; i++) {
         float re = fftOut[i][0];
         float im = fftOut[i][1];
-
-        float mag =
-            std::sqrt(re * re + im * im);
-
-        mag /= FFT_SIZE;
-
-        mag = std::log10(1.0f + mag * 10.0f);
-
-        fftMagnitudes[i] = mag;
+        float mag = std::sqrt(re * re + im * im) * windowCompensation;
+        // Soft compression: preserves dynamic range better than log10
+        // Maps typical audio magnitudes (0..1) to a usable 0..1 range
+        float compressed = std::sqrt(mag);
+        fftMagnitudes[i] = compressed;
     }
 
     calculateBands();
@@ -316,35 +428,28 @@ void AudioSystem::applyEnvelope(
 }
 
 void AudioSystem::calculateBands() {
-    auto sumRange =
-        [&](float startHz, float endHz)
-    {
-        int start = hzToBin(startHz);
-        int end   = hzToBin(endHz);
+    // Energy-based (RMS) per band with logarithmic frequency spacing.
+    // This is closer to how real spectrum analysers / graphic EQs work.
+    auto rmsBand = [&](float startHz, float endHz) -> float {
+        int start = std::max(1, hzToBin(startHz));
+        int end   = std::min((int)fftMagnitudes.size() - 1, hzToBin(endHz));
+        if (end <= start) end = start + 1;
 
-        float sum = 0.0f;
-
+        float sumSq = 0.0f;
+        int count = 0;
         for (int i = start; i <= end; i++) {
-            sum += fftMagnitudes[i];
+            sumSq += fftMagnitudes[i] * fftMagnitudes[i];
+            count++;
         }
-
-        return sum / (end - start + 1);
+        return std::sqrt(sumSq / count);
     };
 
-    float sb =
-        sumRange(20, 60);
-
-    float k =
-        sumRange(60, 150);
-
-    float b =
-        sumRange(150, 300);
-
-    float m =
-        sumRange(300, 4000);
-
-    float h =
-        sumRange(4000, 12000);
+    // Logarithmic-spaced bands (roughly 1-2 octaves each)
+    float sb = rmsBand(20,    80);
+    float k  = rmsBand(80,    250);
+    float b  = rmsBand(250,   500);
+    float m  = rmsBand(500,   2000);
+    float h  = rmsBand(2000, 20000);
 
     subBass.store(sb);
     kick.store(k);

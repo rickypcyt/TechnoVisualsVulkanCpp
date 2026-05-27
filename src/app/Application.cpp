@@ -14,6 +14,7 @@
 #include <random>
 #include <future>
 #include <nlohmann/json.hpp>
+#include <SDL2/SDL.h>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers internos
@@ -1022,6 +1023,20 @@ void Application::mainLoop() {
         const float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
         lastFrameTimestamp   = now;
 
+        // ── FPS counter + window titles ─────────────────────────────────────
+        frameCount++;
+        fpsAccumTime += deltaTime;
+        if (fpsAccumTime >= 0.5f) {
+            currentFps = frameCount / fpsAccumTime;
+            frameCount = 0;
+            fpsAccumTime = 0.0f;
+            char title[128];
+            snprintf(title, sizeof(title), "Vulkan Renderer — %.1f FPS", currentFps);
+            SDL_SetWindowTitle(window.getMainWindow(), title);
+            snprintf(title, sizeof(title), "Controls — %.1f FPS", currentFps);
+            SDL_SetWindowTitle(window.getUiWindow(), title);
+        }
+
         // ── Render jobs pendientes ───────────────────────────────────────────
         {
             std::lock_guard lock(completedRenderJobsMutex);
@@ -1034,7 +1049,9 @@ void Application::mainLoop() {
         transitionActive = false;
 
         // ── Auto-randomize colors ────────────────────────────────────────────
-        tickAutoColors(deltaTime);
+        // Quick energy read for color palette (linear RMS -> 0..1)
+        float quickEnergy = std::min(audioSystem.getRMS() * visualControls.audio.inputGain * 3.0f, 1.0f);
+        tickAutoColors(deltaTime, quickEnergy);
 
         // ── Auto-randomize videos ────────────────────────────────────────────
         tickAutoRandomize(deltaTime, now);
@@ -1142,32 +1159,47 @@ void Application::mainLoop() {
 // Tick helpers (extraídos del mainLoop)
 // ─────────────────────────────────────────────────────────────────────────────
 
-void Application::tickAutoColors(float dt) {
+void Application::tickAutoColors(float dt, float energy) {
     auto& c = visualControls.color;
     if (!c.autoRandomizeColors) return;
 
-    c.colorRandomizeElapsed += dt;
-    if (c.colorRandomizeElapsed >= c.colorRandomizeInterval) {
-        std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
-        std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
-        std::uniform_real_distribution<float> valDist(0.7f, 1.0f);
+    auto hsvToRgb = [](float h, float s, float v) -> glm::vec3 {
+        float c2 = v * s, x = c2 * (1.f - std::fabs(std::fmod(h / 60.f, 2.f) - 1.f)), m = v - c2;
+        float r, g, b;
+        if      (h < 60)  { r=c2; g=x;  b=0;  }
+        else if (h < 120) { r=x;  g=c2; b=0;  }
+        else if (h < 180) { r=0;  g=c2; b=x;  }
+        else if (h < 240) { r=0;  g=x;  b=c2; }
+        else if (h < 300) { r=x;  g=0;  b=c2; }
+        else              { r=c2; g=0;  b=x;  }
+        return { r+m, g+m, b+m };
+    };
 
-        auto hsvToRgb = [](float h, float s, float v) -> glm::vec3 {
-            float c2 = v * s, x = c2 * (1.f - std::fabs(std::fmod(h / 60.f, 2.f) - 1.f)), m = v - c2;
-            float r, g, b;
-            if      (h < 60)  { r=c2; g=x;  b=0;  }
-            else if (h < 120) { r=x;  g=c2; b=0;  }
-            else if (h < 180) { r=0;  g=c2; b=x;  }
-            else if (h < 240) { r=0;  g=x;  b=c2; }
-            else if (h < 300) { r=x;  g=0;  b=c2; }
-            else              { r=c2; g=0;  b=x;  }
-            return { r+m, g+m, b+m };
-        };
+    if (visualControls.system.enableAudioReactive) {
+        // Continuous hue rotation driven by energy — no timer, smooth flow
+        static float currentHue = 0.0f;
+        float speed = 30.0f + energy * 200.0f; // 30-230 deg/sec based on energy
+        currentHue += speed * dt;
+        if (currentHue >= 360.0f) currentHue -= 360.0f;
 
-        float ph = hueDist(rng), ps = satDist(rng), pv = valDist(rng);
-        c.primaryColorTarget   = glm::vec4(hsvToRgb(ph, ps, pv), 1.f);
-        c.secondaryColorTarget = glm::vec4(hsvToRgb(std::fmod(ph + 180.f, 360.f), ps, pv), 1.f);
-        c.colorRandomizeElapsed = 0.f;
+        float sat = 0.5f + energy * 0.5f;  // 0.5-1.0
+        float val = 0.6f + energy * 0.4f;  // 0.6-1.0
+
+        c.primaryColorTarget   = glm::vec4(hsvToRgb(currentHue, sat, val), 1.f);
+        c.secondaryColorTarget = glm::vec4(hsvToRgb(std::fmod(currentHue + 180.f, 360.f), sat, val), 1.f);
+    } else {
+        // Original timer-based randomization
+        c.colorRandomizeElapsed += dt;
+        if (c.colorRandomizeElapsed >= c.colorRandomizeInterval) {
+            std::uniform_real_distribution<float> hueDist(0.0f, 360.0f);
+            std::uniform_real_distribution<float> satDist(0.6f, 1.0f);
+            std::uniform_real_distribution<float> valDist(0.7f, 1.0f);
+
+            float ph = hueDist(rng), ps = satDist(rng), pv = valDist(rng);
+            c.primaryColorTarget   = glm::vec4(hsvToRgb(ph, ps, pv), 1.f);
+            c.secondaryColorTarget = glm::vec4(hsvToRgb(std::fmod(ph + 180.f, 360.f), ps, pv), 1.f);
+            c.colorRandomizeElapsed = 0.f;
+        }
     }
 
     float t = 2.f * dt;
@@ -1314,24 +1346,46 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
         if (visualControls.playback.tempoLfoPhase < 0.0f) visualControls.playback.tempoLfoPhase += kTwoPi;
     }
 
-    float tempoValue = visualControls.playback.tempo;
-    if (visualControls.playback.enableTempoLfo) {
-        float lfoValue = std::sin(visualControls.playback.tempoLfoPhase);
-        tempoValue += visualControls.playback.tempoLfoDepth * lfoValue;
-    }
-    tempoValue = std::clamp(tempoValue, 0.05f, 8.0f);
-
     // Update audio values from AudioSystem (normalized + smoothed)
     auto normalizeAudioLevel = [](float rawValue, float gain, float gamma) {
         float scaled = std::clamp(rawValue * gain, 0.0f, 1.0f);
         return (gamma != 1.0f) ? std::pow(scaled, gamma) : scaled;
     };
 
-    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS(),           0.05f, 0.85f);
-    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass(),  5.0f, 0.90f);
-    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid(),   3.0f, 0.95f);
-    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh(),  3.0f, 1.00f);
+    float inputGain = visualControls.audio.inputGain;
+    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS() * inputGain,           3.0f, 0.85f);
+    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass() * inputGain,  5.0f, 0.90f);
+    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid() * inputGain,   5.0f, 0.95f);
+    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh() * inputGain,   5.0f, 1.00f);
+
+    // Per-band EQ gains
+    liveBass = std::clamp(liveBass * visualControls.audio.bassGain, 0.0f, 1.0f);
+    liveMid  = std::clamp(liveMid  * visualControls.audio.midGain,  0.0f, 1.0f);
     liveHigh = std::clamp(liveHigh * visualControls.audio.highGain, 0.0f, 1.0f);
+
+    float tempoValue;
+    if (visualControls.system.enableAudioReactive) {
+        // Auto-tempo driven by audio energy: 0x (silence) to 5x (loud)
+        float drive = visualControls.audio.reactiveDrive;
+        tempoValue = liveEnergy * 5.0f * drive;
+        tempoValue = std::clamp(tempoValue, 0.0f, 5.0f);
+    } else {
+        tempoValue = visualControls.playback.tempo;
+        if (visualControls.playback.enableTempoLfo) {
+            float lfoValue = std::sin(visualControls.playback.tempoLfoPhase);
+            tempoValue += visualControls.playback.tempoLfoDepth * lfoValue;
+        }
+        tempoValue = std::clamp(tempoValue, 0.05f, 8.0f);
+    }
+
+    // Shader time: accumulates at tempo speed so procedural layers
+    // (Layer 0, Layer 1, Anaglyph) animate with audio energy
+    static float shaderTime = 0.0f;
+    if (visualControls.system.enableAudioReactive) {
+        shaderTime += globalDeltaTime * tempoValue;
+    } else {
+        shaderTime += globalDeltaTime * std::max(0.01f, visualControls.playback.animationSpeed);
+    }
 
     auto& reactive = visualControls.runtime.audioReactive;
     reactive.enabled = visualControls.system.enableAudioReactive;
@@ -1358,7 +1412,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
                                static_cast<float>(vulkanContext.getSwapchainExtent().height));
     ubo.videoResolution = glm::vec2(static_cast<float>(videoTexture.getWidth()),
                                     static_cast<float>(videoTexture.getHeight()));
-    ubo.time = time;
+    ubo.time = visualControls.system.enableAudioReactive ? shaderTime : time;
     ubo.mode = visualControls.playback.activeMode;
     ubo.videoMix = visualControls.playback.videoMix;
     ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.isReady()) ? 1.0f : 0.0f;

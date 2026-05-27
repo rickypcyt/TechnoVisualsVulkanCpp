@@ -12,6 +12,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     auto& camera = c.camera;
     auto& grid = c.grid;
     auto& system = c.system;
+    auto& locks = c.locks;
     // CORE / PLAYBACK
     r.registerFloat("animationSpeed", &playback.animationSpeed, 0.0f, 10.0f);
     r.registerFloat("animationTargetSeconds", &playback.animationTargetSeconds, 0.0f, 10.0f);
@@ -98,6 +99,11 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerVec3("colorBalance", &color.colorBalance);
     r.registerVec3("rgbOverlay", &color.rgbOverlay);
     r.registerBool("enableRgbOverlay", &color.enableRgbOverlay);
+
+    // PARAMETER LOCKS
+    r.registerBool("lockColorBalance", &locks.lockColorBalance);
+    r.registerBool("lockThreshold", &locks.lockThreshold);
+    r.registerBool("lockGrid", &locks.lockGrid);
 
     // COLOR GRADING
     r.registerBool("enableColorGrading", &color.enableColorGrading);
@@ -187,7 +193,10 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("audioGlitchResponse", &audio.glitchResponse, 0.0f, 2.0f);
     r.registerFloat("audioBeatSync", &audio.beatSync, 0.0f, 1.0f);
     r.registerFloat("audioLfoRate", &audio.lfoRate, 0.0f, 5.0f);
-    r.registerFloat("audioHighGain", &audio.highGain, 0.0f, 5.0f);
+    r.registerFloat("audioInputGain", &audio.inputGain, 0.0f, 3.0f);
+    r.registerFloat("audioBassGain", &audio.bassGain, 0.0f, 4.0f);
+    r.registerFloat("audioMidGain", &audio.midGain, 0.0f, 4.0f);
+    r.registerFloat("audioHighGain", &audio.highGain, 0.0f, 4.0f);
     r.registerFloat("audioReactiveDrive", &audio.reactiveDrive, 0.0f, 10.0f);
 
     // EXTRA EFFECTS / EDGE

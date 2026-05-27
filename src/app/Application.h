@@ -228,6 +228,9 @@ private:
     std::chrono::high_resolution_clock::time_point lastGlobalTime;
 
     float accumulatedTime = 0.0f;
+    int   frameCount = 0;
+    float fpsAccumTime = 0.0f;
+    float currentFps = 0.0f;
     float debugAnimationTime = 0.0f;
     float debugAnimationDelta = 0.0f;
     float debugAnimationElapsedSeconds = 0.0f;
@@ -356,7 +359,7 @@ private:
 
     void handleWindowResize(uint32_t width, uint32_t height);
 
-    void tickAutoColors(float dt);
+    void tickAutoColors(float dt, float energy);
 
     void tickAutoRandomize(float dt,
                            const std::chrono::steady_clock::time_point& now);

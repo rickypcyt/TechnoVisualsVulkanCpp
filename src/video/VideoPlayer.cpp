@@ -209,6 +209,9 @@ bool VideoPlayer::grabFrame(std::vector<uint8_t>& outRGBA, int& outWidth, int& o
 
 bool VideoPlayer::grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidth, int& outHeight) {
     if (!ready || !dest || destCapacity == 0) {
+        std::cerr << "[VideoPlayer] grabFrameInto aborted: ready=" << ready
+                  << " dest=" << (dest ? "yes" : "null")
+                  << " cap=" << destCapacity << "\n";
         return false;
     }
 
@@ -217,14 +220,17 @@ bool VideoPlayer::grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidt
         if (ret < 0) {
             if (ret == AVERROR_EOF) {
                 if (!loopEnabled) {
+                    std::cerr << "[VideoPlayer] grabFrameInto EOF (loop disabled)\n";
                     return false;
                 }
                 if (av_seek_frame(formatCtx, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD) < 0) {
+                    std::cerr << "[VideoPlayer] grabFrameInto seek to 0 failed\n";
                     return false;
                 }
                 avcodec_flush_buffers(codecCtx);
                 continue;
             }
+            std::cerr << "[VideoPlayer] grabFrameInto av_read_frame error: " << ret << "\n";
             return false;
         }
 
@@ -245,10 +251,13 @@ bool VideoPlayer::grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidt
                 break;
             }
             if (ret < 0) {
+                std::cerr << "[VideoPlayer] grabFrameInto avcodec_receive_frame error: " << ret << "\n";
                 return false;
             }
 
             if (!ensureScalingContext(frame->width, frame->height, static_cast<AVPixelFormat>(frame->format))) {
+                std::cerr << "[VideoPlayer] grabFrameInto ensureScalingContext failed for "
+                          << frame->width << "x" << frame->height << " fmt=" << frame->format << "\n";
                 av_frame_unref(frame);
                 return false;
             }
@@ -258,6 +267,8 @@ bool VideoPlayer::grabFrameInto(uint8_t* dest, size_t destCapacity, int& outWidt
             const size_t needed = static_cast<size_t>(av_image_get_buffer_size(
                 AV_PIX_FMT_RGBA, videoWidth, videoHeight, 16));
             if (needed > destCapacity) {
+                std::cerr << "[VideoPlayer] grabFrameInto buffer too small: needed=" << needed
+                          << " cap=" << destCapacity << " for " << videoWidth << "x" << videoHeight << "\n";
                 outWidth = videoWidth;
                 outHeight = videoHeight;
                 av_frame_unref(frame);

@@ -32,18 +32,22 @@ float anaglyphSimpleNoise(vec3 p) {
 }
 
 float anaglyphAudioEnergy() {
-    float energy = uBass * 0.5 + uMid * 0.3 + uHigh * 0.2;
-    return max(energy, 0.25);
+    // Stronger audio response with bass emphasis, but keep base shape visible
+    float energy = uBass * 0.6 + uMid * 0.3 + uHigh * 0.15;
+    return max(energy, 0.22); // minimum ensures the object is always partially formed
 }
 
 float anaglyphAssemblyFactor() {
-    return smoothstep(0.12, 0.85, anaglyphAudioEnergy());
+    // More dramatic assembly/disassembly range
+    return smoothstep(0.05, 0.95, anaglyphAudioEnergy());
 }
 
 vec3 anaglyphApplyCamera(vec3 pos) {
-    float tiltY = -PI * 0.25 + (sin(uTime * 0.35) + uMid * 0.8) * 0.25;
-    float tiltX = -PI * 0.5 + (cos(uTime * 0.27) + uBass * 1.2) * 0.2;
-    float twist = sin(uTime * 0.18 + uHigh * 1.8) * 0.35;
+    // Much stronger audio-reactive camera movement
+    float audioDrive = anaglyphAudioEnergy() * 2.0;
+    float tiltY = -PI * 0.25 + (sin(uTime * 0.35) + uMid * 1.5 + audioDrive) * 0.35;
+    float tiltX = -PI * 0.5 + (cos(uTime * 0.27) + uBass * 2.0 + audioDrive * 0.5) * 0.35;
+    float twist = sin(uTime * 0.18 + uHigh * 3.0 + uBass * 2.0) * 0.6;
 
     pos.yz *= anaglyphRot(tiltY);
     pos.xz *= anaglyphRot(tiltX);
@@ -56,7 +60,7 @@ float anaglyphCoreGeometry(vec3 pos) {
     float a = 1.0;
     float scene = 1.0;
     float t = uTime * 0.2;
-    float wave = 1.0 + 0.2 * sin(t * 8.0 - length(pos) * 2.0 + anaglyphAudioEnergy() * 2.5);
+    float wave = 1.0 + 0.35 * sin(t * 8.0 - length(pos) * 2.0 + anaglyphAudioEnergy() * 4.0) + uBass * 0.3;
     t = floor(t) + pow(fract(t), 0.5);
 
     for (int i = kAnaglyphLayerCount; i > 0; --i) {
@@ -149,8 +153,10 @@ vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, floa
     vec2 anchor = st * 2.0;
     vec3 target = vec3(0.0);
 
-    vec3 eyeLeft = vec3(-kAnaglyphDivergence, 0.0, 5.0);
-    vec3 eyeRight = vec3(kAnaglyphDivergence, 0.0, 5.0);
+    // Audio-reactive eye divergence — more bass = more stereo separation
+    float audioDivergence = kAnaglyphDivergence * (1.0 + uBass * 2.0);
+    vec3 eyeLeft = vec3(-audioDivergence, 0.0, 5.0 + uMid * 0.5);
+    vec3 eyeRight = vec3(audioDivergence, 0.0, 5.0 + uMid * 0.5);
 
     vec3 rayLeft = anaglyphLook(eyeLeft, target, anchor, kAnaglyphFieldOfView);
     vec3 rayRight = anaglyphLook(eyeRight, target, anchor, kAnaglyphFieldOfView);
@@ -161,7 +167,8 @@ vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, floa
     vec3 color = vec3(leftSample.r, rightSample.g, rightSample.b);
 
     float assemblyFactor = anaglyphAssemblyFactor();
-    color += vec3(0.08, 0.05, 0.1) * assemblyFactor * 0.2;
+    // Audio-reactive color boost
+    color += vec3(0.12, 0.08, 0.15) * assemblyFactor * (0.3 + uEnergy * 0.5);
     color = clamp(color, 0.0, 1.0);
     color = pow(color, vec3(1.0 / 2.2));
 
