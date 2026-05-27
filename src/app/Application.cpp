@@ -1354,9 +1354,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
 
     float inputGain = visualControls.audio.inputGain;
     float liveEnergy = normalizeAudioLevel(audioSystem.getRMS() * inputGain,           1.0f, 0.85f);
-    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass() * inputGain,  5.0f, 0.90f);
-    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid() * inputGain,   5.0f, 0.95f);
-    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh() * inputGain,   5.0f, 1.00f);
+    float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass() * inputGain,  2.0f, 1.10f);
+    float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid() * inputGain,   2.0f, 1.00f);
+    float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh() * inputGain,   2.0f, 1.00f);
 
     // Per-band EQ gains
     liveBass = std::clamp(liveBass * visualControls.audio.bassGain, 0.0f, 1.0f);

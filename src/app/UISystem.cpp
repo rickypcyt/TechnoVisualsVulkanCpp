@@ -65,9 +65,9 @@ namespace {
 
 // ── Layer combo ──────────────────────────────────────────────────────────────
 
-constexpr int  kLayerModeValues[] = {0, 1, 40};
-constexpr int  kLayerModeCount    = 3;
-constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Anaglyph 3D\0";
+constexpr int  kLayerModeValues[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 40};
+constexpr int  kLayerModeCount    = 10;
+constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Plasma Wave\0Radial Burst\0Grid Pulse\0Noise Flow\0Cellular\0Mandala\0Terrain Scan\0Anaglyph 3D\0";
 
 int layerIndexFromMode(int mode) {
     for (int i = 0; i < kLayerModeCount; ++i)

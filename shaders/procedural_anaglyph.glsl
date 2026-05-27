@@ -38,13 +38,15 @@ float anaglyphAudioEnergy() {
 }
 
 float anaglyphAssemblyFactor() {
-    // More dramatic assembly/disassembly range
-    return smoothstep(0.05, 0.95, anaglyphAudioEnergy());
+    // Capped with time oscillation — never fully saturates to avoid getting stuck/white
+    float base = smoothstep(0.05, 0.95, anaglyphAudioEnergy()) * 0.75;
+    float oscillation = sin(uTime * 0.4) * 0.12;
+    return clamp(base + oscillation, 0.08, 0.88);
 }
 
 vec3 anaglyphApplyCamera(vec3 pos) {
-    // Much stronger audio-reactive camera movement
-    float audioDrive = anaglyphAudioEnergy() * 2.0;
+    // Audio-reactive camera — capped to prevent extreme spins that cause whiteout
+    float audioDrive = clamp(anaglyphAudioEnergy() * 1.5, 0.0, 1.0);
     float tiltY = -PI * 0.25 + (sin(uTime * 0.35) + uMid * 1.5 + audioDrive) * 0.35;
     float tiltX = -PI * 0.5 + (cos(uTime * 0.27) + uBass * 2.0 + audioDrive * 0.5) * 0.35;
     float twist = sin(uTime * 0.18 + uHigh * 3.0 + uBass * 2.0) * 0.6;
@@ -127,7 +129,7 @@ vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
             float assemblyFactor = anaglyphAssemblyFactor();
             vec3 basePalette = mix(uPrimaryColor, uSecondaryColor, clamp(0.35 + assemblyFactor * 0.5, 0.0, 1.0));
 
-            vec3 color = basePalette * (0.3 + diff * (0.9 + uEnergy * 0.4));
+            vec3 color = basePalette * (0.25 + diff * (0.5 + uEnergy * 0.25));
 
             // Removed fog effect for better sharpness/quality
 
@@ -141,12 +143,8 @@ vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
         }
     }
 
-    float assemblyFactor = anaglyphAssemblyFactor();
-    float horizon = clamp(anchor.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 bg = mix(uPrimaryColor * 0.1, uSecondaryColor * 0.25, horizon);
-    bg += vec3(0.05, 0.08, 0.12) * (0.8 - clamp(length(anchor), 0.0, 1.2)) * (0.3 + assemblyFactor * 0.5);
-
-    return vec4(clamp(bg, 0.0, 1.0), 0.15 + assemblyFactor * 0.2);
+    // Pure black background — no color tinting, ever
+    return vec4(0.0, 0.0, 0.0, 0.0);
 }
 
 vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
@@ -164,11 +162,10 @@ vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, floa
     vec4 leftSample = anaglyphShadeEye(eyeLeft, rayLeft, anchor);
     vec4 rightSample = anaglyphShadeEye(eyeRight, rayRight, anchor);
 
+    // Build anaglyph: left eye = red channel, right eye = cyan (green+blue)
     vec3 color = vec3(leftSample.r, rightSample.g, rightSample.b);
 
-    float assemblyFactor = anaglyphAssemblyFactor();
-    // Audio-reactive color boost
-    color += vec3(0.12, 0.08, 0.15) * assemblyFactor * (0.3 + uEnergy * 0.5);
+    // No extra tinting — background is pure black so colors stay clean
     color = clamp(color, 0.0, 1.0);
     color = pow(color, vec3(1.0 / 2.2));
 

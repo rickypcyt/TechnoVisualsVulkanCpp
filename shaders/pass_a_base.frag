@@ -15,6 +15,7 @@ const float PI = 3.1415926535;
 #define uSecondaryColor ubo.secondaryColor.rgb
 
 #include "procedural_anaglyph.glsl"
+#include "procedural_effects.glsl"
 
 #undef uTime
 #undef uTempo
@@ -186,6 +187,13 @@ vec3 renderMode1(vec2 st) {
 vec4 dispatchMode(int m, vec2 st) {
     if (m == 0) return vec4(renderMode0(st), 1.0);
     if (m == 1) return vec4(renderMode1(st), 1.0);
+    if (m == 2) return vec4(renderPlasmaWave(st), 1.0);
+    if (m == 3) return vec4(renderRadialBurst(st), 1.0);
+    if (m == 4) return vec4(renderGridPulse(st), 1.0);
+    if (m == 5) return vec4(renderNoiseFlow(st), 1.0);
+    if (m == 6) return vec4(renderCellularVoronoi(st), 1.0);
+    if (m == 7) return vec4(renderMandalaSpin(st), 1.0);
+    if (m == 8) return vec4(renderTerrainScan(st), 1.0);
     if (m == 40) {
         vec2 aspectCorrected = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
         return renderAnaglyphAssembly(aspectCorrected, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);

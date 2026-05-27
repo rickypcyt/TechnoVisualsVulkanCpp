@@ -21,7 +21,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("tempoLfoSpeed", &playback.tempoLfoSpeed, 0.0f, 10.0f);
     r.registerFloat("tempoLfoDepth", &playback.tempoLfoDepth, 0.0f, 2.0f);
     r.registerFloat("tempoLfoPhase", &playback.tempoLfoPhase, 0.0f, 6.28f);
-    r.registerInt("activeMode", &playback.activeMode, 0, 10);
+    r.registerInt("activeMode", &playback.activeMode, 0, 40);
 
     // Audio analysis snapshot (exposed for monitoring)
     r.registerFloat("energy", &audio.energy, 0.0f, 1.0f);
