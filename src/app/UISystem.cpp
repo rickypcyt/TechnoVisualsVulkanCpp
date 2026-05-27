@@ -426,15 +426,6 @@ void randomizeVJayBasicsControls(VisualControls& c, std::mt19937& rng) {
         c.post.vhsDistortion              = u01();
         c.post.analogChromaticAberration  = rr(0.f, 0.25f);
     }
-    if (c.system.enableAudioReactive) {
-        c.audio.warpResponse     = rr(0.f, 2.f);
-        c.audio.feedbackResponse = rr(0.f, 2.f);
-        c.audio.blurResponse     = rr(0.f, 2.f);
-        c.audio.colorResponse    = rr(0.f, 2.f);
-        c.audio.glitchResponse   = rr(0.f, 2.f);
-        c.audio.beatSync         = rr(0.f, 4.f);
-        c.audio.lfoRate          = rr(0.05f, 4.f);
-    }
     if (c.temporal.enableTemporal) {
         c.playback.temporalInterpolation  = u01();
         c.playback.temporalBlendStrength  = u01();
@@ -1190,13 +1181,12 @@ void UISystem::drawProceduralControlsContent(
     ImGui::Separator();
     ImGui::Text("Audio-inspired inputs");
     if (controls.system.enableAudioReactive) {
-        float autoTempo = std::clamp(controls.audio.energy * 5.0f * controls.audio.reactiveDrive, 0.0f, 5.0f);
         ImGui::BeginDisabled(true);
-        ImGui::SliderFloat("Tempo (auto)", &autoTempo, 0.0f, 5.0f, "%.2fx");
+        ImGui::SliderFloat("Tempo (auto)", &controls.playback.tempo, 0.0f, 5.0f, "%.2fx");
         ImGui::EndDisabled();
         ImGui::SameLine(); ImGui::TextDisabled("(energy driven)");
     } else {
-        changed |= ImGui::SliderFloat("Tempo",  &controls.playback.tempo, 0.25f, 4.f);
+        changed |= ImGui::SliderFloat("Tempo",  &controls.playback.tempo, 0.0f, 5.0f, "%.2fx");
     }
     changed |= ImGui::Checkbox("Auto tempo LFO", &controls.playback.enableTempoLfo);
     if (controls.playback.enableTempoLfo) {
@@ -1359,7 +1349,7 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
     auto setAll = [&](bool v) {
         c.color.enableColorGrading = c.temporal.enableFeedback = c.fx.enableDistortion =
         c.fx.enableBlurMotion      = c.fx.enableSharpen        = c.fx.enableGlitch     =
-        c.blending.enableBlending  = c.post.enableAnalog       = c.system.enableAudioReactive =
+        c.blending.enableBlending  = c.post.enableAnalog       =
         c.temporal.enableTemporal  = v;
     };
     auto reset = [&]() {
@@ -1383,8 +1373,6 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         c.blending.blendProceduralMix  = 1;  c.blending.blendVideoMix  = 1;  c.blending.blendFeedbackMix  = 0.5f;
         c.post.analogScanlineFocus = 0.5f;   c.post.analogMaskBalance = 0.5f; c.post.analogNoise = 0.2f;
         c.post.analogBloom = 0.3f;           c.post.vhsDistortion = 0;        c.post.analogChromaticAberration = 0.02f;
-        c.audio.warpResponse = c.audio.feedbackResponse = c.audio.blurResponse =
-        c.audio.colorResponse = c.audio.glitchResponse = c.audio.beatSync = 0; c.audio.lfoRate = 0.5f;
         c.playback.temporalInterpolation = c.playback.temporalBlendStrength = 0;
         c.playback.slowMotionFactor = 1;  c.playback.frameAccumulation = 0;
     };
@@ -1452,16 +1440,7 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         changed |= ImGui::SliderFloat("VHS distortion",&c.post.vhsDistortion,             0.f,1.f,   "%.2f");
         changed |= ImGui::SliderFloat("Analog chroma", &c.post.analogChromaticAberration, 0.f,0.25f, "%.3f");
     )
-    TOGGLED_SECTION("9. Audio reactivity", c.system.enableAudioReactive,
-        changed |= ImGui::SliderFloat("Warp response",    &c.audio.warpResponse,    0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Feedback response",&c.audio.feedbackResponse,0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Blur response",    &c.audio.blurResponse,    0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Color response",   &c.audio.colorResponse,   0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Glitch response",  &c.audio.glitchResponse,  0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Beat sync",        &c.audio.beatSync,        0,4,"%.2f");
-        changed |= ImGui::SliderFloat("LFO rate",         &c.audio.lfoRate,     0.05f,4,"%.2f Hz");
-    )
-    TOGGLED_SECTION("10. Temporal speed processing", c.temporal.enableTemporal,
+    TOGGLED_SECTION("9. Temporal speed processing", c.temporal.enableTemporal,
         changed |= ImGui::SliderFloat("Frame interpolation",&c.playback.temporalInterpolation,0,1, "%.2f");
         changed |= ImGui::SliderFloat("Temporal blend",     &c.playback.temporalBlendStrength,0,1, "%.2f");
         changed |= ImGui::SliderFloat("Slow-motion",        &c.playback.slowMotionFactor, 0.1f,4,  "%.2fx");
@@ -1964,15 +1943,12 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
     // Manual inputs
     ImGui::Text("Audio-inspired inputs");
     if (c.system.enableAudioReactive) {
-        // Show auto-tempo as read-only when audio reactive is on
-        float autoTempo = c.runtime.audioReactive.enabled ?
-            std::clamp(c.audio.energy * 5.0f * c.audio.reactiveDrive, 0.0f, 5.0f) : c.playback.tempo;
         ImGui::BeginDisabled(true);
-        ImGui::SliderFloat("Tempo (auto)", &autoTempo, 0.0f, 5.0f, "%.2fx");
+        ImGui::SliderFloat("Tempo (auto)", &c.playback.tempo, 0.0f, 5.0f, "%.2fx");
         ImGui::EndDisabled();
         ImGui::SameLine(); ImGui::TextDisabled("(driven by energy)");
     } else {
-        ImGui::SliderFloat("Tempo",  &c.playback.tempo, 0.25f, 4.f);
+        ImGui::SliderFloat("Tempo",  &c.playback.tempo, 0.0f, 5.0f, "%.2fx");
     }
     ImGui::Checkbox("Auto tempo LFO", &c.playback.enableTempoLfo);
     if (c.playback.enableTempoLfo) {
@@ -1989,6 +1965,15 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
     ImGui::SliderFloat("Mid gain",      &c.audio.midGain,   0.0f, 4.0f, "%.2fx");
     ImGui::SliderFloat("High gain",     &c.audio.highGain,  0.0f, 4.0f, "%.2fx");
     ImGui::SliderFloat("Procedural audio drive", &c.audio.reactiveDrive, 0.5f,3.f,"%.2fx");
+    ImGui::Separator();
+    ImGui::TextColored({0,1,0.5f,1}, "Audio Reactivity (always ON)");
+    ImGui::SliderFloat("Warp response",    &c.audio.warpResponse,    0,2,"%.2f");
+    ImGui::SliderFloat("Feedback response",&c.audio.feedbackResponse,0,2,"%.2f");
+    ImGui::SliderFloat("Blur response",    &c.audio.blurResponse,    0,2,"%.2f");
+    ImGui::SliderFloat("Color response",   &c.audio.colorResponse,   0,2,"%.2f");
+    ImGui::SliderFloat("Glitch response",  &c.audio.glitchResponse,  0,2,"%.2f");
+    ImGui::SliderFloat("Beat sync",        &c.audio.beatSync,        0,4,"%.2f");
+    ImGui::SliderFloat("LFO rate",         &c.audio.lfoRate,     0.05f,4,"%.2f Hz");
     ImGui::Separator();
 
     // Live read-only meters

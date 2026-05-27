@@ -32,6 +32,27 @@ shaders=(
   "pass_g_output.frag"
 )
 
+# Find the oldest .spv so .glsl changes are compared against it
+oldest_spv=""
+for shader in "${shaders[@]}"; do
+    out="$SHADERS_DIR/$shader.spv"
+    if [[ -f "$out" ]]; then
+        if [[ -z "$oldest_spv" || "$out" -ot "$oldest_spv" ]]; then
+            oldest_spv="$out"
+        fi
+    fi
+done
+
+# Detect if any .glsl include file changed (newer than the oldest .spv)
+force_recompile=0
+for glsl in "$SHADERS_DIR"/*.glsl; do
+    if [[ ! -f "$glsl" ]]; then continue; fi
+    if [[ -z "$oldest_spv" || "$glsl" -nt "$oldest_spv" ]]; then
+        force_recompile=1
+        break
+    fi
+done
+
 # Compile shaders only if needed
 for shader in "${shaders[@]}"; do
     src="$SHADERS_DIR/$shader"
@@ -42,7 +63,7 @@ for shader in "${shaders[@]}"; do
         continue
     fi
 
-    if [[ "$src" -nt "$out" ]]; then
+    if [[ "$force_recompile" -eq 1 || "$src" -nt "$out" ]]; then
         echo "[build_and_run] compiling $shader"
         glslc "$src" -o "$out"
     else

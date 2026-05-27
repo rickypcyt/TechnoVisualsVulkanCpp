@@ -16,7 +16,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     // CORE / PLAYBACK
     r.registerFloat("animationSpeed", &playback.animationSpeed, 0.0f, 10.0f);
     r.registerFloat("animationTargetSeconds", &playback.animationTargetSeconds, 0.0f, 10.0f);
-    r.registerFloat("tempo", &playback.tempo, 20.0f, 300.0f);
+    r.registerFloat("tempo", &playback.tempo, 0.0f, 8.0f);
     r.registerBool("enableTempoLfo", &playback.enableTempoLfo);
     r.registerFloat("tempoLfoSpeed", &playback.tempoLfoSpeed, 0.0f, 10.0f);
     r.registerFloat("tempoLfoDepth", &playback.tempoLfoDepth, 0.0f, 2.0f);
@@ -41,7 +41,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
 
     // VIDEO
     r.registerFloat("videoMix", &playback.videoMix, 0.0f, 1.0f);
-    r.registerFloat("videoPlaybackRate", &playback.videoPlaybackRate, 0.1f, 4.0f);
+    r.registerFloat("videoPlaybackRate", &playback.videoPlaybackRate, 0.0f, 5.0f);
     r.registerFloat("videoDecodeOversample", &playback.videoDecodeOversample, 1.0f, 4.0f);
     r.registerBool("autoScaleVideo", &playback.autoScaleVideo);
 
@@ -51,7 +51,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerInt("video2BlendMode", &playback.video2BlendMode, 0, 4);
     r.registerInt("selectedVideo2Asset", &playback.selectedVideo2Asset, 0, 1000);
     r.registerString("selectedVideo2Folder", &playback.selectedVideo2Folder);
-    r.registerFloat("video2PlaybackRate", &playback.video2PlaybackRate, 0.1f, 4.0f);
+    r.registerFloat("video2PlaybackRate", &playback.video2PlaybackRate, 0.0f, 5.0f);
     r.registerBool("randomVideo2Start", &playback.randomVideo2Start);
     r.registerFloat("randomJumpInterval2", &playback.randomJumpInterval2, 0.1f, 60.0f);
     r.registerBool("enableRandomJumpInterval2", &playback.enableRandomJumpInterval2);
@@ -184,8 +184,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("vhsDistortion", &post.vhsDistortion, 0.0f, 1.0f);
     r.registerFloat("analogChromaticAberration", &post.analogChromaticAberration, 0.0f, 0.1f);
 
-    // AUDIO REACTIVE
-    r.registerBool("enableAudioReactive", &system.enableAudioReactive);
+    // AUDIO REACTIVE (enableAudioReactive is always ON, not registered)
     r.registerFloat("audioWarpResponse", &audio.warpResponse, 0.0f, 2.0f);
     r.registerFloat("audioFeedbackResponse", &audio.feedbackResponse, 0.0f, 2.0f);
     r.registerFloat("audioBlurResponse", &audio.blurResponse, 0.0f, 2.0f);

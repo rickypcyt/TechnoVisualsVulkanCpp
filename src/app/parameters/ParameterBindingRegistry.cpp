@@ -360,7 +360,7 @@ const std::unordered_map<std::string, ParamBinding>& ParameterBindingRegistry::g
         { "audioMidGain", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.midGain; }} },
         { "audioHighGain", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.highGain; }} },
         { "audioReactiveDrive", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.reactiveDrive; }} },
-        { "enableAudioReactive", {ParamBinding::Type::Bool, nullptr, nullptr, [](VisualControls& c) -> bool& { return c.system.enableAudioReactive; }} },
+        // enableAudioReactive is always ON, not exposed
 
         // ============================================================================
         // TEMPORAL DOMAIN
@@ -451,7 +451,7 @@ const std::unordered_map<std::string, ParamBinding>& ParameterBindingRegistry::g
         { "system.fxaaQualitySubpix", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.system.fxaaQualitySubpix; }} },
         { "system.fxaaQualityEdgeThreshold", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.system.fxaaQualityEdgeThreshold; }} },
         { "system.fxaaQualityEdgeThresholdMin", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.system.fxaaQualityEdgeThresholdMin; }} },
-        { "system.enableAudioReactive", {ParamBinding::Type::Bool, nullptr, nullptr, [](VisualControls& c) -> bool& { return c.system.enableAudioReactive; }} },
+        // enableAudioReactive is always ON, not exposed
 
         // Legacy flat names for System
         { "enableFXAA", {ParamBinding::Type::Bool, nullptr, nullptr, [](VisualControls& c) -> bool& { return c.system.enableFXAA; }} },

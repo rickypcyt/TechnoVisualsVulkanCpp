@@ -1353,7 +1353,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     };
 
     float inputGain = visualControls.audio.inputGain;
-    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS() * inputGain,           3.0f, 0.85f);
+    float liveEnergy = normalizeAudioLevel(audioSystem.getRMS() * inputGain,           1.0f, 0.85f);
     float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass() * inputGain,  5.0f, 0.90f);
     float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid() * inputGain,   5.0f, 0.95f);
     float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh() * inputGain,   5.0f, 1.00f);
@@ -1366,9 +1366,14 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     float tempoValue;
     if (visualControls.system.enableAudioReactive) {
         // Auto-tempo driven by audio energy: 0x (silence) to 5x (loud)
+        // Power curve makes it harder to reach 5 (needs very high energy)
         float drive = visualControls.audio.reactiveDrive;
-        tempoValue = liveEnergy * 5.0f * drive;
+        float curvedEnergy = std::pow(liveEnergy, 1.5f);
+        tempoValue = curvedEnergy * 5.0f * drive;
         tempoValue = std::clamp(tempoValue, 0.0f, 5.0f);
+        // Sync playback.tempo so the UI slider moves too
+        visualControls.playback.tempo = tempoValue;
+        // Note: video playback rate is NOT synced to tempo — videos keep their manual speed
     } else {
         tempoValue = visualControls.playback.tempo;
         if (visualControls.playback.enableTempoLfo) {
