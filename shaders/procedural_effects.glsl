@@ -412,57 +412,73 @@ vec3 renderOscilloscope(vec2 st) {
     float high = clamp(ubo.high * drive, 0.0, 1.0);
     float energy = clamp(ubo.energy * drive, 0.0, 1.0);
 
-    // Dark background
-    vec3 color = vec3(0.01, 0.01, 0.015);
+    // Dark background with subtle grid
+    vec3 color = vec3(0.005, 0.005, 0.008);
+    float gridX = abs(fract(uv.x * 10.0) - 0.5);
+    float gridY = abs(fract(uv.y * 8.0) - 0.5);
+    color += vec3(0.01) * (smoothstep(0.02, 0.0, gridX) + smoothstep(0.02, 0.0, gridY));
 
-    // Multiple oscilloscope traces with different shapes
+    // Each trace reacts to a different frequency band
+    // trace 0 = bass, 1 = mid, 2 = high, 3 = energy
+    float bands[4] = float[4](bass, mid, high, energy);
+
     for (int trace = 0; trace < 4; ++trace) {
         float fi = float(trace);
+        float band = bands[trace];
 
-        // Each trace has its own time offset and frequency
-        float tt = t * (0.5 + fi * 0.25) + fi * 1.57;
-        float freq = 2.0 + fi * 3.0 + bass * 4.0;
+        // Time offset per trace, modulated by its band
+        float tt = t * (0.5 + fi * 0.3 + band * 0.5) + fi * 1.57;
+        // Frequency strongly driven by band
+        float freq = 2.0 + fi * 2.5 + band * 6.0 + sin(tt * 0.3) * 2.0;
 
-        // Complex waveform — multiple harmonics that morph over time
-        float shape = sin(uv.x * freq + tt) * (0.4 + mid * 0.3);
-        shape += sin(uv.x * freq * 2.37 + tt * 0.73) * (0.25 + high * 0.15);
-        shape += sin(uv.x * freq * 3.13 + tt * 1.19) * (0.15 + bass * 0.1);
-        shape += cos(uv.x * freq * 1.73 + tt * 0.47 + bass * 3.0) * 0.1;
+        // Complex waveform — each harmonic scaled by different band
+        float shape = sin(uv.x * freq + tt) * (0.35 + mid * 0.35);
+        shape += sin(uv.x * freq * 2.37 + tt * 0.73 + bass * 2.0) * (0.25 + bass * 0.25);
+        shape += sin(uv.x * freq * 3.13 + tt * 1.19 - high * 3.0) * (0.18 + high * 0.2);
+        shape += cos(uv.x * freq * 1.73 + tt * 0.47 + mid * 4.0) * (0.12 + energy * 0.15);
+        // Add a fast chaotic harmonic for "hair"
+        shape += sin(uv.x * freq * 5.91 + tt * 1.7) * (0.05 + band * 0.08);
 
-        // Audio makes the wave pulse vertically
-        float amp = 0.25 + energy * 0.35 + bass * 0.2;
+        // Amplitude driven PRIMARILY by the trace's band, not just energy
+        float amp = 0.15 + band * 0.5 + bass * 0.15;
         float y = uv.y - shape * amp;
 
-        // Line thickness varies with high frequencies
-        float thick = 0.003 + high * 0.005 + fi * 0.002;
-        float line = 1.0 - smoothstep(0.0, thick, abs(y));
+        // Thickness: much thicker core line + pronounced glow
+        float thick = 0.004 + band * 0.012 + fi * 0.002;
+        // Sharper core line using pow for pronounced look
+        float line = pow(1.0 - smoothstep(0.0, thick, abs(y)), 2.0);
 
-        // Glow around the line
-        float glow = exp(-y * y * 300.0) * (0.15 + mid * 0.1);
+        // Stronger glow around the line, modulated by band
+        float glow = exp(-y * y * (120.0 + band * 200.0)) * (0.25 + band * 0.35);
 
-        // Color per trace, cycling with time and audio
-        float hue = fract(t * 0.1 + fi * 0.25 + bass * 0.2);
+        // Color per trace, strongly tied to its band
+        float hue = fract(t * 0.15 + fi * 0.25 + band * 0.3);
         vec3 traceCol = mix(uPrimaryColor, uSecondaryColor, hue);
 
-        // Add to color with trace-specific intensity
-        float intensity = 0.6 - fi * 0.12;
+        // Intensity boosted by band
+        float intensity = 0.7 - fi * 0.1 + band * 0.4;
         color += traceCol * line * intensity;
-        color += traceCol * glow * 0.5;
+        color += traceCol * glow * 0.6;
     }
 
-    // Central beam that reacts to bass
-    float beamWidth = 0.01 + bass * 0.02;
-    float beam = exp(-abs(uv.x) * abs(uv.x) * 200.0) * (0.1 + bass * 0.3);
-    color += mix(uPrimaryColor, vec3(1.0), high * 0.5) * beam;
+    // Central vertical beam reacting to bass
+    float beamWidth = 0.008 + bass * 0.025;
+    float beam = exp(-abs(uv.x) * abs(uv.x) * (80.0 + bass * 300.0)) * (0.15 + bass * 0.5);
+    color += mix(uPrimaryColor, vec3(1.0), high * 0.6) * beam;
 
-    // Lissajous-style overlay when energy is high
-    if (energy > 0.3) {
-        float lissX = sin(t * 0.7 + uv.x * 4.0) * 0.3;
-        float lissY = cos(t * 0.5 + uv.y * 3.0 + bass * 2.0) * 0.3;
+    // Horizontal sweep line reacting to tempo
+    float sweep = fract(t * 0.5 * uTempo);
+    float sweepLine = exp(-abs(uv.x - (sweep - 0.5) * 1.8) * 80.0) * 0.08;
+    color += uSecondaryColor * sweepLine;
+
+    // Lissajous dots when energy is high
+    if (energy > 0.25) {
+        float lissX = sin(t * 0.7 + uv.x * 4.0 + bass * 3.0) * 0.35;
+        float lissY = cos(t * 0.5 + uv.y * 3.0 + high * 2.0) * 0.35;
         float liss = length(uv - vec2(lissX, lissY));
-        float lissDot = exp(-liss * liss * 80.0) * (energy - 0.3) * 0.8;
-        color += mix(uSecondaryColor, uPrimaryColor, sin(t)) * lissDot;
+        float lissDot = exp(-liss * liss * 100.0) * (energy - 0.25) * 1.2;
+        color += mix(uSecondaryColor, uPrimaryColor, sin(t + mid * 3.0)) * lissDot;
     }
 
-    return clamp(color, 0.0, 0.9);
+    return clamp(color, 0.0, 1.2);
 }

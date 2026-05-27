@@ -108,6 +108,13 @@ public:
 
     void run();
 
+    // Presets
+    std::vector<std::string> listPresets() const;
+    bool savePreset(const std::string& name);
+    bool loadPreset(const std::string& name);
+    bool deletePreset(const std::string& name);
+    std::string presetsDir = "presets";
+
 private:
 
     // --------------------------

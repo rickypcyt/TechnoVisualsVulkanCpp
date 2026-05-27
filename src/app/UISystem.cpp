@@ -1079,6 +1079,53 @@ void UISystem::render(
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// Tab: Presets
+// ═════════════════════════════════════════════════════════════════════════════
+
+void UISystem::drawPresetsContent(VisualControls& controls, bool& controlsDirty, const UICallbacks& callbacks) {
+    if (!callbacks.onListPresets || !callbacks.onSavePreset || !callbacks.onLoadPreset || !callbacks.onDeletePreset) {
+        ImGui::Text("Preset callbacks not configured.");
+        return;
+    }
+
+    ImGui::InputText("Name", presetNameBuffer, sizeof(presetNameBuffer));
+    ImGui::SameLine();
+    if (ImGui::Button("Save")) {
+        std::string name(presetNameBuffer);
+        if (!name.empty()) {
+            if (callbacks.onSavePreset(name)) {
+                // clear name after save
+                presetNameBuffer[0] = '\0';
+            }
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Saved Presets:");
+
+    auto presets = callbacks.onListPresets();
+    if (presets.empty()) {
+        ImGui::TextDisabled("No presets saved yet.");
+    }
+
+    for (const auto& name : presets) {
+        ImGui::PushID(name.c_str());
+        if (ImGui::Button("Load")) {
+            if (callbacks.onLoadPreset(name)) {
+                controlsDirty = true;
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Delete")) {
+            callbacks.onDeletePreset(name);
+        }
+        ImGui::SameLine();
+        ImGui::Text("%s", name.c_str());
+        ImGui::PopID();
+    }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // Main navbar (entry point de tabs)
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -1133,6 +1180,7 @@ void UISystem::drawMainNavbar(
         if (ImGui::BeginTabItem("OSC"))        { drawOscControlsContent(oscSystem);           ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Audio"))      { drawAudioDebugContent(audioSystem, controls); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Parameters")) { drawParameterIndexContent();                  ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("Presets"))    { drawPresetsContent(controls, controlsDirty, callbacks); ImGui::EndTabItem(); }
         ImGui::EndTabBar();
     }
     ImGui::End();

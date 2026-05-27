@@ -13,6 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <random>
 #include <future>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
 
@@ -187,6 +188,119 @@ void Application::saveState() const {
         videoSourcePath2
     );
     saveVideoSpeeds();
+}
+
+std::vector<std::string> Application::listPresets() const {
+    std::vector<std::string> names;
+    if (!std::filesystem::exists(presetsDir)) return names;
+    for (const auto& entry : std::filesystem::directory_iterator(presetsDir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".json") {
+            names.push_back(entry.path().stem().string());
+        }
+    }
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
+bool Application::savePreset(const std::string& name) {
+    std::filesystem::create_directories(presetsDir);
+    std::string path = presetsDir + "/" + name + ".json";
+
+    nlohmann::json j;
+    j["version"] = 2;
+    j["visualControls"] = JsonSerializer::toJson(parameterRegistry);
+
+    nlohmann::json video;
+    video["videoSourcePath"] = videoSourcePath;
+    video["videoSourcePath2"] = videoSourcePath2;
+    video["selectedVideoAsset"] = selectedVideoAsset;
+    video["selectedVideoAsset2"] = selectedVideoAsset2;
+    video["allowDimensionChangeRecreation"] = allowDimensionChangeRecreation;
+
+    nlohmann::json r1;
+    r1["autoRandomize"] = videoRandomizer.autoRandomize;
+    r1["useVideoDuration"] = videoRandomizer.useVideoDuration;
+    r1["intervalSeconds"] = videoRandomizer.intervalSeconds;
+    r1["useShuffleMode"] = videoRandomizer.useShuffleMode;
+    video["randomizer1"] = r1;
+
+    nlohmann::json r2;
+    r2["autoRandomize"] = videoRandomizer2.autoRandomize;
+    r2["useVideoDuration"] = videoRandomizer2.useVideoDuration;
+    r2["intervalSeconds"] = videoRandomizer2.intervalSeconds;
+    r2["useShuffleMode"] = videoRandomizer2.useShuffleMode;
+    video["randomizer2"] = r2;
+
+    j["video"] = video;
+
+    std::ofstream file(path);
+    if (!file.is_open()) return false;
+    file << j.dump(4);
+    return true;
+}
+
+bool Application::loadPreset(const std::string& name) {
+    std::string path = presetsDir + "/" + name + ".json";
+    if (!std::filesystem::exists(path)) return false;
+
+    std::ifstream file(path);
+    if (!file.is_open()) return false;
+
+    nlohmann::json j;
+    try {
+        file >> j;
+    } catch (...) {
+        std::cerr << "[Preset] Invalid JSON: " << path << std::endl;
+        return false;
+    }
+
+    // Load visual controls
+    if (j.contains("visualControls")) {
+        JsonSerializer::fromJson(j["visualControls"], parameterRegistry);
+    } else if (j.contains("version")) {
+        // Legacy v1 preset: root is the visual controls
+        JsonSerializer::fromJson(j, parameterRegistry);
+    }
+
+    // Load video state
+    if (j.contains("video")) {
+        auto& v = j["video"];
+        if (v.contains("videoSourcePath")) videoSourcePath = v["videoSourcePath"];
+        if (v.contains("videoSourcePath2")) videoSourcePath2 = v["videoSourcePath2"];
+        if (v.contains("selectedVideoAsset")) selectedVideoAsset = v["selectedVideoAsset"];
+        if (v.contains("selectedVideoAsset2")) selectedVideoAsset2 = v["selectedVideoAsset2"];
+        if (v.contains("allowDimensionChangeRecreation")) allowDimensionChangeRecreation = v["allowDimensionChangeRecreation"];
+
+        if (v.contains("randomizer1")) {
+            auto& r1 = v["randomizer1"];
+            if (r1.contains("autoRandomize")) videoRandomizer.autoRandomize = r1["autoRandomize"];
+            if (r1.contains("useVideoDuration")) videoRandomizer.useVideoDuration = r1["useVideoDuration"];
+            if (r1.contains("intervalSeconds")) videoRandomizer.intervalSeconds = r1["intervalSeconds"];
+            if (r1.contains("useShuffleMode")) videoRandomizer.useShuffleMode = r1["useShuffleMode"];
+        }
+        if (v.contains("randomizer2")) {
+            auto& r2 = v["randomizer2"];
+            if (r2.contains("autoRandomize")) videoRandomizer2.autoRandomize = r2["autoRandomize"];
+            if (r2.contains("useVideoDuration")) videoRandomizer2.useVideoDuration = r2["useVideoDuration"];
+            if (r2.contains("intervalSeconds")) videoRandomizer2.intervalSeconds = r2["intervalSeconds"];
+            if (r2.contains("useShuffleMode")) videoRandomizer2.useShuffleMode = r2["useShuffleMode"];
+        }
+    }
+
+    // Reload videos to match preset state
+    if (canChangeVideo()) {
+        if (!videoSourcePath.empty()) reloadVideoSlot(0, videoSourcePath);
+        if (!videoSourcePath2.empty()) reloadVideoSlot(1, videoSourcePath2);
+    }
+
+    controlsDirty = true;
+    return true;
+}
+
+bool Application::deletePreset(const std::string& name) {
+    std::string path = presetsDir + "/" + name + ".json";
+    if (!std::filesystem::exists(path)) return false;
+    return std::filesystem::remove(path);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1342,6 +1456,11 @@ UICallbacks Application::buildUICallbacks() {
     cb.onSetVideoSpeed = [this](const std::string& path, float speed) {
         videoSpeedCache[path] = speed;
     };
+
+    cb.onListPresets = [this]() { return listPresets(); };
+    cb.onSavePreset = [this](const std::string& name) { return savePreset(name); };
+    cb.onLoadPreset = [this](const std::string& name) { return loadPreset(name); };
+    cb.onDeletePreset = [this](const std::string& name) { return deletePreset(name); };
 
     return cb;
 }

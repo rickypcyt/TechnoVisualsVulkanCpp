@@ -113,7 +113,22 @@ CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: \
  /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
  /usr/include/c++/16.1.1/tuple /usr/include/c++/16.1.1/bits/invoke.h \
  /usr/include/c++/16.1.1/bits/ranges_util.h \
- /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/json.hpp \
+ /usr/include/c++/16.1.1/algorithm \
+ /usr/include/c++/16.1.1/bits/stl_algo.h \
+ /usr/include/c++/16.1.1/bits/algorithmfwd.h \
+ /usr/include/c++/16.1.1/bits/stl_heap.h \
+ /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
+ /usr/include/c++/16.1.1/bits/stl_tempbuf.h \
+ /usr/include/c++/16.1.1/bits/ranges_algo.h \
+ /usr/include/c++/16.1.1/bits/ranges_algobase.h \
+ /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/16.1.1/pstl/execution_defs.h \
+ /usr/include/c++/16.1.1/functional \
+ /usr/include/c++/16.1.1/bits/refwrap.h \
+ /usr/include/c++/16.1.1/bits/std_function.h \
+ /usr/include/c++/16.1.1/typeinfo \
+ /usr/include/c++/16.1.1/bits/functexcept.h \
  /usr/include/c++/16.1.1/unordered_map \
  /usr/include/c++/16.1.1/bits/unordered_map.h \
  /usr/include/c++/16.1.1/bits/hashtable.h \
@@ -125,8 +140,77 @@ CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: \
  /usr/include/c++/16.1.1/bits/stl_uninitialized.h \
  /usr/include/c++/16.1.1/bits/stl_vector.h \
  /usr/include/c++/16.1.1/bits/stl_bvector.h \
- /usr/include/c++/16.1.1/bits/vector.tcc /usr/include/glm/glm.hpp \
- /usr/include/glm/detail/_fixes.hpp /usr/include/c++/16.1.1/cmath \
+ /usr/include/c++/16.1.1/bits/vector.tcc /usr/include/c++/16.1.1/array \
+ /usr/include/c++/16.1.1/bits/binders.h /usr/include/c++/16.1.1/iterator \
+ /usr/include/c++/16.1.1/bits/stream_iterator.h \
+ /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
+ /usr/include/c++/16.1.1/streambuf \
+ /usr/include/c++/16.1.1/bits/ios_base.h \
+ /usr/include/c++/16.1.1/ext/atomicity.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
+ /usr/include/pthread.h /usr/include/sched.h /usr/include/bits/sched.h \
+ /usr/include/linux/sched/types.h /usr/include/linux/types.h \
+ /usr/include/asm/types.h /usr/include/asm-generic/types.h \
+ /usr/include/asm-generic/int-ll64.h /usr/include/asm/bitsperlong.h \
+ /usr/include/asm-generic/bitsperlong.h /usr/include/linux/posix_types.h \
+ /usr/include/linux/stddef.h /usr/include/asm/posix_types.h \
+ /usr/include/asm/posix_types_64.h /usr/include/asm-generic/posix_types.h \
+ /usr/include/bits/types/struct_sched_param.h /usr/include/bits/cpu-set.h \
+ /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/timex.h \
+ /usr/include/bits/types/struct_tm.h \
+ /usr/include/bits/types/struct_itimerspec.h /usr/include/bits/setjmp.h \
+ /usr/include/bits/types/struct___jmp_buf_tag.h \
+ /usr/include/bits/pthread_stack_min-dynamic.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
+ /usr/include/sys/single_threaded.h \
+ /usr/include/c++/16.1.1/bits/locale_classes.h \
+ /usr/include/c++/16.1.1/bits/locale_classes.tcc \
+ /usr/include/c++/16.1.1/system_error \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/error_constants.h \
+ /usr/include/c++/16.1.1/stdexcept /usr/include/c++/16.1.1/exception \
+ /usr/include/c++/16.1.1/bits/exception_ptr.h \
+ /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
+ /usr/include/c++/16.1.1/bits/nested_exception.h \
+ /usr/include/c++/16.1.1/bits/stdexcept_except.h \
+ /usr/include/c++/16.1.1/bits/streambuf.tcc \
+ /usr/include/c++/16.1.1/memory \
+ /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h \
+ /usr/include/c++/16.1.1/bits/align.h \
+ /usr/include/c++/16.1.1/bits/unique_ptr.h \
+ /usr/include/c++/16.1.1/bits/ostream.h /usr/include/c++/16.1.1/ios \
+ /usr/include/c++/16.1.1/bits/basic_ios.h \
+ /usr/include/c++/16.1.1/bits/locale_facets.h \
+ /usr/include/c++/16.1.1/cwctype /usr/include/wctype.h \
+ /usr/include/bits/wctype-wchar.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
+ /usr/include/c++/16.1.1/bits/locale_facets.tcc \
+ /usr/include/c++/16.1.1/bits/basic_ios.tcc \
+ /usr/include/c++/16.1.1/bits/shared_ptr.h \
+ /usr/include/c++/16.1.1/bits/shared_ptr_base.h \
+ /usr/include/c++/16.1.1/bits/allocated_ptr.h \
+ /usr/include/c++/16.1.1/ext/concurrence.h \
+ /usr/include/c++/16.1.1/bits/shared_ptr_atomic.h \
+ /usr/include/c++/16.1.1/bits/atomic_base.h \
+ /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/16.1.1/bits/atomic_wait.h \
+ /usr/include/c++/16.1.1/backward/auto_ptr.h \
+ /usr/include/c++/16.1.1/bits/ranges_uninitialized.h \
+ /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
+ /usr/include/c++/16.1.1/utility \
+ /usr/include/c++/16.1.1/bits/stl_relops.h \
+ /usr/include/c++/16.1.1/bits/intcmp.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/adl_serializer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/abi_macros.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/from_json.hpp \
+ /usr/include/c++/16.1.1/forward_list \
+ /usr/include/c++/16.1.1/bits/forward_list.h \
+ /usr/include/c++/16.1.1/bits/forward_list.tcc \
+ /usr/include/c++/16.1.1/map /usr/include/c++/16.1.1/bits/stl_tree.h \
+ /usr/include/c++/16.1.1/bits/stl_map.h \
+ /usr/include/c++/16.1.1/bits/stl_multimap.h \
+ /usr/include/c++/16.1.1/valarray /usr/include/c++/16.1.1/cmath \
  /usr/include/math.h /usr/include/bits/math-vector.h \
  /usr/include/bits/libm-simd-decl-stubs.h \
  /usr/include/bits/flt-eval-method.h /usr/include/bits/fp-logb.h \
@@ -146,17 +230,99 @@ CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: \
  /usr/include/c++/16.1.1/tr1/poly_hermite.tcc \
  /usr/include/c++/16.1.1/tr1/poly_laguerre.tcc \
  /usr/include/c++/16.1.1/tr1/riemann_zeta.tcc \
- /usr/include/glm/detail/setup.hpp /usr/include/c++/16.1.1/cassert \
- /usr/include/assert.h /usr/include/glm/simd/platform.h \
+ /usr/include/c++/16.1.1/bits/valarray_array.h \
+ /usr/include/c++/16.1.1/bits/valarray_array.tcc \
+ /usr/include/c++/16.1.1/bits/valarray_before.h \
+ /usr/include/c++/16.1.1/bits/slice_array.h \
+ /usr/include/c++/16.1.1/bits/valarray_after.h \
+ /usr/include/c++/16.1.1/bits/gslice.h \
+ /usr/include/c++/16.1.1/bits/gslice_array.h \
+ /usr/include/c++/16.1.1/bits/mask_array.h \
+ /usr/include/c++/16.1.1/bits/indirect_array.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/exceptions.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/value_t.hpp \
  /usr/include/c++/16.1.1/cstdint \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h /usr/include/c++/16.1.1/climits \
+ /usr/include/bits/stdint-least.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_scope.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/detected.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/void_t.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley.hpp \
+ /usr/include/c++/16.1.1/version /usr/include/c++/16.1.1/cassert \
+ /usr/include/assert.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/string_escape.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/position_t.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/cpp_future.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/type_traits.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iterator_traits.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/call_std/begin.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/call_std/end.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/json_fwd.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/string_concat.hpp \
+ /usr/include/c++/16.1.1/cstring /usr/include/string.h \
+ /usr/include/strings.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/identity_tag.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/std_fs.hpp \
+ /usr/include/c++/16.1.1/filesystem /usr/include/c++/16.1.1/bits/fs_fwd.h \
+ /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
+ /usr/include/c++/16.1.1/ctime \
+ /usr/include/c++/16.1.1/bits/parse_numbers.h \
+ /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/locale \
+ /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/16.1.1/bits/codecvt.h \
+ /usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/16.1.1/bits/locale_conv.h \
+ /usr/include/c++/16.1.1/iomanip \
+ /usr/include/c++/16.1.1/bits/quoted_string.h \
+ /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/istream \
+ /usr/include/c++/16.1.1/ostream \
+ /usr/include/c++/16.1.1/bits/ostream_print.h \
+ /usr/include/c++/16.1.1/bits/ostream.tcc \
+ /usr/include/c++/16.1.1/bits/istream.tcc \
+ /usr/include/c++/16.1.1/bits/sstream.tcc /usr/include/c++/16.1.1/codecvt \
+ /usr/include/c++/16.1.1/bits/fs_dir.h \
+ /usr/include/c++/16.1.1/bits/fs_ops.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/to_json.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iteration_proxy.hpp \
+ /usr/include/c++/16.1.1/ranges /usr/include/c++/16.1.1/optional \
+ /usr/include/c++/16.1.1/span \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/byte_container_with_subtype.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/hash.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/binary_reader.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/input_adapters.hpp \
+ /usr/include/c++/16.1.1/numeric \
+ /usr/include/c++/16.1.1/bits/stl_numeric.h \
+ /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/json_sax.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/lexer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/is_sax.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/parser.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/internal_iterator.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/primitive_iterator.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iter_impl.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/json_reverse_iterator.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_custom_base_class.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_pointer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_ref.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/binary_writer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/output_adapters.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/serializer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/to_chars.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/ordered_map.hpp \
+ /usr/include/c++/16.1.1/any \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_unscope.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley_undef.hpp \
+ /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterRegistry.h \
+ /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
+ /usr/include/glm/detail/setup.hpp /usr/include/glm/simd/platform.h \
+ /usr/include/c++/16.1.1/climits \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/limits.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
- /usr/include/bits/pthread_stack_min-dynamic.h \
  /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
  /usr/include/bits/uio_lim.h /usr/include/c++/16.1.1/cfloat \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/float.h \
@@ -181,12 +347,6 @@ CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: \
  /usr/include/glm/detail/type_vec3.hpp \
  /usr/include/glm/detail/type_vec3.inl \
  /usr/include/glm/detail/compute_vector_decl.hpp \
- /usr/include/c++/16.1.1/functional \
- /usr/include/c++/16.1.1/bits/refwrap.h \
- /usr/include/c++/16.1.1/bits/std_function.h \
- /usr/include/c++/16.1.1/typeinfo \
- /usr/include/c++/16.1.1/bits/functexcept.h /usr/include/c++/16.1.1/array \
- /usr/include/c++/16.1.1/bits/binders.h \
  /usr/include/glm/detail/_vectorize.hpp \
  /usr/include/glm/ext/vector_bool3_precision.hpp \
  /usr/include/glm/ext/vector_float3.hpp \
@@ -281,167 +441,8 @@ CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: \
  /usr/include/glm/detail/func_integer.inl \
  /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterDescriptor.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/parameters/ParameterType.h \
- /usr/include/c++/16.1.1/fstream /usr/include/c++/16.1.1/istream \
- /usr/include/c++/16.1.1/ios /usr/include/c++/16.1.1/exception \
- /usr/include/c++/16.1.1/bits/exception_ptr.h \
- /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
- /usr/include/c++/16.1.1/bits/nested_exception.h \
- /usr/include/c++/16.1.1/bits/ios_base.h \
- /usr/include/c++/16.1.1/ext/atomicity.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
- /usr/include/pthread.h /usr/include/sched.h /usr/include/bits/sched.h \
- /usr/include/linux/sched/types.h /usr/include/linux/types.h \
- /usr/include/asm/types.h /usr/include/asm-generic/types.h \
- /usr/include/asm-generic/int-ll64.h /usr/include/asm/bitsperlong.h \
- /usr/include/asm-generic/bitsperlong.h /usr/include/linux/posix_types.h \
- /usr/include/linux/stddef.h /usr/include/asm/posix_types.h \
- /usr/include/asm/posix_types_64.h /usr/include/asm-generic/posix_types.h \
- /usr/include/bits/types/struct_sched_param.h /usr/include/bits/cpu-set.h \
- /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/timex.h \
- /usr/include/bits/types/struct_tm.h \
- /usr/include/bits/types/struct_itimerspec.h /usr/include/bits/setjmp.h \
- /usr/include/bits/types/struct___jmp_buf_tag.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
- /usr/include/sys/single_threaded.h \
- /usr/include/c++/16.1.1/bits/locale_classes.h \
- /usr/include/c++/16.1.1/bits/locale_classes.tcc \
- /usr/include/c++/16.1.1/system_error \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/error_constants.h \
- /usr/include/c++/16.1.1/stdexcept \
- /usr/include/c++/16.1.1/bits/stdexcept_except.h \
- /usr/include/c++/16.1.1/streambuf \
- /usr/include/c++/16.1.1/bits/streambuf.tcc \
- /usr/include/c++/16.1.1/bits/basic_ios.h \
- /usr/include/c++/16.1.1/bits/locale_facets.h \
- /usr/include/c++/16.1.1/cwctype /usr/include/wctype.h \
- /usr/include/bits/wctype-wchar.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
- /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
- /usr/include/c++/16.1.1/bits/locale_facets.tcc \
- /usr/include/c++/16.1.1/bits/basic_ios.tcc \
- /usr/include/c++/16.1.1/ostream /usr/include/c++/16.1.1/bits/ostream.h \
- /usr/include/c++/16.1.1/bits/ostream_print.h \
- /usr/include/c++/16.1.1/bits/ostream.tcc \
- /usr/include/c++/16.1.1/bits/istream.tcc \
- /usr/include/c++/16.1.1/bits/codecvt.h \
+ /usr/include/c++/16.1.1/fstream \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
  /usr/include/c++/16.1.1/bits/fstream.tcc \
- /usr/include/c++/16.1.1/iostream /usr/include/c++/16.1.1/algorithm \
- /usr/include/c++/16.1.1/bits/stl_algo.h \
- /usr/include/c++/16.1.1/bits/algorithmfwd.h \
- /usr/include/c++/16.1.1/bits/stl_heap.h \
- /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
- /usr/include/c++/16.1.1/bits/stl_tempbuf.h \
- /usr/include/c++/16.1.1/bits/ranges_algo.h \
- /usr/include/c++/16.1.1/bits/ranges_algobase.h \
- /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
- /usr/include/c++/16.1.1/pstl/execution_defs.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/json.hpp \
- /usr/include/c++/16.1.1/iterator \
- /usr/include/c++/16.1.1/bits/stream_iterator.h \
- /usr/include/c++/16.1.1/memory \
- /usr/include/c++/16.1.1/bits/stl_raw_storage_iter.h \
- /usr/include/c++/16.1.1/bits/align.h \
- /usr/include/c++/16.1.1/bits/unique_ptr.h \
- /usr/include/c++/16.1.1/bits/shared_ptr.h \
- /usr/include/c++/16.1.1/bits/shared_ptr_base.h \
- /usr/include/c++/16.1.1/bits/allocated_ptr.h \
- /usr/include/c++/16.1.1/ext/concurrence.h \
- /usr/include/c++/16.1.1/bits/shared_ptr_atomic.h \
- /usr/include/c++/16.1.1/bits/atomic_base.h \
- /usr/include/c++/16.1.1/bits/atomic_lockfree_defines.h \
- /usr/include/c++/16.1.1/bits/atomic_wait.h \
- /usr/include/c++/16.1.1/backward/auto_ptr.h \
- /usr/include/c++/16.1.1/bits/ranges_uninitialized.h \
- /usr/include/c++/16.1.1/pstl/glue_memory_defs.h \
- /usr/include/c++/16.1.1/utility \
- /usr/include/c++/16.1.1/bits/stl_relops.h \
- /usr/include/c++/16.1.1/bits/intcmp.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/adl_serializer.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/abi_macros.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/from_json.hpp \
- /usr/include/c++/16.1.1/forward_list \
- /usr/include/c++/16.1.1/bits/forward_list.h \
- /usr/include/c++/16.1.1/bits/forward_list.tcc \
- /usr/include/c++/16.1.1/map /usr/include/c++/16.1.1/bits/stl_tree.h \
- /usr/include/c++/16.1.1/bits/stl_map.h \
- /usr/include/c++/16.1.1/bits/stl_multimap.h \
- /usr/include/c++/16.1.1/valarray \
- /usr/include/c++/16.1.1/bits/valarray_array.h \
- /usr/include/c++/16.1.1/bits/valarray_array.tcc \
- /usr/include/c++/16.1.1/bits/valarray_before.h \
- /usr/include/c++/16.1.1/bits/slice_array.h \
- /usr/include/c++/16.1.1/bits/valarray_after.h \
- /usr/include/c++/16.1.1/bits/gslice.h \
- /usr/include/c++/16.1.1/bits/gslice_array.h \
- /usr/include/c++/16.1.1/bits/mask_array.h \
- /usr/include/c++/16.1.1/bits/indirect_array.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/exceptions.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/value_t.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_scope.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/detected.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/void_t.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley.hpp \
- /usr/include/c++/16.1.1/version \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/string_escape.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/position_t.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/cpp_future.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/type_traits.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iterator_traits.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/call_std/begin.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/call_std/end.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/json_fwd.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/string_concat.hpp \
- /usr/include/c++/16.1.1/cstring /usr/include/string.h \
- /usr/include/strings.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/identity_tag.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/std_fs.hpp \
- /usr/include/c++/16.1.1/filesystem /usr/include/c++/16.1.1/bits/fs_fwd.h \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime \
- /usr/include/c++/16.1.1/bits/parse_numbers.h \
- /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/locale \
- /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
- /usr/include/libintl.h \
- /usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc \
- /usr/include/c++/16.1.1/bits/locale_conv.h \
- /usr/include/c++/16.1.1/iomanip \
- /usr/include/c++/16.1.1/bits/quoted_string.h \
- /usr/include/c++/16.1.1/sstream /usr/include/c++/16.1.1/bits/sstream.tcc \
- /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
- /usr/include/c++/16.1.1/bits/fs_ops.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/to_json.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iteration_proxy.hpp \
- /usr/include/c++/16.1.1/ranges /usr/include/c++/16.1.1/optional \
- /usr/include/c++/16.1.1/span \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/byte_container_with_subtype.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/hash.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/binary_reader.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/input_adapters.hpp \
- /usr/include/c++/16.1.1/numeric \
- /usr/include/c++/16.1.1/bits/stl_numeric.h \
- /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/json_sax.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/lexer.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/is_sax.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/parser.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/internal_iterator.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/primitive_iterator.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iter_impl.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/json_reverse_iterator.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_custom_base_class.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_pointer.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_ref.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/binary_writer.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/output_adapters.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/serializer.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/to_chars.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/ordered_map.hpp \
- /usr/include/c++/16.1.1/any \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_unscope.hpp \
- /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley_undef.hpp
+ /usr/include/c++/16.1.1/iostream

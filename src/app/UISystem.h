@@ -79,6 +79,12 @@ struct UICallbacks {
     // Per-video playback speed cache
     std::function<float(const std::string&)> onGetVideoSpeed;
     std::function<void(const std::string&, float)> onSetVideoSpeed;
+
+    // Presets
+    std::function<std::vector<std::string>()> onListPresets;
+    std::function<bool(const std::string&)> onSavePreset;
+    std::function<bool(const std::string&)> onLoadPreset;
+    std::function<bool(const std::string&)> onDeletePreset;
 };
 
 // ---------------------------------------------------------------------------
@@ -196,6 +202,8 @@ private:
     );
 
     void drawNLEEditor(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path);
+
+    void drawPresetsContent(VisualControls& controls, bool& controlsDirty, const UICallbacks& callbacks);
 
     void drawDiagnostics(
         const UIDiagnostics& diag,
@@ -327,6 +335,8 @@ private:
     VideoPreviewSlot previewSlotVideo2;
     bool previewShuffleRequested[2] = {false, false};
     std::mt19937 previewRng{std::random_device{}()};
+
+    char presetNameBuffer[64] = "";
 
     void destroyPreviewSlot(VideoPreviewSlot& slot);
     bool loadPreview(VideoPreviewSlot& slot, const std::string& path);

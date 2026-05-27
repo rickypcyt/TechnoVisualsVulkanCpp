@@ -7,7 +7,7 @@
 
 using json = nlohmann::json;
 
-bool JsonSerializer::save(const std::string& path, const ParameterRegistry& registry) {
+nlohmann::json JsonSerializer::toJson(const ParameterRegistry& registry) {
     json j;
     j["version"] = 1;
 
@@ -39,29 +39,10 @@ bool JsonSerializer::save(const std::string& path, const ParameterRegistry& regi
                 break;
         }
     }
-
-    std::ofstream file(path);
-    if (!file.is_open())
-        return false;
-
-    file << j.dump(4);
-    return true;
+    return j;
 }
 
-bool JsonSerializer::load(const std::string& path, ParameterRegistry& registry) {
-    std::ifstream file(path);
-    if (!file.is_open())
-        return false;
-
-    json j;
-    try {
-        file >> j;
-    } catch (const json::parse_error& e) {
-        // File exists but is not valid JSON (likely old format)
-        std::cerr << "[JsonSerializer] File is not valid JSON, skipping: " << path << std::endl;
-        return false;
-    }
-
+void JsonSerializer::fromJson(const nlohmann::json& j, ParameterRegistry& registry) {
     for (auto& p : registry.all()) {
         if (!j.contains(p.name))
             continue;
@@ -106,6 +87,32 @@ bool JsonSerializer::load(const std::string& path, ParameterRegistry& registry) 
                 break;
         }
     }
+}
 
+bool JsonSerializer::save(const std::string& path, const ParameterRegistry& registry) {
+    json j = toJson(registry);
+
+    std::ofstream file(path);
+    if (!file.is_open())
+        return false;
+
+    file << j.dump(4);
+    return true;
+}
+
+bool JsonSerializer::load(const std::string& path, ParameterRegistry& registry) {
+    std::ifstream file(path);
+    if (!file.is_open())
+        return false;
+
+    json j;
+    try {
+        file >> j;
+    } catch (const json::parse_error& e) {
+        std::cerr << "[JsonSerializer] File is not valid JSON, skipping: " << path << std::endl;
+        return false;
+    }
+
+    fromJson(j, registry);
     return true;
 }
