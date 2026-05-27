@@ -2,15 +2,15 @@
 // Audio-reactive stereoscopic anaglyph inspired by Leon Denise's "Anaglyph Quick Sketch"
 // Adapted to the Cascade procedural pipeline with assembly/disassembly behaviour similar to the head shader.
 
-const int kAnaglyphLayerCount = 3;
-const int kAnaglyphMarchSteps = 32;
-const float kAnaglyphRange = 1.0;
-const float kAnaglyphRadius = 0.3;
-const float kAnaglyphBlend = 1.5;
-const float kAnaglyphBalance = 1.5;
-const float kAnaglyphFalloff = 1.9;
-const float kAnaglyphDivergence = 0.08;
-const float kAnaglyphFieldOfView = 1.2;
+const int kAnaglyphLayerCount = 3;        // keep it light on GPU
+const int kAnaglyphMarchSteps = 32;       // original step count
+const float kAnaglyphRange = 2.0;         // larger structure
+const float kAnaglyphRadius = 0.55;       // thicker shapes
+const float kAnaglyphBlend = 1.8;
+const float kAnaglyphBalance = 1.8;
+const float kAnaglyphFalloff = 1.7;
+const float kAnaglyphDivergence = 0.12;
+const float kAnaglyphFieldOfView = 2.0;   // wider FOV = fills more screen
 
 float anaglyphRandom(vec2 p) {
     return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x))));
@@ -34,22 +34,29 @@ float anaglyphSimpleNoise(vec3 p) {
 float anaglyphAudioEnergy() {
     // Stronger audio response with bass emphasis, but keep base shape visible
     float energy = uBass * 0.6 + uMid * 0.3 + uHigh * 0.15;
-    return max(energy, 0.22); // minimum ensures the object is always partially formed
+    return max(energy, 0.15); // minimum ensures the object is always partially formed
 }
 
 float anaglyphAssemblyFactor() {
-    // Capped with time oscillation — never fully saturates to avoid getting stuck/white
-    float base = smoothstep(0.05, 0.95, anaglyphAudioEnergy()) * 0.75;
-    float oscillation = sin(uTime * 0.4) * 0.12;
-    return clamp(base + oscillation, 0.08, 0.88);
+    // Chaotic assembly — multiple non-harmonic frequencies, never repeats
+    float audio = anaglyphAudioEnergy();
+    float base = smoothstep(0.05, 0.95, audio) * 0.85;
+    // Multiple incommensurate frequencies create non-repeating motion
+    float o1 = sin(uTime * 0.28 + audio * 3.0) * 0.15;
+    float o2 = sin(uTime * 0.43 + uBass * 4.0) * 0.10;
+    float o3 = cos(uTime * 0.19 + uMid * 3.0) * 0.08;
+    float o4 = sin(uTime * 0.67 + uHigh * 5.0) * 0.05;
+    return clamp(base + o1 + o2 + o3 + o4, 0.05, 0.92);
 }
 
 vec3 anaglyphApplyCamera(vec3 pos) {
-    // Audio-reactive camera — capped to prevent extreme spins that cause whiteout
-    float audioDrive = clamp(anaglyphAudioEnergy() * 1.5, 0.0, 1.0);
-    float tiltY = -PI * 0.25 + (sin(uTime * 0.35) + uMid * 1.5 + audioDrive) * 0.35;
-    float tiltX = -PI * 0.5 + (cos(uTime * 0.27) + uBass * 2.0 + audioDrive * 0.5) * 0.35;
-    float twist = sin(uTime * 0.18 + uHigh * 3.0 + uBass * 2.0) * 0.6;
+    // Continuous chaotic rotation — multiple axes, never stops, never repeats
+    float audio = anaglyphAudioEnergy();
+    float t = uTime;
+    // Slower, smoother rotation — still chaotic but gentler
+    float tiltY = sin(t * 0.06) * 0.5 + cos(t * 0.11 + uBass * 1.0) * 0.3 + uMid * 0.15;
+    float tiltX = cos(t * 0.08) * 0.4 + sin(t * 0.17 + uHigh * 1.0) * 0.25 + audio * 0.15;
+    float twist = sin(t * 0.05 + uBass * 1.5) * 0.5 + cos(t * 0.12 + uMid * 1.0) * 0.3;
 
     pos.yz *= anaglyphRot(tiltY);
     pos.xz *= anaglyphRot(tiltX);
@@ -57,21 +64,41 @@ vec3 anaglyphApplyCamera(vec3 pos) {
     return pos;
 }
 
+vec3 anaglyphStretchSpace(vec3 pos) {
+    // Gentle stretch — fills screen without heavy computation
+    float stretch = 1.0 + uBass * 1.2 + sin(uTime * 0.7) * 0.2;
+    float squash  = 1.0 / (1.0 + uMid * 0.5 + cos(uTime * 0.5) * 0.15);
+    pos.x *= stretch * 1.3;
+    pos.y *= squash * 1.1;
+    pos.z *= mix(stretch, squash, sin(uTime * 0.3) * 0.5 + 0.5) * 1.2;
+    return pos;
+}
+
 float anaglyphCoreGeometry(vec3 pos) {
     pos = anaglyphApplyCamera(pos);
+    pos = anaglyphStretchSpace(pos);
     float a = 1.0;
     float scene = 1.0;
-    float t = uTime * 0.2;
-    float wave = 1.0 + 0.35 * sin(t * 8.0 - length(pos) * 2.0 + anaglyphAudioEnergy() * 4.0) + uBass * 0.3;
+    float t = uTime * (0.08 + uTempo * 0.1); // much slower base animation
+
+    // Wave varies with audio
+    float wave = 1.0 + 0.3 * sin(t * 2.0 - length(pos) * 2.0 + anaglyphAudioEnergy() * 2.0)
+                   + uBass * 0.3 + uMid * 0.15;
     t = floor(t) + pow(fract(t), 0.5);
 
+    // Audio-reactive variation of SDF parameters
+    float dynRange = kAnaglyphRange * (1.0 + uBass * 0.3);
+    float dynRadius = kAnaglyphRadius * (1.0 + uMid * 0.2);
+    float dynBlend = kAnaglyphBlend * (0.8 + uHigh * 0.4);
+    float dynFalloff = kAnaglyphFalloff + sin(t * 0.5) * 0.2;
+
     for (int i = kAnaglyphLayerCount; i > 0; --i) {
-        float rotSeed = cos(t) * kAnaglyphBalance / a + a * 2.0 + t;
+        float rotSeed = cos(t * 0.5 + uBass * float(i)) * kAnaglyphBalance / a + a * 2.0 + t * 0.5;
         pos.xy *= anaglyphRot(rotSeed);
-        pos.zy *= anaglyphRot(sin(t) * kAnaglyphBalance / a + a * 2.0 + t);
-        pos = abs(pos) - kAnaglyphRange * a * wave;
-        scene = anaglyphSmoothMin(scene, length(pos) - kAnaglyphRadius * a, kAnaglyphBlend * a);
-        a /= kAnaglyphFalloff;
+        pos.zy *= anaglyphRot(sin(t * 0.5 + uMid * float(i)) * kAnaglyphBalance / a + a * 2.0 + t * 0.5);
+        pos = abs(pos) - dynRange * a * wave;
+        scene = anaglyphSmoothMin(scene, length(pos) - dynRadius * a, dynBlend * a);
+        a /= dynFalloff;
     }
 
     return scene;
@@ -127,18 +154,23 @@ vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
             float diff = max(dot(normal, lightDir), 0.0);
 
             float assemblyFactor = anaglyphAssemblyFactor();
-            vec3 basePalette = mix(uPrimaryColor, uSecondaryColor, clamp(0.35 + assemblyFactor * 0.5, 0.0, 1.0));
+            vec3 basePalette = mix(uPrimaryColor, uSecondaryColor, clamp(0.25 + assemblyFactor * 0.6, 0.0, 1.0));
 
-            vec3 color = basePalette * (0.25 + diff * (0.5 + uEnergy * 0.25));
+            // Brighter, more saturated base color
+            vec3 color = basePalette * (0.35 + diff * (0.7 + uEnergy * 0.35));
 
-            // Removed fog effect for better sharpness/quality
+            // Specular highlight for extra vibrancy
+            vec3 viewDir = normalize(-pos);
+            vec3 halfDir = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(normal, halfDir), 0.0), 16.0);
+            color += mix(uPrimaryColor, uSecondaryColor, sin(uTime * 0.5)) * spec * (0.3 + uHigh * 0.4);
 
-            float alpha = clamp(0.5 + diff * 0.3 + assemblyFactor * 0.3, 0.0, 1.0);
+            float alpha = clamp(0.6 + diff * 0.3 + assemblyFactor * 0.25, 0.0, 1.0);
             return vec4(clamp(color, 0.0, 1.0), alpha);
         }
 
         travel += dist * 0.9;
-        if (travel > 12.0) {
+        if (travel > 20.0) {
             break;
         }
     }
@@ -152,9 +184,10 @@ vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, floa
     vec3 target = vec3(0.0);
 
     // Audio-reactive eye divergence — more bass = more stereo separation
-    float audioDivergence = kAnaglyphDivergence * (1.0 + uBass * 2.0);
-    vec3 eyeLeft = vec3(-audioDivergence, 0.0, 5.0 + uMid * 0.5);
-    vec3 eyeRight = vec3(audioDivergence, 0.0, 5.0 + uMid * 0.5);
+    float audioDivergence = kAnaglyphDivergence * (1.0 + uBass * 3.0);
+    // Camera closer = object fills more of screen
+    vec3 eyeLeft = vec3(-audioDivergence, 0.0, 3.0 + uMid * 0.3);
+    vec3 eyeRight = vec3(audioDivergence, 0.0, 3.0 + uMid * 0.3);
 
     vec3 rayLeft = anaglyphLook(eyeLeft, target, anchor, kAnaglyphFieldOfView);
     vec3 rayRight = anaglyphLook(eyeRight, target, anchor, kAnaglyphFieldOfView);
@@ -167,7 +200,8 @@ vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, floa
 
     // No extra tinting — background is pure black so colors stay clean
     color = clamp(color, 0.0, 1.0);
-    color = pow(color, vec3(1.0 / 2.2));
+    // Slightly punchier gamma for more vivid colors (lift midtones)
+    color = pow(color, vec3(0.85));
 
     float alpha = clamp(max(leftSample.a, rightSample.a), 0.0, 1.0);
     return vec4(color, alpha);

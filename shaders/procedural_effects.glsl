@@ -29,6 +29,29 @@ float peFbm(vec2 p, int octaves) {
     return v;
 }
 
+// ── 3D rotation helpers ──────────────────────────────────────────────────────
+
+mat3 peRotX(float a) {
+    float c = cos(a), s = sin(a);
+    return mat3(1.0, 0.0, 0.0,
+                0.0,   c, -s,
+                0.0,   s,  c);
+}
+
+mat3 peRotY(float a) {
+    float c = cos(a), s = sin(a);
+    return mat3(  c, 0.0,  s,
+                0.0, 1.0, 0.0,
+                 -s, 0.0,  c);
+}
+
+mat3 peRotZ(float a) {
+    float c = cos(a), s = sin(a);
+    return mat3(  c, -s, 0.0,
+                  s,  c, 0.0,
+                0.0, 0.0, 1.0);
+}
+
 // ── Mode 2: Plasma Wave ──────────────────────────────────────────────────────
 
 vec3 renderPlasmaWave(vec2 st) {
@@ -98,8 +121,8 @@ vec3 renderGridPulse(vec2 st) {
     float gridX = abs(fract(uv.x * 6.0 + uBass * sin(uv.y * 3.0 + t)) - 0.5);
     float gridY = abs(fract(uv.y * 6.0 + uBass * cos(uv.x * 3.0 + t * 0.7)) - 0.5);
 
-    float lineX = smoothstep(0.02 + uMid * 0.03, 0.0, gridX);
-    float lineY = smoothstep(0.02 + uMid * 0.03, 0.0, gridY);
+    float lineX = 1.0 - smoothstep(0.0, 0.02 + uMid * 0.03, gridX);
+    float lineY = 1.0 - smoothstep(0.0, 0.02 + uMid * 0.03, gridY);
 
     float pattern = max(lineX, lineY);
 
@@ -259,11 +282,11 @@ vec3 renderTerrainScan(vec2 st) {
     // Scan line that moves vertically with time, speed reacts to tempo
     float scanSpeed = 0.5 + uTempo * 0.5;
     float scanY = fract(t * scanSpeed * 0.15);
-    float scanLine = smoothstep(0.015, 0.0, abs(uv.y - (scanY - 0.5) * 1.2));
+    float scanLine = 1.0 - smoothstep(0.0, 0.015, abs(uv.y - (scanY - 0.5) * 1.2));
 
     // Contour lines at terrain height levels
     float contour = abs(fract(height * 10.0 + uBass * 2.0) - 0.5);
-    float contourLine = smoothstep(0.02 + uMid * 0.02, 0.0, contour);
+    float contourLine = 1.0 - smoothstep(0.0, 0.02 + uMid * 0.02, contour);
 
     // Dark background base
     vec3 color = mix(uPrimaryColor * 0.03, uSecondaryColor * 0.05, sin(t * 0.04) * 0.5 + 0.5);
@@ -290,4 +313,156 @@ vec3 renderTerrainScan(vec2 st) {
     color += mix(uPrimaryColor, vec3(1.0), uHigh) * scanDot * (0.12 + uEnergy * 0.15);
 
     return clamp(color, 0.0, 0.85);
+}
+
+// ── Mode 9: Wireframe Cube 3D ────────────────────────────────────────────────
+
+vec3 renderWireCube(vec2 st) {
+    vec2 uv = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+    float t = uTime * (0.4 + uTempo * 0.6);
+
+    // Smaller cube that always fits on screen
+    float s = 0.35 + uEnergy * 0.2 + uBass * 0.15;
+
+    // 8 cube corners
+    vec3 v[8] = vec3[](
+        vec3(-s, -s, -s), vec3(s, -s, -s), vec3(s, s, -s), vec3(-s, s, -s),
+        vec3(-s, -s,  s), vec3(s, -s,  s), vec3(s, s,  s), vec3(-s, s,  s)
+    );
+
+    // 12 edges as flat int pairs (avoids ivec2 array issues)
+    const int edgePairs[24] = int[](
+        0,1, 1,2, 2,3, 3,0,
+        4,5, 5,6, 6,7, 7,4,
+        0,4, 1,5, 2,6, 3,7
+    );
+
+    // Rotation driven by audio
+    float ax = t * 0.37 + uHigh * 2.0;
+    float ay = t * 0.53 + uMid * 2.0;
+    float az = t * 0.71 + uBass * 2.0;
+    mat3 rot = peRotZ(az) * peRotY(ay) * peRotX(ax);
+
+    // Perspective projection
+    float camZ = 3.0;
+    vec2 proj[8];
+    float depth[8];
+
+    for (int i = 0; i < 8; ++i) {
+        vec3 p = rot * v[i];
+        float z = p.z + camZ;
+        float w = 2.0 / max(z, 0.5);
+        proj[i] = p.xy * w;
+        depth[i] = z;
+    }
+
+    // Find nearest edge to this pixel
+    float minDist = 999.0;
+
+    for (int e = 0; e < 12; ++e) {
+        int i0 = edgePairs[e * 2];
+        int i1 = edgePairs[e * 2 + 1];
+        vec2 a = proj[i0];
+        vec2 b = proj[i1];
+        vec2 ab = b - a;
+        float abLenSq = dot(ab, ab);
+        if (abLenSq < 0.00001) continue;
+        vec2 ap = uv - a;
+        float h = clamp(dot(ap, ab) / abLenSq, 0.0, 1.0);
+        vec2 closest = a + ab * h;
+        float d = length(uv - closest);
+        if (d < minDist) minDist = d;
+    }
+
+    // Line rendering — CORRECT smoothstep order (edge0 < edge1)
+    float thick = 0.018 + uBass * 0.012;
+    float line = 1.0 - smoothstep(0.0, thick, minDist);
+
+    // Glow around lines
+    float glow = exp(-minDist * minDist * 40.0) * 0.4;
+
+    // Color cycling with time
+    float hue = fract(t * 0.15 + uEnergy * 0.3);
+    vec3 lineCol = mix(uPrimaryColor, uSecondaryColor, hue) * (line + glow * 0.5);
+    vec3 glowCol = mix(uSecondaryColor, uPrimaryColor, fract(t * 0.2 + 0.5)) * glow;
+
+    // Corner dots
+    float dots = 0.0;
+    for (int i = 0; i < 8; ++i) {
+        float d = length(uv - proj[i]);
+        dots += exp(-d * d * 100.0) * 0.35;
+    }
+    vec3 dotCol = mix(uPrimaryColor, vec3(1.0), 0.3) * dots;
+
+    // Dark background so cube is visible against black
+    vec3 color = vec3(0.02, 0.015, 0.025);
+    color += lineCol + glowCol * 0.5 + dotCol;
+    return clamp(color, 0.0, 0.85);
+}
+
+// ── Mode 10: Oscilloscope ──────────────────────────────────────────────────
+
+vec3 renderOscilloscope(vec2 st) {
+    vec2 uv = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+    float t = uTime * (0.3 + uTempo * 0.4);
+
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass = clamp(ubo.bass * drive, 0.0, 1.0);
+    float mid  = clamp(ubo.mid * drive, 0.0, 1.0);
+    float high = clamp(ubo.high * drive, 0.0, 1.0);
+    float energy = clamp(ubo.energy * drive, 0.0, 1.0);
+
+    // Dark background
+    vec3 color = vec3(0.01, 0.01, 0.015);
+
+    // Multiple oscilloscope traces with different shapes
+    for (int trace = 0; trace < 4; ++trace) {
+        float fi = float(trace);
+
+        // Each trace has its own time offset and frequency
+        float tt = t * (0.5 + fi * 0.25) + fi * 1.57;
+        float freq = 2.0 + fi * 3.0 + bass * 4.0;
+
+        // Complex waveform — multiple harmonics that morph over time
+        float shape = sin(uv.x * freq + tt) * (0.4 + mid * 0.3);
+        shape += sin(uv.x * freq * 2.37 + tt * 0.73) * (0.25 + high * 0.15);
+        shape += sin(uv.x * freq * 3.13 + tt * 1.19) * (0.15 + bass * 0.1);
+        shape += cos(uv.x * freq * 1.73 + tt * 0.47 + bass * 3.0) * 0.1;
+
+        // Audio makes the wave pulse vertically
+        float amp = 0.25 + energy * 0.35 + bass * 0.2;
+        float y = uv.y - shape * amp;
+
+        // Line thickness varies with high frequencies
+        float thick = 0.003 + high * 0.005 + fi * 0.002;
+        float line = 1.0 - smoothstep(0.0, thick, abs(y));
+
+        // Glow around the line
+        float glow = exp(-y * y * 300.0) * (0.15 + mid * 0.1);
+
+        // Color per trace, cycling with time and audio
+        float hue = fract(t * 0.1 + fi * 0.25 + bass * 0.2);
+        vec3 traceCol = mix(uPrimaryColor, uSecondaryColor, hue);
+
+        // Add to color with trace-specific intensity
+        float intensity = 0.6 - fi * 0.12;
+        color += traceCol * line * intensity;
+        color += traceCol * glow * 0.5;
+    }
+
+    // Central beam that reacts to bass
+    float beamWidth = 0.01 + bass * 0.02;
+    float beam = exp(-abs(uv.x) * abs(uv.x) * 200.0) * (0.1 + bass * 0.3);
+    color += mix(uPrimaryColor, vec3(1.0), high * 0.5) * beam;
+
+    // Lissajous-style overlay when energy is high
+    if (energy > 0.3) {
+        float lissX = sin(t * 0.7 + uv.x * 4.0) * 0.3;
+        float lissY = cos(t * 0.5 + uv.y * 3.0 + bass * 2.0) * 0.3;
+        float liss = length(uv - vec2(lissX, lissY));
+        float lissDot = exp(-liss * liss * 80.0) * (energy - 0.3) * 0.8;
+        color += mix(uSecondaryColor, uPrimaryColor, sin(t)) * lissDot;
+    }
+
+    return clamp(color, 0.0, 0.9);
 }

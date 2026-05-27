@@ -131,33 +131,82 @@ vec3 sharpen3x3(vec2 p, float amount) {
 }
 
 vec3 renderMode0(vec2 st) {
-    vec2 centered = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
-    float halfSize = 0.35;
-    float edgeWidth = 0.03;
+    vec2 uv = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+    float t = ubo.time * (0.5 + ubo.tempo * 0.8);
 
-    float box = max(abs(centered.x), abs(centered.y));
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass = clamp(ubo.bass * drive, 0.0, 1.0);
+    float mid  = clamp(ubo.mid * drive, 0.0, 1.0);
+    float high = clamp(ubo.high * drive, 0.0, 1.0);
+    float energy = clamp(ubo.energy * drive, 0.0, 1.0);
+
+    // Escalating multi-axis rotation — accumulates speed with audio energy
+    float rotSpeed = 0.15 + bass * 2.5 + energy * 1.5;
+    float rotPhase = t * rotSpeed;
+    // Multiple harmonic frequencies prevent looping
+    float angle1 = rotPhase + bass * 4.0;
+    float angle2 = rotPhase * 0.67 + mid * 3.0 + sin(t * 0.3) * 2.0;
+    float c1 = cos(angle1);
+    float s1 = sin(angle1);
+    float c2 = cos(angle2);
+    float s2 = sin(angle2);
+    // Apply dual rotation — axis 1 then axis 2 (pseudo-3D feel)
+    vec2 rotated = vec2(
+        uv.x * c1 - uv.y * s1,
+        uv.x * s1 + uv.y * c1
+    );
+    // Second axis adds complexity
+    rotated = vec2(
+        rotated.x * c2 - rotated.y * s2,
+        rotated.x * s2 + rotated.y * c2
+    );
+
+    // Square size pulses with bass
+    float halfSize = 0.25 + energy * 0.15 + bass * 0.12;
+    float edgeWidth = 0.025 + high * 0.02;
+
+    float box = max(abs(rotated.x), abs(rotated.y));
+
+    // Outer border glow that pulses outward with bass
+    float outerGlow = smoothstep(halfSize + 0.25 + bass * 0.2, halfSize, box);
+
     float fill = smoothstep(halfSize, halfSize - edgeWidth, box);
     float border = smoothstep(halfSize + edgeWidth, halfSize, box) - fill;
 
-    float drive = max(0.1, ubo.audioReactiveDrive);
-    float bassInfluence = clamp(ubo.bass * drive, 0.0, 1.0);
-    float midInfluence = clamp(ubo.mid * drive, 0.0, 1.0);
-    float highInfluence = clamp(ubo.high * drive, 0.0, 1.0);
-    float energyInfluence = clamp(ubo.energy * drive * 0.8, 0.0, 1.0);
+    // Inner grid pattern that reacts to mid
+    float grid = 0.0;
+    if (box < halfSize) {
+        float gridX = abs(fract(rotated.x * (8.0 + mid * 8.0)) - 0.5);
+        float gridY = abs(fract(rotated.y * (8.0 + mid * 8.0)) - 0.5);
+        grid = 1.0 - smoothstep(0.0, 0.04 + high * 0.03, max(gridX, gridY));
+    }
 
-    float colorLerp = clamp(0.2f + 0.5f * energyInfluence + 0.3f * midInfluence, 0.0f, 1.0f);
+    float colorLerp = clamp(0.2 + 0.5 * energy + 0.3 * mid, 0.0, 1.0);
 
-    vec3 bg = mix(ubo.secondaryColor.rgb * 0.1, ubo.primaryColor.rgb * 0.05, energyInfluence);
+    // Background with slow color shift and bass-driven vignette
+    vec3 bg = mix(ubo.secondaryColor.rgb * 0.08, ubo.primaryColor.rgb * 0.05, energy);
+    bg *= 1.0 + sin(t * 0.3) * 0.05;
+
     vec3 square = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, colorLerp);
-    vec3 borderColor = mix(square, vec3(1.0), highInfluence * 0.5);
+    vec3 borderColor = mix(square, vec3(1.0), high * 0.6);
 
-    square *= 0.8 + 0.4 * bassInfluence;
-    borderColor *= 0.7 + 0.3 * highInfluence;
+    // Bass makes the square brighter and redder
+    square *= 0.7 + bass * 0.5;
+    borderColor *= 0.8 + bass * 0.4;
 
     vec3 color = bg;
+    // Outer glow
+    vec3 glowCol = mix(ubo.secondaryColor.rgb, ubo.primaryColor.rgb, sin(t * 0.5) * 0.5 + 0.5);
+    color += glowCol * outerGlow * (0.15 + bass * 0.25);
     color = mix(color, borderColor, border);
     color = mix(color, square, fill);
-    return color;
+    color += grid * mix(ubo.primaryColor.rgb, vec3(1.0), high * 0.5) * (0.15 + mid * 0.15);
+
+    // High-frequency sparkle on edges
+    float sparkle = smoothstep(0.48, 0.5, box) * high * 0.3;
+    color += vec3(1.0, 0.9, 0.8) * sparkle;
+
+    return clamp(color, 0.0, 0.85);
 }
 
 vec3 renderMode1(vec2 st) {
@@ -194,6 +243,8 @@ vec4 dispatchMode(int m, vec2 st) {
     if (m == 6) return vec4(renderCellularVoronoi(st), 1.0);
     if (m == 7) return vec4(renderMandalaSpin(st), 1.0);
     if (m == 8) return vec4(renderTerrainScan(st), 1.0);
+    if (m == 9) return vec4(renderWireCube(st), 1.0);
+    if (m == 10) return vec4(renderOscilloscope(st), 1.0);
     if (m == 40) {
         vec2 aspectCorrected = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
         return renderAnaglyphAssembly(aspectCorrected, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);

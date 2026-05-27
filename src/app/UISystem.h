@@ -128,6 +128,12 @@ public:
 
     void forcePreviewShuffle(int slotIndex);
 
+    // Randomiza los controles VJAY Basics directamente
+    void randomizeVJayBasics(VisualControls& controls);
+
+    // Randomiza los controles VJAY Extra directamente
+    void randomizeVJayExtra(VisualControls& controls);
+
 private:
     void drawProceduralControls(
         VisualControls&       controls,

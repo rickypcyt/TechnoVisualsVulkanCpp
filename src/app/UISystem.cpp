@@ -65,9 +65,9 @@ namespace {
 
 // ── Layer combo ──────────────────────────────────────────────────────────────
 
-constexpr int  kLayerModeValues[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 40};
-constexpr int  kLayerModeCount    = 10;
-constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Plasma Wave\0Radial Burst\0Grid Pulse\0Noise Flow\0Cellular\0Mandala\0Terrain Scan\0Anaglyph 3D\0";
+constexpr int  kLayerModeValues[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 40};
+constexpr int  kLayerModeCount    = 12;
+constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Plasma Wave\0Radial Burst\0Grid Pulse\0Noise Flow\0Cellular\0Mandala\0Terrain Scan\0Wire Cube\0Oscilloscope\0Anaglyph 3D\0";
 
 int layerIndexFromMode(int mode) {
     for (int i = 0; i < kLayerModeCount; ++i)
@@ -885,6 +885,14 @@ void UISystem::drawPreviewContent(
 void UISystem::forcePreviewShuffle(int slotIndex) {
     if (slotIndex < 0 || slotIndex > 1) return;
     previewShuffleRequested[slotIndex] = true;
+}
+
+void UISystem::randomizeVJayBasics(VisualControls& controls) {
+    randomizeVJayBasicsControls(controls, previewRng);
+}
+
+void UISystem::randomizeVJayExtra(VisualControls& controls) {
+    randomizeVJayExtraControls(controls, previewRng);
 }
 
 void UISystem::destroyPreviewSlot(VideoPreviewSlot& slot) {

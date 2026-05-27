@@ -976,6 +976,40 @@ void Application::mainLoop() {
                 switch (event.key.keysym.sym) {
                     case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizePreviewVideo1");  break;
                     case SDLK_2: case SDLK_KP_2: handleOscTrigger("randomizePreviewVideo2"); break;
+                    case SDLK_r: {
+                        static std::random_device rd;
+                        static std::mt19937 gen(rd());
+                        std::uniform_int_distribution<> dis(0, 1);
+                        auto& p = visualControls.post;
+                        auto& f = visualControls.fx;
+                        // Randomize post FX toggles
+                        p.enablePostCrtCurvature    = dis(gen) == 1;
+                        p.enablePostScanMask        = dis(gen) == 1;
+                        p.enablePostVignette        = dis(gen) == 1;
+                        p.enablePostFishEye         = dis(gen) == 1;
+                        p.enablePostBloom           = dis(gen) == 1;
+                        p.enablePostAberration      = dis(gen) == 1;
+                        p.enablePostGrain           = dis(gen) == 1;
+                        p.enablePostBend            = dis(gen) == 1;
+                        p.enablePostGlitch          = dis(gen) == 1;
+                        p.enablePostColorBalance    = dis(gen) == 1;
+                        p.enableAnalog              = dis(gen) == 1;
+                        f.enableMirror              = dis(gen) == 1;
+                        f.enableInvert              = dis(gen) == 1;
+                        f.enablePosterize           = dis(gen) == 1;
+                        f.enableInfrared            = dis(gen) == 1;
+                        f.enableRGBShift            = dis(gen) == 1;
+                        f.enableDistortion          = dis(gen) == 1;
+                        f.enableBlurMotion          = dis(gen) == 1;
+                        f.enableSharpen             = dis(gen) == 1;
+                        break;
+                    }
+                    case SDLK_t:
+                        uiSystem.randomizeVJayBasics(visualControls);
+                        break;
+                    case SDLK_y:
+                        uiSystem.randomizeVJayExtra(visualControls);
+                        break;
                 }
             }
 
