@@ -5,6 +5,7 @@
 #include "parameters/JsonSerializer.h"
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <algorithm>
 #include <glm/glm.hpp>
@@ -12,6 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <random>
 #include <future>
+#include <nlohmann/json.hpp>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers internos
@@ -84,9 +86,29 @@ void Application::rebuildVideoTexture(int slot) {
 
 // Recarga un slot completo desde una ruta dada.
 bool Application::reloadVideoSlot(int slot, const std::string& path) {
-    // Skip if the same video is already loaded in this slot
-    if (slot == 0 && path == videoSourcePath) return true;
-    if (slot == 1 && path == videoSourcePath2) return true;
+    // Skip if the same video is already loaded AND the player is ready
+    if (slot == 0 && path == videoSourcePath && videoSubsystemInitialized) {
+        std::cout << "[reloadVideoSlot] V1 already loaded and ready: " << path << "\n";
+        return true;
+    }
+    if (slot == 1 && path == videoSourcePath2 && videoSubsystemInitialized2) {
+        std::cout << "[reloadVideoSlot] V2 already loaded and ready: " << path << "\n";
+        return true;
+    }
+    std::cout << "[reloadVideoSlot] Reloading slot " << slot << " with: " << path << "\n";
+
+    // Restore per-video playback speed
+    auto restoreSpeed = [&](int targetSlot, const std::string& videoPath) {
+        auto it = videoSpeedCache.find(videoPath);
+        float speed = (it != videoSpeedCache.end()) ? it->second : 1.0f;
+        if (targetSlot == 0) {
+            visualControls.playback.videoPlaybackRate = speed;
+            lastPlaybackRate = speed;
+        } else {
+            visualControls.playback.video2PlaybackRate = speed;
+            lastPlaybackRate2 = speed;
+        }
+    };
 
     if (slot == 0) {
         videoSourcePath = path;
@@ -101,6 +123,7 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         }
 
         videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
+        videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
         rebuildVideoTexture(0);
         updateAllDescriptorSets();
 
@@ -121,6 +144,7 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         }
 
         videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
+        videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
         rebuildVideoTexture(1);
         updateAllDescriptorSets();
 
@@ -129,8 +153,30 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         videoRandomizer2.currentVideoDuration = videoPlayer2.durationSeconds();
         videoSubsystemInitialized2 = videoTexture2.isReady();
     }
+
+    restoreSpeed(slot, path);
+
     isReloadingVideo = false;
     return true;
+}
+
+void Application::saveVideoSpeeds() const {
+    try {
+        nlohmann::json j;
+        for (const auto& [k, v] : videoSpeedCache) j[k] = v;
+        std::ofstream f(videoSpeedCachePath);
+        f << j.dump(2);
+    } catch (...) {}
+}
+
+void Application::loadVideoSpeeds() {
+    try {
+        std::ifstream f(videoSpeedCachePath);
+        if (!f.is_open()) return;
+        nlohmann::json j; f >> j;
+        videoSpeedCache.clear();
+        for (auto& [k, v] : j.items()) videoSpeedCache[k] = v.get<float>();
+    } catch (...) {}
 }
 
 void Application::saveState() const {
@@ -142,8 +188,11 @@ void Application::saveState() const {
         allowDimensionChangeRecreation,
         oscSystem,
         selectedVideoAsset,
-        selectedVideoAsset2
+        selectedVideoAsset2,
+        videoSourcePath,
+        videoSourcePath2
     );
+    saveVideoSpeeds();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,6 +201,7 @@ void Application::saveState() const {
 
 Application::Application() {
     VisualControlsRegistry::build(parameterRegistry, visualControls);
+    loadVideoSpeeds();
 }
 
 Application::~Application() {
@@ -180,7 +230,9 @@ void Application::run() {
         allowDimensionChangeRecreation,
         oscSystem,
         selectedVideoAsset,
-        selectedVideoAsset2
+        selectedVideoAsset2,
+        videoSourcePath,
+        videoSourcePath2
     );
 
     initVideo();
@@ -536,20 +588,64 @@ void Application::initVideo() {
     glm::ivec2 screenSize = getScreenSize();
 
     // ── Resolve paths ───────────────────────────────────────────────────────
-    const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-    if (!assets.empty()) {
-        selectedVideoAsset = std::clamp(selectedVideoAsset, 0, (int)assets.size() - 1);
-        videoSourcePath    = assets[selectedVideoAsset].metadata.path;
-    }
+    // Prefer saved paths; validate against the whole registry, then locate
+    // inside the current folder.  If the path exists globally but not in the
+    // selected folder we keep the path (video will load) and reset the index.
+    auto resolvePath = [&](const std::string& folder,
+                          int& selAsset,
+                          std::string& path)
+    {
+        bool pathValid = false;
+        if (!path.empty()) {
+            for (const auto& asset : videoRegistry.getAssets()) {
+                if (asset.metadata.path == path) { pathValid = true; break; }
+            }
+        }
 
-    const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
-    if (!assets2.empty()) {
-        selectedVideoAsset2 = std::clamp(selectedVideoAsset2, 0, (int)assets2.size() - 1);
-        videoSourcePath2    = assets2[selectedVideoAsset2].metadata.path;
-    } else if (!assets.empty()) {
-        selectedVideoAsset2 = (assets.size() > 1) ? 1 : 0;
-        videoSourcePath2    = assets[selectedVideoAsset2].metadata.path;
-    }
+        const auto& assets = videoRegistry.getFilteredAssets(folder);
+        if (!assets.empty()) {
+            if (pathValid) {
+                for (int i = 0; i < (int)assets.size(); ++i) {
+                    if (assets[i].metadata.path == path) {
+                        selAsset = i;
+                        std::cout << "[initVideo] Path found in folder '" << folder
+                                  << "' at index " << i << ": " << path << "\n";
+                        return;
+                    }
+                }
+                std::cout << "[initVideo] Path valid globally but not in folder '"
+                          << folder << "', keeping path: " << path
+                          << " (reset selAsset from " << selAsset << " to 0)\n";
+                selAsset = 0;
+                return;
+            }
+            std::cout << "[initVideo] Path invalid ('" << path
+                      << "'), falling back to selAsset=" << selAsset
+                      << " in folder '" << folder << "'\n";
+            selAsset = std::clamp(selAsset, 0, (int)assets.size() - 1);
+            path = assets[selAsset].metadata.path;
+            std::cout << "[initVideo] Fallback path: " << path << "\n";
+        } else {
+            std::cout << "[initVideo] Folder '" << folder << "' is empty\n";
+        }
+    };
+
+    std::cout << "[initVideo] Before resolve: V1 path=" << videoSourcePath
+              << " idx=" << selectedVideoAsset << " folder="
+              << visualControls.playback.selectedVideoFolder << "\n";
+    std::cout << "[initVideo] Before resolve: V2 path=" << videoSourcePath2
+              << " idx=" << selectedVideoAsset2 << " folder="
+              << visualControls.playback.selectedVideo2Folder << "\n";
+
+    resolvePath(visualControls.playback.selectedVideoFolder,
+                selectedVideoAsset, videoSourcePath);
+    resolvePath(visualControls.playback.selectedVideo2Folder,
+                selectedVideoAsset2, videoSourcePath2);
+
+    std::cout << "[initVideo] After resolve:  V1 path=" << videoSourcePath
+              << " idx=" << selectedVideoAsset << "\n";
+    std::cout << "[initVideo] After resolve:  V2 path=" << videoSourcePath2
+              << " idx=" << selectedVideoAsset2 << "\n";
 
     // ── Lazy init: only init slot 1 when dual video is enabled ────────────
     bool initSlot1 = visualControls.playback.enableDualVideo;
@@ -958,6 +1054,17 @@ void Application::mainLoop() {
 
         if (videoSubsystemInitialized)  videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
         if (videoSubsystemInitialized2) videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
+
+        // Detect playback speed changes and cache them
+        if (visualControls.playback.videoPlaybackRate != lastPlaybackRate) {
+            lastPlaybackRate = visualControls.playback.videoPlaybackRate;
+            videoSpeedCache[videoSourcePath] = lastPlaybackRate;
+        }
+        if (visualControls.playback.video2PlaybackRate != lastPlaybackRate2) {
+            lastPlaybackRate2 = visualControls.playback.video2PlaybackRate;
+            videoSpeedCache[videoSourcePath2] = lastPlaybackRate2;
+        }
+
         if (videoRenderer)  videoRenderer->update(deltaTime, frame->frameIndex);
         if (videoRenderer2) videoRenderer2->update(deltaTime, frame->frameIndex);
 
@@ -1154,6 +1261,14 @@ UICallbacks Application::buildUICallbacks() {
     cb.onReloadVideo2 = [this](const std::string& path) {
         if (!canChangeVideo()) return;
         reloadVideoSlot(1, path);
+    };
+
+    cb.onGetVideoSpeed = [this](const std::string& path) -> float {
+        auto it = videoSpeedCache.find(path);
+        return (it != videoSpeedCache.end()) ? it->second : 1.0f;
+    };
+    cb.onSetVideoSpeed = [this](const std::string& path, float speed) {
+        videoSpeedCache[path] = speed;
     };
 
     return cb;

@@ -44,14 +44,14 @@ void main() {
 
     float glitchWeight = clamp(
         ubo.glitchAmount +
-        ubo.glitchDatamosh * 0.25 +
-        ubo.glitchJitter * 0.25 +
-        ubo.glitchRGBSplit * 0.2 +
-        ubo.glitchScanlineBreak * 0.15 +
-        ubo.glitchTearing * 0.2 +
-        ubo.glitchPixelSort * 0.2 +
-        ubo.glitchBufferCorruption * 0.15 +
-        ubo.grainStrength * 0.08,
+        ubo.glitchDatamosh * 0.12 +
+        ubo.glitchJitter * 0.12 +
+        ubo.glitchRGBSplit * 0.10 +
+        ubo.glitchScanlineBreak * 0.08 +
+        ubo.glitchTearing * 0.10 +
+        ubo.glitchPixelSort * 0.10 +
+        ubo.glitchBufferCorruption * 0.08 +
+        ubo.grainStrength * 0.04,
         0.0, 1.0
     );
     
@@ -65,44 +65,44 @@ void main() {
         vec2 p = uv;
 
         if (ubo.glitchDatamosh > 0.0001) {
-            p.x += sin(c.y * 80.0 + t * 10.0) * ubo.glitchDatamosh * 0.008;
+            p.x += sin(c.y * 80.0 + t * 10.0) * ubo.glitchDatamosh * 0.003;
         }
 
         if (ubo.glitchJitter > 0.0001) {
-            p += (hash21(uv * 400.0 + t) - 0.5) * ubo.glitchJitter * 0.008;
+            p += (hash21(uv * 400.0 + t) - 0.5) * ubo.glitchJitter * 0.003;
         }
 
         vec3 g = texture(inputTex, clamp(p, 0.0, 1.0)).rgb;
 
         if (ubo.glitchRGBSplit > 0.0001) {
             float osc = sin(t * 2.0) * 0.5 + 0.5;
-            vec2 off = (ubo.glitchRGBSplit * osc * 0.003) * c / max(ubo.resolution, vec2(1.0));
+            vec2 off = (ubo.glitchRGBSplit * osc * 0.001) * c / max(ubo.resolution, vec2(1.0));
             g.r = texture(inputTex, clamp(p + off, 0.0, 1.0)).r;
             g.b = texture(inputTex, clamp(p - off, 0.0, 1.0)).b;
         }
 
         if (ubo.glitchScanlineBreak > 0.0001) {
             float line = step(0.98, fract(uv.y * 200.0 + t * 5.0));
-            g *= 1.0 - line * ubo.glitchScanlineBreak * 0.5;
+            g *= 1.0 - line * ubo.glitchScanlineBreak * 0.2;
         }
 
         if (ubo.glitchTearing > 0.0001) {
             float tear = step(0.85, hash21(vec2(uv.y * 10.0, t)));
-            g = mix(g, base, 1.0 - tear * ubo.glitchTearing * 0.6);
+            g = mix(g, base, 1.0 - tear * ubo.glitchTearing * 0.25);
         }
 
         if (ubo.glitchPixelSort > 0.0001) {
-            g = mix(g, rgbSortApprox(g), ubo.glitchPixelSort * 0.2);
+            g = mix(g, rgbSortApprox(g), ubo.glitchPixelSort * 0.08);
         }
 
         if (ubo.glitchBufferCorruption > 0.0001) {
             float rnd = hash21(uv * 600.0 + t * 20.0);
-            g = mix(g, vec3(rnd), ubo.glitchBufferCorruption * 0.12);
+            g = mix(g, vec3(rnd), ubo.glitchBufferCorruption * 0.05);
         }
 
         if (ubo.grainStrength > 0.0001) {
             float n = hash21(uv * 800.0 + t * 60.0) - 0.5;
-            g += n * ubo.grainStrength * 0.15;
+            g += n * ubo.grainStrength * 0.06;
         }
 
         color = mix(base, g, glitchWeight);

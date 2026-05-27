@@ -540,7 +540,9 @@ void UISystem::drawPreviewContent(
     float&                transDur2,
     bool&                 controlsDirty,
     const UIDiagnostics&  diag,
-    const UICallbacks&    callbacks)
+    const UICallbacks&    callbacks,
+    const std::string&    video1Path,
+    const std::string&    video2Path)
 {
     float deltaTime = ImGui::GetIO().DeltaTime;
     updatePreviewSlot(previewSlotVideo1, deltaTime);
@@ -617,6 +619,11 @@ void UISystem::drawPreviewContent(
         if (slot.loadedPath != desiredPath)
             loadPreview(slot, desiredPath);
 
+        if (slot.player && callbacks.onGetVideoSpeed) {
+            float speed = callbacks.onGetVideoSpeed(desiredPath);
+            slot.player->setPlaybackRate(speed);
+        }
+
         ImGui::PushID(tag);
         if (slot.texture) {
             float aspect = (slot.textureHeight > 0) ? (float)slot.textureWidth / (float)slot.textureHeight : 1.0f;
@@ -690,14 +697,12 @@ void UISystem::drawPreviewContent(
         // ── Per-slot sliders ──
         if (slotIndex == 0) {
             changed |= ImGui::SliderFloat("Mix",   &controls.playback.videoMix,          0.f, 1.f);
-            changed |= ImGui::SliderFloat("Speed", &controls.playback.videoPlaybackRate, 0.1f, 5.f, "%.2fx");
             ImGui::Separator();
             changed |= ImGui::Combo("Blend mode", &controls.blending.blendModeProcedural, BLEND_ITEMS);
             changed |= ImGui::SliderFloat("Blend amount", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
         } else {
             ImGui::BeginDisabled(!controls.playback.enableDualVideo);
             changed |= ImGui::SliderFloat("Mix",   &controls.playback.video2Mix,          0.f, 1.f);
-            changed |= ImGui::SliderFloat("Speed", &controls.playback.video2PlaybackRate, 0.1f, 5.f, "%.2fx");
             changed |= ImGui::Combo("Blend mode", &controls.playback.video2BlendMode,
                                     "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
             ImGui::EndDisabled();
@@ -706,9 +711,9 @@ void UISystem::drawPreviewContent(
         bool confirmClick = ImGui::Button("Enviar a escena");
         ImGui::SameLine();
         if (slotIndex == 0)
-            ImGui::TextDisabled("Enter = enviar");
+            ImGui::TextDisabled("Q = enviar");
         else
-            ImGui::TextDisabled("Shift+Enter = enviar");
+            ImGui::TextDisabled("W = enviar");
         if (confirmClick && applyCallback) {
             activeSelection = slot.previewSelection;
             applyCallback(meta.path);
@@ -739,25 +744,47 @@ void UISystem::drawPreviewContent(
     ImGui::Text("PREVIEW");
     ImGui::Separator();
 
-    // ── ROW 1: both preview images side by side ──
-    float availW = ImGui::GetContentRegionAvail().x;
-    float halfW  = (availW - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+    // ── Active renderer videos (always on top) ──
+    auto baseName = [](const std::string& p) {
+        size_t s = p.find_last_of("/\\");
+        return (s == std::string::npos) ? p : p.substr(s + 1);
+    };
+    ImGui::PushStyleColor(ImGuiCol_Text, {0.4f, 1.0f, 0.4f, 1.0f});
+    ImGui::Text("🎬 MIX 1: %s", video1Path.empty() ? "(vacío)" : baseName(video1Path).c_str());
+    ImGui::PopStyleColor();
+    ImGui::PushStyleColor(ImGuiCol_Text, {0.4f, 0.7f, 1.0f, 1.0f});
+    ImGui::Text("🎬 MIX 2: %s", video2Path.empty() ? "(vacío)" : baseName(video2Path).c_str());
+    ImGui::PopStyleColor();
+    ImGui::Separator();
 
+    // ── ROW 1: preview images stacked vertically ──
     ImGui::BeginGroup();
     ImGui::Text("Video 1");
     if (diag.videoReady) ImGui::SameLine(); ImGui::TextDisabled("online");
     updateSlotAndDrawImage("V1", previewSlotVideo1,
                            controls.playback.selectedVideoFolder,
                            selectedVideoAsset, 0);
+    if (ImGui::SliderFloat("Speed##V1", &controls.playback.videoPlaybackRate, 0.1f, 5.f, "%.2fx")) {
+        if (previewSlotVideo1.player)
+            previewSlotVideo1.player->setPlaybackRate(controls.playback.videoPlaybackRate);
+        if (callbacks.onSetVideoSpeed && !previewSlotVideo1.previewPath.empty())
+            callbacks.onSetVideoSpeed(previewSlotVideo1.previewPath, controls.playback.videoPlaybackRate);
+    }
     ImGui::EndGroup();
-
-    ImGui::SameLine();
 
     ImGui::BeginGroup();
     ImGui::Text("Video 2");
     updateSlotAndDrawImage("V2", previewSlotVideo2,
                            controls.playback.selectedVideo2Folder,
                            selectedVideoAsset2, 1);
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    if (ImGui::SliderFloat("Speed##V2", &controls.playback.video2PlaybackRate, 0.1f, 5.f, "%.2fx")) {
+        if (previewSlotVideo2.player)
+            previewSlotVideo2.player->setPlaybackRate(controls.playback.video2PlaybackRate);
+        if (callbacks.onSetVideoSpeed && !previewSlotVideo2.previewPath.empty())
+            callbacks.onSetVideoSpeed(previewSlotVideo2.previewPath, controls.playback.video2PlaybackRate);
+    }
+    ImGui::EndDisabled();
     ImGui::EndGroup();
 
     // ── ROW 2+: controls for each slot ──
@@ -771,7 +798,7 @@ void UISystem::drawPreviewContent(
     }
 
     // ── Global keyboard shortcuts ──
-    if (ImGui::IsKeyPressed(ImGuiKey_Enter) && !ImGui::GetIO().KeyShift) {
+    if (ImGui::IsKeyPressed(ImGuiKey_Q)) {
         const auto& assets1 = registry.getFilteredAssets(controls.playback.selectedVideoFolder);
         if (!assets1.empty() && previewSlotVideo1.previewSelection >= 0 &&
             previewSlotVideo1.previewSelection < (int)assets1.size()) {
@@ -780,7 +807,7 @@ void UISystem::drawPreviewContent(
                 callbacks.onReloadVideo(assets1[previewSlotVideo1.previewSelection].metadata.path);
         }
     }
-    if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().KeyShift) {
+    if (ImGui::IsKeyPressed(ImGuiKey_W)) {
         const auto& assets2 = registry.getFilteredAssets(controls.playback.selectedVideo2Folder);
         if (!assets2.empty() && previewSlotVideo2.previewSelection >= 0 &&
             previewSlotVideo2.previewSelection < (int)assets2.size()) {
@@ -834,7 +861,7 @@ bool UISystem::loadPreview(VideoPreviewSlot& slot, const std::string& path) {
     slot.textureWidth = slot.textureHeight = 0;
     slot.frameAccumulator = 0.0f;
 
-    if (!slot.player->initialize(path)) {
+    if (!slot.player->initialize(path, 640, 360)) {
         slot.lastError = "No se pudo abrir el video";
         slot.loadedPath.clear();
         return false;
@@ -1027,7 +1054,7 @@ void UISystem::drawMainNavbar(
         if (ImGui::BeginTabItem("Preview")) {
             drawPreviewContent(controls, registry, selAsset, selAsset2,
                 randomizer, randomizer2, transDur, transDur2,
-                controlsDirty, diag, callbacks);
+                controlsDirty, diag, callbacks, video1Path, video2Path);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Diagnostics")) {

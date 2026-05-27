@@ -22,8 +22,9 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     shutdown();
 
     currentSourcePath = path;
-    targetScreenWidth = screenW;
-    targetScreenHeight = screenH;
+    // Hard cap at 1080p — we never need more than this for display
+    targetScreenWidth  = std::min(screenW,  1920);
+    targetScreenHeight = std::min(screenH, 1080);
 
     if (avformat_open_input(&formatCtx, path.c_str(), nullptr, nullptr) < 0) {
         std::cerr << "[Video] Failed to open source: " << path << std::endl;

@@ -22,7 +22,9 @@ void load(
     bool&               allowDimensionChangeRecreation,
     OscSystem&          oscSystem,
     int&                selectedVideoAsset,
-    int&                selectedVideoAsset2
+    int&                selectedVideoAsset2,
+    std::string&        videoSourcePath,
+    std::string&        videoSourcePath2
 );
 
 void save(
@@ -32,7 +34,9 @@ void save(
     bool                      allowDimensionChangeRecreation,
     const OscSystem&          oscSystem,
     int                       selectedVideoAsset,
-    int                       selectedVideoAsset2
+    int                       selectedVideoAsset2,
+    const std::string&        videoSourcePath,
+    const std::string&        videoSourcePath2
 );
 
 } // namespace ControlState

@@ -75,6 +75,10 @@ struct UICallbacks {
 
     // Notifica que los controles cambiaron (para marcar controlsDirty)
     std::function<void()> onControlsChanged;
+
+    // Per-video playback speed cache
+    std::function<float(const std::string&)> onGetVideoSpeed;
+    std::function<void(const std::string&, float)> onSetVideoSpeed;
 };
 
 // ---------------------------------------------------------------------------
@@ -303,7 +307,9 @@ private:
         float&                transitionDuration2,
         bool&                 controlsDirty,
         const UIDiagnostics&  diag,
-        const UICallbacks&    callbacks);
+        const UICallbacks&    callbacks,
+        const std::string&    video1Path,
+        const std::string&    video2Path);
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;

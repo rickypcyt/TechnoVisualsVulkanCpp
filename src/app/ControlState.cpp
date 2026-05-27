@@ -144,7 +144,9 @@ void ControlState::load(
     bool&                 allowDimensionChangeRecreation,
     OscSystem&            oscSystem,
     int&                  selectedVideoAsset,
-    int&                  selectedVideoAsset2)
+    int&                  selectedVideoAsset2,
+    std::string&          videoSourcePath,
+    std::string&          videoSourcePath2)
 {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -200,6 +202,13 @@ void ControlState::load(
     allowDimensionChangeRecreation = readBool(kv, "allowDimensionChangeRecreation", allowDimensionChangeRecreation);
     selectedVideoAsset  = readInt(kv, "selectedVideoAsset",  selectedVideoAsset);
     selectedVideoAsset2 = readInt(kv, "selectedVideoAsset2", selectedVideoAsset2);
+    videoSourcePath     = readString(kv, "videoSourcePath",  videoSourcePath);
+    videoSourcePath2    = readString(kv, "videoSourcePath2", videoSourcePath2);
+
+    std::cout << "[ControlState::load] Loaded V1 idx=" << selectedVideoAsset
+              << " path='" << videoSourcePath << "'\n";
+    std::cout << "[ControlState::load] Loaded V2 idx=" << selectedVideoAsset2
+              << " path='" << videoSourcePath2 << "'\n";
 
     r = rLoaded;
     r2 = r2Loaded;
@@ -218,7 +227,9 @@ void ControlState::save(
     bool                      allowDimensionChangeRecreation,
     const OscSystem&          oscSystem,
     int                       selectedVideoAsset,
-    int                       selectedVideoAsset2)
+    int                       selectedVideoAsset2,
+    const std::string&        videoSourcePath,
+    const std::string&        videoSourcePath2)
 {
     std::ofstream file(path);
     if (!file.is_open()) {
@@ -255,4 +266,11 @@ void ControlState::save(
     file << "allowDimensionChangeRecreation=" << (allowDimensionChangeRecreation ? 1 : 0) << "\n";
     file << "selectedVideoAsset=" << selectedVideoAsset << "\n";
     file << "selectedVideoAsset2=" << selectedVideoAsset2 << "\n";
+    file << "videoSourcePath=" << videoSourcePath << "\n";
+    file << "videoSourcePath2=" << videoSourcePath2 << "\n";
+
+    std::cout << "[ControlState::save] Saved V1 idx=" << selectedVideoAsset
+              << " path='" << videoSourcePath << "'\n";
+    std::cout << "[ControlState::save] Saved V2 idx=" << selectedVideoAsset2
+              << " path='" << videoSourcePath2 << "'\n";
 }

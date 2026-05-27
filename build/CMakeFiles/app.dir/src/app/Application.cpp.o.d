@@ -240,6 +240,11 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/c++/16.1.1/bits/random.tcc /usr/include/c++/16.1.1/numeric \
  /usr/include/c++/16.1.1/bits/stl_numeric.h \
  /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
+ /usr/include/c++/16.1.1/unordered_map \
+ /usr/include/c++/16.1.1/bits/unordered_map.h \
+ /usr/include/c++/16.1.1/bits/hashtable.h \
+ /usr/include/c++/16.1.1/bits/hashtable_policy.h \
+ /usr/include/c++/16.1.1/bits/node_handle.h \
  /usr/include/c++/16.1.1/algorithm \
  /usr/include/c++/16.1.1/bits/ranges_algo.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
@@ -277,11 +282,6 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/glm/detail/compute_vector_decl.hpp \
  /usr/include/c++/16.1.1/functional \
  /usr/include/c++/16.1.1/bits/std_function.h \
- /usr/include/c++/16.1.1/unordered_map \
- /usr/include/c++/16.1.1/bits/unordered_map.h \
- /usr/include/c++/16.1.1/bits/hashtable.h \
- /usr/include/c++/16.1.1/bits/hashtable_policy.h \
- /usr/include/c++/16.1.1/bits/node_handle.h \
  /usr/include/c++/16.1.1/bits/binders.h \
  /usr/include/glm/detail/_vectorize.hpp \
  /usr/include/glm/ext/vector_bool3_precision.hpp \
@@ -649,6 +649,10 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/../app/parameters/ParameterType.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/parameters/VisualControlsRegistry.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/parameters/JsonSerializer.h \
+ /usr/include/c++/16.1.1/fstream \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
+ /usr/include/c++/16.1.1/bits/fstream.tcc \
  /usr/include/glm/gtc/matrix_transform.hpp \
  /usr/include/glm/ext/matrix_projection.hpp \
  /usr/include/glm/gtc/constants.hpp \
@@ -693,4 +697,70 @@ CMakeFiles/app.dir/src/app/Application.cpp.o: \
  /usr/include/glm/ext/vector_int1_sized.hpp \
  /usr/include/glm/ext/vector_uint1.hpp \
  /usr/include/glm/ext/vector_uint1_sized.hpp \
- /usr/include/glm/gtc/type_ptr.inl
+ /usr/include/glm/gtc/type_ptr.inl \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/json.hpp \
+ /usr/include/c++/16.1.1/iterator \
+ /usr/include/c++/16.1.1/bits/stream_iterator.h \
+ /usr/include/c++/16.1.1/utility \
+ /usr/include/c++/16.1.1/bits/stl_relops.h \
+ /usr/include/c++/16.1.1/bits/intcmp.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/adl_serializer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/abi_macros.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/from_json.hpp \
+ /usr/include/c++/16.1.1/forward_list \
+ /usr/include/c++/16.1.1/bits/forward_list.h \
+ /usr/include/c++/16.1.1/bits/forward_list.tcc \
+ /usr/include/c++/16.1.1/valarray \
+ /usr/include/c++/16.1.1/bits/valarray_array.h \
+ /usr/include/c++/16.1.1/bits/valarray_array.tcc \
+ /usr/include/c++/16.1.1/bits/valarray_before.h \
+ /usr/include/c++/16.1.1/bits/slice_array.h \
+ /usr/include/c++/16.1.1/bits/valarray_after.h \
+ /usr/include/c++/16.1.1/bits/gslice.h \
+ /usr/include/c++/16.1.1/bits/gslice_array.h \
+ /usr/include/c++/16.1.1/bits/mask_array.h \
+ /usr/include/c++/16.1.1/bits/indirect_array.h \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/exceptions.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/value_t.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_scope.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/detected.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/void_t.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley.hpp \
+ /usr/include/c++/16.1.1/version \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/string_escape.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/position_t.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/cpp_future.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/type_traits.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iterator_traits.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/call_std/begin.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/call_std/end.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/json_fwd.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/string_concat.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/identity_tag.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/std_fs.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/to_json.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iteration_proxy.hpp \
+ /usr/include/c++/16.1.1/ranges \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/byte_container_with_subtype.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/hash.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/binary_reader.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/input_adapters.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/json_sax.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/lexer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/meta/is_sax.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/input/parser.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/internal_iterator.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/primitive_iterator.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/iter_impl.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/iterators/json_reverse_iterator.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_custom_base_class.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_pointer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/json_ref.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/binary_writer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/output_adapters.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/output/serializer.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/conversions/to_chars.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/ordered_map.hpp \
+ /usr/include/c++/16.1.1/any \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_unscope.hpp \
+ /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley_undef.hpp

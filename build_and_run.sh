@@ -60,10 +60,31 @@ cmake --build "$BUILD_DIR" --parallel
 RUN_APP="${RUN_APP:-1}"
 SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-}"
 
+# ── Interactive prompts ──────────────────────────────────────────────
+USE_MANGOHUD=""
+
+if [[ "$RUN_APP" == "1" && -t 0 ]]; then
+    read -rp "Activar MangoHud? [s/N]: " mh
+    if [[ "${mh,,}" == "s" ]]; then
+        USE_MANGOHUD=1
+        echo "[build_and_run] MangoHud activado"
+    fi
+
+    read -rp "Elegir GPU (0=iGPU / 1=dGPU / Enter=default): " gpu
+    if [[ "$gpu" == "0" ]]; then
+        export DRI_PRIME=0
+        echo "[build_and_run] Forzando iGPU (DRI_PRIME=0)"
+    elif [[ "$gpu" == "1" ]]; then
+        export DRI_PRIME=1
+        echo "[build_and_run] Forzando dGPU (DRI_PRIME=1)"
+    fi
+fi
+
 if [[ "$RUN_APP" == "1" ]]; then
     echo "[build_and_run] Running application..."
-    if [[ -n "$SDL_VIDEODRIVER" ]]; then
-        SDL_VIDEODRIVER="$SDL_VIDEODRIVER" "$BUILD_DIR/app"
+    [[ -n "$SDL_VIDEODRIVER" ]] && export SDL_VIDEODRIVER="$SDL_VIDEODRIVER"
+    if [[ "$USE_MANGOHUD" == "1" ]]; then
+        mangohud "$BUILD_DIR/app"
     else
         "$BUILD_DIR/app"
     fi

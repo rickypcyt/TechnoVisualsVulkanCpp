@@ -9,6 +9,7 @@
 #include <numeric>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <algorithm>
 #include <glm/glm.hpp>
 
@@ -150,6 +151,13 @@ private:
     std::chrono::steady_clock::time_point lastVideoChangeTime2 =
         std::chrono::steady_clock::now();
 
+    // Per-video playback speed cache (path → rate)
+    mutable std::unordered_map<std::string, float> videoSpeedCache;
+    std::string videoSpeedCachePath = "video_speeds.json";
+    float lastPlaybackRate  = 1.0f;
+    float lastPlaybackRate2 = 1.0f;
+    void loadVideoSpeeds();
+    void saveVideoSpeeds() const;
 
     // --------------------------
     // Rendering
