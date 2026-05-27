@@ -461,7 +461,9 @@ bool VideoPlayer::convertFrameToRGBA(AVFrame* src, std::vector<uint8_t>& out) {
         return false;
     }
 
-    out.resize(static_cast<size_t>(videoWidth) * videoHeight * 4);
+    // sws_scale may write up to 16 bytes past the end of each line for SIMD
+    // alignment, so add 64 bytes of padding (same safety margin as CpuFramePool)
+    out.resize(static_cast<size_t>(videoWidth) * videoHeight * 4 + 64);
     uint8_t* destData[4] = {out.data(), nullptr, nullptr, nullptr};
     int destLinesize[4] = {videoWidth * 4, 0, 0, 0};
 

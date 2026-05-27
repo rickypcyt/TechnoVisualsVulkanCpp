@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <random>
+#include <future>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers internos
@@ -83,6 +84,10 @@ void Application::rebuildVideoTexture(int slot) {
 
 // Recarga un slot completo desde una ruta dada.
 bool Application::reloadVideoSlot(int slot, const std::string& path) {
+    // Skip if the same video is already loaded in this slot
+    if (slot == 0 && path == videoSourcePath) return true;
+    if (slot == 1 && path == videoSourcePath2) return true;
+
     if (slot == 0) {
         videoSourcePath = path;
         videoRenderer.reset();
@@ -523,31 +528,20 @@ void Application::initCommandBuffers() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void Application::initVideo() {
+    using Clock = std::chrono::high_resolution_clock;
+    auto t0 = Clock::now();
+
     std::cout << "[Application] initVideo()\n";
-    videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
+    videoRegistry.scan(videoAssetsRoot);
     glm::ivec2 screenSize = getScreenSize();
 
-    // ── Slot 0 ──────────────────────────────────────────────────────────────
+    // ── Resolve paths ───────────────────────────────────────────────────────
     const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
     if (!assets.empty()) {
         selectedVideoAsset = std::clamp(selectedVideoAsset, 0, (int)assets.size() - 1);
         videoSourcePath    = assets[selectedVideoAsset].metadata.path;
     }
 
-    if (!videoPlayer.initialize(videoSourcePath, screenSize.x, screenSize.y)) {
-        std::cerr << "[Application] Failed to initialize video player 1\n";
-        return;
-    }
-    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-    cpuFramePool.resize(videoPlayer.width(), videoPlayer.height(), videoPlayer.width() * 4);
-    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
-                                 vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                 videoPlayer.width(), videoPlayer.height());
-    videoSubsystemInitialized = videoTexture.isReady();
-    if (videoSubsystemInitialized)
-        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-
-    // ── Slot 1 ──────────────────────────────────────────────────────────────
     const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
     if (!assets2.empty()) {
         selectedVideoAsset2 = std::clamp(selectedVideoAsset2, 0, (int)assets2.size() - 1);
@@ -557,20 +551,67 @@ void Application::initVideo() {
         videoSourcePath2    = assets[selectedVideoAsset2].metadata.path;
     }
 
-    if (!videoPlayer2.initialize(videoSourcePath2, screenSize.x, screenSize.y)) {
-        std::cerr << "[Application] Failed to initialize video player 2: " << videoSourcePath2 << '\n';
+    // ── Lazy init: only init slot 1 when dual video is enabled ────────────
+    bool initSlot1 = visualControls.playback.enableDualVideo;
+
+    // ── Parallel player initialization (heaviest part: disk + codecs) ──────
+    auto tPlayer = Clock::now();
+
+    auto future0 = std::async(std::launch::async, [&]() {
+        return videoPlayer.initialize(videoSourcePath, screenSize.x, screenSize.y);
+    });
+
+    std::future<bool> future1;
+    if (initSlot1) {
+        future1 = std::async(std::launch::async, [&]() {
+            return videoPlayer2.initialize(videoSourcePath2, screenSize.x, screenSize.y);
+        });
+    }
+
+    bool ok0 = future0.get();
+    bool ok1 = initSlot1 ? future1.get() : false;
+
+    auto tPlayerDone = Clock::now();
+    std::cout << "[Application] Player init: "
+              << std::chrono::duration<double>(tPlayerDone - tPlayer).count()
+              << "s (slot0=" << ok0 << " slot1=" << ok1 << ")\n";
+
+    if (!ok0) {
+        std::cerr << "[Application] Failed to initialize video player 1\n";
         return;
     }
-    videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-    cpuFramePool2.resize(videoPlayer2.width(), videoPlayer2.height(), videoPlayer2.width() * 4);
-    videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
-                                  vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                  videoPlayer2.width(), videoPlayer2.height());
-    videoSubsystemInitialized2 = videoTexture2.isReady();
-    if (videoSubsystemInitialized2)
-        videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
 
-    std::cout << "[Application] initVideo() done — v1=" << videoSubsystemInitialized
+    // ── Vulkan resources (must be on main thread, but faster) ───────────────
+    auto tVk = Clock::now();
+
+    cpuFramePool.resize(videoPlayer.width(), videoPlayer.height(), videoPlayer.width() * 4);
+    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                 vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                 videoPlayer.width(), videoPlayer.height());
+    videoSubsystemInitialized = videoTexture.isReady();
+    if (videoSubsystemInitialized)
+        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
+
+    if (initSlot1 && ok1) {
+        videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
+        cpuFramePool2.resize(videoPlayer2.width(), videoPlayer2.height(), videoPlayer2.width() * 4);
+        videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+                                      vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                      videoPlayer2.width(), videoPlayer2.height());
+        videoSubsystemInitialized2 = videoTexture2.isReady();
+        if (videoSubsystemInitialized2)
+            videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+    }
+
+    auto tVkDone = Clock::now();
+    std::cout << "[Application] Vulkan resources: "
+              << std::chrono::duration<double>(tVkDone - tVk).count() << "s\n";
+
+    auto t1 = Clock::now();
+    std::cout << "[Application] initVideo() done — total="
+              << std::chrono::duration<double>(t1 - t0).count()
+              << "s v1=" << videoSubsystemInitialized
               << " v2=" << videoSubsystemInitialized2 << '\n';
 }
 
@@ -754,6 +795,12 @@ void Application::handleOscTrigger(const std::string& action) {
         if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
         isReloadingVideo = false;
 
+    } else if (action == "randomizePreviewVideo1") {
+        uiSystem.forcePreviewShuffle(0);
+
+    } else if (action == "randomizePreviewVideo2") {
+        uiSystem.forcePreviewShuffle(1);
+
     } else if (action == "jumpRandom") {
         if (!videoSubsystemInitialized) return;
         const double dur = videoPlayer.durationSeconds();
@@ -761,7 +808,6 @@ void Application::handleOscTrigger(const std::string& action) {
 
     } else if (action == "folderChanged") {
         if (!canChangeVideo()) return;
-        videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
@@ -836,8 +882,8 @@ void Application::mainLoop() {
 
             if (event.type == SDL_KEYDOWN && !event.key.repeat) {
                 switch (event.key.keysym.sym) {
-                    case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizeVideo");  break;
-                    case SDLK_2: case SDLK_KP_2: handleOscTrigger("randomizeVideo2"); break;
+                    case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizePreviewVideo1");  break;
+                    case SDLK_2: case SDLK_KP_2: handleOscTrigger("randomizePreviewVideo2"); break;
                 }
             }
 
@@ -1062,23 +1108,15 @@ UICallbacks Application::buildUICallbacks() {
     };
 
     cb.onFolderChanged = [this]() {
-        if (!canChangeVideo()) return;
-        videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideoFolder);
-        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
+        // Preview folder changes do NOT reload the renderer.
+        // Only explicit "Enviar a escena" / Enter updates the renderer.
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
-        if (!assets.empty()) { selectedVideoAsset = 0; reloadVideoSlot(0, assets[0].metadata.path); }
-        isReloadingVideo = false;
     };
 
     cb.onFolderChanged2 = [this]() {
-        if (!canChangeVideo()) return;
-        videoRegistry.scan(videoAssetsRoot, visualControls.playback.selectedVideo2Folder);
-        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
-        if (!assets.empty()) { selectedVideoAsset2 = 0; reloadVideoSlot(1, assets[0].metadata.path); }
-        isReloadingVideo = false;
     };
 
     cb.onRandomizeVideo = [this]() {
@@ -1093,6 +1131,14 @@ UICallbacks Application::buildUICallbacks() {
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
         if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
         isReloadingVideo = false;
+    };
+
+    cb.onRandomizePreviewVideo1 = [this]() {
+        uiSystem.forcePreviewShuffle(0);
+    };
+
+    cb.onRandomizePreviewVideo2 = [this]() {
+        uiSystem.forcePreviewShuffle(1);
     };
 
     cb.onJumpRandom = [this]() {

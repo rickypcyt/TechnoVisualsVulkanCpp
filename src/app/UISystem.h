@@ -4,6 +4,8 @@
 #include <string>
 #include <functional>
 #include <random>
+#include <memory>
+#include <vector>
 
 // Forward declarations para no incluir todo en el header
 struct ImGuiContext;
@@ -52,6 +54,8 @@ struct UICallbacks {
     // Pide randomizar el video actual
     std::function<void()> onRandomizeVideo;
     std::function<void()> onRandomizeVideo2;
+    std::function<void()> onRandomizePreviewVideo1;
+    std::function<void()> onRandomizePreviewVideo2;
 
     // Pide recargar videos cuando cambia la carpeta seleccionada
     std::function<void()> onFolderChanged;
@@ -118,6 +122,8 @@ public:
         const std::string&    video2Path
     );
 
+    void forcePreviewShuffle(int slotIndex);
+
 private:
     void drawProceduralControls(
         VisualControls&       controls,
@@ -149,6 +155,20 @@ private:
     int selectedTab = 0;
 
 private:
+    struct VideoPreviewSlot {
+        int                       previewSelection   = -1;
+        int                       confirmedSelection = -1;
+        std::string               previewPath;
+        std::string               loadedPath;
+        std::string               lastError;
+        std::vector<uint8_t>      frameBuffer;
+        SDL_Texture*              texture            = nullptr;
+        int                       textureWidth       = 0;
+        int                       textureHeight      = 0;
+        float                     frameAccumulator   = 0.0f;
+        std::unique_ptr<VideoPlayer> player;
+    };
+
     void beginFrame();
     void endFrame();
 
@@ -272,9 +292,32 @@ private:
     void drawOscControlsContent(OscSystem& oscSystem);
     void drawAudioDebugContent(AudioSystem& audioSystem, VisualControls& controls);
     void drawParameterIndexContent();
+    void drawPreviewContent(
+        VisualControls&       controls,
+        VideoRegistry&        registry,
+        int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
+        VideoRandomizerState& randomizer,
+        VideoRandomizerState2& randomizer2,
+        float&                transitionDuration,
+        float&                transitionDuration2,
+        bool&                 controlsDirty,
+        const UIDiagnostics&  diag,
+        const UICallbacks&    callbacks);
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;
     ImGuiContext* context  = nullptr;
     bool          initialized = false;
+
+    VideoPreviewSlot previewSlotVideo1;
+    VideoPreviewSlot previewSlotVideo2;
+    bool previewShuffleRequested[2] = {false, false};
+    std::mt19937 previewRng{std::random_device{}()};
+
+    void destroyPreviewSlot(VideoPreviewSlot& slot);
+    bool loadPreview(VideoPreviewSlot& slot, const std::string& path);
+    bool decodePreviewFrame(VideoPreviewSlot& slot);
+    bool ensurePreviewTexture(VideoPreviewSlot& slot, int width, int height);
+    void updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime);
 };

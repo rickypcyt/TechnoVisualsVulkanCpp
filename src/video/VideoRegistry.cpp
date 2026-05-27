@@ -21,8 +21,11 @@ void VideoRegistry::scan(const std::string& rootPath) {
     scan(rootPath, "");
 }
 
-void VideoRegistry::scan(const std::string& rootPath, const std::string& subfolderFilter) {
+void VideoRegistry::scan(const std::string& rootPath, const std::string& /*subfolderFilter*/) {
+    // subfolderFilter is ignored: we always scan the whole tree once and
+    // let getFilteredAssets() do the filtering from the in-memory cache.
     assets.clear();
+    filteredCache.clear();
 
     fs::path root(rootPath);
     if (!fs::exists(root) || !fs::is_directory(root)) {
@@ -68,20 +71,21 @@ const std::vector<VideoAsset>& VideoRegistry::getFilteredAssets(const std::strin
     if (subfolderFilter.empty()) {
         return assets;
     }
-    
-    // Create a filtered vector (cache this in production if needed)
-    static std::vector<VideoAsset> filteredAssets;
-    filteredAssets.clear();
-    
+
+    auto it = filteredCache.find(subfolderFilter);
+    if (it != filteredCache.end()) {
+        return it->second;
+    }
+
+    auto& filteredAssets = filteredCache[subfolderFilter];
     for (const auto& asset : assets) {
         fs::path assetPath(asset.metadata.path);
-        // Check if the file is in the specified subfolder
         std::string relativePath = assetPath.string();
         if (relativePath.find(subfolderFilter) != std::string::npos) {
             filteredAssets.push_back(asset);
         }
     }
-    
+
     return filteredAssets;
 }
 

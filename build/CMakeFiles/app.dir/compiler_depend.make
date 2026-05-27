@@ -10056,6 +10056,7 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/bits/cpp_type_traits.h \
   /usr/include/c++/16.1.1/bits/cxxabi_forced.h \
   /usr/include/c++/16.1.1/bits/cxxabi_init_exception.h \
+  /usr/include/c++/16.1.1/bits/enable_special_members.h \
   /usr/include/c++/16.1.1/bits/erase_if.h \
   /usr/include/c++/16.1.1/bits/exception.h \
   /usr/include/c++/16.1.1/bits/exception_defines.h \
@@ -10067,6 +10068,8 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/bits/functexcept.h \
   /usr/include/c++/16.1.1/bits/functional_hash.h \
   /usr/include/c++/16.1.1/bits/hash_bytes.h \
+  /usr/include/c++/16.1.1/bits/hashtable.h \
+  /usr/include/c++/16.1.1/bits/hashtable_policy.h \
   /usr/include/c++/16.1.1/bits/invoke.h \
   /usr/include/c++/16.1.1/bits/ios_base.h \
   /usr/include/c++/16.1.1/bits/istream.tcc \
@@ -10087,6 +10090,7 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/bits/new_allocator.h \
   /usr/include/c++/16.1.1/bits/new_except.h \
   /usr/include/c++/16.1.1/bits/new_throw.h \
+  /usr/include/c++/16.1.1/bits/node_handle.h \
   /usr/include/c++/16.1.1/bits/ostream.h \
   /usr/include/c++/16.1.1/bits/ostream.tcc \
   /usr/include/c++/16.1.1/bits/ostream_insert.h \
@@ -10133,6 +10137,7 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
   /usr/include/c++/16.1.1/bits/unique_lock.h \
   /usr/include/c++/16.1.1/bits/unique_ptr.h \
+  /usr/include/c++/16.1.1/bits/unordered_map.h \
   /usr/include/c++/16.1.1/bits/uses_allocator.h \
   /usr/include/c++/16.1.1/bits/uses_allocator_args.h \
   /usr/include/c++/16.1.1/bits/utility.h \
@@ -10202,6 +10207,7 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: /home/ricky/coding/proyects/vu
   /usr/include/c++/16.1.1/tuple \
   /usr/include/c++/16.1.1/type_traits \
   /usr/include/c++/16.1.1/typeinfo \
+  /usr/include/c++/16.1.1/unordered_map \
   /usr/include/c++/16.1.1/vector \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \

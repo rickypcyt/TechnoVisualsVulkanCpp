@@ -4,6 +4,7 @@
 #include <array>
 #include <filesystem>
 #include <algorithm>
+#include <unordered_map>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -44,4 +45,5 @@ private:
     static void probeMetadata(VideoAsset& asset);
 
     std::vector<VideoAsset> assets;
+    mutable std::unordered_map<std::string, std::vector<VideoAsset>> filteredCache;
 };

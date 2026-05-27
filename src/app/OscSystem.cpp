@@ -14,6 +14,8 @@ namespace {
 static const std::pair<const char*, const char*> DEFAULT_TRIGGER_ACTIONS[] = {
     {"/vjay/randomizeVideo", "randomizeVideo"},
     {"/vjay/randomizeVideo2", "randomizeVideo2"},
+    {"/vjay/randomizePreviewVideo1", "randomizePreviewVideo1"},
+    {"/vjay/randomizePreviewVideo2", "randomizePreviewVideo2"},
     {"/vjay/jumpRandom", "jumpRandom"},
     {"/vjay/folderChanged", "folderChanged"},
     {"/vjay/applyChanges", "applyChanges"}

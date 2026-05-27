@@ -56,6 +56,10 @@ static const std::array<int, 5> FORCED_FPS_OPTIONS_UI = {0, 15, 24, 30, 60};
 
 static const char* BLEND_ITEMS = "Add\0Screen\0Multiply\0Overlay\0Difference\0Soft Light\0";
 
+static constexpr float kPreviewMinAspect = 16.0f / 9.0f;
+static constexpr float kPreviewMaxWidth  = 420.0f;
+static constexpr float kPreviewMaxHeight = 240.0f;
+
 // ── Namespace interno ─────────────────────────────────────────────────────────
 namespace {
 
@@ -70,6 +74,7 @@ int layerIndexFromMode(int mode) {
         if (kLayerModeValues[i] == mode) return i;
     return 0;
 }
+
 
 bool drawActiveLayerCombo(const char* label, int& activeMode) {
     int idx = layerIndexFromMode(activeMode);
@@ -136,7 +141,7 @@ static const ParameterInfo PARAMETER_INFOS[] = {
     {"Post FX","crtScanlineIntensity",      0.f, 1.f},
     {"Post FX","crtMaskIntensity",          0.f, 1.f},
     {"Post FX","crtVignette",               0.f, 1.f},
-    {"Post FX","crtFishEye",                0.f,0.5f},
+    {"Post FX","crtFishEye",                0.f,0.2f},
     {"Post FX","gaussianBlur",              0.f, 1.f},
     {"Post FX","directionalBlur",           0.f, 1.f},
     {"Post FX","directionalBlurAngle",      0.f,360.f},
@@ -220,7 +225,9 @@ static const ParameterInfo PARAMETER_INFOS[] = {
 constexpr int PARAMETER_COUNT = static_cast<int>(std::size(PARAMETER_INFOS));
 
 static const char* TRIGGER_ACTIONS[] = {
-    "randomizeVideo", "randomizeVideo2", "jumpRandom", "folderChanged", "applyChanges"
+    "randomizeVideo", "randomizeVideo2",
+    "randomizePreviewVideo1", "randomizePreviewVideo2",
+    "jumpRandom", "folderChanged", "applyChanges"
 };
 constexpr int TRIGGER_ACTION_COUNT = static_cast<int>(std::size(TRIGGER_ACTIONS));
 
@@ -469,7 +476,8 @@ bool drawRandomizerBlock(const char* suffix,
                          Randomizer& r,
                          float& transitionDuration,
                          size_t assetCount,
-                         std::function<void()> onRandomize)
+                         const std::function<void()>& onRandomizePreview,
+                         const std::function<void()>& onRandomizeFinal)
 {
     bool changed = false;
     const bool hasChoice = assetCount > 1;
@@ -493,8 +501,11 @@ bool drawRandomizerBlock(const char* suffix,
     changed |= ImGui::SliderFloat(lbl, &transitionDuration, 0.1f, 2.f, "%.2f s");
 
     ImGui::BeginDisabled(!hasChoice);
-    snprintf(lbl, sizeof(lbl), "Randomize video%s", suffix);
-    if (ImGui::Button(lbl) && onRandomize) { onRandomize(); changed = true; }
+    snprintf(lbl, sizeof(lbl), "Randomize preview%s", suffix);
+    if (ImGui::Button(lbl) && onRandomizePreview) {
+        onRandomizePreview();
+        changed = true;
+    }
     ImGui::SameLine();
     snprintf(lbl, sizeof(lbl), "Auto randomize%s", suffix);
     changed |= ImGui::Checkbox(lbl, &r.autoRandomize);
@@ -517,6 +528,372 @@ bool drawRandomizerBlock(const char* suffix,
 }
 
 } // namespace
+
+void UISystem::drawPreviewContent(
+    VisualControls&       controls,
+    VideoRegistry&        registry,
+    int&                  selectedVideoAsset,
+    int&                  selectedVideoAsset2,
+    VideoRandomizerState& r1,
+    VideoRandomizerState2& r2,
+    float&                transDur,
+    float&                transDur2,
+    bool&                 controlsDirty,
+    const UIDiagnostics&  diag,
+    const UICallbacks&    callbacks)
+{
+    float deltaTime = ImGui::GetIO().DeltaTime;
+    updatePreviewSlot(previewSlotVideo1, deltaTime);
+    updatePreviewSlot(previewSlotVideo2, deltaTime);
+
+    bool changed = false;
+
+    auto drawAssetCombo = [&](const char* label, const std::string& folder,
+                              int& sel, std::function<void(const std::string&)> onLoad)
+    {
+        const auto& assets = registry.getFilteredAssets(folder);
+
+        if (assets.empty()) {
+            ImGui::TextDisabled("No videos found in this folder");
+            return;
+        }
+
+        if (sel < 0 || sel >= (int)assets.size())
+            sel = 0;
+
+        if (ImGui::BeginCombo(label, assets[sel].metadata.filename.c_str()))
+        {
+            for (int i = 0; i < (int)assets.size(); ++i)
+            {
+                if (ImGui::Selectable(assets[i].metadata.filename.c_str(), i == sel))
+                {
+                    if (sel != i)
+                    {
+                        sel = i;
+                        if (onLoad) onLoad(assets[i].metadata.path);
+                    }
+                }
+
+                if (i == sel)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::Text("Videos in folder: %zu", assets.size());
+    };
+
+    // ── Helper: update slot state and draw just the image ──
+    auto updateSlotAndDrawImage = [&](const char* tag,
+                                      VideoPreviewSlot& slot,
+                                      std::string& folder,
+                                      int& activeSelection,
+                                      int slotIndex)
+    {
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (assets.empty()) {
+            destroyPreviewSlot(slot);
+            return;
+        }
+
+        activeSelection = std::clamp(activeSelection, 0, (int)assets.size() - 1);
+        if (slot.previewSelection < 0)
+            slot.previewSelection = activeSelection;
+        slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
+        if (slotIndex >= 0 && slotIndex < 2 && previewShuffleRequested[slotIndex]) {
+            previewShuffleRequested[slotIndex] = false;
+            if (assets.size() > 1) {
+                std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+                int newSelection;
+                do { newSelection = dist(previewRng); }
+                while (newSelection == slot.previewSelection);
+                slot.previewSelection = newSelection;
+            }
+        }
+        if (slot.confirmedSelection != activeSelection)
+            slot.confirmedSelection = activeSelection;
+
+        const std::string& desiredPath = assets[slot.previewSelection].metadata.path;
+        if (slot.loadedPath != desiredPath)
+            loadPreview(slot, desiredPath);
+
+        ImGui::PushID(tag);
+        if (slot.texture) {
+            float aspect = (slot.textureHeight > 0) ? (float)slot.textureWidth / (float)slot.textureHeight : 1.0f;
+            float width  = kPreviewMaxWidth;
+            float height = width / std::max(0.001f, aspect);
+            if (height > kPreviewMaxHeight) {
+                height = kPreviewMaxHeight;
+                width  = height * aspect;
+            }
+            ImGui::Image((ImTextureID)slot.texture, {width, height});
+        } else if (!slot.lastError.empty()) {
+            ImGui::TextColored({1.f,0.4f,0.4f,1.f}, "%s", slot.lastError.c_str());
+        } else {
+            ImGui::TextDisabled("Cargando preview...");
+        }
+        ImGui::PopID();
+    };
+
+    // ── Helper: draw all controls for a slot ──
+    auto drawControls = [&](const char* tag,
+                            VideoPreviewSlot& slot,
+                            std::string& folder,
+                            int& activeSelection,
+                            const std::function<void(const std::string&)>& applyCallback,
+                            int slotIndex)
+    {
+        const auto& assets = registry.getFilteredAssets(folder);
+        ImGui::PushID(tag);
+        ImGui::Separator();
+        ImGui::Text("Controls %s", tag);
+        if (assets.empty()) {
+            ImGui::TextDisabled("No hay videos en esta carpeta");
+            ImGui::PopID();
+            return;
+        }
+
+        // ── Folder & Asset selectors ──
+        if (drawFolderCombo("Load Folder", folder))
+        {
+            if (slotIndex == 0 && callbacks.onFolderChanged)
+                callbacks.onFolderChanged();
+            else if (slotIndex == 1 && callbacks.onFolderChanged2)
+                callbacks.onFolderChanged2();
+        }
+
+        ImGui::Text("Current folder: %s",
+            folder.empty() ? "All Folders" : folder.c_str());
+
+        drawAssetCombo("Asset",
+            folder,
+            activeSelection,
+            [](const std::string&){});
+
+        // ── Clip selector ──
+        const char* currentLabel = assets[slot.previewSelection].metadata.filename.c_str();
+        std::string comboId = std::string("Clip##") + tag;
+        if (ImGui::BeginCombo(comboId.c_str(), currentLabel)) {
+            for (int i = 0; i < (int)assets.size(); ++i) {
+                bool sel = (slot.previewSelection == i);
+                if (ImGui::Selectable(assets[i].metadata.filename.c_str(), sel))
+                    slot.previewSelection = i;
+                if (sel) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        const auto& meta = assets[slot.previewSelection].metadata;
+        ImGui::Text("%dx%d  %.2f fps  %.1f s",
+                    meta.width, meta.height, meta.fps, meta.duration);
+
+        // ── Per-slot sliders ──
+        if (slotIndex == 0) {
+            changed |= ImGui::SliderFloat("Mix",   &controls.playback.videoMix,          0.f, 1.f);
+            changed |= ImGui::SliderFloat("Speed", &controls.playback.videoPlaybackRate, 0.1f, 5.f, "%.2fx");
+            ImGui::Separator();
+            changed |= ImGui::Combo("Blend mode", &controls.blending.blendModeProcedural, BLEND_ITEMS);
+            changed |= ImGui::SliderFloat("Blend amount", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
+        } else {
+            ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+            changed |= ImGui::SliderFloat("Mix",   &controls.playback.video2Mix,          0.f, 1.f);
+            changed |= ImGui::SliderFloat("Speed", &controls.playback.video2PlaybackRate, 0.1f, 5.f, "%.2fx");
+            changed |= ImGui::Combo("Blend mode", &controls.playback.video2BlendMode,
+                                    "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
+            ImGui::EndDisabled();
+        }
+
+        bool confirmClick = ImGui::Button("Enviar a escena");
+        ImGui::SameLine();
+        if (slotIndex == 0)
+            ImGui::TextDisabled("Enter = enviar");
+        else
+            ImGui::TextDisabled("Shift+Enter = enviar");
+        if (confirmClick && applyCallback) {
+            activeSelection = slot.previewSelection;
+            applyCallback(meta.path);
+        }
+
+        // ── Randomizer ──
+        ImGui::Separator();
+        ImGui::Text("Randomizer %s", tag);
+        if (slotIndex == 0) {
+            changed |= drawRandomizerBlock(
+                "##V1", r1, transDur,
+                registry.getFilteredAssets(folder).size(),
+                callbacks.onRandomizePreviewVideo1,
+                callbacks.onRandomizeVideo
+            );
+        } else {
+            changed |= drawRandomizerBlock(
+                "##V2", r2, transDur2,
+                registry.getFilteredAssets(folder).size(),
+                callbacks.onRandomizePreviewVideo2,
+                callbacks.onRandomizeVideo2
+            );
+        }
+
+        ImGui::PopID();
+    };
+
+    ImGui::Text("PREVIEW");
+    ImGui::Separator();
+
+    // ── ROW 1: both preview images side by side ──
+    float availW = ImGui::GetContentRegionAvail().x;
+    float halfW  = (availW - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+
+    ImGui::BeginGroup();
+    ImGui::Text("Video 1");
+    if (diag.videoReady) ImGui::SameLine(); ImGui::TextDisabled("online");
+    updateSlotAndDrawImage("V1", previewSlotVideo1,
+                           controls.playback.selectedVideoFolder,
+                           selectedVideoAsset, 0);
+    ImGui::EndGroup();
+
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    ImGui::Text("Video 2");
+    updateSlotAndDrawImage("V2", previewSlotVideo2,
+                           controls.playback.selectedVideo2Folder,
+                           selectedVideoAsset2, 1);
+    ImGui::EndGroup();
+
+    // ── ROW 2+: controls for each slot ──
+    if (ImGui::CollapsingHeader("Video 1 Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+        drawControls("V1", previewSlotVideo1, controls.playback.selectedVideoFolder,
+                     selectedVideoAsset, callbacks.onReloadVideo, 0);
+    }
+    if (ImGui::CollapsingHeader("Video 2 Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+        drawControls("V2", previewSlotVideo2, controls.playback.selectedVideo2Folder,
+                     selectedVideoAsset2, callbacks.onReloadVideo2, 1);
+    }
+
+    // ── Global keyboard shortcuts ──
+    if (ImGui::IsKeyPressed(ImGuiKey_Enter) && !ImGui::GetIO().KeyShift) {
+        const auto& assets1 = registry.getFilteredAssets(controls.playback.selectedVideoFolder);
+        if (!assets1.empty() && previewSlotVideo1.previewSelection >= 0 &&
+            previewSlotVideo1.previewSelection < (int)assets1.size()) {
+            selectedVideoAsset = previewSlotVideo1.previewSelection;
+            if (callbacks.onReloadVideo)
+                callbacks.onReloadVideo(assets1[previewSlotVideo1.previewSelection].metadata.path);
+        }
+    }
+    if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().KeyShift) {
+        const auto& assets2 = registry.getFilteredAssets(controls.playback.selectedVideo2Folder);
+        if (!assets2.empty() && previewSlotVideo2.previewSelection >= 0 &&
+            previewSlotVideo2.previewSelection < (int)assets2.size()) {
+            selectedVideoAsset2 = previewSlotVideo2.previewSelection;
+            if (callbacks.onReloadVideo2)
+                callbacks.onReloadVideo2(assets2[previewSlotVideo2.previewSelection].metadata.path);
+        }
+    }
+
+    if (changed) {
+        controlsDirty = true;
+        if (callbacks.onControlsChanged)
+            callbacks.onControlsChanged();
+    }
+}
+
+void UISystem::forcePreviewShuffle(int slotIndex) {
+    if (slotIndex < 0 || slotIndex > 1) return;
+    previewShuffleRequested[slotIndex] = true;
+}
+
+void UISystem::destroyPreviewSlot(VideoPreviewSlot& slot) {
+    if (slot.texture) {
+        SDL_DestroyTexture(slot.texture);
+        slot.texture = nullptr;
+    }
+    if (slot.player) {
+        slot.player->shutdown();
+        slot.player.reset();
+    }
+    slot.frameBuffer.clear();
+    slot.loadedPath.clear();
+    slot.previewPath.clear();
+    slot.lastError.clear();
+    slot.textureWidth = slot.textureHeight = 0;
+    slot.frameAccumulator = 0.0f;
+    slot.previewSelection = -1;
+    slot.confirmedSelection = -1;
+}
+
+bool UISystem::loadPreview(VideoPreviewSlot& slot, const std::string& path) {
+    slot.previewPath = path;
+    if (!renderer || path.empty()) {
+        slot.lastError = path.empty() ? "Selecciona un video para previsualizar" : "Renderer no disponible";
+        return false;
+    }
+
+    if (!slot.player) slot.player = std::make_unique<VideoPlayer>();
+    slot.player->shutdown();
+    slot.frameBuffer.clear();
+    slot.textureWidth = slot.textureHeight = 0;
+    slot.frameAccumulator = 0.0f;
+
+    if (!slot.player->initialize(path)) {
+        slot.lastError = "No se pudo abrir el video";
+        slot.loadedPath.clear();
+        return false;
+    }
+
+    slot.loadedPath = path;
+    slot.lastError.clear();
+    return true;
+}
+
+bool UISystem::ensurePreviewTexture(VideoPreviewSlot& slot, int width, int height) {
+    if (!renderer || width <= 0 || height <= 0) return false;
+
+    if (slot.texture && (slot.textureWidth != width || slot.textureHeight != height)) {
+        SDL_DestroyTexture(slot.texture);
+        slot.texture = nullptr;
+    }
+
+    if (!slot.texture) {
+        slot.texture = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA32,
+            SDL_TEXTUREACCESS_STREAMING,
+            width,
+            height);
+        if (!slot.texture) {
+            slot.lastError = "No se pudo crear textura SDL";
+            return false;
+        }
+        SDL_SetTextureBlendMode(slot.texture, SDL_BLENDMODE_BLEND);
+    }
+
+    slot.textureWidth  = width;
+    slot.textureHeight = height;
+    return true;
+}
+
+bool UISystem::decodePreviewFrame(VideoPreviewSlot& slot) {
+    if (!slot.player || !slot.player->isReady()) return false;
+
+    int width = 0;
+    int height = 0;
+    if (!slot.player->grabFrame(slot.frameBuffer, width, height)) return false;
+    if (!ensurePreviewTexture(slot, width, height)) return false;
+
+    const int stride = width * 4;
+    SDL_UpdateTexture(slot.texture, nullptr, slot.frameBuffer.data(), stride);
+    return true;
+}
+
+void UISystem::updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime) {
+    if (!slot.player || !slot.player->isReady()) return;
+    double frameDuration = slot.player->frameDuration();
+    if (frameDuration <= 0.0) frameDuration = 1.0 / 24.0;
+    slot.frameAccumulator += deltaTime;
+    if (slot.frameAccumulator < frameDuration) return;
+    slot.frameAccumulator -= static_cast<float>(frameDuration);
+    decodePreviewFrame(slot);
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Lifecycle
@@ -563,6 +940,9 @@ void UISystem::shutdown() {
     ImGui::DestroyContext(context);
     context     = nullptr;
     initialized = false;
+
+    destroyPreviewSlot(previewSlotVideo1);
+    destroyPreviewSlot(previewSlotVideo2);
 }
 
 void UISystem::processEvent(const SDL_Event& ev) {
@@ -644,6 +1024,12 @@ void UISystem::drawMainNavbar(
         if (ImGui::BeginTabItem("VJAY Basics")) { drawVJayBasicsContent(controls, controlsDirty, rng); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("VJAY Extra"))  { drawVJayExtraContent(controls, controlsDirty, rng);  ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("NLE Editor"))  { drawNLEEditorContent(callbacks, video1Path, video2Path); ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("Preview")) {
+            drawPreviewContent(controls, registry, selAsset, selAsset2,
+                randomizer, randomizer2, transDur, transDur2,
+                controlsDirty, diag, callbacks);
+            ImGui::EndTabItem();
+        }
         if (ImGui::BeginTabItem("Diagnostics")) {
             drawDiagnosticsContent(diag, player, player2, registry,
                 selAsset, selAsset2, controls, callbacks);
@@ -773,123 +1159,15 @@ void UISystem::drawVideoContent(
     changed |= ImGui::SliderFloat("Loop crossfade (s)", &c.playback.loopBlendSeconds, 0.f, 2.f, "%.2f s");
     changed |= ImGui::Checkbox("Allow dimension change", &allowDimChange);
 
-    // Helper
-    auto drawAssetCombo = [&](const char* label, const std::string& folder,
-                              int& sel, std::function<void(const std::string&)> onLoad)
-    {
-        const auto& assets = registry.getFilteredAssets(folder);
-
-        if (assets.empty()) {
-            ImGui::TextDisabled("No videos found in this folder");
-            return;
-        }
-
-        if (sel < 0 || sel >= (int)assets.size())
-            sel = 0;
-
-        if (ImGui::BeginCombo(label, assets[sel].metadata.filename.c_str()))
-        {
-            for (int i = 0; i < (int)assets.size(); ++i)
-            {
-                if (ImGui::Selectable(assets[i].metadata.filename.c_str(), i == sel))
-                {
-                    if (sel != i)
-                    {
-                        sel = i;
-                        if (onLoad) onLoad(assets[i].metadata.path);
-                    }
-                }
-
-                if (i == sel)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::Text("Videos in folder: %zu", assets.size());
-    };
-
     // ─────────────────────────────────────────────────────────────
-    // VIDEO 1
+    // VIDEO 1 & VIDEO 2 per-slot controls moved to Preview tab
     // ─────────────────────────────────────────────────────────────
-    ImGui::Separator();
-    ImGui::Text("Video 1");
-    ImGui::Separator();
-
-    ImGui::TextWrapped("Status: %s", diag.videoReady ? "online" : "unavailable");
-
-    changed |= ImGui::SliderFloat("Mix",   &c.playback.videoMix,          0.f, 1.f);
-    changed |= ImGui::SliderFloat("Speed", &c.playback.videoPlaybackRate, 0.1f, 5.f, "%.2fx");
-
-    if (drawFolderCombo("Load Folder##V1", c.playback.selectedVideoFolder))
-    {
-        if (callbacks.onFolderChanged)
-            callbacks.onFolderChanged();
-    }
-
-    ImGui::Text("Current folder: %s",
-        c.playback.selectedVideoFolder.empty()
-            ? "All Folders"
-            : c.playback.selectedVideoFolder.c_str());
-
-    drawAssetCombo("Asset##V1",
-        c.playback.selectedVideoFolder,
-        selAsset,
-        callbacks.onReloadVideo);
 
     ImGui::Separator();
-    ImGui::Text("Randomizer V1");
-
-    changed |= drawRandomizerBlock(
-        "##V1",
-        r1,
-        transDur,
-        registry.getFilteredAssets(c.playback.selectedVideoFolder).size(),
-        callbacks.onRandomizeVideo
-    );
-
-    // ─────────────────────────────────────────────────────────────
-    // VIDEO 2
-    // ─────────────────────────────────────────────────────────────
-    ImGui::Separator();
-    ImGui::Text("Video 2");
-    ImGui::Separator();
-
-    ImGui::BeginDisabled(!c.playback.enableDualVideo);
-
-    changed |= ImGui::SliderFloat("Mix (V2)",   &c.playback.video2Mix,          0.f, 1.f);
-    changed |= ImGui::Combo("Blend Mode",      &c.playback.video2BlendMode,
-                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
-    changed |= ImGui::SliderFloat("Speed (V2)", &c.playback.video2PlaybackRate, 0.1f, 5.f, "%.2fx");
-
-    ImGui::EndDisabled();
-
-    if (drawFolderCombo("Load Folder##V2", c.playback.selectedVideo2Folder))
-    {
-        if (callbacks.onFolderChanged2)
-            callbacks.onFolderChanged2();
-    }
-
-    ImGui::Text("Current folder: %s",
-        c.playback.selectedVideo2Folder.empty()
-            ? "All Folders"
-            : c.playback.selectedVideo2Folder.c_str());
-
-    drawAssetCombo("Asset##V2",
-        c.playback.selectedVideo2Folder,
-        selAsset2,
-        callbacks.onReloadVideo2);
-
-    ImGui::Separator();
-    ImGui::Text("Randomizer V2");
-
-    changed |= drawRandomizerBlock(
-        "##V2",
-        r2,
-        transDur2,
-        registry.getFilteredAssets(c.playback.selectedVideo2Folder).size(),
-        callbacks.onRandomizeVideo2
-    );
+    TOGGLED_SECTION("Feedback blending", c.blending.enableBlending,
+        changed |= ImGui::Combo("Feedback blend", &c.blending.blendModeFeedback, BLEND_ITEMS);
+        changed |= ImGui::SliderFloat("Feedback mix", &c.blending.blendFeedbackMix, 0,2,"%.2f");
+    )
 
     // ─────────────────────────────────────────────────────────────
     // FINALIZE
@@ -922,11 +1200,11 @@ void UISystem::drawPostFxContent(VisualControls& c, bool& controlsDirty, std::mt
         if (c.post.enablePostCrtCurvature) { c.post.crtCurvature = rr(0,0.6f); c.post.crtHorizontalCurvature = rr(0,0.6f); }
         if (c.post.enablePostScanMask)     { c.post.crtScanlineIntensity = u(); c.post.crtMaskIntensity = u(); }
         if (c.post.enablePostVignette)     { c.post.crtVignette = u(); }
-        if (c.post.enablePostFishEye)      { c.post.crtFishEye = rr(-3,3); }
+        if (c.post.enablePostFishEye)      { c.post.crtFishEye = rr(-1,1); }
         if (c.post.enablePostBloom)        { c.post.bloomIntensity = rr(0,2); c.post.bloomThreshold = u(); }
         if (c.post.enablePostAberration)   { c.post.aberrationAmount = rr(-0.05f,0.05f); }
         if (c.post.enablePostGrain)        { c.post.grainStrength = rr(0,0.5f); }
-        if (c.post.enablePostBend)         { c.fx.bendAmount = u(); }
+        if (c.post.enablePostBend)         { c.fx.bendAmount = randFloat(rng, 0.f, 0.4f); }
         if (c.post.enablePostGlitch)       { c.fx.glitchAmount = u(); }
         if (c.post.enablePostColorBalance) { c.color.colorBalance = {rr(0,2),rr(0,2),rr(0,2)}; }
         controlsDirty = true;
@@ -961,7 +1239,7 @@ void UISystem::drawPostFxContent(VisualControls& c, bool& controlsDirty, std::mt
     PFX("Vignette",  c.post.enablePostVignette,
         changed |= ImGui::SliderFloat("CRT Black Bars",&c.post.crtVignette, 0.f,1.f,"%.2f");)
     PFX("Fish-eye",  c.post.enablePostFishEye,
-        changed |= ImGui::SliderFloat("CRT Fish-eye",  &c.post.crtFishEye, -3.f,3.f,"%.2f");)
+        changed |= ImGui::SliderFloat("CRT Fish-eye",  &c.post.crtFishEye, -1.f,1.f,"%.2f");)
     PFX("Bloom",     c.post.enablePostBloom,
         changed |= ImGui::SliderFloat("Bloom Intensity",&c.post.bloomIntensity, 0.f,2.f,"%.2f");
         changed |= ImGui::SliderFloat("Bloom Threshold",&c.post.bloomThreshold, 0.f,1.f,"%.2f");)
@@ -970,7 +1248,7 @@ void UISystem::drawPostFxContent(VisualControls& c, bool& controlsDirty, std::mt
     PFX("Film Grain##Toggle", c.post.enablePostGrain,
         changed |= ImGui::SliderFloat("Film Grain",&c.post.grainStrength,0.f,0.5f,"%.2f");)
     PFX("Screen Bend",  c.post.enablePostBend,
-        changed |= ImGui::SliderFloat("Bend Amount",&c.fx.bendAmount,0.f,1.f,"%.2f");)
+        changed |= ImGui::SliderFloat("Bend Amount",&c.fx.bendAmount,0.f,0.5f,"%.2f");)
     PFX("Glitch wrapper",c.post.enablePostGlitch,
         changed |= ImGui::SliderFloat("Glitch Intensity",&c.fx.glitchAmount,0.f,1.f,"%.2f");)
     PFX("RGB Mix##Toggle",c.post.enablePostColorBalance,
@@ -1076,13 +1354,7 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         changed |= ImGui::SliderFloat("Pixel sorting",     &c.fx.glitchPixelSort,       0,1,"%.2f");
         changed |= ImGui::SliderFloat("Buffer corruption", &c.fx.glitchBufferCorruption,0,1,"%.2f");
     )
-    TOGGLED_SECTION("7. Compositing & blending", c.blending.enableBlending,
-        changed |= ImGui::Combo("Video blend",    &c.blending.blendModeVideo,    BLEND_ITEMS);
-        changed |= ImGui::Combo("Feedback blend", &c.blending.blendModeFeedback, BLEND_ITEMS);
-        changed |= ImGui::SliderFloat("Video mix",    &c.blending.blendVideoMix,    0,2,"%.2f");
-        changed |= ImGui::SliderFloat("Feedback mix", &c.blending.blendFeedbackMix, 0,2,"%.2f");
-    )
-    TOGGLED_SECTION("8. CRT / analog simulation", c.post.enableAnalog,
+    TOGGLED_SECTION("7. CRT / analog simulation", c.post.enableAnalog,
         changed |= ImGui::SliderFloat("Scanline focus",&c.post.analogScanlineFocus,       0.f,1.f,   "%.2f");
         changed |= ImGui::SliderFloat("Mask balance",  &c.post.analogMaskBalance,         0.f,1.f,   "%.2f");
         changed |= ImGui::SliderFloat("Analog noise",  &c.post.analogNoise,               0.f,1.f,   "%.2f");

@@ -60,7 +60,7 @@ vec2 applyFishEye(vec2 p) {
 
     vec2 c = p * 2.0 - 1.0;
     float r = length(c);
-    c *= 1.0 + ubo.crtFishEye * r * r;
+    c *= 1.0 + ubo.crtFishEye * r * r * 0.5;
     return c * 0.5 + 0.5;
 }
 
@@ -73,45 +73,45 @@ void main() {
     if (ubo.enableDistortion == 1) {
         float warpMask = clamp(ubo.uvWarpStrength, 0.0, 1.0);
         if (warpMask > 0.0001) {
-            vec2 w = sin((p.yx + t) * 8.0) * warpMask * 0.01;
+            vec2 w = sin((p.yx + t) * 8.0) * warpMask * 0.004;
             float audioMod = 1.0;
             if (ubo.enableAudioReactive == 1) {
-                audioMod = 1.0 + ubo.energy * ubo.audioWarpResponse;
+                audioMod = 1.0 + ubo.energy * ubo.audioWarpResponse * 0.5;
             }
             p += w * audioMod;
         }
 
         if (ubo.rippleStrength > 0.0001) {
             float r = length(centered);
-            float wave = sin(r * max(ubo.rippleFrequency, 0.1) * 12.0 - t * 4.0);
-            p += normalize(centered + 0.0001) * wave * ubo.rippleStrength * 0.01;
+            float wave = sin(r * max(ubo.rippleFrequency, 0.1) * 10.0 - t * 3.0);
+            p += normalize(centered + 0.0001) * wave * ubo.rippleStrength * 0.004;
         }
 
         if (abs(ubo.swirlStrength) > 0.0001) {
-            float a = ubo.swirlStrength * length(centered) * 5.0;
+            float a = ubo.swirlStrength * length(centered) * 2.0;
             float c = cos(a);
             float s = sin(a);
             vec2 q = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
-            p = q * 0.5 + 0.5;
+            p = mix(p, q * 0.5 + 0.5, abs(ubo.swirlStrength));
         }
 
         if (ubo.displacementAmount > 0.0001) {
             vec2 n = vec2(fbm(centered * 5.0 + t), fbm(centered * 7.0 - t));
-            p += (n - 0.5) * ubo.displacementAmount * 0.05;
+            p += (n - 0.5) * ubo.displacementAmount * 0.018;
         }
 
         if (ubo.tunnelDepth > 0.0001) {
             vec2 q = centered;
             float r = max(length(q), 0.0001);
-            float d = pow(r, 1.0 - clamp(ubo.tunnelDepth, 0.0, 1.0));
-            float c = 1.0 + ubo.tunnelCurvature * r * r;
-            p = normalize(q) * d * c * 0.5 + 0.5;
+            float d = pow(r, 1.0 - clamp(ubo.tunnelDepth, 0.0, 1.0) * 0.6);
+            float c = 1.0 + ubo.tunnelCurvature * r * r * 0.4;
+            p = mix(p, normalize(q) * d * c * 0.5 + 0.5, clamp(ubo.tunnelDepth, 0.0, 1.0));
         }
     }
 
     if (ubo.enablePostBend == 1 && ubo.bendAmount > 0.0001) {
         float chaos = sin((centered.x + centered.y) * 60.0 + t * 20.0);
-        p += vec2(chaos, cos(t * 10.0 + centered.y * 50.0)) * ubo.bendAmount * 0.05;
+        p += vec2(chaos, cos(t * 10.0 + centered.y * 50.0)) * ubo.bendAmount * 0.018;
     }
 
     p = applyCurvature(p);
@@ -124,7 +124,7 @@ void main() {
 
     if (ubo.enableSlowZoom == 1 && ubo.slowZoomAmount > 0.0001) {
         vec2 z = vec2(0.5);
-        float zoomFactor = 1.0 - ubo.slowZoomAmount * 0.3;
+        float zoomFactor = 1.0 - ubo.slowZoomAmount * 0.12;
         p = z + (p - z) * zoomFactor;
     }
 

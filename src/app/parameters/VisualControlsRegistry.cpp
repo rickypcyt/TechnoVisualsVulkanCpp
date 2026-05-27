@@ -69,7 +69,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("crtScanlineIntensity", &post.crtScanlineIntensity, 0.0f, 5.0f);
     r.registerFloat("crtMaskIntensity", &post.crtMaskIntensity, 0.0f, 5.0f);
     r.registerFloat("crtVignette", &post.crtVignette, 0.0f, 2.0f);
-    r.registerFloat("crtFishEye", &post.crtFishEye, 0.0f, 1.0f);
+    r.registerFloat("crtFishEye", &post.crtFishEye, -1.0f, 1.0f);
     r.registerBool("enablePostCrtCurvature", &post.enablePostCrtCurvature);
     r.registerBool("enablePostScanMask", &post.enablePostScanMask);
     r.registerBool("enablePostVignette", &post.enablePostVignette);
@@ -84,7 +84,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerBool("enablePostGrain", &post.enablePostGrain);
     r.registerFloat("grainStrength", &post.grainStrength, 0.0f, 1.0f);
     r.registerBool("enablePostBend", &post.enablePostBend);
-    r.registerFloat("bendAmount", &fx.bendAmount, 0.0f, 1.0f);
+    r.registerFloat("bendAmount", &fx.bendAmount, 0.0f, 0.5f);
 
     // GLITCH / RANDOM VIDEO
     r.registerBool("enablePostGlitch", &post.enablePostGlitch);

@@ -189,12 +189,6 @@ int AudioSystem::audioCallback(
     void* userData
 ) {
     auto* self = static_cast<AudioSystem*>(userData);
-    static int callbackCount = 0;
-    callbackCount++;
-
-    if (callbackCount % 500 == 0) {
-        std::cout << "[AudioSystem] Callback count: " << callbackCount << std::endl;
-    }
 
     if (!input)
         return paContinue;
@@ -223,7 +217,6 @@ int AudioSystem::audioCallback(
 
 void AudioSystem::dspLoop() {
     size_t readIndex = 0;
-    static int frameCount = 0;
 
     while (running) {
         {
@@ -253,14 +246,6 @@ void AudioSystem::dspLoop() {
         }
 
         processFFT();
-
-        frameCount++;
-        if (frameCount % 100 == 0) {
-            float rms = rmsDb.load();
-            std::cout << "[AudioSystem] RMS dB: " << rms
-                      << " Kick: " << smoothedKick.load()
-                      << " Bass: " << smoothedBass.load() << std::endl;
-        }
     }
 }
 

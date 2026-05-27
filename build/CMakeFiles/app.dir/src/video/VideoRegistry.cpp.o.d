@@ -201,6 +201,12 @@ CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: \
  /usr/include/c++/16.1.1/bits/ranges_algobase.h \
  /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
  /usr/include/c++/16.1.1/pstl/execution_defs.h \
+ /usr/include/c++/16.1.1/unordered_map \
+ /usr/include/c++/16.1.1/bits/unordered_map.h \
+ /usr/include/c++/16.1.1/bits/hashtable.h \
+ /usr/include/c++/16.1.1/bits/hashtable_policy.h \
+ /usr/include/c++/16.1.1/bits/enable_special_members.h \
+ /usr/include/c++/16.1.1/bits/node_handle.h \
  /usr/include/libavformat/avformat.h /usr/include/libavcodec/codec_par.h \
  /usr/include/libavutil/avutil.h /usr/include/libavutil/common.h \
  /usr/include/inttypes.h \
