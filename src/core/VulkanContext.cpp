@@ -89,6 +89,13 @@ void VulkanContext::createSwapchain(uint32_t width, uint32_t height) {
 
     VkSurfaceFormatKHR surfaceFormat = support.formats[0];
     VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    for (auto mode : support.presentModes) {
+        if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+            presentMode = mode;
+            break;
+        }
+    }
+    std::cout << "[VulkanContext] Present mode: " << (presentMode == VK_PRESENT_MODE_MAILBOX_KHR ? "MAILBOX" : "FIFO") << std::endl;
 
     VkExtent2D extent = chooseSwapchainExtent(support, width, height);
 

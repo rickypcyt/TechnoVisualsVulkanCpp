@@ -13,6 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <random>
 #include <future>
+#include <thread>
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
@@ -1300,6 +1301,16 @@ void Application::mainLoop() {
             window.resetResizeFlag();
 
         frameSystem.endFrame();
+
+        // ── Frame rate limiter ─────────────────────────────────────────────
+        // Prevent CPU spinning at 1000+ FPS when GPU is very fast.
+        // 120 FPS cap = ~8.33 ms target. Clamp-based sleep_until avoids
+        // the "catch-up burst" of the accumulative model.
+        constexpr float targetFrameTime = 1.0f / 120.0f;
+        const auto targetNs = std::chrono::nanoseconds(static_cast<int64_t>(targetFrameTime * 1e9f));
+        const auto frameEnd = std::chrono::steady_clock::now();
+        const auto sleepUntil = frameEnd + targetNs;
+        std::this_thread::sleep_until(sleepUntil);
     }
 }
 

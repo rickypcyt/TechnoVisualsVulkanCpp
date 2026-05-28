@@ -2,6 +2,10 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
+#include <iostream>
+extern "C" {
+#include <libavutil/imgutils.h>
+}
 #include "FrameLayout.h"
 
 // CPU Frame Pool - resize-safe dynamic frame storage
@@ -22,21 +26,25 @@ public:
     // Resize all frames to new resolution with stride validation
     // This is the ONLY place where frame size changes
     void resize(uint32_t w, uint32_t h, uint32_t srcStride = 0) {
-        // If no stride provided, assume compact layout
-        uint32_t stride = (srcStride == 0) ? w * 4 : srcStride;
-        
-        // Validate stride is sufficient
-        if (stride < w * 4) {
-            std::cerr << "[CpuFramePool] Invalid stride: " << stride 
-                      << " < " << (w * 4) << " for " << w << "x" << h 
-                      << ", using compact layout" << std::endl;
-            stride = w * 4;
-        }
+        size_t newSize = 0;
+        uint32_t stride = 0;
 
-        // Add 256 bytes of padding for SIMD alignment safety (sws_scale may
-        // write slightly past the end of each line for SSE/AVX alignment, and
-        // av_image_get_buffer_size with align=16 may need extra headroom)
-        size_t newSize = static_cast<size_t>(stride) * h + 256;
+        if (srcStride == 0) {
+            // Compact layout: use FFmpeg's exact aligned buffer size (align=16)
+            // to match what sws_scale / grabFrameInto expects.
+            // +256 padding because sws_scale may write past the last row for SIMD.
+            newSize = static_cast<size_t>(av_image_get_buffer_size(AV_PIX_FMT_RGBA, w, h, 16)) + 256;
+            stride = static_cast<uint32_t>(av_image_get_linesize(AV_PIX_FMT_RGBA, w, 16));
+        } else {
+            stride = srcStride;
+            if (stride < w * 4) {
+                std::cerr << "[CpuFramePool] Invalid stride: " << stride
+                          << " < " << (w * 4) << " for " << w << "x" << h
+                          << ", using compact layout" << std::endl;
+                stride = w * 4;
+            }
+            newSize = static_cast<size_t>(stride) * h + 256;
+        }
 
         for (auto& f : frames) {
             f.width = w;

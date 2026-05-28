@@ -594,6 +594,12 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
  /usr/include/c++/16.1.1/bits/fs_ops.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/VideoRenderer.h \
+ /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
+ /usr/include/c++/16.1.1/bits/std_thread.h \
+ /usr/include/c++/16.1.1/semaphore \
+ /usr/include/c++/16.1.1/bits/semaphore_base.h \
+ /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
+ /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/CpuFramePool.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../video/../video/FrameLayout.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/UniformBufferManager.h \
@@ -605,12 +611,6 @@ CMakeFiles/app.dir/src/main.cpp.o: \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/EffectChain.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/../app/Timeline.h \
  /home/ricky/coding/proyects/vulkancpp/src/app/../render/RenderJob.h \
- /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
- /usr/include/c++/16.1.1/bits/std_thread.h \
- /usr/include/c++/16.1.1/semaphore \
- /usr/include/c++/16.1.1/bits/semaphore_base.h \
- /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
- /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
  /usr/include/c++/16.1.1/condition_variable \
  /usr/include/c++/16.1.1/future \
  /usr/include/c++/16.1.1/bits/atomic_futex.h /usr/include/c++/16.1.1/map \

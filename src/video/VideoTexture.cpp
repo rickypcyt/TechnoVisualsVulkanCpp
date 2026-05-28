@@ -44,13 +44,13 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
         std::cout << "[VideoTexture] Staging ring created with capacity: " << stagingRing.getCapacity() << " bytes" << std::endl;
     }
 
-    // Create current frame texture
+    // Create current frame texture (needs TRANSFER_SRC for copying to prev frame)
     imageHandle = resourceSystem.createImage(
         width,
         height,
         VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     // Create previous frame texture for interpolation

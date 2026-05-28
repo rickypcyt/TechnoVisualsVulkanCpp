@@ -96,9 +96,11 @@ FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
 
     FrameContext& frame = m_frameContexts[m_currentFrame];
 
-    // Wait for previous use of this frame slot
+    // 1. Wait for previous use of this frame slot
+    //    (frees imageAvailableSemaphore for reuse)
     vkWaitForFences(m_device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
 
+    // 2. Acquire next swapchain image
     result = vkAcquireNextImageKHR(
         m_device,
         swapchain,
@@ -109,7 +111,6 @@ FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
     );
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        // Caller must recreate swapchain; do NOT reset fence yet
         return nullptr;
     }
 
@@ -120,11 +121,11 @@ FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
     if (imageIndex >= m_imagesInFlight.size())
         m_imagesInFlight.resize(imageIndex + 1, VK_NULL_HANDLE);
 
-    // Wait for any previous frame still using this swapchain image
+    // 3. Wait for any previous frame still using this swapchain image
     if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
         vkWaitForFences(m_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 
-    // Reset fence only when we're about to submit work
+    // 4. Reset fence only when we're about to submit work
     vkResetFences(m_device, 1, &frame.inFlightFence);
 
     m_imagesInFlight[imageIndex] = frame.inFlightFence;

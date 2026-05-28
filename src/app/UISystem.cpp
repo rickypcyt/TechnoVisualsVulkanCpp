@@ -927,8 +927,9 @@ bool UISystem::loadPreview(VideoPreviewSlot& slot, const std::string& path) {
     slot.textureWidth = slot.textureHeight = 0;
     slot.frameAccumulator = 0.0f;
 
-    // Limit preview decode to 480p to avoid wasting GPU/CPU on full-res frames
-    if (!slot.player->initialize(path, 854, 480)) {
+    // Decode preview at the exact max display size (420x240) so sws_scale
+    // does the minimum work.  The UI never shows previews larger than this.
+    if (!slot.player->initialize(path, 420, 240)) {
         slot.lastError = "No se pudo abrir el video";
         slot.loadedPath.clear();
         return false;
@@ -981,11 +982,18 @@ bool UISystem::decodePreviewFrame(VideoPreviewSlot& slot) {
 
 void UISystem::updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime) {
     if (!slot.player || !slot.player->isReady()) return;
-    double frameDuration = slot.player->frameDuration();
-    if (frameDuration <= 0.0) frameDuration = 1.0 / 24.0;
+
+    // Preview doesn't need full video frame rate; cap at 8 FPS to save CPU.
+    // FFmpeg decode + sws_scale on the main thread is expensive.
+    constexpr float previewFrameTime = 1.0f / 8.0f;
     slot.frameAccumulator += deltaTime;
-    if (slot.frameAccumulator < frameDuration) return;
-    slot.frameAccumulator -= static_cast<float>(frameDuration);
+    if (slot.frameAccumulator < previewFrameTime) return;
+
+    // Clamp accumulator to avoid a catch-up burst after switching to this tab
+    if (slot.frameAccumulator > previewFrameTime * 2.0f)
+        slot.frameAccumulator = previewFrameTime * 2.0f;
+
+    slot.frameAccumulator -= previewFrameTime;
     decodePreviewFrame(slot);
 }
 
