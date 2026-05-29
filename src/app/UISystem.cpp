@@ -1222,6 +1222,29 @@ void UISystem::drawProceduralControlsContent(
     ImGui::Text("Layers");
     changed |= drawActiveLayerCombo("Active Layer", controls.playback.activeMode);
 
+    // Arrow buttons for cycling procedural layers
+    ImGui::SameLine();
+    if (ImGui::Button("<")) {
+        int& mode = controls.playback.activeMode;
+        int maxMode = 10;
+        if (mode == 40) mode = maxMode;
+        else if (mode > 0) mode--;
+        else mode = maxMode;
+        changed = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(">")) {
+        int& mode = controls.playback.activeMode;
+        int maxMode = 10;
+        if (mode >= maxMode) mode = 0;
+        else mode++;
+        changed = true;
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Camera");
+    changed |= ImGui::SliderFloat("Zoom", &controls.camera.zoom, 0.01f, 5.0f, "%.2f");
+
     ImGui::Separator();
     ImGui::Text("Color Palette");
     changed |= ImGui::ColorEdit4("Primary",   glm::value_ptr(controls.color.primaryColor));
@@ -1588,7 +1611,7 @@ void UISystem::drawVJayExtraContent(VisualControls& c, bool& controlsDirty, std:
 
     ImGui::Separator();
     EXT("Camera movement", c.camera.enableMovement,
-        changed |= ImGui::SliderFloat("Camera zoom",     &c.camera.zoom,     0.5f,2.f,       "%.2f");
+        changed |= ImGui::SliderFloat("Camera zoom",     &c.camera.zoom,     0.01f,5.f,       "%.2f");
         changed |= ImGui::SliderFloat("Camera pan X",    &c.camera.panX,     -1.f,1.f,       "%.2f");
         changed |= ImGui::SliderFloat("Camera pan Y",    &c.camera.panY,     -1.f,1.f,       "%.2f");
         changed |= ImGui::SliderFloat("Camera rotation", &c.camera.rotation, -3.14159f,3.14159f,"%.2f rad");)

@@ -64,7 +64,7 @@
 95921	95990	1780076029937514931	rtmidi-build/librtmidi.so.6	e45ff7f854f6b806
 95921	95990	1780076029937514931	rtmidi-build/librtmidi.so	e45ff7f854f6b806
 95990	97765	1780076030007681026	rtmidi-build/CMakeFiles/cmidiin.dir/tests/cmidiin.cpp.o	18f1677cf5f670f0
-18	7442	1780077813480446427	CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o	e4e5f7453774a661
+10	3389	1780078875113308509	CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o	e4e5f7453774a661
 95216	98256	1780076029232523248	CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o	11745a1ed9cbc43e
 94108	98727	1780076028125536309	CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o	116c3b9bca97b0d4
 92847	99024	1780076026864414786	CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o	9930e4d56ed32786
@@ -85,7 +85,7 @@
 92966	102609	1780076026982549794	CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o	176119d48bf0ff3
 92845	103047	1780076026861551222	CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o	e3f16259514d459f
 103047	103133	1780076037063430858	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/mf_coder.cpp.o	f6b4e0a50c7fbc37
-10	12470	1780078572705416207	CMakeFiles/app.dir/src/app/Application.cpp.o	4cbaef3593752655
+9	9470	1780080551561812310	CMakeFiles/app.dir/src/app/Application.cpp.o	4cbaef3593752655
 93699	105077	1780076027715541146	CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o	ef74a2020bc2c4ea
 105077	105216	1780076039093406908	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/version.cpp.o	5d014b2ae2ad925
 101713	115567	1780076035730446585	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/flac_coder.cpp.o	9cc144a0f6055696
@@ -103,11 +103,13 @@
 117261	117589	1780076051277263161	rtmidi-build/tests/sysextest	bf755ef0759a0374
 117332	117638	1780076051349262312	rtmidi-build/tests/apinames	1579352a82bbbb48
 117377	117673	1780076051393261793	rtmidi-build/tests/testcapi	6811d201360147de
-12470	13225	1780078585165679920	app	91c52d8c93a3acb3
+9470	10036	1780080561021946550	app	91c52d8c93a3acb3
 103211	118760	1780076037227428923	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/raw_coder.cpp.o	83ec0aca196bfb6c
 101385	119232	1780076035401450466	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/data.cpp.o	fc414aed7482c8f5
 105216	119636	1780076039233405256	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/w64_coder.cpp.o	67bd1d73194b2ff5
 115569	123869	1780076049586283112	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/wave_coder.cpp.o	27c8d82df375a4d1
 123869	124038	1780076057885185200	kfr-build/src/audio/libkfr_audio.a	5990895757e480c1
-10	3389	1780078875113308509	CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o	e4e5f7453774a661
-3389	3978	1780078878492369399	app	91c52d8c93a3acb3
+10	1898	1780081547308768305	CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o	b97dbd792d5b3e46
+10	7934	1780081547308465186	CMakeFiles/app.dir/src/app/UISystem.cpp.o	ee84578d81813b76
+10	13058	1780081547307859506	CMakeFiles/app.dir/src/app/Application.cpp.o	4cbaef3593752655
+13058	13631	1780081560355042977	app	91c52d8c93a3acb3

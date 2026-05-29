@@ -214,23 +214,81 @@ vec3 renderMode1(vec2 st) {
     float drive = max(0.1, ubo.audioReactiveDrive);
     float bassResponse = clamp(ubo.bass * drive, 0.0, 1.0);
     float energyResponse = clamp(ubo.energy * drive, 0.0, 1.0);
-    float radius = 0.25 + 0.35 * (0.6 * bassResponse + 0.4 * energyResponse);
+    float midResponse = clamp(ubo.mid * drive, 0.0, 1.0);
+    float highResponse = clamp(ubo.high * drive, 0.0, 1.0);
+
+    float radius = 0.25 + 0.25 * (0.6 * bassResponse + 0.4 * energyResponse);
     float dist = length(centered);
+    float angle = atan(centered.y, centered.x);
 
-    float core = smoothstep(radius, radius - 0.02, dist);
-    float rim = smoothstep(radius + 0.05, radius, dist) - core;
+    // ── Circle mask ──
+    float circleEdge = smoothstep(radius + 0.01, radius - 0.01, dist);
+    float rim = smoothstep(radius + 0.06, radius, dist) - circleEdge;
 
+    // ── Inside the circle: glowing orb content ──
     float hueShift = clamp(ubo.mid * drive, 0.0, 1.0);
     float bodyMix = clamp(ubo.colorBlend + hueShift * 0.3, 0.0, 1.0);
     vec3 bodyColor = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, bodyMix);
     vec3 rimColor = mix(ubo.secondaryColor.rgb, vec3(1.0, 0.9, 0.8), clamp(ubo.high * drive, 0.0, 1.0));
 
-    float glow = exp(-dist * (3.0 - bassResponse)) * (0.35 + energyResponse * 0.65);
-    vec3 color = vec3(0.0);
-    color = mix(color, rimColor, rim);
-    color = mix(color, bodyColor, core);
-    color += glow * ubo.primaryColor.rgb;
-    return clamp(color, 0.0, 1.0);
+    // Animated inner swirl
+    float swirl = sin(angle * 3.0 + ubo.time * 2.0 + bassResponse * 4.0) * 0.5 + 0.5;
+    float innerGlow = exp(-dist * dist * (8.0 + bassResponse * 10.0)) * (0.5 + energyResponse * 0.5);
+
+    vec3 innerColor = mix(bodyColor, rimColor, swirl * 0.4);
+    innerColor += innerGlow * ubo.primaryColor.rgb;
+
+    // ── Outside: light rays shooting from behind the circle ──
+    vec3 outsideColor = vec3(0.0);
+
+    // Only draw rays outside the circle
+    if (dist > radius * 0.9) {
+        float t = ubo.time * (1.0 + ubo.tempo * 1.5);
+
+        // Radial rays emanating from circle edge
+        int numRays = 6 + int(energyResponse * 10.0);
+        for (int i = 0; i < 16; ++i) {
+            if (i >= numRays) break;
+            float fi = float(i);
+            float rayAngle = (fi / float(numRays)) * 6.283 + t * 0.3 + bassResponse * 2.0;
+            float angleDiff = abs(fract((angle - rayAngle) / 6.283 + 0.5) - 0.5) * 6.283;
+
+            // Ray width narrows as it goes out
+            float rayWidth = 0.15 + fi * 0.02;
+            float ray = exp(-angleDiff * angleDiff / (rayWidth * rayWidth));
+
+            // Ray length: longer with bass, fades with distance
+            float rayLength = 1.0 - smoothstep(radius, radius + 0.3 + bassResponse * 0.4, dist);
+            ray *= rayLength;
+
+            // Pulse intensity with audio
+            float pulse = sin(t * 2.0 + fi * 1.3) * 0.5 + 0.5;
+            pulse = mix(pulse, 1.0, bassResponse * 0.5);
+
+            // Color per ray
+            float hue = fract(fi / float(numRays) + t * 0.05 + energyResponse * 0.3);
+            vec3 rayCol = mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, hue);
+            outsideColor += rayCol * ray * pulse * (0.3 + energyResponse * 0.4);
+        }
+
+        // Sparkle / particle burst at the edge
+        float burst = exp(-(dist - radius) * (dist - radius) * (30.0 + bassResponse * 50.0));
+        vec2 sparkleCoord = vec2(floor(angle * 20.0), floor(dist * 30.0)) + t * 2.0;
+        float sparkle = fract(sin(dot(sparkleCoord, vec2(127.1, 311.7))) * 43758.5453);
+        sparkle = step(0.7, sparkle) * highResponse;
+        outsideColor += mix(ubo.primaryColor.rgb, vec3(1.0), highResponse) * burst * sparkle * 0.8;
+
+        // Ambient glow around the circle edge
+        float ambientGlow = exp(-abs(dist - radius) * 10.0) * 0.15;
+        outsideColor += mix(ubo.primaryColor.rgb, ubo.secondaryColor.rgb, sin(t * 0.5)) * ambientGlow;
+    }
+
+    // ── Compose: circle in front, rays behind ──
+    vec3 color = outsideColor;
+    color = mix(color, rimColor * 0.8, rim * 0.6);
+    color = mix(color, innerColor, circleEdge);
+
+    return clamp(color, 0.0, 1.2);
 }
 
 vec4 dispatchMode(int m, vec2 st) {

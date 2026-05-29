@@ -67,14 +67,14 @@ vec3 renderPlasmaWave(vec2 st) {
     float pattern = (v1 + v2 + v3 + v4) * 0.25;
     pattern = pattern * 0.5 + 0.5;
 
-    // Nearly black background (never depends on palette)
-    vec3 color = vec3(0.01, 0.01, 0.02);
+    // Pure black background
+    vec3 color = vec3(0.0);
 
-    // Bright plasma blended on top (gentle mix)
+    // Plasma blended on top (no white washout)
     float hueShift = fract(pattern + t * 0.05 + uEnergy * 0.3);
     vec3 plasma = mix(uPrimaryColor, uSecondaryColor, hueShift);
-    plasma *= 0.25 + pattern * 0.35; // hard cap: max ~0.6 per channel
-    color = mix(color, plasma, pattern * (0.25 + uEnergy * 0.25));
+    plasma *= 0.15 + pattern * 0.25; // lower cap to avoid bright washout
+    color += plasma * pattern * (0.35 + uEnergy * 0.2);
 
     return clamp(color, 0.0, 0.85);
 }
@@ -95,18 +95,18 @@ vec3 renderRadialBurst(vec2 st) {
     pattern += peNoise(uv * 5.0 + t) * 0.2;
     pattern = clamp(pattern, 0.0, 1.0);
 
-    // Dark background base
-    vec3 color = vec3(0.02, 0.02, 0.03);
+    // Pure black background
+    vec3 color = vec3(0.0);
 
     // Color cycling with time
     float colorCycle = fract(pattern * 0.5 + t * 0.1 + uMid * 0.3);
     vec3 burst = mix(uPrimaryColor, uSecondaryColor, colorCycle);
-    burst *= 0.25 + pattern * 0.5; // hard cap
-    color = mix(color, burst, pattern * (0.4 + uEnergy * 0.25));
+    burst *= 0.15 + pattern * 0.35; // lower cap to avoid bright washout
+    color += burst * pattern * (0.35 + uEnergy * 0.2);
 
-    // Center glow that breathes continuously
-    float glow = exp(-dist * (4.0 + uBass * 4.0)) * (0.5 + sin(t * 2.0) * 0.3);
-    color += mix(uPrimaryColor, uSecondaryColor, sin(t)) * glow * 0.25;
+    // Center glow that breathes continuously (dimmed)
+    float glow = exp(-dist * (4.0 + uBass * 4.0)) * (0.3 + sin(t * 2.0) * 0.2);
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t)) * glow * 0.15;
 
     return clamp(color, 0.0, 0.85);
 }
@@ -160,73 +160,117 @@ vec3 renderNoiseFlow(vec2 st) {
     float pattern = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
     pattern = fract(pattern + t * 0.05 + uEnergy * 0.2);
 
-    // Dark background base
-    vec3 color = mix(uPrimaryColor * 0.05, uSecondaryColor * 0.08, sin(t * 0.07) * 0.5 + 0.5);
+    // Pure black background so colors pop
+    vec3 color = vec3(0.0);
 
-    // Flowing noise blended on top
+    // Flowing noise — much more saturated and visible
     vec3 flowColor = mix(uPrimaryColor, uSecondaryColor, pattern);
-    flowColor *= 0.25 + n1 * 0.4; // hard cap
-    color = mix(color, flowColor, clamp(n1 * 0.35 + uEnergy * 0.25, 0.0, 0.7));
+    flowColor *= 0.6 + n1 * 0.8; // brighter, more saturated
+    color += flowColor * clamp(n1 * 0.8 + uEnergy * 0.4, 0.0, 1.0);
 
-    // Moving highlights
+    // Secondary flow layer for depth
+    vec3 flowColor2 = mix(uSecondaryColor, uPrimaryColor, fract(pattern + 0.5));
+    flowColor2 *= 0.4 + n2 * 0.6;
+    color += flowColor2 * clamp(n2 * 0.5 + uMid * 0.3, 0.0, 1.0);
+
+    // Moving highlights (brighter)
     float highlight = peNoise(uv * 8.0 + t * 2.0) * uHigh;
-    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 3.0)) * highlight * 0.2;
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 3.0)) * highlight * 0.5;
 
-    return clamp(color, 0.0, 0.85);
+    // Energy-driven glow overlay
+    float glow = peFbm(uv * 4.0 + flow * 0.3, 3) * uEnergy;
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 0.7)) * glow * 0.4;
+
+    return clamp(color, 0.0, 1.2);
 }
 
-// ── Mode 6: Cellular Voronoi ─────────────────────────────────────────────────
+// ── Mode 6: Audio Grid (moving 1:1 squares) ──────────────────────────────────
 
 vec3 renderCellularVoronoi(vec2 st) {
     vec2 uv = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
-    float t = uTime * (0.2 + uTempo * 0.5);
+    float t = uTime * (0.3 + uTempo * 0.6);
 
-    float minDist = 10.0;
-    float secondDist = 10.0;
-    vec2 nearestCell = vec2(0.0);
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass  = clamp(uBass * drive, 0.0, 1.0);
+    float mid   = clamp(uMid  * drive, 0.0, 1.0);
+    float high  = clamp(uHigh * drive, 0.0, 1.0);
+    float energy= clamp(uEnergy* drive, 0.0, 1.0);
 
-    vec2 cellId = floor(uv * 4.0);
-    vec2 cellFract = fract(uv * 4.0);
+    // Grid density: 6 to 20 cells, driven by energy + bass
+    float gridCount = 6.0 + energy * 10.0 + bass * 4.0;
 
-    for (int y = -1; y <= 1; ++y) {
-        for (int x = -1; x <= 1; ++x) {
-            vec2 neighbor = vec2(float(x), float(y));
-            vec2 cell = cellId + neighbor;
-            // Each cell has a moving point inside
-            float phase = peHash(cell) * 6.283;
-            vec2 point = neighbor + vec2(
-                0.5 + sin(t + phase) * (0.35 + uEnergy * 0.15),
-                0.5 + cos(t * 0.7 + phase * 1.3) * (0.35 + uBass * 0.15)
-            );
-            float d = length(cellFract - point);
-            if (d < minDist) {
-                secondDist = minDist;
-                minDist = d;
-                nearestCell = cell;
-            } else if (d < secondDist) {
-                secondDist = d;
-            }
-        }
-    }
+    // The grid "breathes" — cells shift position over time
+    // Audio makes the shift more dramatic
+    float shiftX = sin(t * 0.4 + bass * 2.0) * (0.1 + bass * 0.25);
+    float shiftY = cos(t * 0.3 + energy * 1.5) * (0.1 + energy * 0.2);
 
-    // Edge pattern (difference between nearest and second-nearest)
-    float edge = secondDist - minDist;
-    float pattern = smoothstep(0.02 + uMid * 0.03, 0.15 + uMid * 0.05, edge);
+    // Apply shifting to UV before grid division
+    vec2 shiftedUV = uv + vec2(shiftX, shiftY);
 
-    // Dark background base
-    vec3 color = mix(uPrimaryColor * 0.04, uSecondaryColor * 0.06, sin(t * 0.05) * 0.5 + 0.5);
+    // Also a subtle rotation when bass hits
+    float rotAngle = bass * 0.3 * sin(t * 0.7);
+    float cR = cos(rotAngle);
+    float sR = sin(rotAngle);
+    shiftedUV = vec2(
+        shiftedUV.x * cR - shiftedUV.y * sR,
+        shiftedUV.x * sR + shiftedUV.y * cR
+    );
 
-    // Cell color varies with cell ID + time
-    float cellHue = fract(peHash(nearestCell) + t * 0.03 + uEnergy * 0.3);
-    vec3 cellColor = mix(uPrimaryColor, uSecondaryColor, cellHue);
-    cellColor *= 0.25 + pattern * 0.35 + (1.0 - pattern) * 0.25; // hard cap ~0.6
-    color = mix(color, cellColor, 0.4 + pattern * 0.25);
+    // Grid coordinates
+    vec2 cellCoord = shiftedUV * gridCount;
+    vec2 cellId = floor(cellCoord);
+    vec2 cellFract = fract(cellCoord);
 
-    // Pulsing cell borders
-    float border = 1.0 - smoothstep(0.0, 0.08 + uHigh * 0.05, edge);
-    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 2.0)) * border * (0.12 + uEnergy * 0.15);
+    // Each cell has its own "life" driven by audio + time
+    float cellHash = peHash(cellId + 50.0);
+    float cellHash2 = peHash(cellId + 150.0);
 
-    return clamp(color, 0.0, 0.85);
+    // Cell activation: some cells light up based on audio thresholds
+    float activation = sin(t * (0.5 + cellHash * 3.0) + bass * 4.0 + cellHash2 * 6.28) * 0.5 + 0.5;
+    activation = mix(activation, 1.0, bass * 0.4); // bass boosts activation
+    activation = mix(activation, 0.0, (1.0 - energy) * 0.3); // low energy dims
+
+    // Cell size "breathing" — cells grow/shrink with audio
+    float cellBreath = 0.75 + activation * 0.35 + mid * 0.2;
+    vec2 cellCenter = vec2(0.5);
+    vec2 distFromCenter = abs(cellFract - cellCenter) * 2.0;
+    float inCell = step(max(distFromCenter.x, distFromCenter.y), cellBreath);
+
+    // Smooth edges for anti-aliased look
+    float edgeSmooth = 0.04 + high * 0.03;
+    float cellMask = 1.0 - smoothstep(cellBreath - edgeSmooth, cellBreath, max(distFromCenter.x, distFromCenter.y));
+
+    // Cell color: cycles between primary/secondary based on cell hash + time
+    float hue = fract(cellHash + t * 0.05 + energy * 0.3);
+    vec3 cellColor = mix(uPrimaryColor, uSecondaryColor, hue);
+
+    // Brightness: activated cells glow brighter
+    float brightness = 0.2 + activation * 0.8 + bass * 0.3;
+    cellColor *= brightness;
+
+    // Pure black background
+    vec3 color = vec3(0.0);
+
+    // Draw cells
+    color += cellColor * cellMask * (0.6 + energy * 0.4);
+
+    // Grid lines between cells (bright, thin)
+    float pixelSize = 1.0 / max(ubo.resolution.y, 1.0);
+    float lineW = pixelSize * 1.5 + 0.003 + bass * 0.004;
+    float gridLineX = 1.0 - smoothstep(0.0, lineW, cellFract.x) + smoothstep(1.0 - lineW, 1.0, cellFract.x);
+    float gridLineY = 1.0 - smoothstep(0.0, lineW, cellFract.y) + smoothstep(1.0 - lineW, 1.0, cellFract.y);
+    float gridLine = clamp(gridLineX + gridLineY, 0.0, 1.0);
+    color += mix(uPrimaryColor, uSecondaryColor, fract(t * 0.1 + high * 0.3)) * gridLine * (0.5 + mid * 0.4);
+
+    // Active cells get a glow halo
+    float halo = exp(-length(cellFract - cellCenter) * (6.0 + bass * 10.0)) * activation;
+    color += mix(uPrimaryColor, uSecondaryColor, fract(cellHash * 3.0 + t * 0.2)) * halo * 0.4;
+
+    // Subtle shimmer on top
+    float shimmer = peNoise(cellId * 3.0 + t * 2.0) * high * 0.1;
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 1.5)) * shimmer;
+
+    return clamp(color, 0.0, 1.2);
 }
 
 // ── Mode 7: Mandala Spin ───────────────────────────────────────────────────
@@ -248,71 +292,117 @@ vec3 renderMandalaSpin(vec2 st) {
 
     float pattern = petalPattern * ring;
 
-    // Dark background base
-    vec3 color = vec3(0.02, 0.015, 0.025);
+    // Pure black background
+    vec3 color = vec3(0.0);
 
     // Color rotates continuously with time and energy
     float hue = fract(angle / 6.283 + t * 0.05 + uEnergy * 0.25 + dist * 0.3);
     vec3 petalColor = mix(uPrimaryColor, uSecondaryColor, hue);
-    petalColor *= 0.18 + pattern * 0.4; // hard cap
-    color = mix(color, petalColor, pattern * (0.4 + uEnergy * 0.2));
+    petalColor *= 0.12 + pattern * 0.3; // lower cap to avoid bright washout
+    color += petalColor * pattern * (0.4 + uEnergy * 0.2);
 
-    // Center vortex
+    // Center vortex (dimmed)
     float vortex = exp(-dist * (3.0 + uBass * 3.0));
-    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 4.0)) * vortex * (0.12 + uEnergy * 0.15);
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 4.0)) * vortex * (0.08 + uEnergy * 0.1);
 
-    // Outer rim glow
+    // Outer rim glow (dimmed)
     float rim = smoothstep(0.4, 0.5, dist) * (1.0 - smoothstep(0.5, 0.6, dist));
-    color += uSecondaryColor * rim * uHigh * sin(t * 6.0 + angle * 3.0) * 0.25;
+    color += uSecondaryColor * rim * uHigh * sin(t * 6.0 + angle * 3.0) * 0.15;
 
     return clamp(color, 0.0, 0.85);
 }
 
-// ── Mode 8: Terrain Scan ─────────────────────────────────────────────────────
+// ── Mode 8: Cellular Automata (audio-reactive) ──────────────────────────────
 
 vec3 renderTerrainScan(vec2 st) {
     vec2 uv = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
-    float t = uTime * (0.2 + uTempo * 0.4);
+    float t = uTime * (0.3 + uTempo * 0.5);
 
-    // Generate terrain height from layered noise
-    float height = peFbm(uv * 3.0 + vec2(t * 0.3, 0.0), 5);
-    height += peFbm(uv * 6.0 - vec2(t * 0.15, t * 0.1), 4) * 0.5;
-    height = height * 0.5 + 0.5;
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass  = clamp(uBass * drive, 0.0, 1.0);
+    float mid   = clamp(uMid  * drive, 0.0, 1.0);
+    float high  = clamp(uHigh * drive, 0.0, 1.0);
+    float energy= clamp(uEnergy* drive, 0.0, 1.0);
 
-    // Scan line that moves vertically with time, speed reacts to tempo
-    float scanSpeed = 0.5 + uTempo * 0.5;
-    float scanY = fract(t * scanSpeed * 0.15);
-    float scanLine = 1.0 - smoothstep(0.0, 0.015, abs(uv.y - (scanY - 0.5) * 1.2));
+    // Grid density reacts to energy (8 to 24 cells across)
+    float gridDensity = 8.0 + energy * 16.0 + bass * 6.0;
+    vec2 cellCoord = uv * gridDensity;
+    vec2 cellId = floor(cellCoord);
+    vec2 cellFract = fract(cellCoord);
 
-    // Contour lines at terrain height levels
-    float contour = abs(fract(height * 10.0 + uBass * 2.0) - 0.5);
-    float contourLine = 1.0 - smoothstep(0.0, 0.02 + uMid * 0.02, contour);
+    // Per-cell hash for deterministic randomness
+    float cellRand = peHash(cellId + 100.0);
+    float cellRand2 = peHash(cellId + 200.0);
 
-    // Dark background base
-    vec3 color = mix(uPrimaryColor * 0.03, uSecondaryColor * 0.05, sin(t * 0.04) * 0.5 + 0.5);
+    // Audio-reactive cell activation rules
+    // Cells "live" when their hash matches an audio threshold
+    float birthThreshold = 0.25 + bass * 0.35;
+    float surviveThreshold = 0.15 + mid * 0.25;
 
-    // Height-based color
-    float colorMix = fract(height + t * 0.03 + uEnergy * 0.2);
-    vec3 terrain = mix(uPrimaryColor * 0.35, uSecondaryColor * 0.7, colorMix);
-    terrain *= 0.35 + height * 0.4; // hard cap
-    color = mix(color, terrain, 0.4 + height * 0.25);
+    // Time-based pulse per cell (creates organic evolution)
+    float pulse = sin(t * (0.5 + cellRand * 2.0) + cellRand2 * 6.28 + bass * 4.0) * 0.5 + 0.5;
+    float alive = step(birthThreshold, cellRand * pulse);
+    float aliveSurvive = step(surviveThreshold, cellRand2 * pulse);
+    float cellState = max(alive, aliveSurvive * 0.6);
 
-    // Contour lines
-    color += contourLine * mix(uPrimaryColor, uSecondaryColor, sin(t * 2.0)) * (0.15 + uEnergy * 0.15);
+    // Neighbor count for Conway-like smoothness (3x3 kernel)
+    float neighbors = 0.0;
+    for (int ny = -1; ny <= 1; ++ny) {
+        for (int nx = -1; nx <= 1; ++nx) {
+            if (nx == 0 && ny == 0) continue;
+            vec2 nId = cellId + vec2(float(nx), float(ny));
+            float nRand = peHash(nId + 100.0);
+            float nPulse = sin(t * (0.5 + nRand * 2.0) + peHash(nId + 200.0) * 6.28 + bass * 4.0) * 0.5 + 0.5;
+            neighbors += step(birthThreshold, nRand * nPulse);
+        }
+    }
+    neighbors /= 8.0;
 
-    // Scan line reveals brighter colors
-    vec3 scanColor = mix(uPrimaryColor, uSecondaryColor, peNoise(uv * 4.0 + t)) * 0.8;
-    color = mix(color, scanColor, scanLine * (0.3 + uEnergy * 0.2));
+    // Game-of-Life-inspired state: born with 3 neighbors, survive with 2-3
+    float golState = 0.0;
+    if (cellState > 0.5 && neighbors >= 0.25 && neighbors <= 0.5) {
+        golState = 1.0; // survive
+    } else if (cellState < 0.5 && neighbors >= 0.3 && neighbors <= 0.45) {
+        golState = 1.0; // birth
+    }
+    // Blend original cellState with GOL for organic feel
+    cellState = mix(cellState, golState, 0.4);
 
-    // Topographic shadow
-    float shadow = smoothstep(0.0, 0.5, height) * (1.0 - smoothstep(0.5, 1.0, height));
-    color *= 0.75 + shadow * 0.25;
+    // Resolution-aware smooth cell borders
+    float pixelSize = 1.0 / max(ubo.resolution.y, 1.0);
+    float gridLineWidth = 0.015 + pixelSize * 1.5 + bass * 0.008;
 
-    // Scan dot at current position
-    float scanDot = exp(-length(vec2(uv.x, uv.y - (scanY - 0.5) * 1.2)) * (20.0 + uHigh * 20.0));
-    color += mix(uPrimaryColor, vec3(1.0), uHigh) * scanDot * (0.12 + uEnergy * 0.15);
+    // Distance to nearest cell edge (for smooth grid lines)
+    vec2 edgeDist = min(cellFract, 1.0 - cellFract);
+    float edge = smoothstep(0.0, gridLineWidth, min(edgeDist.x, edgeDist.y));
+    // Invert: line is HIGH at edges, LOW inside cell
+    float gridLine = 1.0 - edge;
 
-    return clamp(color, 0.0, 0.85);
+    // Cell fill intensity (colored interior)
+    float fill = cellState * (0.25 + energy * 0.3);
+
+    // Pure black background
+    vec3 color = vec3(0.0);
+
+    // Cell interior glow (dimmed, colored)
+    float cellHue = fract(cellRand + t * 0.02 + energy * 0.3);
+    vec3 cellColor = mix(uPrimaryColor, uSecondaryColor, cellHue);
+    color += cellColor * fill * 0.4;
+
+    // Grid lines (bright, anti-aliased, audio-reactive)
+    float lineIntensity = 0.5 + bass * 0.4 + mid * 0.3;
+    vec3 lineColor = mix(uPrimaryColor, uSecondaryColor, fract(t * 0.1 + high * 0.3));
+    color += lineColor * gridLine * lineIntensity * (0.8 + energy * 0.4);
+
+    // Active cells pulse with neighbors (border glow)
+    float activeGlow = cellState * neighbors * exp(-min(edgeDist.x, edgeDist.y) * (20.0 + bass * 30.0));
+    color += mix(uPrimaryColor, uSecondaryColor, fract(cellRand * 2.0 + t * 0.15)) * activeGlow * 0.5;
+
+    // Subtle organic noise on top (not glitch)
+    float organicNoise = peNoise(uv * 20.0 + t * 0.5) * 0.02 * energy;
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 0.3)) * organicNoise;
+
+    return clamp(color, 0.0, 1.0);
 }
 
 // ── Mode 9: Wireframe Cube 3D ────────────────────────────────────────────────
@@ -443,13 +533,15 @@ vec3 renderOscilloscope(vec2 st) {
         float amp = 0.15 + band * 0.5 + bass * 0.15;
         float y = uv.y - shape * amp;
 
-        // Thickness: much thicker core line + pronounced glow
-        float thick = 0.004 + band * 0.012 + fi * 0.002;
-        // Sharper core line using pow for pronounced look
-        float line = pow(1.0 - smoothstep(0.0, thick, abs(y)), 2.0);
+        // Thickness: thicker core line with resolution-aware anti-aliasing
+        float pixelSize = 1.0 / max(ubo.resolution.y, 1.0);
+        float thick = 0.012 + band * 0.020 + fi * 0.004;
+        // Smooth line with at least 1 pixel of anti-aliasing on each side
+        float line = 1.0 - smoothstep(0.0, thick + pixelSize * 1.5, abs(y));
+        line = pow(line, 1.5); // slightly sharpen the core while keeping soft edges
 
         // Stronger glow around the line, modulated by band
-        float glow = exp(-y * y * (120.0 + band * 200.0)) * (0.25 + band * 0.35);
+        float glow = exp(-y * y * (80.0 + band * 120.0)) * (0.35 + band * 0.45);
 
         // Color per trace, strongly tied to its band
         float hue = fract(t * 0.15 + fi * 0.25 + band * 0.3);

@@ -17,6 +17,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
+#include "imgui.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers internos
@@ -1106,6 +1107,19 @@ void Application::mainLoop() {
 
             if (event.type == SDL_QUIT) { running = false; break; }
 
+            // Mouse wheel zoom for procedural camera (when not interacting with UI)
+            if (event.type == SDL_MOUSEWHEEL) {
+                ImGuiIO& io = ImGui::GetIO();
+                if (!io.WantCaptureMouse) {
+                    float zoomSpeed = 0.1f;
+                    float delta = event.wheel.y > 0 ? -zoomSpeed : (event.wheel.y < 0 ? zoomSpeed : 0.0f);
+                    visualControls.camera.zoom = std::clamp(
+                        visualControls.camera.zoom + delta,
+                        0.01f, 5.0f);
+                    controlsDirty = true;
+                }
+            }
+
             if (event.type == SDL_KEYDOWN && !event.key.repeat) {
                 switch (event.key.keysym.sym) {
                     case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizePreviewVideo1");  break;
@@ -1144,6 +1158,26 @@ void Application::mainLoop() {
                     case SDLK_y:
                         uiSystem.randomizeVJayExtra(visualControls);
                         break;
+                    case SDLK_LEFT: {
+                        int& mode = visualControls.playback.activeMode;
+                        int maxMode = 10;
+                        // Wrap from 40 (anaglyph) to 10 as well
+                        if (mode == 40) mode = maxMode;
+                        else if (mode > 0) mode--;
+                        else mode = maxMode;
+                        controlsDirty = true;
+                        std::cout << "[Mode] Previous: " << mode << std::endl;
+                        break;
+                    }
+                    case SDLK_RIGHT: {
+                        int& mode = visualControls.playback.activeMode;
+                        int maxMode = 10;
+                        if (mode >= maxMode) mode = 0;
+                        else mode++;
+                        controlsDirty = true;
+                        std::cout << "[Mode] Next: " << mode << std::endl;
+                        break;
+                    }
                 }
             }
 
@@ -1964,6 +1998,11 @@ void Application::cleanup() {
     saveState();
     uiSystem.shutdown();
     frameSystem.cleanup();
+
+    // Destroy VideoRenderers FIRST to stop decoder threads before
+    // freeing the FFmpeg resources they access (formatCtx, etc.)
+    videoRenderer.reset();
+    videoRenderer2.reset();
 
     videoPlayer.shutdown();
     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());

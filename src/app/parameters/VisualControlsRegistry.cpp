@@ -244,7 +244,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerVec3("gridLineColor", &grid.lineColor);
 
     // CAMERA
-    r.registerFloat("cameraZoom", &camera.zoom, 0.1f, 5.0f);
+    r.registerFloat("cameraZoom", &camera.zoom, 0.01f, 5.0f);
     r.registerFloat("cameraPanX", &camera.panX, -1.0f, 1.0f);
     r.registerFloat("cameraPanY", &camera.panY, -1.0f, 1.0f);
     r.registerFloat("cameraRotation", &camera.rotation, -3.14f, 3.14f);
