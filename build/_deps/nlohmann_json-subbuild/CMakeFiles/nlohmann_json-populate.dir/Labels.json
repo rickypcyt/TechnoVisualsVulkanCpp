@@ -26,13 +26,13 @@
 			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-mkdir.rule"
 		},
 		{
-			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch.rule"
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected.rule"
 		},
 		{
 			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-test.rule"
 		},
 		{
-			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update.rule"
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected.rule"
 		}
 	],
 	"target" : 

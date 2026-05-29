@@ -6,6 +6,6 @@ e72bc01c5166ed975bf0ff2379de4bd0 kfr-populate-prefix/src/kfr-populate-stamp/kfr-
 bb1145c4c7482ea7bde9f2e5d5295b82 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download
 099a7b729102f7a824d478ad3f7c69ad kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install
 55f2305de6738b69d6859ce7d8755545 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir
-1818e57c8098a8b3e8019fc88a3ecd84 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch
+8c81b2ab1219c136b61860776d21ae11 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected
 ee522571ae71804105cb65ee66d3c768 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test
-9eeac8dc5cf10e323c360b9d9d070326 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update
+b38c11aab12c38ca5b2d83f96d68571f kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected

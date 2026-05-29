@@ -71,8 +71,8 @@ CMakeFiles/kfr-populate: CMakeFiles/kfr-populate-complete
 CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install
 CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir
 CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download
-CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update
-CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch
+CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected
+CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected
 CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure
 CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-build
 CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install
@@ -82,16 +82,13 @@ CMakeFiles/kfr-populate-complete: kfr-populate-prefix/src/kfr-populate-stamp/kfr
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles/kfr-populate-complete
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-done
 
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update:
-.PHONY : kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update
-
 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-build: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "No build step for 'kfr-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-build
 
 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure: kfr-populate-prefix/tmp/kfr-populate-cfgcmd.txt
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch
+kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "No configure step for 'kfr-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure
@@ -112,25 +109,23 @@ kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir:
 	/usr/bin/cmake -Dcfgdir= -P /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/tmp/kfr-populate-mkdirs.cmake
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir
 
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch-info.txt
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "No patch step for 'kfr-populate'"
+kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch-info.txt
+kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "No patch_disconnected step for 'kfr-populate'"
 	/usr/bin/cmake -E echo_append
-	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch
-
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update:
-.PHONY : kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update
+	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected
 
 kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "No test step for 'kfr-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test
 
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update: kfr-populate-prefix/tmp/kfr-populate-gitupdate.cmake
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update-info.txt
-kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Performing update step for 'kfr-populate'"
-	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src && /usr/bin/cmake -Dcan_fetch=YES -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/tmp/kfr-populate-gitupdate.cmake
+kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected: kfr-populate-prefix/tmp/kfr-populate-gitupdate.cmake
+kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update-info.txt
+kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Performing disconnected update step for 'kfr-populate'"
+	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src && /usr/bin/cmake -Dcan_fetch=NO -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/tmp/kfr-populate-gitupdate.cmake
+	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected
 
 CMakeFiles/kfr-populate.dir/codegen:
 .PHONY : CMakeFiles/kfr-populate.dir/codegen
@@ -142,9 +137,9 @@ kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-configure
 kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download
 kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install
 kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir
-kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch
+kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected
 kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test
-kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update
+kfr-populate: kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected
 kfr-populate: CMakeFiles/kfr-populate.dir/build.make
 .PHONY : kfr-populate
 

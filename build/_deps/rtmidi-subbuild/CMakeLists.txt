@@ -27,7 +27,7 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 
 include(ExternalProject)
 ExternalProject_Add(rtmidi-populate
-                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/thestk/rtmidi.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "5.0.0"
+                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/thestk/rtmidi.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "5.0.0" "UPDATE_DISCONNECTED" "TRUE"
                     SOURCE_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src"
                     BINARY_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build"
                     CONFIGURE_COMMAND   ""

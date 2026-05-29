@@ -16,6 +16,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "_deps/kfr-src/CMakeLists.txt"
   "_deps/kfr-src/cmake/add_kfr_library.cmake"
   "_deps/kfr-src/cmake/config.cmake.in"
+  "_deps/kfr-src/cmake/detect_cpu.cpp"
   "_deps/kfr-src/cmake/link_as_whole.cmake"
   "_deps/kfr-src/cmake/target_set_arch.cmake"
   "_deps/kfr-src/sources.cmake"

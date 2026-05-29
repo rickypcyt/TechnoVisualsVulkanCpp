@@ -13,30 +13,57 @@ find_package(PkgConfig REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale libswresample)
 
+# --- Dependency helpers: prefer local third_party/ copies for offline builds ---
+set(RTMIDI_LOCAL ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rtmidi)
+set(KFR_LOCAL    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/kfr)
+set(NLOHMANN_JSON_LOCAL ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nlohmann_json)
+
 # RtMidi for MIDI support
-FetchContent_Declare(
-    rtmidi
-    GIT_REPOSITORY https://github.com/thestk/rtmidi.git
-    GIT_TAG 5.0.0
-)
-FetchContent_MakeAvailable(rtmidi)
+if(EXISTS ${RTMIDI_LOCAL}/CMakeLists.txt)
+    message(STATUS "Using local rtmidi from ${RTMIDI_LOCAL}")
+    set(rtmidi_SOURCE_DIR ${RTMIDI_LOCAL})
+    add_subdirectory(${RTMIDI_LOCAL} ${CMAKE_BINARY_DIR}/rtmidi-build)
+else()
+    FetchContent_Declare(
+        rtmidi
+        GIT_REPOSITORY https://github.com/thestk/rtmidi.git
+        GIT_TAG 5.0.0
+        UPDATE_DISCONNECTED TRUE
+    )
+    FetchContent_MakeAvailable(rtmidi)
+endif()
 
 # KFR for DSP/audio processing
-set(KFR_IO OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(
-    kfr
-    GIT_REPOSITORY https://github.com/kfrlib/kfr.git
-    GIT_TAG main
-)
-FetchContent_MakeAvailable(kfr)
+if(EXISTS ${KFR_LOCAL}/CMakeLists.txt)
+    message(STATUS "Using local kfr from ${KFR_LOCAL}")
+    set(KFR_IO OFF CACHE BOOL "" FORCE)
+    set(kfr_SOURCE_DIR ${KFR_LOCAL})
+    add_subdirectory(${KFR_LOCAL} ${CMAKE_BINARY_DIR}/kfr-build)
+else()
+    set(KFR_IO OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        kfr
+        GIT_REPOSITORY https://github.com/kfrlib/kfr.git
+        GIT_TAG main
+        UPDATE_DISCONNECTED TRUE
+    )
+    FetchContent_MakeAvailable(kfr)
+endif()
 
 # nlohmann/json for parameter serialization
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
-)
-FetchContent_MakeAvailable(nlohmann_json)
+if(EXISTS ${NLOHMANN_JSON_LOCAL}/CMakeLists.txt)
+    message(STATUS "Using local nlohmann_json from ${NLOHMANN_JSON_LOCAL}")
+    set(nlohmann_json_SOURCE_DIR ${NLOHMANN_JSON_LOCAL})
+    add_subdirectory(${NLOHMANN_JSON_LOCAL} ${CMAKE_BINARY_DIR}/nlohmann_json-build)
+else()
+    FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.11.3
+        UPDATE_DISCONNECTED TRUE
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
 
 # liblo for OSC support
 find_package(PkgConfig REQUIRED)

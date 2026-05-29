@@ -71,8 +71,8 @@ CMakeFiles/rtmidi-populate: CMakeFiles/rtmidi-populate-complete
 CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install
 CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir
 CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download
-CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update
-CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch
+CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected
+CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected
 CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-configure
 CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-build
 CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install
@@ -82,16 +82,13 @@ CMakeFiles/rtmidi-populate-complete: rtmidi-populate-prefix/src/rtmidi-populate-
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles/rtmidi-populate-complete
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-done
 
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update:
-.PHONY : rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update
-
 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-build: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-configure
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "No build step for 'rtmidi-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-build
 
 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-configure: rtmidi-populate-prefix/tmp/rtmidi-populate-cfgcmd.txt
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-configure: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch
+rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-configure: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "No configure step for 'rtmidi-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-configure
@@ -112,25 +109,23 @@ rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir:
 	/usr/bin/cmake -Dcfgdir= -P /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/tmp/rtmidi-populate-mkdirs.cmake
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir
 
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch-info.txt
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "No patch step for 'rtmidi-populate'"
+rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch-info.txt
+rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "No patch_disconnected step for 'rtmidi-populate'"
 	/usr/bin/cmake -E echo_append
-	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch
-
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update:
-.PHONY : rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update
+	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected
 
 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-test: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "No test step for 'rtmidi-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-test
 
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update: rtmidi-populate-prefix/tmp/rtmidi-populate-gitupdate.cmake
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update-info.txt
-rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Performing update step for 'rtmidi-populate'"
-	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src && /usr/bin/cmake -Dcan_fetch=YES -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/tmp/rtmidi-populate-gitupdate.cmake
+rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected: rtmidi-populate-prefix/tmp/rtmidi-populate-gitupdate.cmake
+rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update-info.txt
+rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Performing disconnected update step for 'rtmidi-populate'"
+	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src && /usr/bin/cmake -Dcan_fetch=NO -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/tmp/rtmidi-populate-gitupdate.cmake
+	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected
 
 CMakeFiles/rtmidi-populate.dir/codegen:
 .PHONY : CMakeFiles/rtmidi-populate.dir/codegen
@@ -142,9 +137,9 @@ rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populat
 rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download
 rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install
 rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir
-rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch
+rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected
 rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-test
-rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update
+rtmidi-populate: rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected
 rtmidi-populate: CMakeFiles/rtmidi-populate.dir/build.make
 .PHONY : rtmidi-populate
 

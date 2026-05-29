@@ -26,13 +26,13 @@
 			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir.rule"
 		},
 		{
-			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch.rule"
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected.rule"
 		},
 		{
 			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test.rule"
 		},
 		{
-			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update.rule"
+			"file" : "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected.rule"
 		}
 	],
 	"target" : 

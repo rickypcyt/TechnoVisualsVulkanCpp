@@ -9,6 +9,6 @@
 /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download.rule
 /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install.rule
 /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir.rule
-/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch.rule
+/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected.rule
 /home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-test.rule
-/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update.rule
+/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-subbuild/rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected.rule

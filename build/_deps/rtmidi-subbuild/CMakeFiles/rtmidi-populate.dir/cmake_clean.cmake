@@ -6,9 +6,9 @@ file(REMOVE_RECURSE
   "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download"
   "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install"
   "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir"
-  "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch"
+  "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected"
   "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-test"
-  "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update"
+  "rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected"
 )
 
 # Per-language clean rules from dependency scanning.

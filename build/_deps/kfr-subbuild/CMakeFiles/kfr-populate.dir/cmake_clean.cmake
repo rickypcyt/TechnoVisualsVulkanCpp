@@ -6,9 +6,9 @@ file(REMOVE_RECURSE
   "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download"
   "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install"
   "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir"
-  "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch"
+  "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected"
   "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test"
-  "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update"
+  "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected"
 )
 
 # Per-language clean rules from dependency scanning.

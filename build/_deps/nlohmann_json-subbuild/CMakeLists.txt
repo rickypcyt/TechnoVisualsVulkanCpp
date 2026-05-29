@@ -27,7 +27,7 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 
 include(ExternalProject)
 ExternalProject_Add(nlohmann_json-populate
-                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/nlohmann/json.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "v3.11.3"
+                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/nlohmann/json.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "v3.11.3" "UPDATE_DISCONNECTED" "TRUE"
                     SOURCE_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src"
                     BINARY_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build"
                     CONFIGURE_COMMAND   ""

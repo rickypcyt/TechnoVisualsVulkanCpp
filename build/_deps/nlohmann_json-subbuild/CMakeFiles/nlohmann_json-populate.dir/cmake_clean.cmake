@@ -6,9 +6,9 @@ file(REMOVE_RECURSE
   "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-download"
   "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-install"
   "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-mkdir"
-  "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch"
+  "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected"
   "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-test"
-  "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update"
+  "nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected"
 )
 
 # Per-language clean rules from dependency scanning.

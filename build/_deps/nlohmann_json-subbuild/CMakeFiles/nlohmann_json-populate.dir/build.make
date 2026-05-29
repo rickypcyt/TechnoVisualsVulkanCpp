@@ -71,8 +71,8 @@ CMakeFiles/nlohmann_json-populate: CMakeFiles/nlohmann_json-populate-complete
 CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-install
 CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-mkdir
 CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-download
-CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update
-CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch
+CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected
+CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected
 CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-configure
 CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-build
 CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-install
@@ -82,16 +82,13 @@ CMakeFiles/nlohmann_json-populate-complete: nlohmann_json-populate-prefix/src/nl
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles/nlohmann_json-populate-complete
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-done
 
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update:
-.PHONY : nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update
-
 nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-build: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-configure
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "No build step for 'nlohmann_json-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-build
 
 nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-configure: nlohmann_json-populate-prefix/tmp/nlohmann_json-populate-cfgcmd.txt
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-configure: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch
+nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-configure: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "No configure step for 'nlohmann_json-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-configure
@@ -112,25 +109,23 @@ nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-pop
 	/usr/bin/cmake -Dcfgdir= -P /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/tmp/nlohmann_json-populate-mkdirs.cmake
 	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-mkdir
 
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch-info.txt
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "No patch step for 'nlohmann_json-populate'"
+nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch-info.txt
+nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "No patch_disconnected step for 'nlohmann_json-populate'"
 	/usr/bin/cmake -E echo_append
-	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch
-
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update:
-.PHONY : nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update
+	/usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected
 
 nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-test: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-install
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "No test step for 'nlohmann_json-populate'"
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build && /usr/bin/cmake -E echo_append
 	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-test
 
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update: nlohmann_json-populate-prefix/tmp/nlohmann_json-populate-gitupdate.cmake
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update-info.txt
-nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-download
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Performing update step for 'nlohmann_json-populate'"
-	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src && /usr/bin/cmake -Dcan_fetch=YES -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/tmp/nlohmann_json-populate-gitupdate.cmake
+nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected: nlohmann_json-populate-prefix/tmp/nlohmann_json-populate-gitupdate.cmake
+nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update-info.txt
+nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-download
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Performing disconnected update step for 'nlohmann_json-populate'"
+	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src && /usr/bin/cmake -Dcan_fetch=NO -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/tmp/nlohmann_json-populate-gitupdate.cmake
+	cd /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src && /usr/bin/cmake -E touch /home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-subbuild/nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected
 
 CMakeFiles/nlohmann_json-populate.dir/codegen:
 .PHONY : CMakeFiles/nlohmann_json-populate.dir/codegen
@@ -142,9 +137,9 @@ nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate
 nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-download
 nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-install
 nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-mkdir
-nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch
+nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-patch_disconnected
 nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-test
-nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update
+nlohmann_json-populate: nlohmann_json-populate-prefix/src/nlohmann_json-populate-stamp/nlohmann_json-populate-update_disconnected
 nlohmann_json-populate: CMakeFiles/nlohmann_json-populate.dir/build.make
 .PHONY : nlohmann_json-populate
 

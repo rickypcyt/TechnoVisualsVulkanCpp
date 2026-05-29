@@ -6,6 +6,6 @@ ee89743315f44da7256c73adf6e2f435 CMakeFiles/rtmidi-populate
 50d4aca535fc98c5893ccb23b1abb92c rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-download
 cf6aad0e8b737f46930a573df0083e5a rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-install
 6105f60203551bfd1820fe710d8e554f rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-mkdir
-37a3262fdae564ead7daea5b6afa9ec7 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch
+922e5253d724a991da8a06ab2d9722f6 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-patch_disconnected
 fc70a3a12037e552f9245e634748c968 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-test
-5068723f497b168aa0557b55a7a5e8dd rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update
+964d6d47cb695e807132d0d652716e25 rtmidi-populate-prefix/src/rtmidi-populate-stamp/rtmidi-populate-update_disconnected

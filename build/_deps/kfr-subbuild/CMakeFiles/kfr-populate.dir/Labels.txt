@@ -9,6 +9,6 @@
 /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-download.rule
 /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-install.rule
 /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-mkdir.rule
-/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch.rule
+/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-patch_disconnected.rule
 /home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-test.rule
-/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update.rule
+/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-subbuild/kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-update_disconnected.rule

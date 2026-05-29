@@ -27,7 +27,7 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 
 include(ExternalProject)
 ExternalProject_Add(kfr-populate
-                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/kfrlib/kfr.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "main"
+                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/kfrlib/kfr.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "main" "UPDATE_DISCONNECTED" "TRUE"
                     SOURCE_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src"
                     BINARY_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build"
                     CONFIGURE_COMMAND   ""

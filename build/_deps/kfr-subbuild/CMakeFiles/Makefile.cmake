@@ -10,8 +10,10 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/4.3.2/CMakeSystem.cmake"
   "CMakeLists.txt"
   "kfr-populate-prefix/tmp/kfr-populate-mkdirs.cmake"
+  "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake"
   "/usr/share/cmake/Modules/CMakeGenericSystem.cmake"
   "/usr/share/cmake/Modules/CMakeInitializeConfigs.cmake"
+  "/usr/share/cmake/Modules/CMakeSystem.cmake.in"
   "/usr/share/cmake/Modules/CMakeSystemSpecificInformation.cmake"
   "/usr/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake"
   "/usr/share/cmake/Modules/ExternalProject.cmake"
@@ -36,6 +38,7 @@ set(CMAKE_MAKEFILE_OUTPUTS
 
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
+  "CMakeFiles/4.3.2/CMakeSystem.cmake"
   "kfr-populate-prefix/tmp/kfr-populate-mkdirs.cmake"
   "kfr-populate-prefix/tmp/kfr-populate-gitclone.cmake"
   "kfr-populate-prefix/src/kfr-populate-stamp/kfr-populate-gitinfo.txt"
