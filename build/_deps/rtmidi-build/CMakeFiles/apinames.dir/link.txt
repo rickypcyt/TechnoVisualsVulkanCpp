@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -Wl,--dependency-file=CMakeFiles/apinames.dir/link.d CMakeFiles/apinames.dir/tests/apinames.cpp.o -o tests/apinames  -Wl,-rpath,/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build librtmidi.so.6.0.0

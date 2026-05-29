@@ -72,10 +72,10 @@ for shader in "${shaders[@]}"; do
 done
 
 echo "[build_and_run] Configuring CMake..."
-cmake -S "$SCRIPT_DIR" -B "$BUILD_DIR"
+cmake -G Ninja -S "$SCRIPT_DIR" -B "$BUILD_DIR"
 
 echo "[build_and_run] Building..."
-cmake --build "$BUILD_DIR" --parallel
+ninja -C "$BUILD_DIR"
 
 # Optional execution control
 RUN_APP="${RUN_APP:-1}"

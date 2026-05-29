@@ -1,2 +1,0 @@
-/usr/bin/ar qc libkfr_dsp.a CMakeFiles/kfr_dsp_sse2.dir/biquad.cpp.o CMakeFiles/kfr_dsp_sse2.dir/fir.cpp.o CMakeFiles/kfr_dsp_sse2.dir/iir_design.cpp.o CMakeFiles/kfr_dsp_sse2.dir/sample_rate_conversion.cpp.o CMakeFiles/kfr_dsp_sse2.dir/speaker.cpp.o CMakeFiles/kfr_dsp_sse2.dir/version.cpp.o
-/usr/bin/ranlib libkfr_dsp.a

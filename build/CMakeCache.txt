@@ -45,9 +45,6 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 // MinSizeRel ...
 CMAKE_BUILD_TYPE:STRING=
 
-//Enable/Disable color output during build.
-CMAKE_COLOR_MAKEFILE:BOOL=ON
-
 //CXX compiler
 CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
 
@@ -118,6 +115,9 @@ CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
 //Flags used by the linker during RELWITHDEBINFO builds.
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
+//Enable/Disable output of build database during the build.
+CMAKE_EXPORT_BUILD_DATABASE:BOOL=
+
 //Enable/Disable output of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
@@ -178,8 +178,8 @@ CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 //Path to a program.
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
 
-//Path to a program.
-CMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/make
+//Program used to build from build.ninja files.
+CMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/ninja
 
 //Flags used by the linker during the creation of modules during
 // all build types.
@@ -338,32 +338,11 @@ FETCHCONTENT_QUIET:BOOL=ON
 // for boost_math
 FETCHCONTENT_SOURCE_DIR_BOOST_MATH:PATH=
 
-//When not empty, overrides where to find pre-populated content
-// for kfr
-FETCHCONTENT_SOURCE_DIR_KFR:PATH=
-
-//When not empty, overrides where to find pre-populated content
-// for nlohmann_json
-FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON:PATH=
-
-//When not empty, overrides where to find pre-populated content
-// for rtmidi
-FETCHCONTENT_SOURCE_DIR_RTMIDI:PATH=
-
 //Enables UPDATE_DISCONNECTED behavior for all content population
 FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
 
 //Enables UPDATE_DISCONNECTED behavior just for population of boost_math
 FETCHCONTENT_UPDATES_DISCONNECTED_BOOST_MATH:BOOL=OFF
-
-//Enables UPDATE_DISCONNECTED behavior just for population of kfr
-FETCHCONTENT_UPDATES_DISCONNECTED_KFR:BOOL=OFF
-
-//Enables UPDATE_DISCONNECTED behavior just for population of nlohmann_json
-FETCHCONTENT_UPDATES_DISCONNECTED_NLOHMANN_JSON:BOOL=OFF
-
-//Enables UPDATE_DISCONNECTED behavior just for population of rtmidi
-FETCHCONTENT_UPDATES_DISCONNECTED_RTMIDI:BOOL=OFF
 
 //The directory containing a CMake configuration file for FLAC.
 FLAC_DIR:PATH=/usr/lib/cmake/FLAC
@@ -503,13 +482,13 @@ RTMIDI_BUILD_TESTING:BOOL=ON
 RTMIDI_TARGETNAME_UNINSTALL:STRING=uninstall
 
 //Value Computed by CMake
-RtMidi_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build
+RtMidi_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build
 
 //Value Computed by CMake
 RtMidi_IS_TOP_LEVEL:STATIC=OFF
 
 //Value Computed by CMake
-RtMidi_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-src
+RtMidi_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi
 
 //The directory containing a CMake configuration file for SDL2.
 SDL2_DIR:PATH=/usr/lib/cmake/SDL2
@@ -551,22 +530,22 @@ boost_math_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/b
 glm_DIR:PATH=/usr/lib/cmake/glm
 
 //Value Computed by CMake
-kfr_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-build
+kfr_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/kfr-build
 
 //Value Computed by CMake
 kfr_IS_TOP_LEVEL:STATIC=OFF
 
 //Value Computed by CMake
-kfr_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/kfr-src
+kfr_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/third_party/kfr
 
 //Value Computed by CMake
-nlohmann_json_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-build
+nlohmann_json_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/nlohmann_json-build
 
 //Value Computed by CMake
 nlohmann_json_IS_TOP_LEVEL:STATIC=OFF
 
 //Value Computed by CMake
-nlohmann_json_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/nlohmann_json-src
+nlohmann_json_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json
 
 //Path to a library.
 pkgcfg_lib_FFMPEG_avcodec:FILEPATH=/usr/lib/libavcodec.so
@@ -630,8 +609,6 @@ CMAKE_CACHE_MAJOR_VERSION:INTERNAL=4
 CMAKE_CACHE_MINOR_VERSION:INTERNAL=3
 //Patch version of cmake used to create the current loaded cache
 CMAKE_CACHE_PATCH_VERSION:INTERNAL=2
-//ADVANCED property for variable: CMAKE_COLOR_MAKEFILE
-CMAKE_COLOR_MAKEFILE-ADVANCED:INTERNAL=1
 //Path to CMake executable.
 CMAKE_COMMAND:INTERNAL=/usr/bin/cmake
 //Path to cpack program executable.
@@ -688,12 +665,14 @@ CMAKE_EXE_LINKER_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_EXE_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_EXPORT_BUILD_DATABASE
+CMAKE_EXPORT_BUILD_DATABASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_EXPORT_COMPILE_COMMANDS
 CMAKE_EXPORT_COMPILE_COMMANDS-ADVANCED:INTERNAL=1
 //Name of external makefile project generator.
 CMAKE_EXTRA_GENERATOR:INTERNAL=
 //Name of generator.
-CMAKE_GENERATOR:INTERNAL=Unix Makefiles
+CMAKE_GENERATOR:INTERNAL=Ninja
 //Generator instance identifier.
 CMAKE_GENERATOR_INSTANCE:INTERNAL=
 //Name of generator platform.

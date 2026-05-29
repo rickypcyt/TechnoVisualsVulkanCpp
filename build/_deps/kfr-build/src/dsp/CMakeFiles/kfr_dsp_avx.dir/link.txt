@@ -1,2 +1,0 @@
-/usr/bin/ar qc libkfr_dsp_avx.a CMakeFiles/kfr_dsp_avx.dir/biquad.cpp.o CMakeFiles/kfr_dsp_avx.dir/fir.cpp.o CMakeFiles/kfr_dsp_avx.dir/iir_design.cpp.o CMakeFiles/kfr_dsp_avx.dir/sample_rate_conversion.cpp.o CMakeFiles/kfr_dsp_avx.dir/speaker.cpp.o CMakeFiles/kfr_dsp_avx.dir/version.cpp.o
-/usr/bin/ranlib libkfr_dsp_avx.a

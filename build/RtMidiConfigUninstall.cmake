@@ -1,8 +1,8 @@
-if(NOT EXISTS "/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: \"/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/install_manifest.txt\"")
-endif(NOT EXISTS "/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/install_manifest.txt")
+if(NOT EXISTS "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: \"/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/install_manifest.txt\"")
+endif(NOT EXISTS "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/install_manifest.txt")
 
-file(READ "/home/ricky/coding/proyects/vulkancpp/build/_deps/rtmidi-build/install_manifest.txt" files)
+file(READ "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 foreach(file ${files})
   message(STATUS "Uninstalling \"$ENV{DESTDIR}${file}\"")

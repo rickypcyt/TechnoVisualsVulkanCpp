@@ -31,6 +31,8 @@ events:
       - "/home/ricky/.sdkman/candidates/java/current/bin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
+      - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts/"
+      - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts/"
       - "/home/ricky/.dotnet/tools/"
       - "/bin/"
     searched_directories:
@@ -62,6 +64,8 @@ events:
         - "/home/ricky/.cargo/bin"
         - "/usr/local/bin"
         - "/usr/bin"
+        - "/home/ricky/.windsurf/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+        - "/home/ricky/.windsurf/extensions/vscjava.vscode-java-debug-0.59.0-universal/bundled/scripts/noConfigScripts"
         - "/home/ricky/.dotnet/tools"
   -
     kind: "message-v1"
