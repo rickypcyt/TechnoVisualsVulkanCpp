@@ -106,6 +106,18 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         }
     };
 
+    // Start crossfade transition only if a previous video was loaded
+    // (avoids sampling an uninitialized prev texture on first load)
+    if (slot == 0 && videoTexture.isReady()) {
+        transitionActive = true;
+        transitionProgress = 0.0f;
+        videoTexture.setFreezePrev(true);
+    } else if (slot == 1 && videoTexture2.isReady()) {
+        transitionActive = true;
+        transitionProgress = 0.0f;
+        videoTexture2.setFreezePrev(true);
+    }
+
     if (slot == 0) {
         videoSourcePath = path;
         videoRenderer.reset();
@@ -650,25 +662,32 @@ void Application::updateFullscreenDescriptorSets() {
         return; // Descriptor sets not yet created
     }
 
+    std::vector<VkDescriptorBufferInfo> bufferInfos;
+    bufferInfos.reserve(MAX_FRAMES_IN_FLIGHT);
+    std::vector<VkWriteDescriptorSet> writes;
+    writes.reserve(MAX_FRAMES_IN_FLIGHT);
+
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        VkDescriptorBufferInfo bufferInfo{};
+        VkDescriptorBufferInfo& bufferInfo = bufferInfos.emplace_back();
         bufferInfo.buffer = uniformBufferManager.getBuffers()[i];
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(GlobalParamsUBO);
 
-        VkWriteDescriptorSet uboWrite{};
+        VkWriteDescriptorSet& uboWrite = writes.emplace_back();
         uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         uboWrite.dstSet = fullscreenDescriptorSets[i];
         uboWrite.dstBinding = 0;
         uboWrite.dstArrayElement = 0;
         uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboWrite.descriptorCount = 1;
-        uboWrite.pBufferInfo = &bufferInfo;
-
-        vkUpdateDescriptorSets(vulkanContext.getDevice(), 1, &uboWrite, 0, nullptr);
-        // Binding 1 (inputTexture) lo actualiza execute() cada frame
-        // apuntando al output final del multipass pipeline
+        uboWrite.pBufferInfo = &bufferInfos.back();
     }
+
+    if (!writes.empty()) {
+        vkUpdateDescriptorSets(vulkanContext.getDevice(), static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+    }
+    // Binding 1 (inputTexture) lo actualiza execute() cada frame
+    // apuntando al output final del multipass pipeline
 }
 
 void Application::initCommandBuffers() {
@@ -1167,6 +1186,16 @@ void Application::mainLoop() {
             throw std::runtime_error("failed to acquire swapchain image");
         }
 
+        // ── GPU profiling readback (once per second) ────────────────────────
+        {
+            static auto lastProfileTime = std::chrono::steady_clock::now();
+            auto nowProfile = std::chrono::steady_clock::now();
+            if (std::chrono::duration_cast<std::chrono::seconds>(nowProfile - lastProfileTime).count() >= 1) {
+                multiPassPipeline.printProfilingResults(vulkanContext.getDevice());
+                lastProfileTime = nowProfile;
+            }
+        }
+
         // ── Delta time ──────────────────────────────────────────────────────
         const auto now       = std::chrono::steady_clock::now();
         const float deltaTime = std::chrono::duration<float>(now - lastFrameTimestamp).count();
@@ -1195,7 +1224,17 @@ void Application::mainLoop() {
             }
         }
 
-        transitionActive = false;
+        // ── Video transition animation ───────────────────────────────────────
+        if (transitionActive) {
+            float step = deltaTime / transitionDuration;
+            transitionProgress += step;
+            if (transitionProgress >= 1.0f) {
+                transitionProgress = 1.0f;
+                transitionActive = false;
+                videoTexture.setFreezePrev(false);
+                videoTexture2.setFreezePrev(false);
+            }
+        }
 
         // ── Auto-randomize colors ────────────────────────────────────────────
         // Quick energy read for color palette (linear RMS -> 0..1)
@@ -1302,15 +1341,17 @@ void Application::mainLoop() {
 
         frameSystem.endFrame();
 
-        // ── Frame rate limiter ─────────────────────────────────────────────
-        // Prevent CPU spinning at 1000+ FPS when GPU is very fast.
-        // 120 FPS cap = ~8.33 ms target. Clamp-based sleep_until avoids
-        // the "catch-up burst" of the accumulative model.
+        // ── Frame rate limiter (adaptive) ─────────────────────────────────
+        // Only sleep if we finished the frame faster than the target.
+        // This reduces input latency compared to a fixed sleep_until.
         constexpr float targetFrameTime = 1.0f / 120.0f;
-        const auto targetNs = std::chrono::nanoseconds(static_cast<int64_t>(targetFrameTime * 1e9f));
         const auto frameEnd = std::chrono::steady_clock::now();
-        const auto sleepUntil = frameEnd + targetNs;
-        std::this_thread::sleep_until(sleepUntil);
+        const float elapsed = std::chrono::duration<float>(frameEnd - lastFrameTimestamp).count();
+        if (elapsed < targetFrameTime) {
+            const auto sleepNs = std::chrono::nanoseconds(
+                static_cast<int64_t>((targetFrameTime - elapsed) * 1e9f));
+            std::this_thread::sleep_for(sleepNs);
+        }
     }
 }
 
@@ -1855,6 +1896,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     reactive.cameraPanX         = ubo.cameraPanX;
     reactive.cameraPanY         = ubo.cameraPanY;
     reactive.cameraRotation     = ubo.cameraRotation;
+
+    // Video transition crossfade progress
+    ubo.transitionProgress = transitionProgress;
 
     uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }

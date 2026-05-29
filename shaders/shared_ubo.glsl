@@ -167,6 +167,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     vec3 gridLineColor;
     vec3 rgbOverlay;
     int enableRgbOverlay;
+    float transitionProgress;
 } ubo;
 
 #endif // SHARED_UBO_GLSL

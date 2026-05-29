@@ -260,6 +260,13 @@ void main() {
     float v2Mix = clamp(ubo.video2Mix * ubo.video2Available, 0.0, 1.0);
     vec3 videoColor = blendTwoVideos(video1Color, video2Color, ubo.video2BlendMode, v2Mix);
 
+    // Real crossfade transition: mix between frozen previous frame (old video)
+    // and current frame (new video) during a video swap
+    if (ubo.transitionProgress < 1.0 && ubo.videoAvailable > 0.0) {
+        vec3 oldColor = texture(videoTexPrev, clamp(uv, 0.0, 1.0)).rgb;
+        videoColor = mix(oldColor, videoColor, ubo.transitionProgress);
+    }
+
     vec4 procColor = dispatchMode(ubo.mode, procUV);
     vec3 compositedProcedural = procColor.rgb;
     if (ubo.enableBlending == 1) {

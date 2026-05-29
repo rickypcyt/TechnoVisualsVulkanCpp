@@ -99,7 +99,7 @@ struct VideoSlot {
 // ------------------------------
 class Application {
 public:
-    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+    static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
     static constexpr int WIDTH = 800;
     static constexpr int HEIGHT = 600;
 
@@ -261,6 +261,7 @@ private:
     // transition durations
     float transitionDuration = 1.0f;
     float transitionDuration2 = 0.5f;
+    float transitionProgress = 1.0f;  // 0.0 = old video, 1.0 = new video
 
     // command buffers
     std::vector<VkCommandBuffer> commandBuffers;

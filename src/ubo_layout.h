@@ -213,4 +213,7 @@ struct GlobalParamsUBO {
     // Final RGB overlay
     alignas(16) glm::vec3 rgbOverlay;
     alignas(4) int enableRgbOverlay;
+
+    // Video transition crossfade (0.0 = old video, 1.0 = new video)
+    alignas(4) float transitionProgress;
 };

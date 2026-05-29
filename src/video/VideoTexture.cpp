@@ -244,7 +244,8 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
     // Upload to current frame texture
     if (pendingUploads[frameIndex]) {
         // GPU→GPU copy: preserve old current frame as previous frame BEFORE overwriting
-        if (imageHandle.image != VK_NULL_HANDLE && imageHandlePrev.image != VK_NULL_HANDLE) {
+        // (skipped when freezePrev is active to keep the snapshot for crossfade transitions)
+        if (!freezePrev && imageHandle.image != VK_NULL_HANDLE && imageHandlePrev.image != VK_NULL_HANDLE) {
             transition(imageHandle.image,
                        currentLayout,
                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,

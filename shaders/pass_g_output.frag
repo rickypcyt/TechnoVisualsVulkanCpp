@@ -135,5 +135,73 @@ vec3 blendMode(vec3 base, vec3 layer, int mode) {
 }
 
 void main() {
-    outColor = vec4(1.0, 0.0, 0.0, 1.0); // rojo puro, sin condiciones
+    vec2 p = uv;
+
+    // CRT curvature / fish eye (distort UV before sampling)
+    if (ubo.enablePostCrtCurvature == 1 || ubo.enablePostFishEye == 1) {
+        vec2 centered = p * 2.0 - 1.0;
+        float r = length(centered);
+        if (ubo.enablePostCrtCurvature == 1) {
+            centered *= (1.0 + ubo.crtCurvature * r * r);
+        }
+        if (ubo.enablePostFishEye == 1) {
+            centered *= (1.0 + ubo.crtFishEye * r);
+        }
+        p = clamp(centered * 0.5 + 0.5, 0.0, 1.0);
+    }
+
+    vec3 color = sampleInput(p);
+
+    // Bloom (threshold + blur add)
+    if (ubo.enablePostBloom == 1 && ubo.bloomIntensity > 0.0) {
+        float luma = luminance(color);
+        if (luma > ubo.bloomThreshold) {
+            vec3 bloom = blur3x3(p);
+            color = mix(color, bloom + color, ubo.bloomIntensity);
+        }
+    }
+
+    // FXAA
+    if (ubo.enableFXAA == 1) {
+        color = fxaa_compose(p);
+    }
+
+    // Scan mask
+    if (ubo.enablePostScanMask == 1 && ubo.crtScanlineIntensity > 0.0) {
+        float scan = sin(p.y * ubo.resolution.y * PI);
+        scan = pow(max(scan, 0.0), ubo.analogScanlineFocus);
+        color *= (1.0 - ubo.crtScanlineIntensity * scan);
+    }
+
+    // Vignette
+    if (ubo.enablePostVignette == 1 && ubo.crtVignette > 0.0) {
+        vec2 vig = p * 2.0 - 1.0;
+        float vigAmount = 1.0 - dot(vig, vig) * ubo.crtVignette * 0.5;
+        color *= clamp(vigAmount, 0.0, 1.0);
+    }
+
+    // Grain
+    if (ubo.enablePostGrain == 1 && ubo.grainStrength > 0.0001) {
+        float g = hash21(p * ubo.resolution + ubo.time * 60.0) - 0.5;
+        color += g * ubo.grainStrength * 0.08;
+    }
+
+    // Chromatic aberration
+    if (ubo.enablePostAberration == 1 && ubo.aberrationAmount > 0.0001) {
+        vec2 centered = p * 2.0 - 1.0;
+        float r = length(centered);
+        vec2 dir = normalize(centered + 0.0001);
+        float shift = ubo.aberrationAmount * r;
+        vec2 texel = 1.0 / max(ubo.resolution, vec2(1.0));
+        float rCh = sampleInput(p + dir * shift * texel).r;
+        float bCh = sampleInput(p - dir * shift * texel).b;
+        color = vec3(rCh, color.g, bCh);
+    }
+
+    // RGB overlay
+    if (ubo.enableRgbOverlay == 1) {
+        color *= ubo.rgbOverlay;
+    }
+
+    outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }

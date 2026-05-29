@@ -29,6 +29,86 @@ MultiPassPipeline::~MultiPassPipeline() {
     cleanup();
 }
 
+void MultiPassPipeline::setPassEnabled(int pass, bool enabled) {
+    if (pass >= 0 && pass < NUM_PASSES) {
+        passEnabled[pass] = enabled;
+    }
+}
+
+bool MultiPassPipeline::isPassEnabled(int pass) const {
+    if (pass >= 0 && pass < NUM_PASSES) {
+        return passEnabled[pass];
+    }
+    return false;
+}
+
+void MultiPassPipeline::initProfiling(VkDevice device) {
+    VkQueryPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    poolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    poolInfo.queryCount = TOTAL_QUERIES;
+
+    if (vkCreateQueryPool(device, &poolInfo, nullptr, &queryPool) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create timestamp query pool" << std::endl;
+        queryPool = VK_NULL_HANDLE;
+    }
+}
+
+void MultiPassPipeline::cleanupProfiling(VkDevice device) {
+    if (queryPool != VK_NULL_HANDLE) {
+        vkDestroyQueryPool(device, queryPool, nullptr);
+        queryPool = VK_NULL_HANDLE;
+    }
+}
+
+void MultiPassPipeline::printProfilingResults(VkDevice device) {
+    if (queryPool == VK_NULL_HANDLE) return;
+
+    // Readback query results from the PREVIOUS frame (already completed)
+    std::vector<uint64_t> queryResults(TOTAL_QUERIES);
+    VkResult result = vkGetQueryPoolResults(
+        device, queryPool,
+        0, TOTAL_QUERIES,
+        sizeof(uint64_t) * queryResults.size(), queryResults.data(),
+        sizeof(uint64_t),
+        VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT
+    );
+
+    if (result != VK_SUCCESS) {
+        // Results not ready yet, skip this frame
+        return;
+    }
+
+    static const char* PASS_NAMES[] = {
+        "Pass A (Base)",
+        "Pass B (Spatial)",
+        "Pass C (Detail)",
+        "Pass D (Temporal)",
+        "Pass E (Degradation)",
+        "Pass F (Color)",
+        "Pass G (Output)",
+        "Swapchain Final"
+    };
+
+    // Get timestamp period
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(physicalDevice, &props);
+    float timestampPeriod = props.limits.timestampPeriod; // nanoseconds per tick
+
+    std::cout << "--- GPU Timestamps (ms) ---" << std::endl;
+    float totalMs = 0.0f;
+    for (int i = 0; i < PROFILED_PASS_COUNT; ++i) {
+        uint64_t start = queryResults[i * QUERIES_PER_PASS + 0];
+        uint64_t end   = queryResults[i * QUERIES_PER_PASS + 1];
+        if (end > start) {
+            float ms = (end - start) * timestampPeriod / 1'000'000.0f;
+            std::cout << "  " << PASS_NAMES[i] << ": " << ms << " ms" << std::endl;
+            totalMs += ms;
+        }
+    }
+    std::cout << "  Total GPU: " << totalMs << " ms" << std::endl;
+}
+
 bool MultiPassPipeline::createTemporalHistoryImage() {
     destroyTemporalHistoryImage();
 
@@ -165,11 +245,14 @@ bool MultiPassPipeline::initialize(
         video2Sampler
     );
 
+    initProfiling(device);
+
     std::cout << "[MultiPass] Initialized successfully with " << NUM_PASSES << " passes" << std::endl;
     return true;
 }
 
 void MultiPassPipeline::cleanup() {
+    cleanupProfiling(device);
     cleanupDescriptorSets();
     cleanupPipelines();
     cleanupIntermediateFramebuffers();
@@ -767,11 +850,18 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         temporalHistoryInitialized = true;
     }
 
-    // Execute all 7 passes in sequence to offscreen buffers
-    int currentBuffer = 0;
+    // Execute all passes in sequence to offscreen buffers
+    int lastOutputBuffer = -1;  // -1 = no offscreen output yet (pass A reads external textures)
+
+    if (queryPool != VK_NULL_HANDLE) {
+        vkCmdResetQueryPool(cmd, queryPool, 0, TOTAL_QUERIES);
+    }
 
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
-        int targetBuffer = currentBuffer;
+        if (!passEnabled[pass]) continue;
+
+        int targetBuffer = (lastOutputBuffer == -1) ? 0 : (1 - lastOutputBuffer);
+
         // Validate descriptor sets before drawing
         if (frameIndex >= passes[pass].descriptorSets[0].size() ||
             frameIndex >= passes[pass].descriptorSets[1].size() ||
@@ -781,15 +871,8 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
             return;
         }
 
-        // DEBUG: Print descriptor set state before draw (once per second)
-        static auto lastDebugTime = std::chrono::steady_clock::now();
-        auto currentTime = std::chrono::steady_clock::now();
-        if (pass == 0 && std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastDebugTime).count() > 1000) {
-            int prevBuffer = (pass % 2 == 0) ? 1 : 0;
-            // printf("[MultiPass DRAW] Pass=%d frameIndex=%u descriptorSet0=%p descriptorSet1=%p videoImageView=%p\n",
-            //        pass, frameIndex, (void*)passes[pass].descriptorSets[0][frameIndex],
-            //        (void*)passes[pass].descriptorSets[1][frameIndex], (void*)videoImageView);
-            lastDebugTime = currentTime;
+        if (queryPool != VK_NULL_HANDLE) {
+            vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool, pass * QUERIES_PER_PASS);
         }
 
         // Begin render pass
@@ -798,10 +881,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = offscreenRenderPass;
-
-        // For the last pass, we render to swapchain (not implemented here)
-        // For now, all passes render to intermediate buffers
-        renderPassInfo.framebuffer = intermediate[currentBuffer].framebuffer;
+        renderPassInfo.framebuffer = intermediate[targetBuffer].framebuffer;
 
         VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         renderPassInfo.clearValueCount = 1;
@@ -851,15 +931,17 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
             // Return intermediate back to shader-read after copy so next pass can sample it
             ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
-        // For passes other than 3 the render pass finalLayout already transitions to SHADER_READ_ONLY_OPTIMAL
 
-        // Ping-pong buffers
-        currentBuffer = 1 - currentBuffer;
+        if (queryPool != VK_NULL_HANDLE) {
+            vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, pass * QUERIES_PER_PASS + 1);
+        }
+
+        lastOutputBuffer = targetBuffer;
     }
 
     // Final pass: render to swapchain
-    // The final output is in buffer 1 (since we ping-pong after each pass)
-    int finalBuffer = 1;
+    // The final output is in lastOutputBuffer (dynamically tracked)
+    int finalBuffer = (lastOutputBuffer >= 0) ? lastOutputBuffer : 0;
 
     // Update swapchain descriptor set to point to final multipass output
     VkDescriptorImageInfo finalOutputInfo{};
@@ -877,6 +959,11 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
     finalOutputWrite.pImageInfo = &finalOutputInfo;
 
     vkUpdateDescriptorSets(device, 1, &finalOutputWrite, 0, nullptr);
+
+    if (queryPool != VK_NULL_HANDLE) {
+        int swapQuery = NUM_PASSES * QUERIES_PER_PASS;
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool, swapQuery);
+    }
 
     // Begin swapchain render pass
     VkRenderPassBeginInfo swapchainRenderPassInfo{};
@@ -918,6 +1005,11 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
     vkCmdDraw(cmd, 4, 1, 0, 0);
 
     vkCmdEndRenderPass(cmd);
+
+    if (queryPool != VK_NULL_HANDLE) {
+        int swapQuery = NUM_PASSES * QUERIES_PER_PASS + 1;
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, swapQuery);
+    }
 }
 
 void MultiPassPipeline::updateDescriptorSets(
@@ -1171,6 +1263,11 @@ void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
     // Pass C (pass 2) reads from intermediate[1] (output of pass B)
     // And so on with ping-pong
 
+    std::vector<VkWriteDescriptorSet> writes;
+    writes.reserve(NUM_PASSES);
+    std::vector<VkDescriptorImageInfo> imageInfos;
+    imageInfos.reserve(NUM_PASSES + 1);
+
     for (int pass = 1; pass < NUM_PASSES - 1; ++pass) {  // Passes B-F (1-5)
         // Calculate which intermediate buffer this pass should read from
         // Pass 1 reads from buffer 0 (output of pass 0)
@@ -1179,12 +1276,12 @@ void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
         // etc.
         int prevBuffer = (pass % 2 == 1) ? 0 : 1;
 
-        VkDescriptorImageInfo inputTexInfo{};
+        VkDescriptorImageInfo& inputTexInfo = imageInfos.emplace_back();
         inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         inputTexInfo.imageView = intermediate[prevBuffer].imageView;
         inputTexInfo.sampler = videoSampler;
 
-        VkWriteDescriptorSet inputTexWrite{};
+        VkWriteDescriptorSet& inputTexWrite = writes.emplace_back();
         inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         inputTexWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
         inputTexWrite.dstBinding = 0;  // Set 1, binding 0
@@ -1193,18 +1290,16 @@ void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
         inputTexWrite.descriptorCount = 1;
         inputTexWrite.pImageInfo = &inputTexInfo;
 
-        vkUpdateDescriptorSets(device, 1, &inputTexWrite, 0, nullptr);
-
         // Pass D (pass 3) also needs prevFrameTex at binding 1
         if (pass == 3) {
-            VkDescriptorImageInfo prevFrameTexInfo{};
+            VkDescriptorImageInfo& prevFrameTexInfo = imageInfos.emplace_back();
             prevFrameTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             prevFrameTexInfo.imageView = (temporalHistory.imageView != VK_NULL_HANDLE)
                 ? temporalHistory.imageView
                 : intermediate[prevBuffer].imageView;
             prevFrameTexInfo.sampler = videoSampler;
 
-            VkWriteDescriptorSet prevFrameTexWrite{};
+            VkWriteDescriptorSet& prevFrameTexWrite = writes.emplace_back();
             prevFrameTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             prevFrameTexWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
             prevFrameTexWrite.dstBinding = 1;  // Set 1, binding 1
@@ -1212,20 +1307,18 @@ void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
             prevFrameTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             prevFrameTexWrite.descriptorCount = 1;
             prevFrameTexWrite.pImageInfo = &prevFrameTexInfo;
-
-            vkUpdateDescriptorSets(device, 1, &prevFrameTexWrite, 0, nullptr);
         }
     }
 
     // Pass G (pass 6) needs inputTex at binding 0 and proceduralTex at binding 1
     // Pass G reads from buffer 1 (output of pass F)
     int passGBuffer = 1;
-    VkDescriptorImageInfo inputTexInfoG{};
+    VkDescriptorImageInfo& inputTexInfoG = imageInfos.emplace_back();
     inputTexInfoG.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     inputTexInfoG.imageView = intermediate[passGBuffer].imageView;
     inputTexInfoG.sampler = videoSampler;
 
-    VkWriteDescriptorSet inputTexWriteG{};
+    VkWriteDescriptorSet& inputTexWriteG = writes.emplace_back();
     inputTexWriteG.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     inputTexWriteG.dstSet = passes[6].descriptorSets[1][frameIndex];
     inputTexWriteG.dstBinding = 0;  // Set 1, binding 0
@@ -1234,5 +1327,7 @@ void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
     inputTexWriteG.descriptorCount = 1;
     inputTexWriteG.pImageInfo = &inputTexInfoG;
 
-    vkUpdateDescriptorSets(device, 1, &inputTexWriteG, 0, nullptr);
+    if (!writes.empty()) {
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+    }
 }

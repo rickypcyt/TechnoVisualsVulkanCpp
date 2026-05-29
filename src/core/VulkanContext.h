@@ -85,7 +85,7 @@ private:
     VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
     
     // Frame synchronization
-    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
 
     // Helper functions
     void createVulkanInstance(SDL_Window* window);

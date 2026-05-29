@@ -9,7 +9,7 @@
 
 class VideoTexture {
 public:
-    static constexpr size_t MAX_FRAMES_IN_FLIGHT = 2;
+    static constexpr size_t MAX_FRAMES_IN_FLIGHT = 3;
 
     struct StagingSlot {
         ResourceHandle buffer;
@@ -77,6 +77,10 @@ public:
         pendingUploads.fill(false);
     }
 
+    // Freeze prev image (useful for crossfade transitions)
+    void setFreezePrev(bool freeze) { freezePrev = freeze; }
+    bool getFreezePrev() const { return freezePrev; }
+
 private:
     // GPU resources
     ResourceHandle imageHandle;
@@ -95,6 +99,7 @@ private:
     uint32_t stride = 4;  // Expected stride (compact for GPU)
     size_t frameSize = 4;
     bool ready = false;
+    bool freezePrev = false;
     
     // Layout tracking
     VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;

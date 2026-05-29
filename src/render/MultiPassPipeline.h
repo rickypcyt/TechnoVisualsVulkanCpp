@@ -95,6 +95,15 @@ public:
     // Get final output framebuffer (for presentation)
     VkFramebuffer getFinalFramebuffer() const { return swapchainFramebuffer; }
 
+    // Pass culling: enable/disable individual passes at runtime
+    void setPassEnabled(int pass, bool enabled);
+    bool isPassEnabled(int pass) const;
+
+    // GPU profiling (timestamps)
+    void initProfiling(VkDevice device);
+    void cleanupProfiling(VkDevice device);
+    void printProfilingResults(VkDevice device);
+
 private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
@@ -117,6 +126,9 @@ private:
     static const int NUM_PASSES = 7;
     PassConfig passes[NUM_PASSES];
 
+    // Pass culling state (all enabled by default)
+    bool passEnabled[NUM_PASSES] = {true, true, true, true, true, true, true};
+
     // Intermediate framebuffers (ping-pong between passes)
     // We need 2 intermediate textures plus final output
     FramebufferResources intermediate[2];  // Ping-pong buffers
@@ -131,6 +143,12 @@ private:
     
     // Descriptor pool for all passes
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+
+    // GPU profiling
+    VkQueryPool queryPool = VK_NULL_HANDLE;
+    static constexpr int QUERIES_PER_PASS = 2;
+    static constexpr int PROFILED_PASS_COUNT = NUM_PASSES + 1; // +1 for swapchain final
+    static constexpr int TOTAL_QUERIES = PROFILED_PASS_COUNT * QUERIES_PER_PASS;
 
     // Fullscreen quad vertex buffer
     VkBuffer vertexBuffer = VK_NULL_HANDLE;
