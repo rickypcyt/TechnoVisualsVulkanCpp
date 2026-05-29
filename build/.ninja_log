@@ -109,3 +109,5 @@
 105216	119636	1780076039233405256	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/w64_coder.cpp.o	67bd1d73194b2ff5
 115569	123869	1780076049586283112	kfr-build/src/audio/CMakeFiles/kfr_audio.dir/wave_coder.cpp.o	27c8d82df375a4d1
 123869	124038	1780076057885185200	kfr-build/src/audio/libkfr_audio.a	5990895757e480c1
+13	1124	1780076223478231507	CMakeFiles/app.dir/src/video/VideoTexture.cpp.o	f6b8e538a89dcef
+1124	1894	1780076224589218399	app	91c52d8c93a3acb3

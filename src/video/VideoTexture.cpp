@@ -250,6 +250,7 @@ void VideoTexture::recordPendingUpload(VkCommandBuffer commandBuffer, uint32_t f
                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                        VK_PIPELINE_STAGE_TRANSFER_BIT);
+            currentLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
             transition(imageHandlePrev.image,
                        currentLayoutPrev,
