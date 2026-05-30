@@ -162,6 +162,39 @@ private:
     std::chrono::steady_clock::time_point lastVideoChangeTime2 =
         std::chrono::steady_clock::now();
 
+    // --------------------------
+    // Output Video slot 1
+    // --------------------------
+    VideoTexture outputVideoTexture;
+    VideoPlayer outputVideoPlayer;
+    CpuFramePool outputCpuFramePool;
+    std::unique_ptr<VideoRenderer> outputVideoRenderer;
+
+    std::string outputVideoSourcePath = "media/sample.mp4";
+    int outputSelectedVideoAsset = -1;
+    bool outputVideoSubsystemInitialized = false;
+    bool outputIsReloadingVideo = false;
+    std::chrono::steady_clock::time_point outputLastVideoChangeTime =
+        std::chrono::steady_clock::now();
+
+    // --------------------------
+    // Output Video slot 2
+    // --------------------------
+    VideoTexture outputVideoTexture2;
+    VideoPlayer outputVideoPlayer2;
+    CpuFramePool outputCpuFramePool2;
+    std::unique_ptr<VideoRenderer> outputVideoRenderer2;
+
+    std::string outputVideoSourcePath2 = "media/sample.mp4";
+    int outputSelectedVideoAsset2 = -1;
+    bool outputVideoSubsystemInitialized2 = false;
+    bool outputIsReloadingVideo2 = false;
+    std::chrono::steady_clock::time_point outputLastVideoChangeTime2 =
+        std::chrono::steady_clock::now();
+
+    VideoRandomizerState outputVideoRandomizer;
+    VideoRandomizerState2 outputVideoRandomizer2;
+
     // Per-video playback speed cache (path → rate)
     mutable std::unordered_map<std::string, float> videoSpeedCache;
     std::string videoSpeedCachePath = "video_speeds.json";
@@ -350,6 +383,7 @@ private:
     void initCommandBuffers();
 
     void initVideo();
+    void initOutputVideo();
     void updateFullscreenDescriptorSets();
 
     void initUI();
@@ -389,6 +423,7 @@ private:
     void updateAllDescriptorSets();
 
     bool reloadVideoSlot(int slot, const std::string& path);
+    bool reloadOutputVideoSlot(int slot, const std::string& path);
 
     void saveState() const;
 

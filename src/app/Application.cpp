@@ -45,8 +45,8 @@ void Application::updateAllDescriptorSets() {
         outputDescriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             outputUniformBufferManager.getBuffers()[i],
-            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()),
+            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo())
         );
     }
     updateFullscreenDescriptorSets();
@@ -62,14 +62,15 @@ void Application::updateAllDescriptorSets() {
         has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
         has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
     );
+    const bool outputHas2 = outputVideoTexture2.isReady();
     outputMultiPassPipeline.updateDescriptorSets(
         outputUniformBufferManager.getBuffers(),
-        videoTexture.getImageView(),
-        videoTexture.getPrevImageView(),
-        videoTexture.getSampler(),
-        videoTexture.getSampler(),
-        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+        outputVideoTexture.getImageView(),
+        outputVideoTexture.getPrevImageView(),
+        outputVideoTexture.getSampler(),
+        outputVideoTexture.getSampler(),
+        outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
+        outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler()
     );
 }
 
@@ -185,6 +186,88 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
     restoreSpeed(slot, path);
 
     isReloadingVideo = false;
+    return true;
+}
+
+// Recarga un slot del output desde una ruta dada.
+bool Application::reloadOutputVideoSlot(int slot, const std::string& path) {
+    std::cout << "[reloadOutputVideoSlot] Reloading output slot " << slot << " with: " << path << "\n";
+
+    if (slot == 0) {
+        outputVideoSourcePath = path;
+        outputVideoRenderer.reset();
+        outputVideoPlayer.shutdown();
+
+        glm::ivec2 screenSize = getScreenSize();
+        if (!outputVideoPlayer.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadOutputVideoSlot(0) failed: " << path << '\n';
+            outputIsReloadingVideo = false;
+            return false;
+        }
+
+        outputVideoPlayer.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        outputVideoPlayer.setPlaybackRate(outputVisualControls.playback.videoPlaybackRate);
+
+        // Rebuild texture
+        vkDeviceWaitIdle(vulkanContext.getDevice());
+        outputVideoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+        outputVideoTexture.cleanup(resourceSystem);
+        outputVideoTexture.createResources(
+            resourceSystem, vulkanContext.getDevice(),
+            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+            static_cast<uint32_t>(outputVideoPlayer.width()),
+            static_cast<uint32_t>(outputVideoPlayer.height()));
+        outputCpuFramePool.resize(
+            static_cast<uint32_t>(outputVideoPlayer.width()),
+            static_cast<uint32_t>(outputVideoPlayer.height()),
+            static_cast<uint32_t>(outputVideoPlayer.width()) * 4);
+        if (outputVideoRenderer) outputVideoRenderer->reset();
+
+        updateAllDescriptorSets();
+
+        outputVideoRenderer = std::make_unique<VideoRenderer>(outputVideoPlayer, outputVideoTexture, outputCpuFramePool);
+        outputVideoRandomizer.elapsedSeconds = 0.0f;
+        outputVideoRandomizer.currentVideoDuration = outputVideoPlayer.durationSeconds();
+        outputVideoSubsystemInitialized = outputVideoTexture.isReady();
+    } else {
+        outputVideoSourcePath2 = path;
+        outputVideoRenderer2.reset();
+        outputVideoPlayer2.shutdown();
+
+        glm::ivec2 screenSize = getScreenSize();
+        if (!outputVideoPlayer2.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadOutputVideoSlot(1) failed: " << path << '\n';
+            outputIsReloadingVideo2 = false;
+            return false;
+        }
+
+        outputVideoPlayer2.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        outputVideoPlayer2.setPlaybackRate(outputVisualControls.playback.video2PlaybackRate);
+
+        vkDeviceWaitIdle(vulkanContext.getDevice());
+        outputVideoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
+        outputVideoTexture2.cleanup(resourceSystem);
+        outputVideoTexture2.createResources(
+            resourceSystem, vulkanContext.getDevice(),
+            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+            static_cast<uint32_t>(outputVideoPlayer2.width()),
+            static_cast<uint32_t>(outputVideoPlayer2.height()));
+        outputCpuFramePool2.resize(
+            static_cast<uint32_t>(outputVideoPlayer2.width()),
+            static_cast<uint32_t>(outputVideoPlayer2.height()),
+            static_cast<uint32_t>(outputVideoPlayer2.width()) * 4);
+        if (outputVideoRenderer2) outputVideoRenderer2->reset();
+
+        updateAllDescriptorSets();
+
+        outputVideoRenderer2 = std::make_unique<VideoRenderer>(outputVideoPlayer2, outputVideoTexture2, outputCpuFramePool2);
+        outputVideoRandomizer2.elapsedSeconds = 0.0f;
+        outputVideoRandomizer2.currentVideoDuration = outputVideoPlayer2.durationSeconds();
+        outputVideoSubsystemInitialized2 = outputVideoTexture2.isReady();
+    }
+
+    if (slot == 0) outputIsReloadingVideo = false;
+    else outputIsReloadingVideo2 = false;
     return true;
 }
 
@@ -386,14 +469,22 @@ void Application::run() {
     );
 
     initVideo();
+    initOutputVideo();
 
     descriptorSetManager.createSets(vulkanContext.getDevice());
+    outputDescriptorSetManager.createSets(vulkanContext.getDevice());
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         descriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             uniformBufferManager.getBuffers()[i],
             const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
             const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+        );
+        outputDescriptorSetManager.updateSet(
+            vulkanContext.getDevice(), i,
+            outputUniformBufferManager.getBuffers()[i],
+            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()),
+            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo())
         );
     }
 
@@ -913,6 +1004,71 @@ void Application::initVideo() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Output Video init (separate from preview)
+// ─────────────────────────────────────────────────────────────────────────────
+
+void Application::initOutputVideo() {
+    using Clock = std::chrono::high_resolution_clock;
+    auto t0 = Clock::now();
+
+    std::cout << "[Application] initOutputVideo()\n";
+    glm::ivec2 screenSize = getScreenSize();
+
+    // Copy paths from preview initially
+    outputVideoSourcePath = videoSourcePath;
+    outputVideoSourcePath2 = videoSourcePath2;
+    outputSelectedVideoAsset = selectedVideoAsset;
+    outputSelectedVideoAsset2 = selectedVideoAsset2;
+
+    bool initSlot1 = visualControls.playback.enableDualVideo;
+
+    auto future0 = std::async(std::launch::async, [&]() {
+        return outputVideoPlayer.initialize(outputVideoSourcePath, screenSize.x, screenSize.y);
+    });
+
+    std::future<bool> future1;
+    if (initSlot1) {
+        future1 = std::async(std::launch::async, [&]() {
+            return outputVideoPlayer2.initialize(outputVideoSourcePath2, screenSize.x, screenSize.y);
+        });
+    }
+
+    bool ok0 = future0.get();
+    bool ok1 = initSlot1 ? future1.get() : false;
+
+    if (!ok0) {
+        std::cerr << "[Application] Failed to initialize output video player 1\n";
+        return;
+    }
+    outputVideoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
+
+    outputCpuFramePool.resize(outputVideoPlayer.width(), outputVideoPlayer.height(), outputVideoPlayer.width() * 4);
+    outputVideoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                       vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                       outputVideoPlayer.width(), outputVideoPlayer.height());
+    outputVideoSubsystemInitialized = outputVideoTexture.isReady();
+    if (outputVideoSubsystemInitialized)
+        outputVideoRenderer = std::make_unique<VideoRenderer>(outputVideoPlayer, outputVideoTexture, outputCpuFramePool);
+
+    if (initSlot1 && ok1) {
+        outputVideoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
+        outputCpuFramePool2.resize(outputVideoPlayer2.width(), outputVideoPlayer2.height(), outputVideoPlayer2.width() * 4);
+        outputVideoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+                                             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                             outputVideoPlayer2.width(), outputVideoPlayer2.height());
+        outputVideoSubsystemInitialized2 = outputVideoTexture2.isReady();
+        if (outputVideoSubsystemInitialized2)
+            outputVideoRenderer2 = std::make_unique<VideoRenderer>(outputVideoPlayer2, outputVideoTexture2, outputCpuFramePool2);
+    }
+
+    auto t1 = Clock::now();
+    std::cout << "[Application] initOutputVideo() done — total="
+              << std::chrono::duration<double>(t1 - t0).count()
+              << "s v1=" << outputVideoSubsystemInitialized
+              << " v2=" << outputVideoSubsystemInitialized2 << '\n';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Subsystem init
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -985,61 +1141,63 @@ void Application::initAudio() {
 }
 
 void Application::initMultiPassPipeline() {
-    if (!videoSubsystemInitialized) {
-        std::cout << "[Application] Skipping MultiPassPipeline — video not initialized\n";
-        return;
+    uint32_t queueFamily = 0; // TODO: obtener de VulkanContext
+
+    // ── Preview pipeline ────────────────────────────────────────────────────
+    if (videoSubsystemInitialized) {
+        const bool has2 = videoTexture2.isReady();
+        if (!multiPassPipeline.initialize(
+                vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
+                vulkanContext.getGraphicsQueue(), queueFamily,
+                previewPresenter.getExtent(), previewPresenter.getFormat(),
+                videoTexture.getSampler(), videoTexture.getSampler(),
+                videoTexture.getImageView(), videoTexture.getImageView(),
+                has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
+                has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+                uniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
+        {
+            std::cerr << "[Application] Failed to initialize MultiPassPipeline\n";
+        } else {
+            multiPassPipeline.updateDescriptorSets(
+                uniformBufferManager.getBuffers(),
+                videoTexture.getImageView(), videoTexture.getPrevImageView(),
+                videoTexture.getSampler(),   videoTexture.getSampler(),
+                has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+                has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+            );
+            std::cout << "[Application] Preview MultiPassPipeline initialized\n";
+        }
+    } else {
+        std::cout << "[Application] Skipping preview MultiPassPipeline — video not initialized\n";
     }
 
-    const bool  has2        = videoTexture2.isReady();
-    uint32_t    queueFamily = 0; // TODO: obtener de VulkanContext
-
-    if (!multiPassPipeline.initialize(
-            vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
-            vulkanContext.getGraphicsQueue(), queueFamily,
-            previewPresenter.getExtent(), previewPresenter.getFormat(),
-            videoTexture.getSampler(), videoTexture.getSampler(),
-            videoTexture.getImageView(), videoTexture.getImageView(),
-            has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
-            has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-            uniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
-    {
-        std::cerr << "[Application] Failed to initialize MultiPassPipeline\n";
-        return;
+    // ── Output pipeline (independent) ───────────────────────────────────────
+    if (outputVideoSubsystemInitialized) {
+        const bool outputHas2 = outputVideoTexture2.isReady();
+        if (!outputMultiPassPipeline.initialize(
+                vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
+                vulkanContext.getGraphicsQueue(), queueFamily,
+                outputPresenter.getExtent(), outputPresenter.getFormat(),
+                outputVideoTexture.getSampler(), outputVideoTexture.getSampler(),
+                outputVideoTexture.getImageView(), outputVideoTexture.getImageView(),
+                outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
+                outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
+                outputUniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
+        {
+            std::cerr << "[Application] Failed to initialize output MultiPassPipeline\n";
+        } else {
+            outputMultiPassPipeline.updateDescriptorSets(
+                outputUniformBufferManager.getBuffers(),
+                outputVideoTexture.getImageView(), outputVideoTexture.getPrevImageView(),
+                outputVideoTexture.getSampler(),   outputVideoTexture.getSampler(),
+                outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
+                outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler()
+            );
+            std::cout << "[Application] Output MultiPassPipeline initialized\n";
+        }
+    } else {
+        std::cerr << "[Application] Skipping output MultiPassPipeline — output video not initialized\n";
     }
-
-    // Sincronizar con vistas correctas (prev ≠ current)
-    multiPassPipeline.updateDescriptorSets(
-        uniformBufferManager.getBuffers(),
-        videoTexture.getImageView(), videoTexture.getPrevImageView(),
-        videoTexture.getSampler(),   videoTexture.getSampler(),
-        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
-    );
-
-    // Initialize independent output pipeline (1920x1080)
-    if (!outputMultiPassPipeline.initialize(
-            vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
-            vulkanContext.getGraphicsQueue(), queueFamily,
-            outputPresenter.getExtent(), outputPresenter.getFormat(),
-            videoTexture.getSampler(), videoTexture.getSampler(),
-            videoTexture.getImageView(), videoTexture.getImageView(),
-            has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
-            has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-            outputUniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
-    {
-        std::cerr << "[Application] Failed to initialize output MultiPassPipeline\n";
-        return;
-    }
-
-    outputMultiPassPipeline.updateDescriptorSets(
-        outputUniformBufferManager.getBuffers(),
-        videoTexture.getImageView(), videoTexture.getPrevImageView(),
-        videoTexture.getSampler(),   videoTexture.getSampler(),
-        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
-    );
-
-    std::cout << "[Application] MultiPassPipeline initialized\n";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1159,6 +1317,14 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
         videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture2.cleanup(resourceSystem);
     }
+    if (outputVideoSubsystemInitialized) {
+        outputVideoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+        outputVideoTexture.cleanup(resourceSystem);
+    }
+    if (outputVideoSubsystemInitialized2) {
+        outputVideoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
+        outputVideoTexture2.cleanup(resourceSystem);
+    }
 
     previewPresenter.recreate(1280, 720, renderPass);
     outputPresenter.recreate(1920, 1080, renderPass);
@@ -1175,6 +1341,18 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
                                      vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
                                      videoPlayer2.width(), videoPlayer2.height());
         if (videoRenderer2) videoRenderer2->reset();
+    }
+    if (outputVideoSubsystemInitialized) {
+        outputVideoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+                                          vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                          outputVideoPlayer.width(), outputVideoPlayer.height());
+        if (outputVideoRenderer) outputVideoRenderer->reset();
+    }
+    if (outputVideoSubsystemInitialized2) {
+        outputVideoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+                                           vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                           outputVideoPlayer2.width(), outputVideoPlayer2.height());
+        if (outputVideoRenderer2) outputVideoRenderer2->reset();
     }
 
     updateAllDescriptorSets();
@@ -1280,7 +1458,16 @@ void Application::mainLoop() {
                     }
                     case SDLK_RETURN:
                         outputVisualControls = visualControls;
-                        std::cout << "[Output] Controls committed from preview\n";
+                        // Copy video state from preview to output
+                        outputVideoSourcePath = videoSourcePath;
+                        outputVideoSourcePath2 = videoSourcePath2;
+                        outputSelectedVideoAsset = selectedVideoAsset;
+                        outputSelectedVideoAsset2 = selectedVideoAsset2;
+                        if (!outputVideoSourcePath.empty())
+                            reloadOutputVideoSlot(0, outputVideoSourcePath);
+                        if (!outputVideoSourcePath2.empty() && visualControls.playback.enableDualVideo)
+                            reloadOutputVideoSlot(1, outputVideoSourcePath2);
+                        std::cout << "[Output] Controls + videos committed from preview\n";
                         break;
                     case SDLK_SPACE:
                         previewPaused = !previewPaused;
@@ -1330,6 +1517,15 @@ void Application::mainLoop() {
         if (!outputFrame) {
             if (outputResult == VK_ERROR_OUT_OF_DATE_KHR) continue;
             throw std::runtime_error("failed to acquire output swapchain image");
+        }
+
+        static bool loggedOnce = false;
+        if (!loggedOnce) {
+            std::cout << "[DIAG] outputVideoSubsystemInitialized=" << outputVideoSubsystemInitialized
+                      << " outputRenderer=" << (outputVideoRenderer ? "yes" : "no")
+                      << " outputTexReady=" << outputVideoTexture.isReady()
+                      << " outputPlayerReady=" << outputVideoPlayer.isReady() << "\n";
+            loggedOnce = true;
         }
 
         // ── GPU profiling readback (once per second) ────────────────────────
@@ -1440,6 +1636,8 @@ void Application::mainLoop() {
 
         if (videoRenderer)  videoRenderer->update(deltaTime, previewFrame->frameIndex);
         if (videoRenderer2) videoRenderer2->update(deltaTime, previewFrame->frameIndex);
+        if (outputVideoRenderer)  outputVideoRenderer->update(deltaTime, previewFrame->frameIndex);
+        if (outputVideoRenderer2) outputVideoRenderer2->update(deltaTime, previewFrame->frameIndex);
 
         // ── UI ───────────────────────────────────────────────────────────────
         UIDiagnostics diag;
@@ -2109,6 +2307,10 @@ void Application::recordCommandBuffer(VkCommandBuffer cmd,
     videoTexture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
     if (videoSubsystemInitialized2 && videoTexture2.isReady())
         videoTexture2.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (outputVideoSubsystemInitialized && outputVideoTexture.isReady())
+        outputVideoTexture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (outputVideoSubsystemInitialized2 && outputVideoTexture2.isReady())
+        outputVideoTexture2.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
 
     if (previewPaused) {
         // Paused: skip multiPass pipeline, just black + PAUSED label (saves GPU)
@@ -2171,7 +2373,7 @@ void Application::recordCommandBuffer(VkCommandBuffer cmd,
     }
 
     // ── Output window (always renders independently via its own pipeline) ─
-    if (videoSubsystemInitialized) {
+    if (outputVideoSubsystemInitialized) {
         outputMultiPassPipeline.execute(
             cmd, previewFrame.frameIndex,
             outputDescriptorSetManager.getSet(previewFrame.frameIndex),
@@ -2216,6 +2418,8 @@ void Application::cleanup() {
     // freeing the FFmpeg resources they access (formatCtx, etc.)
     videoRenderer.reset();
     videoRenderer2.reset();
+    outputVideoRenderer.reset();
+    outputVideoRenderer2.reset();
 
     videoPlayer.shutdown();
     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
@@ -2223,6 +2427,12 @@ void Application::cleanup() {
     videoPlayer2.shutdown();
     videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
     videoTexture2.cleanup(resourceSystem);
+    outputVideoPlayer.shutdown();
+    outputVideoTexture.destroy(resourceSystem, vulkanContext.getDevice());
+    outputVideoTexture.cleanup(resourceSystem);
+    outputVideoPlayer2.shutdown();
+    outputVideoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
+    outputVideoTexture2.cleanup(resourceSystem);
 
     uniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
     outputUniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
