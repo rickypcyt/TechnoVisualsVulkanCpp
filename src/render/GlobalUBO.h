@@ -441,4 +441,7 @@ struct GlobalUBO {
     // --- Final RGB overlay ---
     alignas(16) glm::vec3 rgbOverlay;
     alignas(4) int enableRgbOverlay;
+
+    // Master brightness (independent from color grading)
+    alignas(4) float masterBrightness;
 };

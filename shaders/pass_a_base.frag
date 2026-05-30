@@ -303,6 +303,7 @@ vec4 dispatchMode(int m, vec2 st) {
     if (m == 8) return vec4(renderTerrainScan(st), 1.0);
     if (m == 9) return vec4(renderWireCube(st), 1.0);
     if (m == 10) return vec4(renderOscilloscope(st), 1.0);
+    if (m == 11) return vec4(renderCornerX(st), 1.0);
     if (m == 40) {
         vec2 aspectCorrected = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
         return renderAnaglyphAssembly(aspectCorrected, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);

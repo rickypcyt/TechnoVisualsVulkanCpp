@@ -193,6 +193,9 @@ struct VisualControls {
         float vhsDistortion = 0.0f;
         float analogChromaticAberration = 0.02f;
 
+        // Master brightness (independent from color grading)
+        float masterBrightness = 1.0f;
+
         // Post effect toggles
         bool enablePostCrtCurvature = true;
         bool enablePostScanMask = true;

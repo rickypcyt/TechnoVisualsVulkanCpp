@@ -1438,8 +1438,8 @@ void Application::mainLoop() {
                         break;
                     case SDLK_LEFT: {
                         int& mode = visualControls.playback.activeMode;
-                        int maxMode = 10;
-                        // Wrap from 40 (anaglyph) to 10 as well
+                        int maxMode = 11;
+                        // Wrap from 40 (anaglyph) to 11 as well
                         if (mode == 40) mode = maxMode;
                         else if (mode > 0) mode--;
                         else mode = maxMode;
@@ -1449,11 +1449,23 @@ void Application::mainLoop() {
                     }
                     case SDLK_RIGHT: {
                         int& mode = visualControls.playback.activeMode;
-                        int maxMode = 10;
+                        int maxMode = 11;
                         if (mode >= maxMode) mode = 0;
                         else mode++;
                         controlsDirty = true;
                         std::cout << "[Mode] Next: " << mode << std::endl;
+                        break;
+                    }
+                    case SDLK_UP: {
+                        visualControls.post.masterBrightness = std::min(2.0f, visualControls.post.masterBrightness + 0.1f);
+                        controlsDirty = true;
+                        std::cout << "[Brightness] Up: " << visualControls.post.masterBrightness << std::endl;
+                        break;
+                    }
+                    case SDLK_DOWN: {
+                        visualControls.post.masterBrightness = std::max(0.0f, visualControls.post.masterBrightness - 0.1f);
+                        controlsDirty = true;
+                        std::cout << "[Brightness] Down: " << visualControls.post.masterBrightness << std::endl;
                         break;
                     }
                     case SDLK_RETURN:
@@ -2211,6 +2223,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     // Final RGB overlay
     ubo.rgbOverlay = controls.color.rgbOverlay;
     ubo.enableRgbOverlay = controls.color.enableRgbOverlay ? 1 : 0;
+
+    // Master brightness (independent from color grading)
+    ubo.masterBrightness = controls.post.masterBrightness;
 
     // ------------------------------------------------------------------
     // AUDIO REACTIVITY AUTO-MODULATION

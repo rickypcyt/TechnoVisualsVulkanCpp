@@ -214,6 +214,9 @@ struct GlobalParamsUBO {
     alignas(16) glm::vec3 rgbOverlay;
     alignas(4) int enableRgbOverlay;
 
+    // Master brightness (independent from color grading)
+    alignas(4) float masterBrightness;
+
     // Video transition crossfade (0.0 = old video, 1.0 = new video)
     alignas(4) float transitionProgress;
 };

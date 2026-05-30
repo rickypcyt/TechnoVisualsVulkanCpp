@@ -574,3 +574,59 @@ vec3 renderOscilloscope(vec2 st) {
 
     return clamp(color, 0.0, 1.2);
 }
+
+// ── Mode 11: Corner X ────────────────────────────────────────────────────────
+
+vec3 renderCornerX(vec2 st) {
+    vec2 uv = st;
+    float t = uTime * (0.3 + uTempo * 0.6);
+
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass  = clamp(uBass * drive, 0.0, 1.0);
+    float mid   = clamp(uMid  * drive, 0.0, 1.0);
+    float high  = clamp(uHigh * drive, 0.0, 1.0);
+    float energy= clamp(uEnergy* drive, 0.0, 1.0);
+
+    // Diagonal distances (corner-to-corner lines)
+    float d1 = abs(uv.y - uv.x) * 0.7071;           // bottom-left to top-right
+    float d2 = abs(uv.y + uv.x - 1.0) * 0.7071;     // top-left to bottom-right
+
+    // Audio-reactive line thickness
+    float baseThick = 0.008 + bass * 0.012;
+    float line1 = 1.0 - smoothstep(0.0, baseThick, d1);
+    float line2 = 1.0 - smoothstep(0.0, baseThick, d2);
+    float lines = max(line1, line2);
+
+    // Glow around lines
+    float glow1 = exp(-d1 * d1 * (2000.0 + bass * 2000.0));
+    float glow2 = exp(-d2 * d2 * (2000.0 + bass * 2000.0));
+    float glow = max(glow1, glow2);
+
+    // Cross intersection pulse at center
+    float centerDist = length(uv - 0.5);
+    float centerPulse = exp(-centerDist * centerDist * (40.0 + energy * 80.0));
+    centerPulse *= 0.5 + 0.5 * sin(t * 4.0 + bass * 6.0);
+
+    // Pure black background
+    vec3 color = vec3(0.0);
+
+    // Line color cycling with time
+    float hue = fract(t * 0.1 + energy * 0.3);
+    vec3 lineCol = mix(uPrimaryColor, uSecondaryColor, hue);
+    vec3 glowCol = mix(uSecondaryColor, uPrimaryColor, fract(hue + 0.5));
+
+    color += lineCol * lines * (0.8 + bass * 0.6);
+    color += glowCol * glow * (0.25 + energy * 0.35);
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 2.0)) * centerPulse * (0.3 + high * 0.3);
+
+    // Corner sparkles when high hits
+    float cornerSparkle = 0.0;
+    vec2 corners[4] = vec2[](vec2(0.0,0.0), vec2(1.0,0.0), vec2(0.0,1.0), vec2(1.0,1.0));
+    for (int i = 0; i < 4; ++i) {
+        float cd = length(uv - corners[i]);
+        cornerSparkle += exp(-cd * cd * (150.0 + high * 300.0)) * 0.15;
+    }
+    color += mix(uPrimaryColor, vec3(1.0), high) * cornerSparkle * (0.4 + high * 0.6);
+
+    return clamp(color, 0.0, 1.2);
+}

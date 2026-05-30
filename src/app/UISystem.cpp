@@ -65,9 +65,9 @@ namespace {
 
 // ── Layer combo ──────────────────────────────────────────────────────────────
 
-constexpr int  kLayerModeValues[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 40};
-constexpr int  kLayerModeCount    = 12;
-constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Plasma Wave\0Radial Burst\0Grid Pulse\0Noise Flow\0Cellular\0Mandala\0Terrain Scan\0Wire Cube\0Oscilloscope\0Anaglyph 3D\0";
+constexpr int  kLayerModeValues[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 40};
+constexpr int  kLayerModeCount    = 13;
+constexpr char kLayerComboItems[] = "Layer 0\0Layer 1\0Plasma Wave\0Radial Burst\0Grid Pulse\0Noise Flow\0Cellular\0Mandala\0Terrain Scan\0Wire Cube\0Oscilloscope\0Corner X\0Anaglyph 3D\0";
 
 int layerIndexFromMode(int mode) {
     for (int i = 0; i < kLayerModeCount; ++i)
@@ -771,7 +771,7 @@ void UISystem::drawPreviewContent(
     ImGui::Separator();
 
     // ── Favorite tools (always on top) ──
-    changed |= ImGui::SliderFloat("Brightness", &controls.color.gradeBrightness, -0.5f, 0.5f, "%.2f");
+    changed |= ImGui::SliderFloat("Brightness", &controls.post.masterBrightness, 0.0f, 2.0f, "%.2f");
     changed |= ImGui::SliderFloat("Contrast", &controls.color.gradeContrast, 0.0f, 2.0f, "%.2f");
     changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
     ImGui::SameLine();
@@ -1230,7 +1230,7 @@ void UISystem::drawProceduralControlsContent(
     ImGui::SameLine();
     if (ImGui::Button("<")) {
         int& mode = controls.playback.activeMode;
-        int maxMode = 10;
+        int maxMode = 11;
         if (mode == 40) mode = maxMode;
         else if (mode > 0) mode--;
         else mode = maxMode;
@@ -1239,7 +1239,7 @@ void UISystem::drawProceduralControlsContent(
     ImGui::SameLine();
     if (ImGui::Button(">")) {
         int& mode = controls.playback.activeMode;
-        int maxMode = 10;
+        int maxMode = 11;
         if (mode >= maxMode) mode = 0;
         else mode++;
         changed = true;

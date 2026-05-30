@@ -203,5 +203,8 @@ void main() {
         color *= ubo.rgbOverlay;
     }
 
+    // Master brightness (independent from color grading)
+    color *= ubo.masterBrightness;
+
     outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }

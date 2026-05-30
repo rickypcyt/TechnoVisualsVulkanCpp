@@ -99,6 +99,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerVec3("colorBalance", &color.colorBalance);
     r.registerVec3("rgbOverlay", &color.rgbOverlay);
     r.registerBool("enableRgbOverlay", &color.enableRgbOverlay);
+    r.registerFloat("masterBrightness", &post.masterBrightness, 0.0f, 2.0f);
 
     // PARAMETER LOCKS
     r.registerBool("lockColorBalance", &locks.lockColorBalance);
