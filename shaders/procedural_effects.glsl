@@ -630,3 +630,96 @@ vec3 renderCornerX(vec2 st) {
 
     return clamp(color, 0.0, 1.2);
 }
+
+// ── Mode 12: Electric Rays ─────────────────────────────────────────────────
+// Bass = big bolts from bottom, Mid = medium sideways bolts, High = thin top bolts
+
+float electricBolt(vec2 p, vec2 origin, vec2 target, float thickness, float jitters, float seed, float t) {
+    vec2 dir = target - origin;
+    float len = length(dir);
+    if (len < 0.001) return 0.0;
+    vec2 ndir = dir / len;
+    vec2 perp = vec2(-ndir.y, ndir.x);
+
+    float proj = dot(p - origin, ndir);
+    float along = clamp(proj / len, 0.0, 1.0);
+
+    // Jitter offsets at multiple points
+    float jit = 0.0;
+    for (float i = 0.0; i < 6.0; i += 1.0) {
+        float fi = i / 6.0;
+        float phase = t * (3.0 + jitters) + seed * 10.0 + i * 3.7;
+        jit += sin(phase) * (0.5 - abs(fi - 0.5)) * 2.0;
+    }
+    jit *= 0.15 * jitters;
+
+    // Discretize jitter segments
+    float seg = floor(along * 8.0) / 8.0;
+    float segJitter = sin(seg * 47.0 + seed * 23.0 + t * 5.0) * 0.12 * jitters;
+
+    vec2 boltPos = origin + ndir * (along * len) + perp * (jit + segJitter) * len;
+    float dist = length(p - boltPos);
+
+    // Main core + glow
+    float core = 1.0 - smoothstep(0.0, thickness, dist);
+    float glow = exp(-dist * dist * (80.0 + jitters * 60.0));
+    return core * 0.7 + glow * 0.4;
+}
+
+vec3 renderElectricRays(vec2 st) {
+    vec2 uv = st;
+    float t = uTime * (0.5 + uTempo * 0.8);
+
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass  = clamp(uBass * drive, 0.0, 1.0);
+    float mid   = clamp(uMid  * drive, 0.0, 1.0);
+    float high  = clamp(uHigh * drive, 0.0, 1.0);
+    float energy= clamp(uEnergy* drive, 0.0, 1.0);
+
+    vec3 color = vec3(0.0);
+
+    // ── BASS: 3 big bolts from bottom ──
+    for (int i = 0; i < 3; ++i) {
+        float fi = float(i);
+        float seed = fi * 17.0 + 1.0;
+        vec2 origin = vec2(0.2 + fi * 0.3 + sin(t * 0.5 + fi) * 0.05, 0.0);
+        vec2 target = vec2(0.3 + fi * 0.2 + sin(t * 0.7 + fi * 2.0) * 0.15, 0.4 + bass * 0.35);
+        float thick = 0.008 + bass * 0.018;
+        float bolt = electricBolt(uv, origin, target, thick, 1.0 + bass * 2.0, seed, t);
+        vec3 boltCol = mix(uPrimaryColor, vec3(1.0, 0.9, 0.7), bass * 0.5);
+        color += boltCol * bolt * (0.6 + bass * 0.8);
+    }
+
+    // ── MID: 4 medium bolts from left & right sides ──
+    for (int i = 0; i < 4; ++i) {
+        float fi = float(i);
+        float seed = fi * 13.0 + 50.0;
+        bool fromLeft = mod(fi, 2.0) < 1.0;
+        float sideX = fromLeft ? 0.0 : 1.0;
+        vec2 origin = vec2(sideX, 0.2 + fi * 0.2 + cos(t * 0.6 + fi) * 0.05);
+        vec2 target = vec2(fromLeft ? (0.35 + mid * 0.25) : (0.65 - mid * 0.25),
+                           0.3 + sin(t * 0.8 + fi * 1.5) * 0.15);
+        float thick = 0.004 + mid * 0.010;
+        float bolt = electricBolt(uv, origin, target, thick, 0.8 + mid * 1.5, seed, t);
+        vec3 boltCol = mix(uSecondaryColor, uPrimaryColor, mid);
+        color += boltCol * bolt * (0.5 + mid * 0.7);
+    }
+
+    // ── HIGH: 5 thin bolts from top ──
+    for (int i = 0; i < 5; ++i) {
+        float fi = float(i);
+        float seed = fi * 11.0 + 100.0;
+        vec2 origin = vec2(0.15 + fi * 0.17 + sin(t * 0.9 + fi * 2.3) * 0.04, 1.0);
+        vec2 target = vec2(0.2 + fi * 0.15 + cos(t * 1.1 + fi) * 0.1, 0.55 - high * 0.2);
+        float thick = 0.002 + high * 0.006;
+        float bolt = electricBolt(uv, origin, target, thick, 0.6 + high * 2.5, seed, t);
+        vec3 boltCol = mix(vec3(0.7, 0.9, 1.0), uSecondaryColor, high);
+        color += boltCol * bolt * (0.4 + high * 0.9);
+    }
+
+    // Global energy flash
+    float flash = exp(-length(uv - 0.5) * 2.0) * energy * 0.15;
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 2.0)) * flash;
+
+    return clamp(color, 0.0, 1.5);
+}

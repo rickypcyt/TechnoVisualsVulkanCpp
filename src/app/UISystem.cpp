@@ -1230,7 +1230,7 @@ void UISystem::drawProceduralControlsContent(
     ImGui::SameLine();
     if (ImGui::Button("<")) {
         int& mode = controls.playback.activeMode;
-        int maxMode = 11;
+        int maxMode = 12;
         if (mode == 40) mode = maxMode;
         else if (mode > 0) mode--;
         else mode = maxMode;
@@ -1239,7 +1239,7 @@ void UISystem::drawProceduralControlsContent(
     ImGui::SameLine();
     if (ImGui::Button(">")) {
         int& mode = controls.playback.activeMode;
-        int maxMode = 11;
+        int maxMode = 12;
         if (mode >= maxMode) mode = 0;
         else mode++;
         changed = true;

@@ -1438,8 +1438,8 @@ void Application::mainLoop() {
                         break;
                     case SDLK_LEFT: {
                         int& mode = visualControls.playback.activeMode;
-                        int maxMode = 11;
-                        // Wrap from 40 (anaglyph) to 11 as well
+                        int maxMode = 12;
+                        // Wrap from 40 (anaglyph) to 12 as well
                         if (mode == 40) mode = maxMode;
                         else if (mode > 0) mode--;
                         else mode = maxMode;
@@ -1449,7 +1449,7 @@ void Application::mainLoop() {
                     }
                     case SDLK_RIGHT: {
                         int& mode = visualControls.playback.activeMode;
-                        int maxMode = 11;
+                        int maxMode = 12;
                         if (mode >= maxMode) mode = 0;
                         else mode++;
                         controlsDirty = true;
@@ -2269,16 +2269,22 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
 
         // Camera movement (2D layer camera)
         if (controls.camera.enableMovement) {
-            // Very subtle zoom pulse driven by bass (max 6% closer)
-            float zoomPulse = 1.0f + (bassClamped * 0.06f + envClamped * 0.02f) * warpGain;
+            // Strong zoom pulse driven by bass (max 20% closer)
+            float zoomPulse = 1.0f + (bassClamped * 0.20f + envClamped * 0.06f) * warpGain;
             ubo.cameraZoom = std::max(ubo.cameraZoom, zoomPulse);
 
-            // Slow orbit rotation driven by energy
-            ubo.cameraRotation += envClamped * 0.3f * globalDeltaTime * warpGain;
+            // Fast orbit rotation driven by energy
+            ubo.cameraRotation += envClamped * 0.8f * globalDeltaTime * warpGain;
 
-            // Gentle pan driven by mid/high (Lissajous-like motion)
-            ubo.cameraPanX = std::max(ubo.cameraPanX, midClamped  * 0.05f * std::sin(ubo.time * 1.5f) * warpGain);
-            ubo.cameraPanY = std::max(ubo.cameraPanY, highClamped * 0.04f * std::cos(ubo.time * 1.2f) * warpGain);
+            // Strong X pan driven by bass — side-to-side bounce with the beat
+            float panXAudio = bassClamped * 0.55f * std::sin(ubo.time * 3.0f) * warpGain;
+            panXAudio += bassClamped * bassClamped * 0.30f * std::sin(ubo.time * 7.0f + 1.0f) * warpGain;
+            ubo.cameraPanX = controls.camera.panX + panXAudio;
+
+            // Y pan driven by mids/highs for floating feel
+            float panYAudio = midClamped * 0.40f * std::cos(ubo.time * 2.5f) * warpGain;
+            panYAudio += highClamped * 0.20f * std::sin(ubo.time * 5.5f) * warpGain;
+            ubo.cameraPanY = controls.camera.panY + panYAudio;
         }
     }
 
