@@ -17,6 +17,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_vulkan.h>
 #include "imgui.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,7 +25,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 glm::ivec2 Application::getScreenSize() const {
-    auto ext = vulkanContext.getSwapchainExtent();
+    auto ext = previewPresenter.getExtent();
     return glm::ivec2(static_cast<int>(ext.width), static_cast<int>(ext.height));
 }
 
@@ -39,12 +40,30 @@ void Application::updateAllDescriptorSets() {
             const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
         );
     }
+    // Output descriptor sets
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        outputDescriptorSetManager.updateSet(
+            vulkanContext.getDevice(), i,
+            outputUniformBufferManager.getBuffers()[i],
+            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
+            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+        );
+    }
     updateFullscreenDescriptorSets();
 
     // Multipass pipeline usa las dos fuentes de vídeo
     const bool has2 = videoTexture2.isReady();
     multiPassPipeline.updateDescriptorSets(
         uniformBufferManager.getBuffers(),
+        videoTexture.getImageView(),
+        videoTexture.getPrevImageView(),
+        videoTexture.getSampler(),
+        videoTexture.getSampler(),
+        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+    );
+    outputMultiPassPipeline.updateDescriptorSets(
+        outputUniformBufferManager.getBuffers(),
         videoTexture.getImageView(),
         videoTexture.getPrevImageView(),
         videoTexture.getSampler(),
@@ -332,16 +351,25 @@ Application::~Application() {
 
 void Application::run() {
     window.initSDL();
-    window.createMainWindow("Vulkan", WIDTH, HEIGHT);
-    window.createUiWindow("Controls", 420, 420);
+    window.createMainWindow("[PREVIEW] Vulkan", 1280, 720);
+    SDL_SetWindowPosition(window.getMainWindow(), 50, 50);
+    window.createOutputWindow("[OUTPUT] Final", 1920, 1080);
+    window.createUiWindow("[CONTROLS] UI", 420, 420);
+    SDL_SetWindowPosition(window.getUiWindow(), 1350, 50);
 
     initVulkan();
-    initSwapchain();
+    initPresenters();
     initRenderPass();
+
+    previewPresenter.createFramebuffers(renderPass);
+    outputPresenter.createFramebuffers(renderPass);
 
     descriptorSetManager.createLayout(vulkanContext.getDevice());
     descriptorSetManager.createPool(vulkanContext.getDevice());
+    outputDescriptorSetManager.createLayout(vulkanContext.getDevice());
+    outputDescriptorSetManager.createPool(vulkanContext.getDevice());
     uniformBufferManager.createBuffers(resourceSystem, vulkanContext.getDevice());
+    outputUniformBufferManager.createBuffers(resourceSystem, vulkanContext.getDevice());
 
     // Cargar estado antes del vídeo para que selectedVideoFolder sea correcto
     JsonSerializer::load(visualControlsPath, parameterRegistry);
@@ -371,7 +399,6 @@ void Application::run() {
 
     initPipelines();
     updateFullscreenDescriptorSets();
-    initFramebuffers();
     initUI();
     initNLE();
     initMultiPassPipeline();
@@ -380,9 +407,11 @@ void Application::run() {
     initAudio();
     initCommandBuffers();
 
-    frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
-                     vulkanContext.getSwapchainImageCount());
-    std::cout << "[Application] FrameSystem initialized\n";
+    previewFrameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
+                            static_cast<uint32_t>(previewPresenter.getImageCount()));
+    outputFrameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
+                           static_cast<uint32_t>(outputPresenter.getImageCount()));
+    std::cout << "[Application] FrameSystems initialized\n";
 
     const auto now   = std::chrono::steady_clock::now();
     startTime        = now;
@@ -405,20 +434,28 @@ void Application::initVulkan() {
     constexpr bool enableValidation = true;
 #endif
     vulkanContext.init(window.getMainWindow(), enableValidation);
-    vulkanContext.createSurface(window.getMainWindow());
+
+    VkSurfaceKHR tempSurface = VK_NULL_HANDLE;
+    if (!SDL_Vulkan_CreateSurface(window.getMainWindow(), vulkanContext.getInstance(), &tempSurface)) {
+        throw std::runtime_error(std::string("failed to create temp surface: ") + SDL_GetError());
+    }
+    vulkanContext.selectDevice(tempSurface);
+    vkDestroySurfaceKHR(vulkanContext.getInstance(), tempSurface, nullptr);
+
     vulkanContext.createCommandPool();
     resourceSystem.init(vulkanContext.getDevice(), vulkanContext.getPhysicalDevice());
 }
 
-void Application::initSwapchain() {
-    uint32_t w, h;
-    window.getDrawableSize(w, h);
-    vulkanContext.createSwapchain(w, h);
+void Application::initPresenters() {
+    previewPresenter.init(vulkanContext.getInstance(), vulkanContext.getPhysicalDevice(),
+                          vulkanContext.getDevice(), window.getMainWindow(), 1280, 720);
+    outputPresenter.init(vulkanContext.getInstance(), vulkanContext.getPhysicalDevice(),
+                         vulkanContext.getDevice(), window.getOutputWindow(), 1920, 1080);
 }
 
 void Application::initRenderPass() {
     VkAttachmentDescription color{};
-    color.format         = vulkanContext.getSwapchainImageFormat();
+    color.format         = previewPresenter.getFormat();
     color.samples        = VK_SAMPLE_COUNT_1_BIT;
     color.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
@@ -446,23 +483,7 @@ void Application::initRenderPass() {
 }
 
 void Application::initFramebuffers() {
-    const auto& views = vulkanContext.getSwapchainImageViews();
-    swapchainFramebuffers.resize(views.size());
-    const auto ext = vulkanContext.getSwapchainExtent();
-
-    for (size_t i = 0; i < views.size(); ++i) {
-        VkFramebufferCreateInfo info{};
-        info.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        info.renderPass      = renderPass;
-        info.attachmentCount = 1;
-        info.pAttachments    = &views[i];
-        info.width           = ext.width;
-        info.height          = ext.height;
-        info.layers          = 1;
-
-        if (vkCreateFramebuffer(vulkanContext.getDevice(), &info, nullptr, &swapchainFramebuffers[i]) != VK_SUCCESS)
-            throw std::runtime_error("failed to create framebuffer");
-    }
+    // Framebuffers now live inside VulkanPresenter instances
 }
 
 void Application::initPipelines() {
@@ -521,11 +542,41 @@ void Application::initPipelines() {
         throw std::runtime_error("failed to allocate fullscreen descriptor sets");
     }
 
+    // Output fullscreen descriptor pool (same layout, separate pool)
+    VkDescriptorPoolCreateInfo outputPoolInfo{};
+    outputPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    outputPoolInfo.poolSizeCount = static_cast<uint32_t>(fullscreenPoolSizes.size());
+    outputPoolInfo.pPoolSizes = fullscreenPoolSizes.data();
+    outputPoolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
+
+    if (vkCreateDescriptorPool(vulkanContext.getDevice(), &outputPoolInfo, nullptr, &outputFullscreenDescriptorPool) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create output fullscreen descriptor pool");
+    }
+
+    std::vector<VkDescriptorSetLayout> outputLayouts(MAX_FRAMES_IN_FLIGHT, fullscreenDescriptorSetLayout);
+    VkDescriptorSetAllocateInfo outputAllocInfo{};
+    outputAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    outputAllocInfo.descriptorPool = outputFullscreenDescriptorPool;
+    outputAllocInfo.descriptorSetCount = static_cast<uint32_t>(outputLayouts.size());
+    outputAllocInfo.pSetLayouts = outputLayouts.data();
+
+    outputFullscreenDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+    if (vkAllocateDescriptorSets(vulkanContext.getDevice(), &outputAllocInfo, outputFullscreenDescriptorSets.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate output fullscreen descriptor sets");
+    }
+
     // Create pipeline layout for fullscreen using the fullscreen descriptor set layout
+    VkPushConstantRange pushRange{};
+    pushRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushRange.offset = 0;
+    pushRange.size = sizeof(int);
+
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutInfo.setLayoutCount = 1;
     layoutInfo.pSetLayouts = &fullscreenDescriptorSetLayout;
+    layoutInfo.pushConstantRangeCount = 1;
+    layoutInfo.pPushConstantRanges = &pushRange;
 
     if (vkCreatePipelineLayout(vulkanContext.getDevice(), &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout");
@@ -562,14 +613,14 @@ void Application::initPipelines() {
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(vulkanContext.getSwapchainExtent().width);
-    viewport.height = static_cast<float>(vulkanContext.getSwapchainExtent().height);
+    viewport.width = static_cast<float>(previewPresenter.getExtent().width);
+    viewport.height = static_cast<float>(previewPresenter.getExtent().height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = vulkanContext.getSwapchainExtent();
+    scissor.extent = previewPresenter.getExtent();
 
     VkPipelineViewportStateCreateInfo viewportState{};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -682,6 +733,27 @@ void Application::updateFullscreenDescriptorSets() {
         uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboWrite.descriptorCount = 1;
         uboWrite.pBufferInfo = &bufferInfos.back();
+    }
+
+    // Output fullscreen descriptor sets (output UBOs)
+    if (outputFullscreenDescriptorSets.size() == MAX_FRAMES_IN_FLIGHT) {
+        std::vector<VkDescriptorBufferInfo> outputBufferInfos;
+        outputBufferInfos.reserve(MAX_FRAMES_IN_FLIGHT);
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            VkDescriptorBufferInfo& bufferInfo = outputBufferInfos.emplace_back();
+            bufferInfo.buffer = outputUniformBufferManager.getBuffers()[i];
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(GlobalParamsUBO);
+
+            VkWriteDescriptorSet& uboWrite = writes.emplace_back();
+            uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            uboWrite.dstSet = outputFullscreenDescriptorSets[i];
+            uboWrite.dstBinding = 0;
+            uboWrite.dstArrayElement = 0;
+            uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboWrite.descriptorCount = 1;
+            uboWrite.pBufferInfo = &bufferInfo;
+        }
     }
 
     if (!writes.empty()) {
@@ -918,14 +990,13 @@ void Application::initMultiPassPipeline() {
         return;
     }
 
-    const auto  ext         = vulkanContext.getSwapchainExtent();
     const bool  has2        = videoTexture2.isReady();
     uint32_t    queueFamily = 0; // TODO: obtener de VulkanContext
 
     if (!multiPassPipeline.initialize(
             vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
             vulkanContext.getGraphicsQueue(), queueFamily,
-            ext, vulkanContext.getSwapchainImageFormat(),
+            previewPresenter.getExtent(), previewPresenter.getFormat(),
             videoTexture.getSampler(), videoTexture.getSampler(),
             videoTexture.getImageView(), videoTexture.getImageView(),
             has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
@@ -939,6 +1010,29 @@ void Application::initMultiPassPipeline() {
     // Sincronizar con vistas correctas (prev ≠ current)
     multiPassPipeline.updateDescriptorSets(
         uniformBufferManager.getBuffers(),
+        videoTexture.getImageView(), videoTexture.getPrevImageView(),
+        videoTexture.getSampler(),   videoTexture.getSampler(),
+        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+    );
+
+    // Initialize independent output pipeline (1920x1080)
+    if (!outputMultiPassPipeline.initialize(
+            vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
+            vulkanContext.getGraphicsQueue(), queueFamily,
+            outputPresenter.getExtent(), outputPresenter.getFormat(),
+            videoTexture.getSampler(), videoTexture.getSampler(),
+            videoTexture.getImageView(), videoTexture.getImageView(),
+            has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
+            has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+            outputUniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
+    {
+        std::cerr << "[Application] Failed to initialize output MultiPassPipeline\n";
+        return;
+    }
+
+    outputMultiPassPipeline.updateDescriptorSets(
+        outputUniformBufferManager.getBuffers(),
         videoTexture.getImageView(), videoTexture.getPrevImageView(),
         videoTexture.getSampler(),   videoTexture.getSampler(),
         has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
@@ -1053,11 +1147,8 @@ void Application::handleOscTrigger(const std::string& action) {
 
 void Application::handleWindowResize(uint32_t width, uint32_t height) {
     vkDeviceWaitIdle(vulkanContext.getDevice());
-    frameSystem.cleanup();
-
-    for (auto fb : swapchainFramebuffers)
-        vkDestroyFramebuffer(vulkanContext.getDevice(), fb, nullptr);
-    swapchainFramebuffers.clear();
+    previewFrameSystem.cleanup();
+    outputFrameSystem.cleanup();
 
     // Destroy slot textures
     if (videoSubsystemInitialized) {
@@ -1069,7 +1160,8 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
         videoTexture2.cleanup(resourceSystem);
     }
 
-    vulkanContext.recreateSwapchain(width, height);
+    previewPresenter.recreate(1280, 720, renderPass);
+    outputPresenter.recreate(1920, 1080, renderPass);
 
     // Recreate slot textures
     if (videoSubsystemInitialized) {
@@ -1086,12 +1178,20 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
     }
 
     updateAllDescriptorSets();
-    initFramebuffers();
 
-    frameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
-                     vulkanContext.getSwapchainImageCount());
-    frameSystem.resetCurrentFrame();
-    frameSystem.waitForAllFences();
+    if (videoSubsystemInitialized) {
+        multiPassPipeline.recreate(previewPresenter.getExtent());
+        outputMultiPassPipeline.recreate(outputPresenter.getExtent());
+    }
+
+    previewFrameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
+                            static_cast<uint32_t>(previewPresenter.getImageCount()));
+    outputFrameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
+                           static_cast<uint32_t>(outputPresenter.getImageCount()));
+    previewFrameSystem.resetCurrentFrame();
+    previewFrameSystem.waitForAllFences();
+    outputFrameSystem.resetCurrentFrame();
+    outputFrameSystem.waitForAllFences();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1178,6 +1278,14 @@ void Application::mainLoop() {
                         std::cout << "[Mode] Next: " << mode << std::endl;
                         break;
                     }
+                    case SDLK_RETURN:
+                        outputVisualControls = visualControls;
+                        std::cout << "[Output] Controls committed from preview\n";
+                        break;
+                    case SDLK_SPACE:
+                        previewPaused = !previewPaused;
+                        std::cout << "[Preview] " << (previewPaused ? "PAUSED" : "RESUMED") << "\n";
+                        break;
                 }
             }
 
@@ -1210,14 +1318,18 @@ void Application::mainLoop() {
             }
         }
 
-        // ── Begin frame ─────────────────────────────────────────────────────
-        uint32_t    imageIndex;
-        VkResult    result;
-        FrameContext* frame = frameSystem.beginFrame(vulkanContext.getSwapchain(), imageIndex, result);
-
-        if (!frame) {
-            if (result == VK_ERROR_OUT_OF_DATE_KHR) continue;
-            throw std::runtime_error("failed to acquire swapchain image");
+        // ── Begin frame (dual swapchain) ────────────────────────────────────
+        uint32_t    previewImageIndex, outputImageIndex;
+        VkResult    previewResult, outputResult;
+        FrameContext* previewFrame = previewFrameSystem.beginFrame(previewPresenter.getSwapchain(), previewImageIndex, previewResult);
+        if (!previewFrame) {
+            if (previewResult == VK_ERROR_OUT_OF_DATE_KHR) continue;
+            throw std::runtime_error("failed to acquire preview swapchain image");
+        }
+        FrameContext* outputFrame = outputFrameSystem.beginFrame(outputPresenter.getSwapchain(), outputImageIndex, outputResult);
+        if (!outputFrame) {
+            if (outputResult == VK_ERROR_OUT_OF_DATE_KHR) continue;
+            throw std::runtime_error("failed to acquire output swapchain image");
         }
 
         // ── GPU profiling readback (once per second) ────────────────────────
@@ -1243,9 +1355,12 @@ void Application::mainLoop() {
             frameCount = 0;
             fpsAccumTime = 0.0f;
             char title[128];
-            snprintf(title, sizeof(title), "Vulkan Renderer — %.1f FPS", currentFps);
+            if (previewPaused)
+                snprintf(title, sizeof(title), "[PREVIEW PAUSED] Vulkan — %.1f FPS", currentFps);
+            else
+                snprintf(title, sizeof(title), "[PREVIEW] Vulkan — %.1f FPS", currentFps);
             SDL_SetWindowTitle(window.getMainWindow(), title);
-            snprintf(title, sizeof(title), "Controls — %.1f FPS", currentFps);
+            snprintf(title, sizeof(title), "[CONTROLS] UI — %.1f FPS", currentFps);
             SDL_SetWindowTitle(window.getUiWindow(), title);
         }
 
@@ -1295,7 +1410,20 @@ void Application::mainLoop() {
         // ── Actualizar subsistemas ───────────────────────────────────────────
         midiSystem.update();
         oscSystem.update();
-        updateUniformBuffer(frame->frameIndex);
+
+        // Preview renders at 30fps (update UBOs every 2 frames)
+        static uint32_t frameCounter = 0;
+        bool updatePreview = (frameCounter % 2 == 0);
+        if (updatePreview) {
+            updateUniformBuffer(previewFrame->frameIndex, visualControls,
+                                uniformBufferManager, previewPresenter, previewAnim);
+        }
+
+        // Output always renders at 60fps with its own controls
+        updateUniformBuffer(previewFrame->frameIndex, outputVisualControls,
+                            outputUniformBufferManager, outputPresenter, outputAnim);
+
+        ++frameCounter;
 
         if (videoSubsystemInitialized)  videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
         if (videoSubsystemInitialized2) videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
@@ -1310,15 +1438,15 @@ void Application::mainLoop() {
             videoSpeedCache[videoSourcePath2] = lastPlaybackRate2;
         }
 
-        if (videoRenderer)  videoRenderer->update(deltaTime, frame->frameIndex);
-        if (videoRenderer2) videoRenderer2->update(deltaTime, frame->frameIndex);
+        if (videoRenderer)  videoRenderer->update(deltaTime, previewFrame->frameIndex);
+        if (videoRenderer2) videoRenderer2->update(deltaTime, previewFrame->frameIndex);
 
         // ── UI ───────────────────────────────────────────────────────────────
         UIDiagnostics diag;
-        diag.lastFrameFrameIndex       = frame->frameIndex;
-        diag.lastFrameImageIndex       = frame->swapchainImageIndex;
-        diag.swapchainWidth            = vulkanContext.getSwapchainExtent().width;
-        diag.swapchainHeight           = vulkanContext.getSwapchainExtent().height;
+        diag.lastFrameFrameIndex       = previewFrame->frameIndex;
+        diag.lastFrameImageIndex       = previewFrame->swapchainImageIndex;
+        diag.swapchainWidth            = previewPresenter.getExtent().width;
+        diag.swapchainHeight           = previewPresenter.getExtent().height;
         diag.currentMode               = visualControls.playback.activeMode;
         diag.videoReady                = videoSubsystemInitialized && videoTexture.isReady();
         diag.videoWidth                = videoTexture.getWidth();
@@ -1326,6 +1454,8 @@ void Application::mainLoop() {
         diag.animationTime             = debugAnimationTime;
         diag.animationDelta            = debugAnimationDelta;
         diag.animationElapsedSeconds   = debugAnimationElapsedSeconds;
+        diag.gpuPassTimes              = multiPassPipeline.lastGpuPassTimes;
+        diag.gpuTotalTime              = multiPassPipeline.lastGpuTotalTime;
 
         UICallbacks callbacks = buildUICallbacks();
         uiSystem.render(visualControls, videoRandomizer, videoRandomizer2,
@@ -1337,43 +1467,69 @@ void Application::mainLoop() {
                         videoSourcePath, videoSourcePath2);
 
         // ── Command buffer ───────────────────────────────────────────────────
-        recordCommandBuffer(commandBuffers[frame->frameIndex], *frame);
+        recordCommandBuffer(commandBuffers[previewFrame->frameIndex],
+                            *previewFrame, previewImageIndex,
+                            *outputFrame, outputImageIndex);
 
-        // ── Submit ───────────────────────────────────────────────────────────
-        auto renderFinished = frameSystem.getRenderFinishedSemaphore(frame->swapchainImageIndex)
-                                         .value_or(VK_NULL_HANDLE);
-        if (renderFinished == VK_NULL_HANDLE)
+        // ── Submit (wait on both available, signal both finished) ────────────
+        auto previewRenderFinished = previewFrameSystem.getRenderFinishedSemaphore(previewImageIndex).value_or(VK_NULL_HANDLE);
+        auto outputRenderFinished  = outputFrameSystem.getRenderFinishedSemaphore(outputImageIndex).value_or(VK_NULL_HANDLE);
+        if (previewRenderFinished == VK_NULL_HANDLE || outputRenderFinished == VK_NULL_HANDLE)
             throw std::runtime_error("invalid renderFinished semaphore");
 
-        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkSemaphore waits[] = { previewFrame->imageAvailableSemaphore, outputFrame->imageAvailableSemaphore };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkSemaphore signals[] = { previewRenderFinished, outputRenderFinished };
+
         VkSubmitInfo submit{};
         submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit.waitSemaphoreCount   = 1;
-        submit.pWaitSemaphores      = &frame->imageAvailableSemaphore;
-        submit.pWaitDstStageMask    = &waitStage;
+        submit.waitSemaphoreCount   = 2;
+        submit.pWaitSemaphores      = waits;
+        submit.pWaitDstStageMask    = waitStages;
         submit.commandBufferCount   = 1;
-        submit.pCommandBuffers      = &commandBuffers[frame->frameIndex];
-        submit.signalSemaphoreCount = 1;
-        submit.pSignalSemaphores    = &renderFinished;
+        submit.pCommandBuffers      = &commandBuffers[previewFrame->frameIndex];
+        submit.signalSemaphoreCount = 2;
+        submit.pSignalSemaphores    = signals;
 
-        if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, frame->inFlightFence) != VK_SUCCESS)
+        if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS)
             throw std::runtime_error("failed to submit draw command buffer");
 
-        // ── Present ──────────────────────────────────────────────────────────
-        VkSwapchainKHR sc = vulkanContext.getSwapchain();
-        VkPresentInfoKHR present{};
-        present.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present.waitSemaphoreCount = 1;
-        present.pWaitSemaphores    = &renderFinished;
-        present.swapchainCount     = 1;
-        present.pSwapchains        = &sc;
-        present.pImageIndices      = &frame->swapchainImageIndex;
+        // Dummy submit to signal output frame fence so outputFrameSystem can advance
+        VkSubmitInfo dummySubmit{};
+        dummySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 0, &dummySubmit, outputFrame->inFlightFence) != VK_SUCCESS)
+            throw std::runtime_error("failed to submit dummy fence signal");
 
-        const VkResult pr = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &present);
-        if (pr == VK_ERROR_OUT_OF_DATE_KHR || pr == VK_SUBOPTIMAL_KHR)
+        // ── Present preview ────────────────────────────────────────────────────
+        VkSwapchainKHR previewSc = previewPresenter.getSwapchain();
+        VkPresentInfoKHR previewPresent{};
+        previewPresent.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        previewPresent.waitSemaphoreCount = 1;
+        previewPresent.pWaitSemaphores    = &previewRenderFinished;
+        previewPresent.swapchainCount     = 1;
+        previewPresent.pSwapchains        = &previewSc;
+        previewPresent.pImageIndices      = &previewImageIndex;
+
+        VkResult previewPresentResult = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &previewPresent);
+        if (previewPresentResult == VK_ERROR_OUT_OF_DATE_KHR || previewPresentResult == VK_SUBOPTIMAL_KHR)
             window.resetResizeFlag();
 
-        frameSystem.endFrame();
+        // ── Present output ─────────────────────────────────────────────────────
+        VkSwapchainKHR outputSc = outputPresenter.getSwapchain();
+        VkPresentInfoKHR outputPresent{};
+        outputPresent.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        outputPresent.waitSemaphoreCount = 1;
+        outputPresent.pWaitSemaphores    = &outputRenderFinished;
+        outputPresent.swapchainCount     = 1;
+        outputPresent.pSwapchains        = &outputSc;
+        outputPresent.pImageIndices      = &outputImageIndex;
+
+        VkResult outputPresentResult = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &outputPresent);
+        if (outputPresentResult == VK_ERROR_OUT_OF_DATE_KHR || outputPresentResult == VK_SUBOPTIMAL_KHR)
+            window.resetResizeFlag();
+
+        previewFrameSystem.endFrame();
+        outputFrameSystem.endFrame();
 
         // ── Frame rate limiter (adaptive) ─────────────────────────────────
         // Only sleep if we finished the frame faster than the target.
@@ -1555,34 +1711,37 @@ UICallbacks Application::buildUICallbacks() {
 // Uniform buffer
 // ─────────────────────────────────────────────────────────────────────────────
 
-void Application::updateUniformBuffer(uint32_t frameIndex) {
+void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& controls,
+                                      UniformBufferManager& uboManager,
+                                      const VulkanPresenter& presenter,
+                                      AnimState& anim) {
     GlobalParamsUBO ubo{};
 
     // Calculate time delta and accumulate (similar to your system)
     auto currentTime = std::chrono::high_resolution_clock::now();
-    if (!animationTimeInitialized) {
-        lastGlobalTime = currentTime;
-        accumulatedTime = 0.0f;
-        animationTimeInitialized = true;
+    if (!anim.timeInitialized) {
+        anim.lastGlobalTime = currentTime;
+        anim.accumulatedTime = 0.0f;
+        anim.timeInitialized = true;
     }
 
-    float globalDeltaTime = std::chrono::duration<float>(currentTime - lastGlobalTime).count();
-    lastGlobalTime = currentTime;
+    float globalDeltaTime = std::chrono::duration<float>(currentTime - anim.lastGlobalTime).count();
+    anim.lastGlobalTime = currentTime;
 
     // Apply animation speed to delta
-    float speed = std::max(0.01f, visualControls.playback.animationSpeed);
-    accumulatedTime += globalDeltaTime * speed;
+    float speed = std::max(0.01f, controls.playback.animationSpeed);
+    anim.accumulatedTime += globalDeltaTime * speed;
 
-    debugAnimationElapsedSeconds = accumulatedTime;
-    debugAnimationDelta = globalDeltaTime;
-    float time = accumulatedTime;
+    anim.debugElapsed = anim.accumulatedTime;
+    anim.debugDelta = globalDeltaTime;
+    float time = anim.accumulatedTime;
 
     constexpr float kTwoPi = 6.28318530718f;
-    if (visualControls.playback.enableTempoLfo) {
-        float lfoSpeed = std::max(0.01f, visualControls.playback.tempoLfoSpeed);
+    if (controls.playback.enableTempoLfo) {
+        float lfoSpeed = std::max(0.01f, controls.playback.tempoLfoSpeed);
         float phaseAdvance = globalDeltaTime * lfoSpeed * kTwoPi;
-        visualControls.playback.tempoLfoPhase = std::fmod(visualControls.playback.tempoLfoPhase + phaseAdvance, kTwoPi);
-        if (visualControls.playback.tempoLfoPhase < 0.0f) visualControls.playback.tempoLfoPhase += kTwoPi;
+        controls.playback.tempoLfoPhase = std::fmod(controls.playback.tempoLfoPhase + phaseAdvance, kTwoPi);
+        if (controls.playback.tempoLfoPhase < 0.0f) controls.playback.tempoLfoPhase += kTwoPi;
     }
 
     // Update audio values from AudioSystem (normalized + smoothed)
@@ -1591,288 +1750,287 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
         return (gamma != 1.0f) ? std::pow(scaled, gamma) : scaled;
     };
 
-    float inputGain = visualControls.audio.inputGain;
+    float inputGain = controls.audio.inputGain;
     float liveEnergy = normalizeAudioLevel(audioSystem.getRMS() * inputGain,           1.0f, 0.85f);
     float liveBass   = normalizeAudioLevel(audioSystem.getSmoothedBass() * inputGain,  2.0f, 1.10f);
     float liveMid    = normalizeAudioLevel(audioSystem.getSmoothedMid() * inputGain,   2.0f, 1.00f);
     float liveHigh   = normalizeAudioLevel(audioSystem.getSmoothedHigh() * inputGain,   2.0f, 1.00f);
 
     // Per-band EQ gains
-    liveBass = std::clamp(liveBass * visualControls.audio.bassGain, 0.0f, 1.0f);
-    liveMid  = std::clamp(liveMid  * visualControls.audio.midGain,  0.0f, 1.0f);
-    liveHigh = std::clamp(liveHigh * visualControls.audio.highGain, 0.0f, 1.0f);
+    liveBass = std::clamp(liveBass * controls.audio.bassGain, 0.0f, 1.0f);
+    liveMid  = std::clamp(liveMid  * controls.audio.midGain,  0.0f, 1.0f);
+    liveHigh = std::clamp(liveHigh * controls.audio.highGain, 0.0f, 1.0f);
 
     float tempoValue;
-    if (visualControls.system.enableAudioReactive) {
+    if (controls.system.enableAudioReactive) {
         // Auto-tempo driven by audio energy: 0x (silence) to 5x (loud)
         // Power curve makes it harder to reach 5 (needs very high energy)
-        float drive = visualControls.audio.reactiveDrive;
+        float drive = controls.audio.reactiveDrive;
         float curvedEnergy = std::pow(liveEnergy, 1.5f);
         tempoValue = curvedEnergy * 5.0f * drive;
         tempoValue = std::clamp(tempoValue, 0.0f, 5.0f);
         // Sync playback.tempo so the UI slider moves too
-        visualControls.playback.tempo = tempoValue;
+        controls.playback.tempo = tempoValue;
         // Note: video playback rate is NOT synced to tempo — videos keep their manual speed
     } else {
-        tempoValue = visualControls.playback.tempo;
-        if (visualControls.playback.enableTempoLfo) {
-            float lfoValue = std::sin(visualControls.playback.tempoLfoPhase);
-            tempoValue += visualControls.playback.tempoLfoDepth * lfoValue;
+        tempoValue = controls.playback.tempo;
+        if (controls.playback.enableTempoLfo) {
+            float lfoValue = std::sin(controls.playback.tempoLfoPhase);
+            tempoValue += controls.playback.tempoLfoDepth * lfoValue;
         }
         tempoValue = std::clamp(tempoValue, 0.05f, 8.0f);
     }
 
     // Shader time: accumulates at tempo speed so procedural layers
     // (Layer 0, Layer 1, Anaglyph) animate with audio energy
-    static float shaderTime = 0.0f;
-    if (visualControls.system.enableAudioReactive) {
-        shaderTime += globalDeltaTime * tempoValue;
+    if (controls.system.enableAudioReactive) {
+        anim.shaderTime += globalDeltaTime * tempoValue;
     } else {
-        shaderTime += globalDeltaTime * std::max(0.01f, visualControls.playback.animationSpeed);
+        anim.shaderTime += globalDeltaTime * std::max(0.01f, controls.playback.animationSpeed);
     }
 
-    auto& reactive = visualControls.runtime.audioReactive;
-    reactive.enabled = visualControls.system.enableAudioReactive;
+    auto& reactive = controls.runtime.audioReactive;
+    reactive.enabled = controls.system.enableAudioReactive;
     reactive.energy = liveEnergy;
     reactive.bass   = liveBass;
     reactive.mid    = liveMid;
     reactive.high   = liveHigh;
 
-    if (visualControls.system.enableAudioReactive) {
-        visualControls.audio.energy = liveEnergy;
-        visualControls.audio.bass   = liveBass;
-        visualControls.audio.mid    = liveMid;
-        visualControls.audio.high   = liveHigh;
+    if (controls.system.enableAudioReactive) {
+        controls.audio.energy = liveEnergy;
+        controls.audio.bass   = liveBass;
+        controls.audio.mid    = liveMid;
+        controls.audio.high   = liveHigh;
     }
 
     // Set basic UBO values
     ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 2.5f), glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
     ubo.proj = glm::perspective(glm::radians(45.0f),
-                                vulkanContext.getSwapchainExtent().width / static_cast<float>(vulkanContext.getSwapchainExtent().height),
+                                presenter.getExtent().width / static_cast<float>(presenter.getExtent().height),
                                 0.1f, 10.0f);
     ubo.proj[1][1] *= -1.0f;
-    ubo.resolution = glm::vec2(static_cast<float>(vulkanContext.getSwapchainExtent().width),
-                               static_cast<float>(vulkanContext.getSwapchainExtent().height));
+    ubo.resolution = glm::vec2(static_cast<float>(presenter.getExtent().width),
+                               static_cast<float>(presenter.getExtent().height));
     ubo.videoResolution = glm::vec2(static_cast<float>(videoTexture.getWidth()),
                                     static_cast<float>(videoTexture.getHeight()));
-    ubo.time = visualControls.system.enableAudioReactive ? shaderTime : time;
-    ubo.mode = visualControls.playback.activeMode;
-    ubo.videoMix = visualControls.playback.videoMix;
+    ubo.time = controls.system.enableAudioReactive ? anim.shaderTime : time;
+    ubo.mode = controls.playback.activeMode;
+    ubo.videoMix = controls.playback.videoMix;
     ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.isReady()) ? 1.0f : 0.0f;
-    ubo.video2Mix = visualControls.playback.video2Mix;
-    ubo.video2Available = (visualControls.playback.enableDualVideo && videoSubsystemInitialized2 && videoTexture2.isReady()) ? 1.0f : 0.0f;
-    ubo.video2BlendMode = visualControls.playback.video2BlendMode;
+    ubo.video2Mix = controls.playback.video2Mix;
+    ubo.video2Available = (controls.playback.enableDualVideo && videoSubsystemInitialized2 && videoTexture2.isReady()) ? 1.0f : 0.0f;
+    ubo.video2BlendMode = controls.playback.video2BlendMode;
 
     // Set visual control values
-    ubo.primaryColor = visualControls.color.primaryColor;
-    ubo.secondaryColor = visualControls.color.secondaryColor;
-    ubo.colorBlend = visualControls.color.colorBlend;
+    ubo.primaryColor = controls.color.primaryColor;
+    ubo.secondaryColor = controls.color.secondaryColor;
+    ubo.colorBlend = controls.color.colorBlend;
     ubo.tempo = tempoValue;
-    ubo.energy = visualControls.audio.energy;
-    ubo.bass = visualControls.audio.bass;
-    ubo.mid = visualControls.audio.mid;
-    ubo.high = visualControls.audio.high;
-    ubo.audioReactiveDrive = visualControls.audio.reactiveDrive;
+    ubo.energy = controls.audio.energy;
+    ubo.bass = controls.audio.bass;
+    ubo.mid = controls.audio.mid;
+    ubo.high = controls.audio.high;
+    ubo.audioReactiveDrive = controls.audio.reactiveDrive;
     
     // Audio reactivity parameters
-    ubo.audioWarpResponse = visualControls.audio.warpResponse;
-    ubo.audioFeedbackResponse = visualControls.audio.feedbackResponse;
-    ubo.audioBlurResponse = visualControls.audio.blurResponse;
-    ubo.audioColorResponse = visualControls.audio.colorResponse;
-    ubo.audioGlitchResponse = visualControls.audio.glitchResponse;
-    ubo.audioBeatSync = visualControls.audio.beatSync;
-    ubo.audioLfoRate = visualControls.audio.lfoRate;
-    ubo.enableAudioReactive = visualControls.system.enableAudioReactive ? 1 : 0;
+    ubo.audioWarpResponse = controls.audio.warpResponse;
+    ubo.audioFeedbackResponse = controls.audio.feedbackResponse;
+    ubo.audioBlurResponse = controls.audio.blurResponse;
+    ubo.audioColorResponse = controls.audio.colorResponse;
+    ubo.audioGlitchResponse = controls.audio.glitchResponse;
+    ubo.audioBeatSync = controls.audio.beatSync;
+    ubo.audioLfoRate = controls.audio.lfoRate;
+    ubo.enableAudioReactive = controls.system.enableAudioReactive ? 1 : 0;
     
     // Post FX basicos
-    ubo.grayscaleAmount = visualControls.playback.grayscaleAmount;
-    ubo.sharpenAmount = visualControls.playback.sharpenAmount;
-    ubo.upscaleEnabled = visualControls.playback.upscaleEnabled ? 1.0f : 0.0f;
+    ubo.grayscaleAmount = controls.playback.grayscaleAmount;
+    ubo.sharpenAmount = controls.playback.sharpenAmount;
+    ubo.upscaleEnabled = controls.playback.upscaleEnabled ? 1.0f : 0.0f;
 
     // Enable/Disable flags for post FX
-    ubo.enablePostCrtCurvature = visualControls.post.enablePostCrtCurvature ? 1 : 0;
-    ubo.enablePostScanMask = visualControls.post.enablePostScanMask ? 1 : 0;
-    ubo.enablePostVignette = visualControls.post.enablePostVignette ? 1 : 0;
-    ubo.enablePostFishEye = visualControls.post.enablePostFishEye ? 1 : 0;
-    ubo.enablePostBloom = visualControls.post.enablePostBloom ? 1 : 0;
-    ubo.enablePostAberration = visualControls.post.enablePostAberration ? 1 : 0;
-    ubo.enablePostGrain = visualControls.post.enablePostGrain ? 1 : 0;
-    ubo.enablePostBend = visualControls.post.enablePostBend ? 1 : 0;
-    ubo.enablePostGlitch = visualControls.post.enablePostGlitch ? 1 : 0;
-    ubo.enablePostColorBalance = visualControls.post.enablePostColorBalance ? 1 : 0;
+    ubo.enablePostCrtCurvature = controls.post.enablePostCrtCurvature ? 1 : 0;
+    ubo.enablePostScanMask = controls.post.enablePostScanMask ? 1 : 0;
+    ubo.enablePostVignette = controls.post.enablePostVignette ? 1 : 0;
+    ubo.enablePostFishEye = controls.post.enablePostFishEye ? 1 : 0;
+    ubo.enablePostBloom = controls.post.enablePostBloom ? 1 : 0;
+    ubo.enablePostAberration = controls.post.enablePostAberration ? 1 : 0;
+    ubo.enablePostGrain = controls.post.enablePostGrain ? 1 : 0;
+    ubo.enablePostBend = controls.post.enablePostBend ? 1 : 0;
+    ubo.enablePostGlitch = controls.post.enablePostGlitch ? 1 : 0;
+    ubo.enablePostColorBalance = controls.post.enablePostColorBalance ? 1 : 0;
 
     // Enable/Disable flags for VJAY BASICS
-    ubo.enableColorGrading = visualControls.color.enableColorGrading ? 1 : 0;
-    ubo.enableFeedback = visualControls.temporal.enableFeedback ? 1 : 0;
-    ubo.enableDistortion = visualControls.fx.enableDistortion ? 1 : 0;
-    ubo.enableBlurMotion = visualControls.fx.enableBlurMotion ? 1 : 0;
-    ubo.enableSharpen = visualControls.fx.enableSharpen ? 1 : 0;
-    ubo.enablePostGlitch = visualControls.fx.enableGlitch ? 1 : 0;
-    ubo.enableBlending = visualControls.blending.enableBlending ? 1 : 0;
-    ubo.enableAnalog = visualControls.post.enableAnalog ? 1 : 0;
-    ubo.enableAudioReactive = visualControls.system.enableAudioReactive ? 1 : 0;
-    ubo.enableTemporal = visualControls.temporal.enableTemporal ? 1 : 0;
+    ubo.enableColorGrading = controls.color.enableColorGrading ? 1 : 0;
+    ubo.enableFeedback = controls.temporal.enableFeedback ? 1 : 0;
+    ubo.enableDistortion = controls.fx.enableDistortion ? 1 : 0;
+    ubo.enableBlurMotion = controls.fx.enableBlurMotion ? 1 : 0;
+    ubo.enableSharpen = controls.fx.enableSharpen ? 1 : 0;
+    ubo.enablePostGlitch = controls.fx.enableGlitch ? 1 : 0;
+    ubo.enableBlending = controls.blending.enableBlending ? 1 : 0;
+    ubo.enableAnalog = controls.post.enableAnalog ? 1 : 0;
+    ubo.enableAudioReactive = controls.system.enableAudioReactive ? 1 : 0;
+    ubo.enableTemporal = controls.temporal.enableTemporal ? 1 : 0;
 
     // Enable/Disable flags for VJAY EXTRA
-    ubo.enablePixelate = visualControls.fx.enablePixelate ? 1 : 0;
-    ubo.enableStrobe = visualControls.fx.enableStrobe ? 1 : 0;
-    ubo.enableThreshold = visualControls.fx.enableThreshold ? 1 : 0;
-    ubo.enableSlowZoom = visualControls.fx.enableSlowZoom ? 1 : 0;
-    ubo.enableMirror = visualControls.fx.enableMirror ? 1 : 0;
-    ubo.enableInvert = visualControls.fx.enableInvert ? 1 : 0;
-    ubo.enablePosterize = visualControls.fx.enablePosterize ? 1 : 0;
-    ubo.enableInfrared = visualControls.fx.enableInfrared ? 1 : 0;
-    ubo.enableZoomPulse = visualControls.fx.enableZoomPulse ? 1 : 0;
-    ubo.enableRGBShift = visualControls.fx.enableRGBShift ? 1 : 0;
+    ubo.enablePixelate = controls.fx.enablePixelate ? 1 : 0;
+    ubo.enableStrobe = controls.fx.enableStrobe ? 1 : 0;
+    ubo.enableThreshold = controls.fx.enableThreshold ? 1 : 0;
+    ubo.enableSlowZoom = controls.fx.enableSlowZoom ? 1 : 0;
+    ubo.enableMirror = controls.fx.enableMirror ? 1 : 0;
+    ubo.enableInvert = controls.fx.enableInvert ? 1 : 0;
+    ubo.enablePosterize = controls.fx.enablePosterize ? 1 : 0;
+    ubo.enableInfrared = controls.fx.enableInfrared ? 1 : 0;
+    ubo.enableZoomPulse = controls.fx.enableZoomPulse ? 1 : 0;
+    ubo.enableRGBShift = controls.fx.enableRGBShift ? 1 : 0;
 
     // CRT
-    ubo.crtCurvature = visualControls.post.crtCurvature;
-    ubo.crtHorizontalCurvature = visualControls.post.crtHorizontalCurvature;
-    ubo.crtScanlineIntensity = visualControls.post.crtScanlineIntensity;
-    ubo.crtMaskIntensity = visualControls.post.crtMaskIntensity;
-    ubo.crtVignette = visualControls.post.crtVignette;
-    ubo.crtFishEye = visualControls.post.crtFishEye;
+    ubo.crtCurvature = controls.post.crtCurvature;
+    ubo.crtHorizontalCurvature = controls.post.crtHorizontalCurvature;
+    ubo.crtScanlineIntensity = controls.post.crtScanlineIntensity;
+    ubo.crtMaskIntensity = controls.post.crtMaskIntensity;
+    ubo.crtVignette = controls.post.crtVignette;
+    ubo.crtFishEye = controls.post.crtFishEye;
     
     // Bloom
-    ubo.bloomIntensity = visualControls.post.bloomIntensity;
-    ubo.bloomThreshold = visualControls.post.bloomThreshold;
+    ubo.bloomIntensity = controls.post.bloomIntensity;
+    ubo.bloomThreshold = controls.post.bloomThreshold;
     
     // Aberracion / grano / bend / glitch
-    ubo.aberrationAmount = visualControls.post.aberrationAmount;
-    ubo.grainStrength = visualControls.post.grainStrength;
-    ubo.bendAmount = visualControls.fx.bendAmount;
-    ubo.glitchAmount = visualControls.fx.glitchAmount;
+    ubo.aberrationAmount = controls.post.aberrationAmount;
+    ubo.grainStrength = controls.post.grainStrength;
+    ubo.bendAmount = controls.fx.bendAmount;
+    ubo.glitchAmount = controls.fx.glitchAmount;
     
     // Color grading
-    ubo.colorBalance = visualControls.color.colorBalance;
-    ubo.gradeBrightness = visualControls.color.gradeBrightness;
-    ubo.gradeContrast = visualControls.color.gradeContrast;
-    ubo.gradeSaturation = visualControls.color.gradeSaturation;
-    ubo.gradeHueShift = visualControls.color.gradeHueShift;
-    ubo.gradeGamma = visualControls.color.gradeGamma;
-    ubo.colorLUTIndex = visualControls.color.colorLUTIndex;
-    ubo.splitToneBalance = visualControls.color.splitToneBalance;
-    ubo.splitToneShadows = visualControls.color.splitToneShadows;
-    ubo.splitToneHighlights = visualControls.color.splitToneHighlights;
+    ubo.colorBalance = controls.color.colorBalance;
+    ubo.gradeBrightness = controls.color.gradeBrightness;
+    ubo.gradeContrast = controls.color.gradeContrast;
+    ubo.gradeSaturation = controls.color.gradeSaturation;
+    ubo.gradeHueShift = controls.color.gradeHueShift;
+    ubo.gradeGamma = controls.color.gradeGamma;
+    ubo.colorLUTIndex = controls.color.colorLUTIndex;
+    ubo.splitToneBalance = controls.color.splitToneBalance;
+    ubo.splitToneShadows = controls.color.splitToneShadows;
+    ubo.splitToneHighlights = controls.color.splitToneHighlights;
     
     // Feedback temporal
-    ubo.feedbackAmount = visualControls.temporal.feedbackAmount;
-    ubo.trailStrength = visualControls.temporal.trailStrength;
-    ubo.temporalAccumulation = visualControls.temporal.temporalAccumulation;
-    ubo.feedbackDecay = visualControls.temporal.feedbackDecay;
-    ubo.recursiveBlend = visualControls.temporal.recursiveBlend;
+    ubo.feedbackAmount = controls.temporal.feedbackAmount;
+    ubo.trailStrength = controls.temporal.trailStrength;
+    ubo.temporalAccumulation = controls.temporal.temporalAccumulation;
+    ubo.feedbackDecay = controls.temporal.feedbackDecay;
+    ubo.recursiveBlend = controls.temporal.recursiveBlend;
     
     // Distorsion espacial
-    ubo.uvWarpStrength = visualControls.fx.uvWarpStrength;
-    ubo.rippleStrength = visualControls.fx.rippleStrength;
-    ubo.rippleFrequency = visualControls.fx.rippleFrequency;
-    ubo.swirlStrength = visualControls.fx.swirlStrength;
-    ubo.displacementAmount = visualControls.fx.displacementAmount;
-    ubo.kaleidoSegments = visualControls.fx.kaleidoSegments;
-    ubo.tunnelDepth = visualControls.fx.tunnelDepth;
-    ubo.tunnelCurvature = visualControls.fx.tunnelCurvature;
+    ubo.uvWarpStrength = controls.fx.uvWarpStrength;
+    ubo.rippleStrength = controls.fx.rippleStrength;
+    ubo.rippleFrequency = controls.fx.rippleFrequency;
+    ubo.swirlStrength = controls.fx.swirlStrength;
+    ubo.displacementAmount = controls.fx.displacementAmount;
+    ubo.kaleidoSegments = controls.fx.kaleidoSegments;
+    ubo.tunnelDepth = controls.fx.tunnelDepth;
+    ubo.tunnelCurvature = controls.fx.tunnelCurvature;
     
     // Blur y motion
-    ubo.gaussianBlur = visualControls.fx.gaussianBlur;
-    ubo.directionalBlur = visualControls.fx.directionalBlur;
-    ubo.directionalBlurAngle = visualControls.fx.directionalBlurAngle;
-    ubo.zoomBlur = visualControls.fx.zoomBlur;
-    ubo.motionBlur = visualControls.fx.motionBlur;
-    ubo.temporalBlur = visualControls.fx.temporalBlur;
+    ubo.gaussianBlur = controls.fx.gaussianBlur;
+    ubo.directionalBlur = controls.fx.directionalBlur;
+    ubo.directionalBlurAngle = controls.fx.directionalBlurAngle;
+    ubo.zoomBlur = controls.fx.zoomBlur;
+    ubo.motionBlur = controls.fx.motionBlur;
+    ubo.temporalBlur = controls.fx.temporalBlur;
     
     // Sharpening
-    ubo.unsharpMask = visualControls.fx.unsharpMask;
-    ubo.casAmount = visualControls.fx.casAmount;
-    ubo.localContrast = visualControls.fx.localContrast;
+    ubo.unsharpMask = controls.fx.unsharpMask;
+    ubo.casAmount = controls.fx.casAmount;
+    ubo.localContrast = controls.fx.localContrast;
     
     // Glitch detallado
-    ubo.glitchDatamosh = visualControls.fx.glitchDatamosh;
-    ubo.glitchRGBSplit = visualControls.fx.glitchRGBSplit;
-    ubo.glitchScanlineBreak = visualControls.fx.glitchScanlineBreak;
-    ubo.glitchJitter = visualControls.fx.glitchJitter;
-    ubo.glitchTearing = visualControls.fx.glitchTearing;
-    ubo.glitchPixelSort = visualControls.fx.glitchPixelSort;
-    ubo.glitchBufferCorruption = visualControls.fx.glitchBufferCorruption;
+    ubo.glitchDatamosh = controls.fx.glitchDatamosh;
+    ubo.glitchRGBSplit = controls.fx.glitchRGBSplit;
+    ubo.glitchScanlineBreak = controls.fx.glitchScanlineBreak;
+    ubo.glitchJitter = controls.fx.glitchJitter;
+    ubo.glitchTearing = controls.fx.glitchTearing;
+    ubo.glitchPixelSort = controls.fx.glitchPixelSort;
+    ubo.glitchBufferCorruption = controls.fx.glitchBufferCorruption;
     
     // Blending / compositing
-    ubo.blendModeProcedural = visualControls.blending.blendModeProcedural;
-    ubo.blendModeVideo = visualControls.blending.blendModeVideo;
-    ubo.blendModeFeedback = visualControls.blending.blendModeFeedback;
-    ubo.blendProceduralMix = visualControls.blending.blendProceduralMix;
-    ubo.blendVideoMix = visualControls.blending.blendVideoMix;
-    ubo.blendFeedbackMix = visualControls.blending.blendFeedbackMix;
+    ubo.blendModeProcedural = controls.blending.blendModeProcedural;
+    ubo.blendModeVideo = controls.blending.blendModeVideo;
+    ubo.blendModeFeedback = controls.blending.blendModeFeedback;
+    ubo.blendProceduralMix = controls.blending.blendProceduralMix;
+    ubo.blendVideoMix = controls.blending.blendVideoMix;
+    ubo.blendFeedbackMix = controls.blending.blendFeedbackMix;
     
     // Analog / CRT avanzado
-    ubo.analogScanlineFocus = visualControls.post.analogScanlineFocus;
-    ubo.analogMaskBalance = visualControls.post.analogMaskBalance;
+    ubo.analogScanlineFocus = controls.post.analogScanlineFocus;
+    ubo.analogMaskBalance = controls.post.analogMaskBalance;
     
     // Temporal
-    ubo.frameAccumulation = visualControls.playback.frameAccumulation;
-    ubo.slowMotionFactor = visualControls.playback.slowMotionFactor;
-    ubo.temporalInterpolation = visualControls.playback.temporalInterpolation;
+    ubo.frameAccumulation = controls.playback.frameAccumulation;
+    ubo.slowMotionFactor = controls.playback.slowMotionFactor;
+    ubo.temporalInterpolation = controls.playback.temporalInterpolation;
     
     // Efectos extra (VJAY EXTRA)
-    ubo.pixelateAmount = visualControls.fx.pixelateAmount;
-    ubo.strobeSpeed = visualControls.fx.strobeSpeed;
-    ubo.thresholdLevel = visualControls.fx.thresholdLevel;
-    ubo.slowZoomAmount = visualControls.fx.slowZoomAmount;
-    ubo.enableEdgeDetect = visualControls.fx.enableEdgeDetect ? 1 : 0;
-    ubo.edgeStrength = visualControls.fx.edgeStrength;
-    ubo.edgeThreshold = visualControls.fx.edgeThreshold;
-    ubo.edgeBlend = visualControls.fx.edgeBlend;
-    ubo.edgeColor = visualControls.fx.edgeColor;
-    ubo.mirrorAmount = visualControls.fx.mirrorAmount;
-    ubo.posterizeLevels = visualControls.fx.posterizeLevels;
-    ubo.zoomPulseAmount = visualControls.fx.zoomPulseAmount;
-    ubo.rgbShiftAmount = visualControls.fx.rgbShiftAmount;
+    ubo.pixelateAmount = controls.fx.pixelateAmount;
+    ubo.strobeSpeed = controls.fx.strobeSpeed;
+    ubo.thresholdLevel = controls.fx.thresholdLevel;
+    ubo.slowZoomAmount = controls.fx.slowZoomAmount;
+    ubo.enableEdgeDetect = controls.fx.enableEdgeDetect ? 1 : 0;
+    ubo.edgeStrength = controls.fx.edgeStrength;
+    ubo.edgeThreshold = controls.fx.edgeThreshold;
+    ubo.edgeBlend = controls.fx.edgeBlend;
+    ubo.edgeColor = controls.fx.edgeColor;
+    ubo.mirrorAmount = controls.fx.mirrorAmount;
+    ubo.posterizeLevels = controls.fx.posterizeLevels;
+    ubo.zoomPulseAmount = controls.fx.zoomPulseAmount;
+    ubo.rgbShiftAmount = controls.fx.rgbShiftAmount;
     
     // FXAA
-    ubo.enableFXAA = visualControls.system.enableFXAA ? 1 : 0;
-    ubo.fxaaQualitySubpix = visualControls.system.fxaaQualitySubpix;
-    ubo.fxaaQualityEdgeThreshold = visualControls.system.fxaaQualityEdgeThreshold;
-    ubo.fxaaQualityEdgeThresholdMin = visualControls.system.fxaaQualityEdgeThresholdMin;
+    ubo.enableFXAA = controls.system.enableFXAA ? 1 : 0;
+    ubo.fxaaQualitySubpix = controls.system.fxaaQualitySubpix;
+    ubo.fxaaQualityEdgeThreshold = controls.system.fxaaQualityEdgeThreshold;
+    ubo.fxaaQualityEdgeThresholdMin = controls.system.fxaaQualityEdgeThresholdMin;
 
     // Grid / Mirroring
-    ubo.enableGrid = visualControls.grid.enabled ? 1 : 0;
-    ubo.gridMode = visualControls.grid.mode;
-    ubo.gridCount = visualControls.grid.count;
-    ubo.gridRows = visualControls.grid.rows;
-    ubo.gridColumns = visualControls.grid.columns;
-    ubo.gridMirrorCells = visualControls.grid.mirrorCells ? 1 : 0;
-    ubo.gridShowLines = visualControls.grid.showLines ? 1 : 0;
-    ubo.gridLineWidth = visualControls.grid.lineWidth;
-    ubo.gridLineIntensity = visualControls.grid.lineIntensity;
-    ubo.gridLineColor = visualControls.grid.lineColor;
+    ubo.enableGrid = controls.grid.enabled ? 1 : 0;
+    ubo.gridMode = controls.grid.mode;
+    ubo.gridCount = controls.grid.count;
+    ubo.gridRows = controls.grid.rows;
+    ubo.gridColumns = controls.grid.columns;
+    ubo.gridMirrorCells = controls.grid.mirrorCells ? 1 : 0;
+    ubo.gridShowLines = controls.grid.showLines ? 1 : 0;
+    ubo.gridLineWidth = controls.grid.lineWidth;
+    ubo.gridLineIntensity = controls.grid.lineIntensity;
+    ubo.gridLineColor = controls.grid.lineColor;
 
     // Camera movement
-    ubo.cameraZoom = visualControls.camera.zoom;
-    ubo.cameraPanX = visualControls.camera.panX;
-    ubo.cameraPanY = visualControls.camera.panY;
-    ubo.cameraRotation = visualControls.camera.rotation;
-    ubo.enableCameraMovement = visualControls.camera.enableMovement ? 1 : 0;
+    ubo.cameraZoom = controls.camera.zoom;
+    ubo.cameraPanX = controls.camera.panX;
+    ubo.cameraPanY = controls.camera.panY;
+    ubo.cameraRotation = controls.camera.rotation;
+    ubo.enableCameraMovement = controls.camera.enableMovement ? 1 : 0;
 
     // Final RGB overlay
-    ubo.rgbOverlay = visualControls.color.rgbOverlay;
-    ubo.enableRgbOverlay = visualControls.color.enableRgbOverlay ? 1 : 0;
+    ubo.rgbOverlay = controls.color.rgbOverlay;
+    ubo.enableRgbOverlay = controls.color.enableRgbOverlay ? 1 : 0;
 
     // ------------------------------------------------------------------
     // AUDIO REACTIVITY AUTO-MODULATION
     // When enabled, audio levels automatically drive effect intensities
     // so the layers animate without manual slider tweaking.
     // ------------------------------------------------------------------
-    float envClamped  = std::clamp(visualControls.audio.energy, 0.0f, 1.0f);
-    float bassClamped = std::clamp(visualControls.audio.bass,   0.0f, 1.0f);
-    float midClamped  = std::clamp(visualControls.audio.mid,    0.0f, 1.0f);
-    float highClamped = std::clamp(visualControls.audio.high,   0.0f, 1.0f);
+    float envClamped  = std::clamp(controls.audio.energy, 0.0f, 1.0f);
+    float bassClamped = std::clamp(controls.audio.bass,   0.0f, 1.0f);
+    float midClamped  = std::clamp(controls.audio.mid,    0.0f, 1.0f);
+    float highClamped = std::clamp(controls.audio.high,   0.0f, 1.0f);
 
-    float warpGain     = std::max(0.0f, visualControls.audio.warpResponse);
-    float feedbackGain = std::max(0.0f, visualControls.audio.feedbackResponse);
-    float blurGain     = std::max(0.0f, visualControls.audio.blurResponse);
-    float colorGain    = std::max(0.0f, visualControls.audio.colorResponse);
-    float glitchGain   = std::max(0.0f, visualControls.audio.glitchResponse);
+    float warpGain     = std::max(0.0f, controls.audio.warpResponse);
+    float feedbackGain = std::max(0.0f, controls.audio.feedbackResponse);
+    float blurGain     = std::max(0.0f, controls.audio.blurResponse);
+    float colorGain    = std::max(0.0f, controls.audio.colorResponse);
+    float glitchGain   = std::max(0.0f, controls.audio.glitchResponse);
 
-    if (visualControls.system.enableAudioReactive) {
+    if (controls.system.enableAudioReactive) {
         // Spatial distortion (Pass B)
         ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    envClamped  * 0.15f * warpGain);
         ubo.rippleStrength    = std::max(ubo.rippleStrength,    bassClamped * 0.30f * warpGain);
@@ -1897,7 +2055,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
         ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    highClamped * 0.03f * colorGain);
 
         // Camera movement (2D layer camera)
-        if (visualControls.camera.enableMovement) {
+        if (controls.camera.enableMovement) {
             // Very subtle zoom pulse driven by bass (max 6% closer)
             float zoomPulse = 1.0f + (bassClamped * 0.06f + envClamped * 0.02f) * warpGain;
             ubo.cameraZoom = std::max(ubo.cameraZoom, zoomPulse);
@@ -1934,52 +2092,106 @@ void Application::updateUniformBuffer(uint32_t frameIndex) {
     // Video transition crossfade progress
     ubo.transitionProgress = transitionProgress;
 
-    uniformBufferManager.update(frameIndex, ubo, vulkanContext.getDevice());
+    uboManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Record command buffer
 // ─────────────────────────────────────────────────────────────────────────────
 
-void Application::recordCommandBuffer(VkCommandBuffer cmd, FrameContext& frame) {
+void Application::recordCommandBuffer(VkCommandBuffer cmd,
+                                      FrameContext& previewFrame, uint32_t previewImageIndex,
+                                      FrameContext& outputFrame, uint32_t outputImageIndex) {
     VkCommandBufferBeginInfo begin{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     if (vkBeginCommandBuffer(cmd, &begin) != VK_SUCCESS)
         throw std::runtime_error("failed to begin command buffer");
 
-    videoTexture.recordPendingUpload(cmd, frame.frameIndex, vulkanContext.getGraphicsQueue());
+    videoTexture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
     if (videoSubsystemInitialized2 && videoTexture2.isReady())
-        videoTexture2.recordPendingUpload(cmd, frame.frameIndex, vulkanContext.getGraphicsQueue());
+        videoTexture2.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
 
-    if (videoSubsystemInitialized) {
-        multiPassPipeline.execute(
-            cmd, frame.frameIndex,
-            descriptorSetManager.getSet(frame.frameIndex),
-            renderPass, swapchainFramebuffers, frame.swapchainImageIndex,
-            fullscreenPipeline, pipelineLayout,
-            fullscreenDescriptorSets[frame.frameIndex],
-            vulkanContext.getSwapchainExtent(), swapchainSampler
-        );
-    } else {
-        // Fallback negro cuando no hay vídeo
+    if (previewPaused) {
+        // Paused: skip multiPass pipeline, just black + PAUSED label (saves GPU)
         VkClearValue clear{ .color = {0.f, 0.f, 0.f, 1.f} };
-        const auto ext = vulkanContext.getSwapchainExtent();
+        const auto ext = previewPresenter.getExtent();
         VkRenderPassBeginInfo rp{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
         rp.renderPass        = renderPass;
-        rp.framebuffer       = swapchainFramebuffers[frame.swapchainImageIndex];
+        rp.framebuffer       = previewPresenter.getFramebuffers()[previewImageIndex];
         rp.renderArea.extent = ext;
         rp.clearValueCount   = 1;
         rp.pClearValues      = &clear;
 
         vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
-        VkDescriptorSet ds = fullscreenDescriptorSets[frame.frameIndex];
+        VkDescriptorSet ds = fullscreenDescriptorSets[previewFrame.frameIndex];
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &ds, 0, nullptr);
+        int previewOverlay = 2; // PAUSED
+        vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &previewOverlay);
 
         VkViewport vp{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
         VkRect2D   sc{ {0,0}, ext };
         vkCmdSetViewport(cmd, 0, 1, &vp);
         vkCmdSetScissor(cmd, 0, 1, &sc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdEndRenderPass(cmd);
+    } else if (videoSubsystemInitialized) {
+        multiPassPipeline.execute(
+            cmd, previewFrame.frameIndex,
+            descriptorSetManager.getSet(previewFrame.frameIndex),
+            renderPass, previewPresenter.getFramebuffers(), previewImageIndex,
+            fullscreenPipeline, pipelineLayout,
+            fullscreenDescriptorSets[previewFrame.frameIndex],
+            previewPresenter.getExtent(), swapchainSampler,
+            1 // previewOverlay
+        );
+    } else {
+        // Fallback negro cuando no hay vídeo
+        VkClearValue clear{ .color = {0.f, 0.f, 0.f, 1.f} };
+        const auto ext = previewPresenter.getExtent();
+        VkRenderPassBeginInfo rp{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+        rp.renderPass        = renderPass;
+        rp.framebuffer       = previewPresenter.getFramebuffers()[previewImageIndex];
+        rp.renderArea.extent = ext;
+        rp.clearValueCount   = 1;
+        rp.pClearValues      = &clear;
+
+        vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fullscreenPipeline);
+        VkDescriptorSet ds = fullscreenDescriptorSets[previewFrame.frameIndex];
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &ds, 0, nullptr);
+        int previewOverlay = 1;
+        vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &previewOverlay);
+
+        VkViewport vp{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
+        VkRect2D   sc{ {0,0}, ext };
+        vkCmdSetViewport(cmd, 0, 1, &vp);
+        vkCmdSetScissor(cmd, 0, 1, &sc);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdEndRenderPass(cmd);
+    }
+
+    // ── Output window (always renders independently via its own pipeline) ─
+    if (videoSubsystemInitialized) {
+        outputMultiPassPipeline.execute(
+            cmd, previewFrame.frameIndex,
+            outputDescriptorSetManager.getSet(previewFrame.frameIndex),
+            renderPass, outputPresenter.getFramebuffers(), outputImageIndex,
+            fullscreenPipeline, pipelineLayout,
+            outputFullscreenDescriptorSets[previewFrame.frameIndex],
+            outputPresenter.getExtent(), swapchainSampler,
+            0 // no overlay on output
+        );
+    } else {
+        const auto outExt = outputPresenter.getExtent();
+        VkClearValue clear{ .color = {0.f, 0.f, 0.f, 1.f} };
+        VkRenderPassBeginInfo rp{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+        rp.renderPass        = renderPass;
+        rp.framebuffer       = outputPresenter.getFramebuffers()[outputImageIndex];
+        rp.renderArea.extent = outExt;
+        rp.clearValueCount   = 1;
+        rp.pClearValues      = &clear;
+
+        vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdEndRenderPass(cmd);
     }
 
@@ -1997,7 +2209,8 @@ void Application::cleanup() {
 
     saveState();
     uiSystem.shutdown();
-    frameSystem.cleanup();
+    previewFrameSystem.cleanup();
+    outputFrameSystem.cleanup();
 
     // Destroy VideoRenderers FIRST to stop decoder threads before
     // freeing the FFmpeg resources they access (formatCtx, etc.)
@@ -2012,8 +2225,11 @@ void Application::cleanup() {
     videoTexture2.cleanup(resourceSystem);
 
     uniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
+    outputUniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
     descriptorSetManager.destroy(vulkanContext.getDevice());
+    outputDescriptorSetManager.destroy(vulkanContext.getDevice());
     multiPassPipeline.cleanup();
+    outputMultiPassPipeline.cleanup();
 
     // Shutdown audio/MIDI/OSC systems before ResourceSystem cleanup
     audioSystem.shutdown();
@@ -2023,12 +2239,13 @@ void Application::cleanup() {
     if (fullscreenPipeline          != VK_NULL_HANDLE) vkDestroyPipeline           (vulkanContext.getDevice(), fullscreenPipeline,          nullptr);
     if (pipelineLayout              != VK_NULL_HANDLE) vkDestroyPipelineLayout      (vulkanContext.getDevice(), pipelineLayout,              nullptr);
     if (fullscreenDescriptorPool    != VK_NULL_HANDLE) vkDestroyDescriptorPool      (vulkanContext.getDevice(), fullscreenDescriptorPool,    nullptr);
+    if (outputFullscreenDescriptorPool != VK_NULL_HANDLE) vkDestroyDescriptorPool   (vulkanContext.getDevice(), outputFullscreenDescriptorPool, nullptr);
     if (fullscreenDescriptorSetLayout != VK_NULL_HANDLE) vkDestroyDescriptorSetLayout(vulkanContext.getDevice(), fullscreenDescriptorSetLayout, nullptr);
     if (swapchainSampler            != VK_NULL_HANDLE) vkDestroySampler             (vulkanContext.getDevice(), swapchainSampler,            nullptr);
     if (renderPass                  != VK_NULL_HANDLE) vkDestroyRenderPass          (vulkanContext.getDevice(), renderPass,                  nullptr);
 
-    for (auto fb : swapchainFramebuffers)
-        vkDestroyFramebuffer(vulkanContext.getDevice(), fb, nullptr);
+    previewPresenter.cleanup();
+    outputPresenter.cleanup();
 
     if (vertexBufferHandle.type != ResourceType::Unknown)
         resourceSystem.destroy(vertexBufferHandle);

@@ -1184,6 +1184,10 @@ void UISystem::drawMainNavbar(
                 selAsset, selAsset2, controls, callbacks);
             ImGui::EndTabItem();
         }
+        if (ImGui::BeginTabItem("Performance")) {
+            drawPerformanceContent(diag);
+            ImGui::EndTabItem();
+        }
         if (ImGui::BeginTabItem("MIDI"))       { drawMidiControlsContent(midiSystem);         ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("OSC"))        { drawOscControlsContent(oscSystem);           ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Audio"))      { drawAudioDebugContent(audioSystem, controls); ImGui::EndTabItem(); }
@@ -1781,6 +1785,40 @@ void UISystem::drawDiagnosticsContent(
             if (callbacks.onControlsChanged) callbacks.onControlsChanged();
         }
     }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Tab: Performance
+// ═════════════════════════════════════════════════════════════════════════════
+
+void UISystem::drawPerformanceContent(const UIDiagnostics& diag)
+{
+    static const char* PASS_NAMES[] = {
+        "Pass A (Base)",
+        "Pass B (Spatial)",
+        "Pass C (Detail)",
+        "Pass D (Temporal)",
+        "Pass E (Degradation)",
+        "Pass F (Color)",
+        "Pass G (Output)",
+        "Swapchain Final"
+    };
+
+    ImGui::Text("GPU Timestamps (ms)");
+    ImGui::Separator();
+
+    for (int i = 0; i < 8; ++i) {
+        float ms = diag.gpuPassTimes[i];
+        if (ms > 0.0f) {
+            ImGui::Text("  %s: %.3f ms", PASS_NAMES[i], ms);
+        } else {
+            ImGui::TextDisabled("  %s: --", PASS_NAMES[i]);
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Total GPU: %.3f ms", diag.gpuTotalTime);
+    ImGui::Text("ImGui FPS: %.1f", ImGui::GetIO().Framerate);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

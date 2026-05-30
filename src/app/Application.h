@@ -15,6 +15,7 @@
 
 #include "../core/Window.h"
 #include "../core/VulkanContext.h"
+#include "../core/VulkanPresenter.h"
 #include "../gfx/ResourceSystem.h"
 #include "../gfx/FrameSystem.h"
 
@@ -123,7 +124,10 @@ private:
     Window window;
     VulkanContext vulkanContext;
     ResourceSystem resourceSystem;
-    FrameSystem frameSystem;
+    VulkanPresenter previewPresenter;
+    VulkanPresenter outputPresenter;
+    FrameSystem previewFrameSystem;
+    FrameSystem outputFrameSystem;
 
 
     // --------------------------
@@ -170,11 +174,13 @@ private:
     // Rendering
     // --------------------------
     UniformBufferManager uniformBufferManager;
+    UniformBufferManager outputUniformBufferManager;
     DescriptorSetManager descriptorSetManager;
+    DescriptorSetManager outputDescriptorSetManager;
     MultiPassPipeline multiPassPipeline;
+    MultiPassPipeline outputMultiPassPipeline;
 
     VkRenderPass renderPass = VK_NULL_HANDLE;
-    std::vector<VkFramebuffer> swapchainFramebuffers;
 
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline fullscreenPipeline = VK_NULL_HANDLE;
@@ -189,6 +195,27 @@ private:
     VkDescriptorSetLayout fullscreenDescriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool fullscreenDescriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> fullscreenDescriptorSets;
+
+    VkDescriptorPool outputFullscreenDescriptorPool = VK_NULL_HANDLE;
+    std::vector<VkDescriptorSet> outputFullscreenDescriptorSets;
+
+    // Output live toggle (Enter key)
+    bool outputLive = false;
+    // Preview pause toggle (Space key)
+    bool previewPaused = false;
+
+    VisualControls outputVisualControls;
+
+    struct AnimState {
+        bool timeInitialized = false;
+        std::chrono::high_resolution_clock::time_point lastGlobalTime;
+        float accumulatedTime = 0.0f;
+        float debugElapsed = 0.0f;
+        float debugDelta = 0.0f;
+        float shaderTime = 0.0f;
+    };
+    AnimState previewAnim;
+    AnimState outputAnim;
 
 
     // --------------------------
@@ -316,7 +343,7 @@ private:
     // Core methods
     // --------------------------
     void initVulkan();
-    void initSwapchain();
+    void initPresenters();
     void initRenderPass();
     void initPipelines();
     void initFramebuffers();
@@ -379,9 +406,13 @@ private:
     // Main loop
     // --------------------------
     void mainLoop();
-    void updateUniformBuffer(uint32_t frameIndex);
+    void updateUniformBuffer(uint32_t frameIndex, VisualControls& controls,
+                            UniformBufferManager& uboManager,
+                            const VulkanPresenter& presenter,
+                            AnimState& anim);
     void recordCommandBuffer(VkCommandBuffer commandBuffer,
-                             FrameContext& frame);
+                             FrameContext& previewFrame, uint32_t previewImageIndex,
+                             FrameContext& outputFrame, uint32_t outputImageIndex);
 
 
     // --------------------------

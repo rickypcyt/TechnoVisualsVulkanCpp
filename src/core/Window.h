@@ -13,6 +13,7 @@ public:
     void initSDL();
     void createMainWindow(const std::string& title, int width, int height);
     void createUiWindow(const std::string& title, int width, int height);
+    void createOutputWindow(const std::string& title, int width, int height);
     void destroy();
 
     // Event handling
@@ -21,10 +22,13 @@ public:
 
     // Main window access
     SDL_Window* getMainWindow() const { return window; }
-    
+
     // UI window access
     SDL_Window* getUiWindow() const { return uiWindow; }
     SDL_Renderer* getUiRenderer() const { return uiRenderer; }
+
+    // Output window access
+    SDL_Window* getOutputWindow() const { return outputWindow; }
 
     // Resize handling
     bool shouldResize() const { return framebufferResized; }
@@ -38,6 +42,7 @@ private:
     SDL_Window* window = nullptr;
     SDL_Window* uiWindow = nullptr;
     SDL_Renderer* uiRenderer = nullptr;
+    SDL_Window* outputWindow = nullptr;
     bool sdlInitialized = false;
     bool closeRequested = false;
     bool resizePending = false;

@@ -106,6 +106,7 @@ add_executable(app
     src/app/parameters/PresetMorpher.cpp
     src/core/Window.cpp
     src/core/VulkanContext.cpp
+    src/core/VulkanPresenter.cpp
     src/video/VideoStaging.cpp
     src/video/VideoPlayer.cpp
     src/video/VideoRegistry.cpp

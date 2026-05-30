@@ -91,13 +91,13 @@ if [[ "$RUN_APP" == "1" && -t 0 ]]; then
         echo "[build_and_run] MangoHud activado"
     fi
 
-    read -rp "Elegir GPU (0=iGPU / 1=dGPU / Enter=default): " gpu
+    read -rp "Elegir GPU (0=AMD/iGPU / 1=NVIDIA/dGPU / Enter=auto): " gpu
     if [[ "$gpu" == "0" ]]; then
-        export DRI_PRIME=0
-        echo "[build_and_run] Forzando iGPU (DRI_PRIME=0)"
+        export VULKAN_GPU_TYPE="integrated"
+        echo "[build_and_run] Forzando iGPU/AMD (VULKAN_GPU_TYPE=integrated)"
     elif [[ "$gpu" == "1" ]]; then
-        export DRI_PRIME=1
-        echo "[build_and_run] Forzando dGPU (DRI_PRIME=1)"
+        export VULKAN_GPU_TYPE="discrete"
+        echo "[build_and_run] Forzando dGPU/NVIDIA (VULKAN_GPU_TYPE=discrete)"
     fi
 fi
 

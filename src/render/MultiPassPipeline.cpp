@@ -95,18 +95,18 @@ void MultiPassPipeline::printProfilingResults(VkDevice device) {
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     float timestampPeriod = props.limits.timestampPeriod; // nanoseconds per tick
 
-    std::cout << "--- GPU Timestamps (ms) ---" << std::endl;
-    float totalMs = 0.0f;
+    lastGpuTotalTime = 0.0f;
     for (int i = 0; i < PROFILED_PASS_COUNT; ++i) {
         uint64_t start = queryResults[i * QUERIES_PER_PASS + 0];
         uint64_t end   = queryResults[i * QUERIES_PER_PASS + 1];
         if (end > start) {
             float ms = (end - start) * timestampPeriod / 1'000'000.0f;
-            std::cout << "  " << PASS_NAMES[i] << ": " << ms << " ms" << std::endl;
-            totalMs += ms;
+            lastGpuPassTimes[i] = ms;
+            lastGpuTotalTime += ms;
+        } else {
+            lastGpuPassTimes[i] = 0.0f;
         }
     }
-    std::cout << "  Total GPU: " << totalMs << " ms" << std::endl;
 }
 
 bool MultiPassPipeline::createTemporalHistoryImage() {
@@ -820,9 +820,10 @@ void MultiPassPipeline::transitionImageLayout(
 }
 
 void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDescriptorSet uboDescriptorSet,
-                                VkRenderPass swapchainRenderPass, std::vector<VkFramebuffer>& swapchainFramebuffers,
+                                VkRenderPass swapchainRenderPass, const std::vector<VkFramebuffer>& swapchainFramebuffers,
                                 uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
-                                VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler) {
+                                VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler,
+                                int previewOverlay) {
     auto ensureLayout = [&](VkImage image, VkImageLayout& currentLayout, VkImageLayout newLayout) {
         if (image == VK_NULL_HANDLE || currentLayout == newLayout) {
             currentLayout = newLayout;
@@ -985,6 +986,9 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
     // Bind swapchain descriptor set
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, swapchainPipelineLayout,
                             0, 1, &swapchainDescriptorSet, 0, nullptr);
+
+    // Push preview overlay flag
+    vkCmdPushConstants(cmd, swapchainPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &previewOverlay);
 
     // Set viewport and scissor
     VkViewport viewport{};

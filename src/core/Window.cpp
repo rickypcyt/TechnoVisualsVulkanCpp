@@ -63,6 +63,21 @@ void Window::createUiWindow(const std::string& title, int width, int height) {
     }
 }
 
+void Window::createOutputWindow(const std::string& title, int width, int height) {
+    outputWindow = SDL_CreateWindow(
+        title.c_str(),
+        SDL_WINDOWPOS_CENTERED_DISPLAY(1),
+        SDL_WINDOWPOS_CENTERED_DISPLAY(1),
+        width,
+        height,
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
+    );
+
+    if (!outputWindow) {
+        throw std::runtime_error(std::string("failed to create output SDL window: ") + SDL_GetError());
+    }
+}
+
 void Window::destroy() {
     if (uiRenderer != nullptr) {
         SDL_DestroyRenderer(uiRenderer);
@@ -71,6 +86,10 @@ void Window::destroy() {
     if (uiWindow != nullptr) {
         SDL_DestroyWindow(uiWindow);
         uiWindow = nullptr;
+    }
+    if (outputWindow != nullptr) {
+        SDL_DestroyWindow(outputWindow);
+        outputWindow = nullptr;
     }
     if (window != nullptr) {
         SDL_DestroyWindow(window);

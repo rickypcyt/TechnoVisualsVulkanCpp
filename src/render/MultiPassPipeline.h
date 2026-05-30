@@ -68,12 +68,24 @@ public:
 
     // Execute all 7 passes (offscreen) + final pass to swapchain
     void execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDescriptorSet uboDescriptorSet,
-                 VkRenderPass swapchainRenderPass, std::vector<VkFramebuffer>& swapchainFramebuffers,
+                 VkRenderPass swapchainRenderPass, const std::vector<VkFramebuffer>& swapchainFramebuffers,
                  uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
-                 VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler);
+                 VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler,
+                 int previewOverlay = 0);
 
     // Get final output framebuffer (for presentation)
     VkImageView getFinalOutput() const { return intermediate[1].imageView; }
+
+    static constexpr int NUM_PASSES = 7;
+
+    // GPU profiling constants
+    static constexpr int QUERIES_PER_PASS = 2;
+    static constexpr int PROFILED_PASS_COUNT = NUM_PASSES + 1; // +1 for swapchain final
+    static constexpr int TOTAL_QUERIES = PROFILED_PASS_COUNT * QUERIES_PER_PASS;
+
+    // GPU profiling data (updated each frame)
+    std::array<float, PROFILED_PASS_COUNT> lastGpuPassTimes{};
+    float lastGpuTotalTime = 0.0f;
 
     // Update descriptor sets with texture bindings
     void updateDescriptorSets(
@@ -123,7 +135,6 @@ private:
     size_t uniformBufferSize = 0;
 
     // Pipeline configurations for each pass
-    static const int NUM_PASSES = 7;
     PassConfig passes[NUM_PASSES];
 
     // Pass culling state (all enabled by default)
@@ -146,9 +157,6 @@ private:
 
     // GPU profiling
     VkQueryPool queryPool = VK_NULL_HANDLE;
-    static constexpr int QUERIES_PER_PASS = 2;
-    static constexpr int PROFILED_PASS_COUNT = NUM_PASSES + 1; // +1 for swapchain final
-    static constexpr int TOTAL_QUERIES = PROFILED_PASS_COUNT * QUERIES_PER_PASS;
 
     // Fullscreen quad vertex buffer
     VkBuffer vertexBuffer = VK_NULL_HANDLE;

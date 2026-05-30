@@ -6,6 +6,7 @@
 #include <random>
 #include <memory>
 #include <vector>
+#include <array>
 
 // Forward declarations para no incluir todo en el header
 struct ImGuiContext;
@@ -40,6 +41,10 @@ struct UIDiagnostics {
     float    animationRelativeSpeed = 1.0f;
     float    animationSecondsPerUnit = 1.0f;
     float    animationElapsedSeconds = 0.0f;
+
+    // GPU profiling
+    std::array<float, 8> gpuPassTimes{};
+    float                gpuTotalTime = 0.0f;
 };
 
 // ---------------------------------------------------------------------------
@@ -171,6 +176,8 @@ private:
     int selectedTab = 0;
 
 private:
+    void drawPerformanceContent(const UIDiagnostics& diag);
+
     struct VideoPreviewSlot {
         int                       previewSelection   = -1;
         int                       confirmedSelection = -1;
