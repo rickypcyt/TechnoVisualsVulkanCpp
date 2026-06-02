@@ -341,6 +341,7 @@ private:
     VideoPreviewSlot previewSlotVideo1;
     VideoPreviewSlot previewSlotVideo2;
     bool previewShuffleRequested[2] = {false, false};
+    float previewAutoRandomizeElapsed[2] = {0.0f, 0.0f};
     std::mt19937 previewRng{std::random_device{}()};
 
     char presetNameBuffer[64] = "";

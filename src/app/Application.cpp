@@ -1825,6 +1825,7 @@ void Application::tickAutoRandomize(float dt,
             int idx = (slot == 0) ? pickNextVideoIndex(assets) : pickNextVideoIndex2(assets);
             if (slot == 0) reloadVideoAtIndex(idx, assets);
             else           reloadVideoAtIndex2(idx, assets);
+            uiSystem.forcePreviewShuffle(slot);
         }
         isReloadingVideo = false;
     };

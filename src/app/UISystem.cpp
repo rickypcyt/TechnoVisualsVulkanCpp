@@ -500,9 +500,10 @@ bool drawRandomizerBlock(const char* suffix,
     changed |= ImGui::SliderFloat(lbl, &transitionDuration, 0.1f, 2.f, "%.2f s");
 
     ImGui::BeginDisabled(!hasChoice);
-    snprintf(lbl, sizeof(lbl), "Randomize preview%s", suffix);
-    if (ImGui::Button(lbl) && onRandomizePreview) {
-        onRandomizePreview();
+    snprintf(lbl, sizeof(lbl), "Randomize video%s", suffix);
+    if (ImGui::Button(lbl)) {
+        if (onRandomizeFinal)  onRandomizeFinal();
+        if (onRandomizePreview) onRandomizePreview();
         changed = true;
     }
     ImGui::SameLine();
@@ -547,6 +548,20 @@ void UISystem::drawPreviewContent(
     float deltaTime = ImGui::GetIO().DeltaTime;
     updatePreviewSlot(previewSlotVideo1, deltaTime);
     updatePreviewSlot(previewSlotVideo2, deltaTime);
+
+    // ── Auto-randomize preview (independent from final renderer) ──
+    auto tickPreviewAutoRandomize = [&](auto& r, int slot) {
+        if (!r.autoRandomize) return;
+        previewAutoRandomizeElapsed[slot] += deltaTime;
+        float target = (r.useVideoDuration && r.currentVideoDuration > 0.f)
+                       ? r.currentVideoDuration : r.intervalSeconds;
+        if (previewAutoRandomizeElapsed[slot] >= target) {
+            previewAutoRandomizeElapsed[slot] = 0.f;
+            forcePreviewShuffle(slot);
+        }
+    };
+    tickPreviewAutoRandomize(r1, 0);
+    tickPreviewAutoRandomize(r2, 1);
 
     bool changed = false;
 
@@ -885,6 +900,7 @@ void UISystem::drawPreviewContent(
 void UISystem::forcePreviewShuffle(int slotIndex) {
     if (slotIndex < 0 || slotIndex > 1) return;
     previewShuffleRequested[slotIndex] = true;
+    previewAutoRandomizeElapsed[slotIndex] = 0.0f;
 }
 
 void UISystem::randomizeVJayBasics(VisualControls& controls) {
