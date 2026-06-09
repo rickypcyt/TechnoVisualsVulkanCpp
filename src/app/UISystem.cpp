@@ -426,6 +426,13 @@ void randomizeVJayBasicsControls(VisualControls& c, std::mt19937& rng) {
         c.post.vhsDistortion              = u01();
         c.post.analogChromaticAberration  = rr(0.f, 0.25f);
     }
+    if (c.temporal.enableFeedback) {
+        c.temporal.feedbackAmount      = u01();
+        c.temporal.trailStrength       = u01();
+        c.temporal.temporalAccumulation= u01();
+        c.temporal.feedbackDecay       = u01();
+        c.temporal.recursiveBlend      = u01();
+    }
     if (c.temporal.enableTemporal) {
         c.playback.temporalInterpolation  = u01();
         c.playback.temporalBlendStrength  = u01();

@@ -55,7 +55,7 @@ void main() {
             off += vec2(0.0, t * 0.02 * temporalMix);
 
             vec2 sampleUV = clamp(uv - off * texel * 20.0, 0.0, 1.0);
-            vec3 s = texture(inputTex, sampleUV).rgb;
+            vec3 s = texture(prevFrameTex, sampleUV).rgb;
 
             float w = feedbackMix * decay * (1.0 - t * 0.35) * edge;
             accum = mix(accum, s, w);

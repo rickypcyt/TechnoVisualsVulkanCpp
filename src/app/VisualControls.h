@@ -242,10 +242,10 @@ struct VisualControls {
     // ============================================================================
     struct Temporal {
         float feedbackAmount = 0.4f;
-        float trailStrength = 0.35f;
+        float trailStrength = 0.5f;
         float temporalAccumulation = 0.5f;
-        float feedbackDecay = 0.25f;
-        float recursiveBlend = 0.4f;
+        float feedbackDecay = 0.0f;
+        float recursiveBlend = 0.7f;
 
         bool enableFeedback = true;
         bool enableTemporal = true;

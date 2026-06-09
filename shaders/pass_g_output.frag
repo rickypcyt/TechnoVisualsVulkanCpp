@@ -198,6 +198,13 @@ void main() {
         color = vec3(rCh, color.g, bCh);
     }
 
+    // Edge detection
+    if (ubo.enableEdgeDetect == 1) {
+        float edge = sobelEdgeStrength(p);
+        edge = smoothstep(ubo.edgeThreshold, ubo.edgeThreshold + 0.1, edge) * ubo.edgeStrength;
+        color = mix(color, ubo.edgeColor, edge * ubo.edgeBlend);
+    }
+
     // RGB overlay
     if (ubo.enableRgbOverlay == 1) {
         color *= ubo.rgbOverlay;
