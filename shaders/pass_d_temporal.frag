@@ -20,6 +20,15 @@ float edgeFade(vec2 p) {
     return e.x * e.y;
 }
 
+vec3 sampleBlurredPrev(vec2 p, vec2 texel) {
+    vec3 c = texture(prevFrameTex, p).rgb * 0.4;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 1.0,  0.0), 0.0, 1.0)).rgb * 0.15;
+    c += texture(prevFrameTex, clamp(p + texel * vec2(-1.0,  0.0), 0.0, 1.0)).rgb * 0.15;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  1.0), 0.0, 1.0)).rgb * 0.15;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0, -1.0), 0.0, 1.0)).rgb * 0.15;
+    return c;
+}
+
 void main() {
     vec2 centered = uv * 2.0 - 1.0;
     vec3 base = texture(inputTex, uv).rgb;
@@ -55,7 +64,7 @@ void main() {
             off += vec2(0.0, t * 0.02 * temporalMix);
 
             vec2 sampleUV = clamp(uv - off * texel * 20.0, 0.0, 1.0);
-            vec3 s = texture(prevFrameTex, sampleUV).rgb;
+            vec3 s = sampleBlurredPrev(sampleUV, texel);
 
             float w = feedbackMix * decay * (1.0 - t * 0.35) * edge;
             accum = mix(accum, s, w);
