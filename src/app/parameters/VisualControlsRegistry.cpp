@@ -57,6 +57,16 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerBool("enableRandomJumpInterval2", &playback.enableRandomJumpInterval2);
     r.registerString("selectedVideoFolder", &playback.selectedVideoFolder);
 
+    // TRIPLE VIDEO (channel 3)
+    r.registerFloat("video3Mix", &playback.video3Mix, 0.0f, 1.0f);
+    r.registerInt("video3BlendMode", &playback.video3BlendMode, 0, 4);
+    r.registerInt("selectedVideo3Asset", &playback.selectedVideo3Asset, 0, 1000);
+    r.registerString("selectedVideo3Folder", &playback.selectedVideo3Folder);
+    r.registerFloat("video3PlaybackRate", &playback.video3PlaybackRate, 0.0f, 5.0f);
+    r.registerBool("randomVideo3Start", &playback.randomVideo3Start);
+    r.registerFloat("randomJumpInterval3", &playback.randomJumpInterval3, 0.1f, 60.0f);
+    r.registerBool("enableRandomJumpInterval3", &playback.enableRandomJumpInterval3);
+
     // POST PROCESSING BASICS
     r.registerFloat("grayscaleAmount", &playback.grayscaleAmount, 0.0f, 1.0f);
     r.registerFloat("sharpenAmount", &playback.sharpenAmount, 0.0f, 2.0f);

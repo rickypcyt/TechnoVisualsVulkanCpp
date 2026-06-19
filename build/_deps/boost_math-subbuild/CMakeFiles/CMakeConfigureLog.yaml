@@ -75,3 +75,14 @@ events:
     message: |
       The system is: Linux - 7.0.9-zen1-1-zen - x86_64
 ...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "CMakeLists.txt:16 (project)"
+    message: |
+      The system is: Linux - 7.0.9-zen1-1-zen - x86_64
+...

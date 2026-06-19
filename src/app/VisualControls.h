@@ -43,6 +43,13 @@ struct VisualControls {
         std::string selectedVideo2Folder = "";
         float video2PlaybackRate = 1.0f;
 
+        // Triple video source controls (channel 3)
+        float video3Mix = 0.0f;
+        int video3BlendMode = 0;  // 0 = mix, 1 = add, 2 = multiply, 3 = screen, 4 = difference
+        int selectedVideo3Asset = 0;
+        std::string selectedVideo3Folder = "";
+        float video3PlaybackRate = 1.0f;
+
         // Video randomization
         bool randomVideoStart = false;
         float randomJumpInterval = 5.0f;
@@ -52,6 +59,10 @@ struct VisualControls {
         bool randomVideo2Start = false;
         float randomJumpInterval2 = 5.0f;
         bool enableRandomJumpInterval2 = false;
+
+        bool randomVideo3Start = false;
+        float randomJumpInterval3 = 5.0f;
+        bool enableRandomJumpInterval3 = false;
     } playback;
 
     // ============================================================================

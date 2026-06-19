@@ -11,7 +11,8 @@ enum class RenderMode {
 // Video source for NLE editor
 enum class NLEVideoSource {
     VIDEO_1,    // Use video 1 (videoSourcePath)
-    VIDEO_2     // Use video 2 (videoSourcePath2)
+    VIDEO_2,    // Use video 2 (videoSourcePath2)
+    VIDEO_3     // Use video 3 (videoSourcePath3)
 };
 
 // ProjectState - centro de verdad del sistema

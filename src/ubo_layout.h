@@ -133,6 +133,9 @@ struct GlobalParamsUBO {
     alignas(4) float video2Mix;
     alignas(4) float video2Available;
     alignas(4) int video2BlendMode;
+    alignas(4) float video3Mix;
+    alignas(4) float video3Available;
+    alignas(4) int video3BlendMode;
 
     // BlendingPassUBO
     alignas(4) int blendModeProcedural;

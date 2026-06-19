@@ -55,16 +55,20 @@ struct UICallbacks {
     // Pide recargar un video por path
     std::function<void(const std::string& path)> onReloadVideo;
     std::function<void(const std::string& path)> onReloadVideo2;
+    std::function<void(const std::string& path)> onReloadVideo3;
 
     // Pide randomizar el video actual
     std::function<void()> onRandomizeVideo;
     std::function<void()> onRandomizeVideo2;
+    std::function<void()> onRandomizeVideo3;
     std::function<void()> onRandomizePreviewVideo1;
     std::function<void()> onRandomizePreviewVideo2;
+    std::function<void()> onRandomizePreviewVideo3;
 
     // Pide recargar videos cuando cambia la carpeta seleccionada
     std::function<void()> onFolderChanged;
     std::function<void()> onFolderChanged2;
+    std::function<void()> onFolderChanged3;
 
     // Pide un jump aleatorio dentro del clip actual
     std::function<void()> onJumpRandom;
@@ -118,13 +122,17 @@ public:
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
         VideoRandomizerState2& randomizer2,
+        VideoRandomizerState2& randomizer3,
         VideoPlayer&          player,
         VideoPlayer&          player2,
+        VideoPlayer&          player3,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
+        int&                  selectedVideoAsset3,
         float&                transitionDuration,
         float&                transitionDuration2,
+        float&                transitionDuration3,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
         std::mt19937&         rng,
@@ -134,7 +142,8 @@ public:
         OscSystem&            oscSystem,
         AudioSystem&          audioSystem,
         const std::string&    video1Path,
-        const std::string&    video2Path
+        const std::string&    video2Path,
+        const std::string&    video3Path
     );
 
     void forcePreviewShuffle(int slotIndex);
@@ -208,7 +217,7 @@ private:
         std::mt19937&   rng
     );
 
-    void drawNLEEditor(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path);
+    void drawNLEEditor(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path, const std::string& video3Path);
 
     void drawPresetsContent(VisualControls& controls, bool& controlsDirty, const UICallbacks& callbacks);
 
@@ -216,9 +225,11 @@ private:
         const UIDiagnostics& diag,
         VideoPlayer&         player,
         VideoPlayer&         player2,
+        VideoPlayer&         player3,
         VideoRegistry&       registry,
         int&                 selectedAsset,
         int&                 selectedAsset2,
+        int&                 selectedAsset3,
         VisualControls&      controls,
         const UICallbacks&   callbacks
     );
@@ -232,13 +243,17 @@ private:
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
         VideoRandomizerState2& randomizer2,
+        VideoRandomizerState2& randomizer3,
         VideoPlayer&          player,
         VideoPlayer&          player2,
+        VideoPlayer&          player3,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
+        int&                  selectedVideoAsset3,
         float&                transitionDuration,
         float&                transitionDuration2,
+        float&                transitionDuration3,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
         std::mt19937&         rng,
@@ -248,7 +263,8 @@ private:
         OscSystem&            oscSystem,
         AudioSystem&          audioSystem,
         const std::string&    video1Path,
-        const std::string&    video2Path
+        const std::string&    video2Path,
+        const std::string&    video3Path
     );
     
     // Content functions for tabs (extracted from window functions)
@@ -259,6 +275,7 @@ private:
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
+        int&                  selectedVideoAsset3,
         float&                transitionDuration,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
@@ -283,11 +300,14 @@ private:
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
         VideoRandomizerState2& randomizer2,
+        VideoRandomizerState2& randomizer3,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
+        int&                  selectedVideoAsset3,
         float&                transitionDuration,
         float&                transitionDuration2,
+        float&                transitionDuration3,
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
         const UIDiagnostics&  diag,
@@ -300,15 +320,17 @@ private:
         std::mt19937&   rng
     );
     
-    void drawNLEEditorContent(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path);
+    void drawNLEEditorContent(const UICallbacks& callbacks, const std::string& video1Path, const std::string& video2Path, const std::string& video3Path);
     
     void drawDiagnosticsContent(
         const UIDiagnostics& diag,
         VideoPlayer&         player,
         VideoPlayer&         player2,
+        VideoPlayer&         player3,
         VideoRegistry&       registry,
         int&                 selectedAsset,
         int&                 selectedAsset2,
+        int&                 selectedAsset3,
         VisualControls&      controls,
         const UICallbacks&   callbacks
     );
@@ -322,15 +344,19 @@ private:
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
+        int&                  selectedVideoAsset3,
         VideoRandomizerState& randomizer,
         VideoRandomizerState2& randomizer2,
+        VideoRandomizerState2& randomizer3,
         float&                transitionDuration,
         float&                transitionDuration2,
+        float&                transitionDuration3,
         bool&                 controlsDirty,
         const UIDiagnostics&  diag,
         const UICallbacks&    callbacks,
         const std::string&    video1Path,
         const std::string&    video2Path,
+        const std::string&    video3Path,
         std::mt19937&         rng);
 
     SDL_Window*   window   = nullptr;
@@ -340,8 +366,9 @@ private:
 
     VideoPreviewSlot previewSlotVideo1;
     VideoPreviewSlot previewSlotVideo2;
-    bool previewShuffleRequested[2] = {false, false};
-    float previewAutoRandomizeElapsed[2] = {0.0f, 0.0f};
+    VideoPreviewSlot previewSlotVideo3;
+    bool previewShuffleRequested[3] = {false, false, false};
+    float previewAutoRandomizeElapsed[3] = {0.0f, 0.0f, 0.0f};
     std::mt19937 previewRng{std::random_device{}()};
 
     char presetNameBuffer[64] = "";

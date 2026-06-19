@@ -163,6 +163,21 @@ private:
         std::chrono::steady_clock::now();
 
     // --------------------------
+    // Video slot 3
+    // --------------------------
+    VideoTexture videoTexture3;
+    VideoPlayer videoPlayer3;
+    CpuFramePool cpuFramePool3;
+    std::unique_ptr<VideoRenderer> videoRenderer3;
+
+    std::string videoSourcePath3 = "media/sample.mp4";
+    int selectedVideoAsset3 = -1;
+    bool videoSubsystemInitialized3 = false;
+    bool isReloadingVideo3 = false;
+    std::chrono::steady_clock::time_point lastVideoChangeTime3 =
+        std::chrono::steady_clock::now();
+
+    // --------------------------
     // Output Video slot 1
     // --------------------------
     VideoTexture outputVideoTexture;
@@ -192,14 +207,31 @@ private:
     std::chrono::steady_clock::time_point outputLastVideoChangeTime2 =
         std::chrono::steady_clock::now();
 
+    // --------------------------
+    // Output Video slot 3
+    // --------------------------
+    VideoTexture outputVideoTexture3;
+    VideoPlayer outputVideoPlayer3;
+    CpuFramePool outputCpuFramePool3;
+    std::unique_ptr<VideoRenderer> outputVideoRenderer3;
+
+    std::string outputVideoSourcePath3 = "media/sample.mp4";
+    int outputSelectedVideoAsset3 = -1;
+    bool outputVideoSubsystemInitialized3 = false;
+    bool outputIsReloadingVideo3 = false;
+    std::chrono::steady_clock::time_point outputLastVideoChangeTime3 =
+        std::chrono::steady_clock::now();
+
     VideoRandomizerState outputVideoRandomizer;
     VideoRandomizerState2 outputVideoRandomizer2;
+    VideoRandomizerState2 outputVideoRandomizer3;
 
     // Per-video playback speed cache (path → rate)
     mutable std::unordered_map<std::string, float> videoSpeedCache;
     std::string videoSpeedCachePath = "video_speeds.json";
     float lastPlaybackRate  = 1.0f;
     float lastPlaybackRate2 = 1.0f;
+    float lastPlaybackRate3 = 1.0f;
     void loadVideoSpeeds();
     void saveVideoSpeeds() const;
 
@@ -259,6 +291,7 @@ private:
 
     VideoRandomizerState videoRandomizer;
     VideoRandomizerState2 videoRandomizer2;
+    VideoRandomizerState2 videoRandomizer3;
 
     MidiSystem midiSystem;
     OscSystem oscSystem;
@@ -321,6 +354,7 @@ private:
     // transition durations
     float transitionDuration = 1.0f;
     float transitionDuration2 = 0.5f;
+    float transitionDuration3 = 0.5f;
     float transitionProgress = 1.0f;  // 0.0 = old video, 1.0 = new video
 
     // command buffers
@@ -406,11 +440,15 @@ private:
 
     int pickNextVideoIndex(const std::vector<VideoAsset>& assets);
     int pickNextVideoIndex2(const std::vector<VideoAsset>& assets);
+    int pickNextVideoIndex3(const std::vector<VideoAsset>& assets);
 
     bool reloadVideoAtIndex(int newIndex,
                             const std::vector<VideoAsset>& assets);
 
     bool reloadVideoAtIndex2(int newIndex,
+                             const std::vector<VideoAsset>& assets);
+
+    bool reloadVideoAtIndex3(int newIndex,
                              const std::vector<VideoAsset>& assets);
 
 

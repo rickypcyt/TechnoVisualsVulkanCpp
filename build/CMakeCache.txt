@@ -46,7 +46,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 CMAKE_BUILD_TYPE:STRING=
 
 //CXX compiler
-CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
+CMAKE_CXX_COMPILER:STRING=/usr/bin/c++
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -72,7 +72,7 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //C compiler
-CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CMAKE_C_COMPILER:STRING=/usr/bin/cc
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -608,7 +608,7 @@ CMAKE_CACHE_MAJOR_VERSION:INTERNAL=4
 //Minor version of cmake used to create the current loaded cache
 CMAKE_CACHE_MINOR_VERSION:INTERNAL=3
 //Patch version of cmake used to create the current loaded cache
-CMAKE_CACHE_PATCH_VERSION:INTERNAL=2
+CMAKE_CACHE_PATCH_VERSION:INTERNAL=4
 //Path to CMake executable.
 CMAKE_COMMAND:INTERNAL=/usr/bin/cmake
 //Path to cpack program executable.
@@ -886,7 +886,7 @@ FFTW_fftw3f_LIBDIR:INTERNAL=
 FFTW_fftw3f_PREFIX:INTERNAL=
 FFTW_fftw3f_VERSION:INTERNAL=
 //Details about finding ALSA
-FIND_PACKAGE_MESSAGE_DETAILS_ALSA:INTERNAL=[/usr/lib/libasound.so][/usr/include][v1.2.15.3()]
+FIND_PACKAGE_MESSAGE_DETAILS_ALSA:INTERNAL=[/usr/lib/libasound.so][/usr/include][v1.2.16.1()]
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v2.5.1()]
 //Details about finding Python3

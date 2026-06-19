@@ -2,7 +2,7 @@
 # If you choose not to use CMake, this file may be hand configured, by
 # filling in the required variables.
 
-cmake_minimum_required(VERSION 4.3.2)
+cmake_minimum_required(VERSION 4.3.4)
 
 # CTest Start Step
 set(CTEST_SOURCE_DIRECTORY "/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi")

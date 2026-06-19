@@ -32,6 +32,7 @@ layout(location = 0) out vec4 outColor;
 layout(set = 1, binding = 0) uniform sampler2D videoTex;
 layout(set = 1, binding = 1) uniform sampler2D videoTexPrev;
 layout(set = 1, binding = 2) uniform sampler2D video2Tex;
+layout(set = 1, binding = 3) uniform sampler2D video3Tex;
 
 float luminance(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));
@@ -54,6 +55,10 @@ vec3 sampleVideo(vec2 p) {
 
 vec3 sampleVideo2(vec2 p) {
     return texture(video2Tex, clamp(p, 0.0, 1.0)).rgb;
+}
+
+vec3 sampleVideo3(vec2 p) {
+    return texture(video3Tex, clamp(p, 0.0, 1.0)).rgb;
 }
 
 vec3 sampleBilinear(vec2 p) {
@@ -316,9 +321,13 @@ void main() {
     vec2 procUV = applyCamera(uv);
     vec3 video1Color = sampleVideo(uv);
     vec3 video2Color = sampleVideo2(uv);
+    vec3 video3Color = sampleVideo3(uv);
 
     float v2Mix = clamp(ubo.video2Mix * ubo.video2Available, 0.0, 1.0);
     vec3 videoColor = blendTwoVideos(video1Color, video2Color, ubo.video2BlendMode, v2Mix);
+
+    float v3Mix = clamp(ubo.video3Mix * ubo.video3Available, 0.0, 1.0);
+    videoColor = blendTwoVideos(videoColor, video3Color, ubo.video3BlendMode, v3Mix);
 
     // Real crossfade transition: mix between frozen previous frame (old video)
     // and current frame (new video) during a video swap

@@ -541,20 +541,25 @@ void UISystem::drawPreviewContent(
     VideoRegistry&        registry,
     int&                  selectedVideoAsset,
     int&                  selectedVideoAsset2,
+    int&                  selectedVideoAsset3,
     VideoRandomizerState& r1,
     VideoRandomizerState2& r2,
+    VideoRandomizerState2& r3,
     float&                transDur,
     float&                transDur2,
+    float&                transDur3,
     bool&                 controlsDirty,
     const UIDiagnostics&  diag,
     const UICallbacks&    callbacks,
     const std::string&    video1Path,
     const std::string&    video2Path,
+    const std::string&    video3Path,
     std::mt19937&         rng)
 {
     float deltaTime = ImGui::GetIO().DeltaTime;
     updatePreviewSlot(previewSlotVideo1, deltaTime);
     updatePreviewSlot(previewSlotVideo2, deltaTime);
+    updatePreviewSlot(previewSlotVideo3, deltaTime);
 
     // ── Auto-randomize preview (independent from final renderer) ──
     auto tickPreviewAutoRandomize = [&](auto& r, int slot) {
@@ -569,6 +574,7 @@ void UISystem::drawPreviewContent(
     };
     tickPreviewAutoRandomize(r1, 0);
     tickPreviewAutoRandomize(r2, 1);
+    tickPreviewAutoRandomize(r3, 2);
 
     bool changed = false;
 
@@ -624,7 +630,7 @@ void UISystem::drawPreviewContent(
         if (slot.previewSelection < 0)
             slot.previewSelection = activeSelection;
         slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
-        if (slotIndex >= 0 && slotIndex < 2 && previewShuffleRequested[slotIndex]) {
+        if (slotIndex >= 0 && slotIndex < 3 && previewShuffleRequested[slotIndex]) {
             previewShuffleRequested[slotIndex] = false;
             if (assets.size() > 1) {
                 std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
@@ -689,6 +695,8 @@ void UISystem::drawPreviewContent(
                 callbacks.onFolderChanged();
             else if (slotIndex == 1 && callbacks.onFolderChanged2)
                 callbacks.onFolderChanged2();
+            else if (slotIndex == 2 && callbacks.onFolderChanged3)
+                callbacks.onFolderChanged3();
         }
 
         ImGui::Text("Current folder: %s",
@@ -720,8 +728,10 @@ void UISystem::drawPreviewContent(
         ImGui::SameLine();
         if (slotIndex == 0)
             ImGui::TextDisabled("Q = enviar");
-        else
+        else if (slotIndex == 1)
             ImGui::TextDisabled("W = enviar");
+        else
+            ImGui::TextDisabled("E = enviar");
         if (confirmClick && applyCallback) {
             activeSelection = slot.previewSelection;
             applyCallback(meta.path);
@@ -737,12 +747,19 @@ void UISystem::drawPreviewContent(
                 callbacks.onRandomizePreviewVideo1,
                 callbacks.onRandomizeVideo
             );
-        } else {
+        } else if (slotIndex == 1) {
             changed |= drawRandomizerBlock(
                 "##V2", r2, transDur2,
                 registry.getFilteredAssets(folder).size(),
                 callbacks.onRandomizePreviewVideo2,
                 callbacks.onRandomizeVideo2
+            );
+        } else {
+            changed |= drawRandomizerBlock(
+                "##V3", r3, transDur3,
+                registry.getFilteredAssets(folder).size(),
+                callbacks.onRandomizePreviewVideo3,
+                callbacks.onRandomizeVideo3
             );
         }
 
@@ -780,6 +797,9 @@ void UISystem::drawPreviewContent(
     ImGui::PushStyleColor(ImGuiCol_Text, {0.4f, 0.7f, 1.0f, 1.0f});
     ImGui::Text("🎬 MIX 2: %s", video2Path.empty() ? "(vacío)" : baseName(video2Path).c_str());
     ImGui::PopStyleColor();
+    ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 0.7f, 0.4f, 1.0f});
+    ImGui::Text("🎬 MIX 3: %s", video3Path.empty() ? "(vacío)" : baseName(video3Path).c_str());
+    ImGui::PopStyleColor();
 
     // ── Video Mix sliders + Blend mode (always on top) ──
     changed |= ImGui::SliderFloat("Mix V1", &controls.playback.videoMix, 0.f, 1.f);
@@ -788,6 +808,9 @@ void UISystem::drawPreviewContent(
     ImGui::BeginDisabled(!controls.playback.enableDualVideo);
     changed |= ImGui::SliderFloat("Mix V2", &controls.playback.video2Mix, 0.f, 1.f);
     changed |= ImGui::Combo("Blend mode V2", &controls.playback.video2BlendMode,
+                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
+    changed |= ImGui::SliderFloat("Mix V3", &controls.playback.video3Mix, 0.f, 1.f);
+    changed |= ImGui::Combo("Blend mode V3", &controls.playback.video3BlendMode,
                             "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
     ImGui::EndDisabled();
     ImGui::Separator();
@@ -867,6 +890,21 @@ void UISystem::drawPreviewContent(
     ImGui::EndDisabled();
     ImGui::EndGroup();
 
+    ImGui::BeginGroup();
+    ImGui::Text("Video 3");
+    updateSlotAndDrawImage("V3", previewSlotVideo3,
+                           controls.playback.selectedVideo3Folder,
+                           selectedVideoAsset3, 2);
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    if (ImGui::SliderFloat("Speed##V3", &controls.playback.video3PlaybackRate, 0.1f, 5.f, "%.2fx")) {
+        if (previewSlotVideo3.player)
+            previewSlotVideo3.player->setPlaybackRate(controls.playback.video3PlaybackRate);
+        if (callbacks.onSetVideoSpeed && !previewSlotVideo3.previewPath.empty())
+            callbacks.onSetVideoSpeed(previewSlotVideo3.previewPath, controls.playback.video3PlaybackRate);
+    }
+    ImGui::EndDisabled();
+    ImGui::EndGroup();
+
     // ── ROW 2+: controls for each slot ──
     if (ImGui::CollapsingHeader("Video 1 Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
         drawControls("V1", previewSlotVideo1, controls.playback.selectedVideoFolder,
@@ -875,6 +913,10 @@ void UISystem::drawPreviewContent(
     if (ImGui::CollapsingHeader("Video 2 Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
         drawControls("V2", previewSlotVideo2, controls.playback.selectedVideo2Folder,
                      selectedVideoAsset2, callbacks.onReloadVideo2, 1);
+    }
+    if (ImGui::CollapsingHeader("Video 3 Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+        drawControls("V3", previewSlotVideo3, controls.playback.selectedVideo3Folder,
+                     selectedVideoAsset3, callbacks.onReloadVideo3, 2);
     }
 
     // ── Global keyboard shortcuts ──
@@ -896,6 +938,15 @@ void UISystem::drawPreviewContent(
                 callbacks.onReloadVideo2(assets2[previewSlotVideo2.previewSelection].metadata.path);
         }
     }
+    if (ImGui::IsKeyPressed(ImGuiKey_E)) {
+        const auto& assets3 = registry.getFilteredAssets(controls.playback.selectedVideo3Folder);
+        if (!assets3.empty() && previewSlotVideo3.previewSelection >= 0 &&
+            previewSlotVideo3.previewSelection < (int)assets3.size()) {
+            selectedVideoAsset3 = previewSlotVideo3.previewSelection;
+            if (callbacks.onReloadVideo3)
+                callbacks.onReloadVideo3(assets3[previewSlotVideo3.previewSelection].metadata.path);
+        }
+    }
 
     if (changed) {
         controlsDirty = true;
@@ -905,7 +956,7 @@ void UISystem::drawPreviewContent(
 }
 
 void UISystem::forcePreviewShuffle(int slotIndex) {
-    if (slotIndex < 0 || slotIndex > 1) return;
+    if (slotIndex < 0 || slotIndex > 2) return;
     previewShuffleRequested[slotIndex] = true;
     previewAutoRandomizeElapsed[slotIndex] = 0.0f;
 }
@@ -1068,6 +1119,7 @@ void UISystem::shutdown() {
 
     destroyPreviewSlot(previewSlotVideo1);
     destroyPreviewSlot(previewSlotVideo2);
+    destroyPreviewSlot(previewSlotVideo3);
 }
 
 void UISystem::processEvent(const SDL_Event& ev) {
@@ -1080,23 +1132,25 @@ void UISystem::processEvent(const SDL_Event& ev) {
 
 void UISystem::render(
     VisualControls& controls, VideoRandomizerState& randomizer,
-    VideoRandomizerState2& randomizer2, VideoPlayer& player, VideoPlayer& player2,
-    VideoRegistry& registry, int& selAsset, int& selAsset2,
-    float& transDur, float& transDur2, bool& allowDimChange,
+    VideoRandomizerState2& randomizer2, VideoRandomizerState2& randomizer3,
+    VideoPlayer& player, VideoPlayer& player2, VideoPlayer& player3,
+    VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
+    float& transDur, float& transDur2, float& transDur3,
+    bool& allowDimChange,
     bool& controlsDirty, std::mt19937& rng, const UIDiagnostics& diag,
     const UICallbacks& callbacks, MidiSystem& midiSystem,
     OscSystem& oscSystem, AudioSystem& audioSystem,
-    const std::string& video1Path, const std::string& video2Path)
+    const std::string& video1Path, const std::string& video2Path, const std::string& video3Path)
 {
     if (!initialized || !renderer) return;
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    drawMainNavbar(controls, randomizer, randomizer2, player, player2, registry,
-                   selAsset, selAsset2, transDur, transDur2,
+    drawMainNavbar(controls, randomizer, randomizer2, randomizer3, player, player2, player3, registry,
+                   selAsset, selAsset2, selAsset3, transDur, transDur2, transDur3,
                    allowDimChange, controlsDirty, rng, diag, callbacks,
-                   midiSystem, oscSystem, audioSystem, video1Path, video2Path);
+                   midiSystem, oscSystem, audioSystem, video1Path, video2Path, video3Path);
 
     if (showDemoWindow) ImGui::ShowDemoWindow(&showDemoWindow);
 
@@ -1162,13 +1216,15 @@ void UISystem::drawPresetsContent(VisualControls& controls, bool& controlsDirty,
 
 void UISystem::drawMainNavbar(
     VisualControls& controls, VideoRandomizerState& randomizer,
-    VideoRandomizerState2& randomizer2, VideoPlayer& player, VideoPlayer& player2,
-    VideoRegistry& registry, int& selAsset, int& selAsset2,
-    float& transDur, float& transDur2, bool& allowDimChange,
+    VideoRandomizerState2& randomizer2, VideoRandomizerState2& randomizer3,
+    VideoPlayer& player, VideoPlayer& player2, VideoPlayer& player3,
+    VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
+    float& transDur, float& transDur2, float& transDur3,
+    bool& allowDimChange,
     bool& controlsDirty, std::mt19937& rng, const UIDiagnostics& diag,
     const UICallbacks& callbacks, MidiSystem& midiSystem,
     OscSystem& oscSystem, AudioSystem& audioSystem,
-    const std::string& video1Path, const std::string& video2Path)
+    const std::string& video1Path, const std::string& video2Path, const std::string& video3Path)
 {
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
@@ -1182,29 +1238,29 @@ void UISystem::drawMainNavbar(
     if (ImGui::BeginTabBar("MainTabBar")) {
         if (ImGui::BeginTabItem("Procedural")) {
             drawProceduralControlsContent(controls, randomizer, player, registry,
-                selAsset, selAsset2, transDur, allowDimChange,
+                selAsset, selAsset2, selAsset3, transDur, allowDimChange,
                 controlsDirty, rng, diag, callbacks);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Video")) {
-            drawVideoContent(controls, randomizer, randomizer2, registry,
-                selAsset, selAsset2, transDur, transDur2,
+            drawVideoContent(controls, randomizer, randomizer2, randomizer3, registry,
+                selAsset, selAsset2, selAsset3, transDur, transDur2, transDur3,
                 allowDimChange, controlsDirty, diag, callbacks);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Post FX"))     { drawPostFxContent(controls, controlsDirty, rng);  ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("VJAY Basics")) { drawVJayBasicsContent(controls, controlsDirty, rng); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("VJAY Extra"))  { drawVJayExtraContent(controls, controlsDirty, rng);  ImGui::EndTabItem(); }
-        if (ImGui::BeginTabItem("NLE Editor"))  { drawNLEEditorContent(callbacks, video1Path, video2Path); ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("NLE Editor"))  { drawNLEEditorContent(callbacks, video1Path, video2Path, video3Path); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Preview")) {
-            drawPreviewContent(controls, registry, selAsset, selAsset2,
-                randomizer, randomizer2, transDur, transDur2,
-                controlsDirty, diag, callbacks, video1Path, video2Path, rng);
+            drawPreviewContent(controls, registry, selAsset, selAsset2, selAsset3,
+                randomizer, randomizer2, randomizer3, transDur, transDur2, transDur3,
+                controlsDirty, diag, callbacks, video1Path, video2Path, video3Path, rng);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Diagnostics")) {
-            drawDiagnosticsContent(diag, player, player2, registry,
-                selAsset, selAsset2, controls, callbacks);
+            drawDiagnosticsContent(diag, player, player2, player3, registry,
+                selAsset, selAsset2, selAsset3, controls, callbacks);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Performance")) {
@@ -1228,7 +1284,7 @@ void UISystem::drawMainNavbar(
 void UISystem::drawProceduralControlsContent(
     VisualControls& controls, VideoRandomizerState& /*randomizer*/,
     VideoPlayer& /*player*/, VideoRegistry& /*registry*/,
-    int& /*selAsset*/, int& /*selAsset2*/,
+    int& /*selAsset*/, int& /*selAsset2*/, int& /*selAsset3*/,
     float& /*transDur*/, bool& /*allowDimChange*/,
     bool& controlsDirty, std::mt19937& rng,
     const UIDiagnostics& /*diag*/, const UICallbacks& callbacks)
@@ -1322,9 +1378,9 @@ void UISystem::drawProceduralControlsContent(
 // ═════════════════════════════════════════════════════════════════════════════
 
 void UISystem::drawVideoContent(
-    VisualControls& c, VideoRandomizerState& r1, VideoRandomizerState2& r2,
-    VideoRegistry& registry, int& selAsset, int& selAsset2,
-    float& transDur, float& transDur2,
+    VisualControls& c, VideoRandomizerState& r1, VideoRandomizerState2& r2, VideoRandomizerState2& r3,
+    VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
+    float& transDur, float& transDur2, float& transDur3,
     bool& allowDimChange, bool& controlsDirty,
     const UIDiagnostics& diag, const UICallbacks& callbacks)
 {
@@ -1658,7 +1714,8 @@ void UISystem::drawVJayExtraContent(VisualControls& c, bool& controlsDirty, std:
 void UISystem::drawNLEEditorContent(
     const UICallbacks& callbacks,
     const std::string& video1Path,
-    const std::string& video2Path)
+    const std::string& video2Path,
+    const std::string& video3Path)
 {
     ImGui::Text("NLE Effects (for rendering/exporting only)");
     ImGui::TextDisabled("These effects are applied when rendering to a new file");
@@ -1669,8 +1726,11 @@ void UISystem::drawNLEEditorContent(
     if (ImGui::RadioButton("Video 1", &videoSource, 0)) g_project_state.nleVideoSource = NLEVideoSource::VIDEO_1;
     ImGui::SameLine();
     if (ImGui::RadioButton("Video 2", &videoSource, 1)) g_project_state.nleVideoSource = NLEVideoSource::VIDEO_2;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Video 3", &videoSource, 2)) g_project_state.nleVideoSource = NLEVideoSource::VIDEO_3;
 
-    const std::string& path = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? video1Path : video2Path;
+    const std::string& path = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? video1Path :
+                              (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_2) ? video2Path : video3Path;
     g_project_state.active_file = path.empty() ? "(no video loaded)" : path;
 
     ImGui::Separator(); ImGui::Text("Quality Presets:");
@@ -1725,8 +1785,8 @@ void UISystem::drawNLEEditorContent(
 // ═════════════════════════════════════════════════════════════════════════════
 
 void UISystem::drawDiagnosticsContent(
-    const UIDiagnostics& diag, VideoPlayer& player, VideoPlayer& player2,
-    VideoRegistry& registry, int& selAsset, int& /*selAsset2*/,
+    const UIDiagnostics& diag, VideoPlayer& player, VideoPlayer& player2, VideoPlayer& player3,
+    VideoRegistry& registry, int& selAsset, int& /*selAsset2*/, int& /*selAsset3*/,
     VisualControls& c, const UICallbacks& callbacks)
 {
     ImGui::Text("Frame %u | Image %u", diag.lastFrameFrameIndex, diag.lastFrameImageIndex);
@@ -1754,6 +1814,14 @@ void UISystem::drawDiagnosticsContent(
     if (player2.isReady()) {
         double fps = 1.0 / std::max(1e-6, player2.frameDuration());
         ImGui::Text("Video: %ux%u",   player2.width(), player2.height());
+        ImGui::Text("Clip FPS: %.2f", fps);
+    } else { ImGui::Text("Video offline"); }
+
+    // Video 3
+    ImGui::Separator(); ImGui::Text("Video 3:");
+    if (player3.isReady()) {
+        double fps = 1.0 / std::max(1e-6, player3.frameDuration());
+        ImGui::Text("Video: %ux%u",   player3.width(), player3.height());
         ImGui::Text("Clip FPS: %.2f", fps);
     } else { ImGui::Text("Video offline"); }
 
@@ -2299,6 +2367,7 @@ void UISystem::drawParameterIndexContent() {
         list({"videoMix","videoPlaybackRate","videoDecodeOversample",
               "loopBlendSeconds","forcedFpsIndex","enableDualVideo",
               "video2Mix","video2BlendMode","video2PlaybackRate",
+              "video3Mix","video3BlendMode","video3PlaybackRate",
               "blendModeProcedural","blendModeVideo","blendModeFeedback",
               "blendProceduralMix","blendVideoMix","blendFeedbackMix"});
         ImGui::EndTabItem();

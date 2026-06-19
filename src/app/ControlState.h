@@ -19,24 +19,30 @@ void load(
     const std::string&  path,
     VideoRandomizerState& randomizer,
     VideoRandomizerState2& randomizer2,
+    VideoRandomizerState2& randomizer3,
     bool&               allowDimensionChangeRecreation,
     OscSystem&          oscSystem,
     int&                selectedVideoAsset,
     int&                selectedVideoAsset2,
+    int&                selectedVideoAsset3,
     std::string&        videoSourcePath,
-    std::string&        videoSourcePath2
+    std::string&        videoSourcePath2,
+    std::string&        videoSourcePath3
 );
 
 void save(
     const std::string&        path,
     const VideoRandomizerState& randomizer,
     const VideoRandomizerState2& randomizer2,
+    const VideoRandomizerState2& randomizer3,
     bool                      allowDimensionChangeRecreation,
     const OscSystem&          oscSystem,
     int                       selectedVideoAsset,
     int                       selectedVideoAsset2,
+    int                       selectedVideoAsset3,
     const std::string&        videoSourcePath,
-    const std::string&        videoSourcePath2
+    const std::string&        videoSourcePath2,
+    const std::string&        videoSourcePath3
 );
 
 } // namespace ControlState

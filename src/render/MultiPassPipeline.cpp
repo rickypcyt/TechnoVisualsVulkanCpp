@@ -185,6 +185,8 @@ bool MultiPassPipeline::initialize(
     VkImageView videoPrevImageView,
     VkSampler video2Sampler,
     VkImageView video2ImageView,
+    VkSampler video3Sampler,
+    VkImageView video3ImageView,
     const std::vector<VkBuffer>& uniformBuffers,
     size_t uniformBufferSize
 ) {
@@ -200,6 +202,8 @@ bool MultiPassPipeline::initialize(
     this->videoPrevImageView = videoPrevImageView;
     this->video2Sampler = video2Sampler;
     this->video2ImageView = video2ImageView;
+    this->video3Sampler = video3Sampler;
+    this->video3ImageView = video3ImageView;
     this->uniformBuffers = uniformBuffers;
     this->uniformBufferSize = uniformBufferSize;
 
@@ -242,7 +246,9 @@ bool MultiPassPipeline::initialize(
         videoSampler,
         videoSamplerPrev,
         video2ImageView,
-        video2Sampler
+        video2Sampler,
+        video3ImageView,
+        video3Sampler
     );
 
     initProfiling(device);
@@ -552,7 +558,7 @@ bool MultiPassPipeline::createPipelines() {
         // Create descriptor set layout for set 1 (textures) - pass-specific texture bindings
         std::vector<VkDescriptorSetLayoutBinding> textureBindings;
 
-        // Pass A needs video textures at bindings 0, 1 and video2 at binding 2
+        // Pass A needs video textures at bindings 0, 1, 2 and video3 at binding 3
         if (i == 0) {
             VkDescriptorSetLayoutBinding videoTexBinding{};
             videoTexBinding.binding = 0;
@@ -574,6 +580,13 @@ bool MultiPassPipeline::createPipelines() {
             video2TexBinding.descriptorCount = 1;
             video2TexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             textureBindings.push_back(video2TexBinding);
+
+            VkDescriptorSetLayoutBinding video3TexBinding{};
+            video3TexBinding.binding = 3;
+            video3TexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            video3TexBinding.descriptorCount = 1;
+            video3TexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBindings.push_back(video3TexBinding);
         }
         // Pass D needs inputTex and prevFrameTex
         else if (i == 3) {
@@ -682,7 +695,7 @@ bool MultiPassPipeline::createDescriptorSets() {
     // Calculate pool sizes
     std::vector<VkDescriptorPoolSize> poolSizes = {
         {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_PASSES * numFrames}, // Set 0: one UBO per pass per frame
-        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 3} // Set 1: up to 3 textures per pass per frame
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 4} // Set 1: up to 4 textures per pass per frame
     };
 
     VkDescriptorPoolCreateInfo poolInfo{};
@@ -1023,7 +1036,9 @@ void MultiPassPipeline::updateDescriptorSets(
     VkSampler videoSampler,
     VkSampler videoSamplerPrev,
     VkImageView video2ImageView,
-    VkSampler video2Sampler
+    VkSampler video2Sampler,
+    VkImageView video3ImageView,
+    VkSampler video3Sampler
 ) {
     // CRITICAL: Validate input handles before proceeding
     printf("[MultiPass] updateDescriptorSets - videoImageView=%p, videoPrevImageView=%p, videoSampler=%p\n",
@@ -1045,8 +1060,11 @@ void MultiPassPipeline::updateDescriptorSets(
     this->videoSamplerPrev = videoSamplerPrev;
     this->video2ImageView = video2ImageView;
     this->video2Sampler = video2Sampler;
+    this->video3ImageView = video3ImageView;
+    this->video3Sampler = video3Sampler;
 
-    printf("[MultiPass] video2ImageView=%p, video2Sampler=%p\n", (void*)video2ImageView, (void*)video2Sampler);
+    printf("[MultiPass] video2ImageView=%p, video2Sampler=%p, video3ImageView=%p, video3Sampler=%p\n",
+           (void*)video2ImageView, (void*)video2Sampler, (void*)video3ImageView, (void*)video3Sampler);
 
     // Update descriptor sets for each pass and frame
     // Note: Set 0 (UBOs) is already updated in createDescriptorSets, so we only update set 1 (textures) here
@@ -1055,9 +1073,9 @@ void MultiPassPipeline::updateDescriptorSets(
         // printf("[MultiPass] Processing pass=%d\n", pass);
         for (size_t frame = 0; frame < uniformBuffers.size(); ++frame) {
             std::vector<VkWriteDescriptorSet> textureWrites;
-            textureWrites.reserve(3);
+            textureWrites.reserve(4);
             std::vector<VkDescriptorImageInfo> imageInfos;
-            imageInfos.reserve(3);
+            imageInfos.reserve(4);
 
             auto addTextureWrite = [&](uint32_t binding, VkImageView view, VkSampler sampler) {
                 if (view == VK_NULL_HANDLE || sampler == VK_NULL_HANDLE) {
@@ -1082,12 +1100,15 @@ void MultiPassPipeline::updateDescriptorSets(
             };
 
             // Pass-specific texture bindings for set 1
-            if (pass == 0) {  // Pass A needs video textures at bindings 0,1 (and optional video2 at 2)
+            if (pass == 0) {  // Pass A needs video textures at bindings 0,1,2,3
                 addTextureWrite(0, videoImageView, videoSampler);
                 addTextureWrite(1, videoPrevImageView, videoSamplerPrev);
 
                 if (video2ImageView != VK_NULL_HANDLE && video2Sampler != VK_NULL_HANDLE) {
                     addTextureWrite(2, video2ImageView, video2Sampler);
+                }
+                if (video3ImageView != VK_NULL_HANDLE && video3Sampler != VK_NULL_HANDLE) {
+                    addTextureWrite(3, video3ImageView, video3Sampler);
                 }
             } else if (pass >= 1 && pass <= 5) {  // Passes B-F need input texture at binding 0
                 int prevBuffer = 1 - currentBuffer;
@@ -1140,7 +1161,9 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
         videoSampler,
         videoSamplerPrev,
         video2ImageView,
-        video2Sampler
+        video2Sampler,
+        video3ImageView,
+        video3Sampler
     );
 }
 

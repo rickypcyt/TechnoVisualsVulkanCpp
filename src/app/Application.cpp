@@ -51,8 +51,9 @@ void Application::updateAllDescriptorSets() {
     }
     updateFullscreenDescriptorSets();
 
-    // Multipass pipeline usa las dos fuentes de vídeo
+    // Multipass pipeline usa las tres fuentes de vídeo
     const bool has2 = videoTexture2.isReady();
+    const bool has3 = videoTexture3.isReady();
     multiPassPipeline.updateDescriptorSets(
         uniformBufferManager.getBuffers(),
         videoTexture.getImageView(),
@@ -60,9 +61,12 @@ void Application::updateAllDescriptorSets() {
         videoTexture.getSampler(),
         videoTexture.getSampler(),
         has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
+        has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
+        has3 ? videoTexture3.getSampler()   : videoTexture.getSampler()
     );
     const bool outputHas2 = outputVideoTexture2.isReady();
+    const bool outputHas3 = outputVideoTexture3.isReady();
     outputMultiPassPipeline.updateDescriptorSets(
         outputUniformBufferManager.getBuffers(),
         outputVideoTexture.getImageView(),
@@ -70,7 +74,9 @@ void Application::updateAllDescriptorSets() {
         outputVideoTexture.getSampler(),
         outputVideoTexture.getSampler(),
         outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
-        outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler()
+        outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
+        outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
+        outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler()
     );
 }
 
@@ -92,7 +98,7 @@ void Application::rebuildVideoTexture(int slot) {
             static_cast<uint32_t>(videoPlayer.width()) * 4
         );
         if (videoRenderer) videoRenderer->reset();
-    } else {
+    } else if (slot == 1) {
         videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
         videoTexture2.cleanup(resourceSystem);
         videoTexture2.createResources(
@@ -107,6 +113,21 @@ void Application::rebuildVideoTexture(int slot) {
             static_cast<uint32_t>(videoPlayer2.width()) * 4
         );
         if (videoRenderer2) videoRenderer2->reset();
+    } else {
+        videoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
+        videoTexture3.cleanup(resourceSystem);
+        videoTexture3.createResources(
+            resourceSystem, vulkanContext.getDevice(),
+            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+            static_cast<uint32_t>(videoPlayer3.width()),
+            static_cast<uint32_t>(videoPlayer3.height())
+        );
+        cpuFramePool3.resize(
+            static_cast<uint32_t>(videoPlayer3.width()),
+            static_cast<uint32_t>(videoPlayer3.height()),
+            static_cast<uint32_t>(videoPlayer3.width()) * 4
+        );
+        if (videoRenderer3) videoRenderer3->reset();
     }
 }
 
@@ -121,9 +142,12 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         if (targetSlot == 0) {
             visualControls.playback.videoPlaybackRate = speed;
             lastPlaybackRate = speed;
-        } else {
+        } else if (targetSlot == 1) {
             visualControls.playback.video2PlaybackRate = speed;
             lastPlaybackRate2 = speed;
+        } else {
+            visualControls.playback.video3PlaybackRate = speed;
+            lastPlaybackRate3 = speed;
         }
     };
 
@@ -137,6 +161,10 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         transitionActive = true;
         transitionProgress = 0.0f;
         videoTexture2.setFreezePrev(true);
+    } else if (slot == 2 && videoTexture3.isReady()) {
+        transitionActive = true;
+        transitionProgress = 0.0f;
+        videoTexture3.setFreezePrev(true);
     }
 
     if (slot == 0) {
@@ -160,7 +188,7 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         videoRandomizer.elapsedSeconds = 0.0f;
         videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
         videoSubsystemInitialized = videoTexture.isReady();
-    } else {
+    } else if (slot == 1) {
         videoSourcePath2 = path;
         videoRenderer2.reset();
         videoPlayer2.shutdown();
@@ -181,11 +209,33 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         videoRandomizer2.elapsedSeconds = 0.0f;
         videoRandomizer2.currentVideoDuration = videoPlayer2.durationSeconds();
         videoSubsystemInitialized2 = videoTexture2.isReady();
+    } else {
+        videoSourcePath3 = path;
+        videoRenderer3.reset();
+        videoPlayer3.shutdown();
+
+        glm::ivec2 screenSize = getScreenSize();
+        if (!videoPlayer3.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadVideoSlot(2) failed: " << path << '\n';
+            isReloadingVideo3 = false;
+            return false;
+        }
+
+        videoPlayer3.setAutoScale(visualControls.playback.autoScaleVideo);
+        videoPlayer3.setPlaybackRate(visualControls.playback.video3PlaybackRate);
+        rebuildVideoTexture(2);
+        updateAllDescriptorSets();
+
+        videoRenderer3 = std::make_unique<VideoRenderer>(videoPlayer3, videoTexture3, cpuFramePool3);
+        videoRandomizer3.elapsedSeconds = 0.0f;
+        videoRandomizer3.currentVideoDuration = videoPlayer3.durationSeconds();
+        videoSubsystemInitialized3 = videoTexture3.isReady();
     }
 
     restoreSpeed(slot, path);
 
-    isReloadingVideo = false;
+    if (slot == 2) isReloadingVideo3 = false;
+    else isReloadingVideo = false;
     return true;
 }
 
@@ -229,7 +279,7 @@ bool Application::reloadOutputVideoSlot(int slot, const std::string& path) {
         outputVideoRandomizer.elapsedSeconds = 0.0f;
         outputVideoRandomizer.currentVideoDuration = outputVideoPlayer.durationSeconds();
         outputVideoSubsystemInitialized = outputVideoTexture.isReady();
-    } else {
+    } else if (slot == 1) {
         outputVideoSourcePath2 = path;
         outputVideoRenderer2.reset();
         outputVideoPlayer2.shutdown();
@@ -264,10 +314,46 @@ bool Application::reloadOutputVideoSlot(int slot, const std::string& path) {
         outputVideoRandomizer2.elapsedSeconds = 0.0f;
         outputVideoRandomizer2.currentVideoDuration = outputVideoPlayer2.durationSeconds();
         outputVideoSubsystemInitialized2 = outputVideoTexture2.isReady();
+    } else {
+        outputVideoSourcePath3 = path;
+        outputVideoRenderer3.reset();
+        outputVideoPlayer3.shutdown();
+
+        glm::ivec2 screenSize = getScreenSize();
+        if (!outputVideoPlayer3.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadOutputVideoSlot(2) failed: " << path << '\n';
+            outputIsReloadingVideo3 = false;
+            return false;
+        }
+
+        outputVideoPlayer3.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        outputVideoPlayer3.setPlaybackRate(outputVisualControls.playback.video3PlaybackRate);
+
+        vkDeviceWaitIdle(vulkanContext.getDevice());
+        outputVideoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
+        outputVideoTexture3.cleanup(resourceSystem);
+        outputVideoTexture3.createResources(
+            resourceSystem, vulkanContext.getDevice(),
+            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+            static_cast<uint32_t>(outputVideoPlayer3.width()),
+            static_cast<uint32_t>(outputVideoPlayer3.height()));
+        outputCpuFramePool3.resize(
+            static_cast<uint32_t>(outputVideoPlayer3.width()),
+            static_cast<uint32_t>(outputVideoPlayer3.height()),
+            static_cast<uint32_t>(outputVideoPlayer3.width()) * 4);
+        if (outputVideoRenderer3) outputVideoRenderer3->reset();
+
+        updateAllDescriptorSets();
+
+        outputVideoRenderer3 = std::make_unique<VideoRenderer>(outputVideoPlayer3, outputVideoTexture3, outputCpuFramePool3);
+        outputVideoRandomizer3.elapsedSeconds = 0.0f;
+        outputVideoRandomizer3.currentVideoDuration = outputVideoPlayer3.durationSeconds();
+        outputVideoSubsystemInitialized3 = outputVideoTexture3.isReady();
     }
 
     if (slot == 0) outputIsReloadingVideo = false;
-    else outputIsReloadingVideo2 = false;
+    else if (slot == 1) outputIsReloadingVideo2 = false;
+    else outputIsReloadingVideo3 = false;
     return true;
 }
 
@@ -296,12 +382,15 @@ void Application::saveState() const {
         controlStatePath,
         static_cast<const VideoRandomizerState&>(videoRandomizer),
         static_cast<const VideoRandomizerState2&>(videoRandomizer2),
+        static_cast<const VideoRandomizerState2&>(videoRandomizer3),
         allowDimensionChangeRecreation,
         oscSystem,
         selectedVideoAsset,
         selectedVideoAsset2,
+        selectedVideoAsset3,
         videoSourcePath,
-        videoSourcePath2
+        videoSourcePath2,
+        videoSourcePath3
     );
     saveVideoSpeeds();
 }
@@ -329,8 +418,10 @@ bool Application::savePreset(const std::string& name) {
     nlohmann::json video;
     video["videoSourcePath"] = videoSourcePath;
     video["videoSourcePath2"] = videoSourcePath2;
+    video["videoSourcePath3"] = videoSourcePath3;
     video["selectedVideoAsset"] = selectedVideoAsset;
     video["selectedVideoAsset2"] = selectedVideoAsset2;
+    video["selectedVideoAsset3"] = selectedVideoAsset3;
     video["allowDimensionChangeRecreation"] = allowDimensionChangeRecreation;
 
     nlohmann::json r1;
@@ -346,6 +437,13 @@ bool Application::savePreset(const std::string& name) {
     r2["intervalSeconds"] = videoRandomizer2.intervalSeconds;
     r2["useShuffleMode"] = videoRandomizer2.useShuffleMode;
     video["randomizer2"] = r2;
+
+    nlohmann::json r3;
+    r3["autoRandomize"] = videoRandomizer3.autoRandomize;
+    r3["useVideoDuration"] = videoRandomizer3.useVideoDuration;
+    r3["intervalSeconds"] = videoRandomizer3.intervalSeconds;
+    r3["useShuffleMode"] = videoRandomizer3.useShuffleMode;
+    video["randomizer3"] = r3;
 
     j["video"] = video;
 
@@ -383,8 +481,10 @@ bool Application::loadPreset(const std::string& name) {
         auto& v = j["video"];
         if (v.contains("videoSourcePath")) videoSourcePath = v["videoSourcePath"];
         if (v.contains("videoSourcePath2")) videoSourcePath2 = v["videoSourcePath2"];
+        if (v.contains("videoSourcePath3")) videoSourcePath3 = v["videoSourcePath3"];
         if (v.contains("selectedVideoAsset")) selectedVideoAsset = v["selectedVideoAsset"];
         if (v.contains("selectedVideoAsset2")) selectedVideoAsset2 = v["selectedVideoAsset2"];
+        if (v.contains("selectedVideoAsset3")) selectedVideoAsset3 = v["selectedVideoAsset3"];
         if (v.contains("allowDimensionChangeRecreation")) allowDimensionChangeRecreation = v["allowDimensionChangeRecreation"];
 
         if (v.contains("randomizer1")) {
@@ -401,12 +501,20 @@ bool Application::loadPreset(const std::string& name) {
             if (r2.contains("intervalSeconds")) videoRandomizer2.intervalSeconds = r2["intervalSeconds"];
             if (r2.contains("useShuffleMode")) videoRandomizer2.useShuffleMode = r2["useShuffleMode"];
         }
+        if (v.contains("randomizer3")) {
+            auto& r3 = v["randomizer3"];
+            if (r3.contains("autoRandomize")) videoRandomizer3.autoRandomize = r3["autoRandomize"];
+            if (r3.contains("useVideoDuration")) videoRandomizer3.useVideoDuration = r3["useVideoDuration"];
+            if (r3.contains("intervalSeconds")) videoRandomizer3.intervalSeconds = r3["intervalSeconds"];
+            if (r3.contains("useShuffleMode")) videoRandomizer3.useShuffleMode = r3["useShuffleMode"];
+        }
     }
 
     // Reload videos to match preset state
     if (canChangeVideo()) {
         if (!videoSourcePath.empty()) reloadVideoSlot(0, videoSourcePath);
         if (!videoSourcePath2.empty()) reloadVideoSlot(1, videoSourcePath2);
+        if (!videoSourcePath3.empty()) reloadVideoSlot(2, videoSourcePath3);
     }
 
     controlsDirty = true;
@@ -460,12 +568,15 @@ void Application::run() {
         controlStatePath,
         videoRandomizer,
         videoRandomizer2,
+        videoRandomizer3,
         allowDimensionChangeRecreation,
         oscSystem,
         selectedVideoAsset,
         selectedVideoAsset2,
+        selectedVideoAsset3,
         videoSourcePath,
-        videoSourcePath2
+        videoSourcePath2,
+        videoSourcePath3
     );
 
     initVideo();
@@ -928,19 +1039,26 @@ void Application::initVideo() {
     std::cout << "[initVideo] Before resolve: V2 path=" << videoSourcePath2
               << " idx=" << selectedVideoAsset2 << " folder="
               << visualControls.playback.selectedVideo2Folder << "\n";
+    std::cout << "[initVideo] Before resolve: V3 path=" << videoSourcePath3
+              << " idx=" << selectedVideoAsset3 << " folder="
+              << visualControls.playback.selectedVideo3Folder << "\n";
 
     resolvePath(visualControls.playback.selectedVideoFolder,
                 selectedVideoAsset, videoSourcePath);
     resolvePath(visualControls.playback.selectedVideo2Folder,
                 selectedVideoAsset2, videoSourcePath2);
+    resolvePath(visualControls.playback.selectedVideo3Folder,
+                selectedVideoAsset3, videoSourcePath3);
 
     std::cout << "[initVideo] After resolve:  V1 path=" << videoSourcePath
               << " idx=" << selectedVideoAsset << "\n";
     std::cout << "[initVideo] After resolve:  V2 path=" << videoSourcePath2
               << " idx=" << selectedVideoAsset2 << "\n";
+    std::cout << "[initVideo] After resolve:  V3 path=" << videoSourcePath3
+              << " idx=" << selectedVideoAsset3 << "\n";
 
-    // ── Lazy init: only init slot 1 when dual video is enabled ────────────
-    bool initSlot1 = visualControls.playback.enableDualVideo;
+    // ── Lazy init: only init slots 1 and 2 when dual video is enabled ────────────
+    bool initExtraSlots = visualControls.playback.enableDualVideo;
 
     // ── Parallel player initialization (heaviest part: disk + codecs) ──────
     auto tPlayer = Clock::now();
@@ -950,19 +1068,24 @@ void Application::initVideo() {
     });
 
     std::future<bool> future1;
-    if (initSlot1) {
+    std::future<bool> future2;
+    if (initExtraSlots) {
         future1 = std::async(std::launch::async, [&]() {
             return videoPlayer2.initialize(videoSourcePath2, screenSize.x, screenSize.y);
+        });
+        future2 = std::async(std::launch::async, [&]() {
+            return videoPlayer3.initialize(videoSourcePath3, screenSize.x, screenSize.y);
         });
     }
 
     bool ok0 = future0.get();
-    bool ok1 = initSlot1 ? future1.get() : false;
+    bool ok1 = initExtraSlots ? future1.get() : false;
+    bool ok2 = initExtraSlots ? future2.get() : false;
 
     auto tPlayerDone = Clock::now();
     std::cout << "[Application] Player init: "
               << std::chrono::duration<double>(tPlayerDone - tPlayer).count()
-              << "s (slot0=" << ok0 << " slot1=" << ok1 << ")\n";
+              << "s (slot0=" << ok0 << " slot1=" << ok1 << " slot2=" << ok2 << ")\n";
 
     if (!ok0) {
         std::cerr << "[Application] Failed to initialize video player 1\n";
@@ -981,7 +1104,7 @@ void Application::initVideo() {
     if (videoSubsystemInitialized)
         videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
 
-    if (initSlot1 && ok1) {
+    if (initExtraSlots && ok1) {
         videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
         cpuFramePool2.resize(videoPlayer2.width(), videoPlayer2.height(), videoPlayer2.width() * 4);
         videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
@@ -992,6 +1115,17 @@ void Application::initVideo() {
             videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
     }
 
+    if (initExtraSlots && ok2) {
+        videoPlayer3.setAutoScale(visualControls.playback.autoScaleVideo);
+        cpuFramePool3.resize(videoPlayer3.width(), videoPlayer3.height(), videoPlayer3.width() * 4);
+        videoTexture3.createResources(resourceSystem, vulkanContext.getDevice(),
+                                      vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                      videoPlayer3.width(), videoPlayer3.height());
+        videoSubsystemInitialized3 = videoTexture3.isReady();
+        if (videoSubsystemInitialized3)
+            videoRenderer3 = std::make_unique<VideoRenderer>(videoPlayer3, videoTexture3, cpuFramePool3);
+    }
+
     auto tVkDone = Clock::now();
     std::cout << "[Application] Vulkan resources: "
               << std::chrono::duration<double>(tVkDone - tVk).count() << "s\n";
@@ -1000,7 +1134,8 @@ void Application::initVideo() {
     std::cout << "[Application] initVideo() done — total="
               << std::chrono::duration<double>(t1 - t0).count()
               << "s v1=" << videoSubsystemInitialized
-              << " v2=" << videoSubsystemInitialized2 << '\n';
+              << " v2=" << videoSubsystemInitialized2
+              << " v3=" << videoSubsystemInitialized3 << '\n';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1017,24 +1152,31 @@ void Application::initOutputVideo() {
     // Copy paths from preview initially
     outputVideoSourcePath = videoSourcePath;
     outputVideoSourcePath2 = videoSourcePath2;
+    outputVideoSourcePath3 = videoSourcePath3;
     outputSelectedVideoAsset = selectedVideoAsset;
     outputSelectedVideoAsset2 = selectedVideoAsset2;
+    outputSelectedVideoAsset3 = selectedVideoAsset3;
 
-    bool initSlot1 = visualControls.playback.enableDualVideo;
+    bool initExtraSlots = visualControls.playback.enableDualVideo;
 
     auto future0 = std::async(std::launch::async, [&]() {
         return outputVideoPlayer.initialize(outputVideoSourcePath, screenSize.x, screenSize.y);
     });
 
     std::future<bool> future1;
-    if (initSlot1) {
+    std::future<bool> future2;
+    if (initExtraSlots) {
         future1 = std::async(std::launch::async, [&]() {
             return outputVideoPlayer2.initialize(outputVideoSourcePath2, screenSize.x, screenSize.y);
+        });
+        future2 = std::async(std::launch::async, [&]() {
+            return outputVideoPlayer3.initialize(outputVideoSourcePath3, screenSize.x, screenSize.y);
         });
     }
 
     bool ok0 = future0.get();
-    bool ok1 = initSlot1 ? future1.get() : false;
+    bool ok1 = initExtraSlots ? future1.get() : false;
+    bool ok2 = initExtraSlots ? future2.get() : false;
 
     if (!ok0) {
         std::cerr << "[Application] Failed to initialize output video player 1\n";
@@ -1050,7 +1192,7 @@ void Application::initOutputVideo() {
     if (outputVideoSubsystemInitialized)
         outputVideoRenderer = std::make_unique<VideoRenderer>(outputVideoPlayer, outputVideoTexture, outputCpuFramePool);
 
-    if (initSlot1 && ok1) {
+    if (initExtraSlots && ok1) {
         outputVideoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
         outputCpuFramePool2.resize(outputVideoPlayer2.width(), outputVideoPlayer2.height(), outputVideoPlayer2.width() * 4);
         outputVideoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
@@ -1061,11 +1203,23 @@ void Application::initOutputVideo() {
             outputVideoRenderer2 = std::make_unique<VideoRenderer>(outputVideoPlayer2, outputVideoTexture2, outputCpuFramePool2);
     }
 
+    if (initExtraSlots && ok2) {
+        outputVideoPlayer3.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        outputCpuFramePool3.resize(outputVideoPlayer3.width(), outputVideoPlayer3.height(), outputVideoPlayer3.width() * 4);
+        outputVideoTexture3.createResources(resourceSystem, vulkanContext.getDevice(),
+                                             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
+                                             outputVideoPlayer3.width(), outputVideoPlayer3.height());
+        outputVideoSubsystemInitialized3 = outputVideoTexture3.isReady();
+        if (outputVideoSubsystemInitialized3)
+            outputVideoRenderer3 = std::make_unique<VideoRenderer>(outputVideoPlayer3, outputVideoTexture3, outputCpuFramePool3);
+    }
+
     auto t1 = Clock::now();
     std::cout << "[Application] initOutputVideo() done — total="
               << std::chrono::duration<double>(t1 - t0).count()
               << "s v1=" << outputVideoSubsystemInitialized
-              << " v2=" << outputVideoSubsystemInitialized2 << '\n';
+              << " v2=" << outputVideoSubsystemInitialized2
+              << " v3=" << outputVideoSubsystemInitialized3 << '\n';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1146,6 +1300,7 @@ void Application::initMultiPassPipeline() {
     // ── Preview pipeline ────────────────────────────────────────────────────
     if (videoSubsystemInitialized) {
         const bool has2 = videoTexture2.isReady();
+        const bool has3 = videoTexture3.isReady();
         if (!multiPassPipeline.initialize(
                 vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
                 vulkanContext.getGraphicsQueue(), queueFamily,
@@ -1154,6 +1309,8 @@ void Application::initMultiPassPipeline() {
                 videoTexture.getImageView(), videoTexture.getImageView(),
                 has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
                 has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+                has3 ? videoTexture3.getSampler()   : videoTexture.getSampler(),
+                has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
                 uniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
         {
             std::cerr << "[Application] Failed to initialize MultiPassPipeline\n";
@@ -1163,7 +1320,9 @@ void Application::initMultiPassPipeline() {
                 videoTexture.getImageView(), videoTexture.getPrevImageView(),
                 videoTexture.getSampler(),   videoTexture.getSampler(),
                 has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                has2 ? videoTexture2.getSampler()   : videoTexture.getSampler()
+                has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
+                has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
+                has3 ? videoTexture3.getSampler()   : videoTexture.getSampler()
             );
             std::cout << "[Application] Preview MultiPassPipeline initialized\n";
         }
@@ -1174,6 +1333,7 @@ void Application::initMultiPassPipeline() {
     // ── Output pipeline (independent) ───────────────────────────────────────
     if (outputVideoSubsystemInitialized) {
         const bool outputHas2 = outputVideoTexture2.isReady();
+        const bool outputHas3 = outputVideoTexture3.isReady();
         if (!outputMultiPassPipeline.initialize(
                 vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
                 vulkanContext.getGraphicsQueue(), queueFamily,
@@ -1182,6 +1342,8 @@ void Application::initMultiPassPipeline() {
                 outputVideoTexture.getImageView(), outputVideoTexture.getImageView(),
                 outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
                 outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
+                outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler(),
+                outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
                 outputUniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
         {
             std::cerr << "[Application] Failed to initialize output MultiPassPipeline\n";
@@ -1191,7 +1353,9 @@ void Application::initMultiPassPipeline() {
                 outputVideoTexture.getImageView(), outputVideoTexture.getPrevImageView(),
                 outputVideoTexture.getSampler(),   outputVideoTexture.getSampler(),
                 outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
-                outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler()
+                outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
+                outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
+                outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler()
             );
             std::cout << "[Application] Output MultiPassPipeline initialized\n";
         }
@@ -1212,6 +1376,10 @@ int Application::pickNextVideoIndex2(const std::vector<VideoAsset>& assets) {
     return pickNextIndex(assets, videoRandomizer2, selectedVideoAsset2);
 }
 
+int Application::pickNextVideoIndex3(const std::vector<VideoAsset>& assets) {
+    return pickNextIndex(assets, videoRandomizer3, selectedVideoAsset3);
+}
+
 bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets) {
     selectedVideoAsset = newIndex;
     transitionActive   = false;
@@ -1224,6 +1392,12 @@ bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset
     return reloadVideoSlot(1, assets[newIndex].metadata.path);
 }
 
+bool Application::reloadVideoAtIndex3(int newIndex, const std::vector<VideoAsset>& assets) {
+    selectedVideoAsset3 = newIndex;
+    transitionActive    = false;
+    return reloadVideoSlot(2, assets[newIndex].metadata.path);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Render job completion
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1231,19 +1405,28 @@ bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset
 void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job) {
     if (!job || !renderWorker) return;
 
-    const int slot = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? 0 : 1;
+    int slot = 0;
+    if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_2) slot = 1;
+    else if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_3) slot = 2;
+
     if (slot == 0) {
         videoRenderer.reset();
         videoPlayer.shutdown();
         renderWorker->perform_atomic_swap(job);
         reloadVideoSlot(0, videoSourcePath);
         std::cout << "[Render] Auto-reloaded video 1: " << videoSourcePath << '\n';
-    } else {
+    } else if (slot == 1) {
         videoRenderer2.reset();
         videoPlayer2.shutdown();
         renderWorker->perform_atomic_swap(job);
         reloadVideoSlot(1, videoSourcePath2);
         std::cout << "[Render] Auto-reloaded video 2: " << videoSourcePath2 << '\n';
+    } else {
+        videoRenderer3.reset();
+        videoPlayer3.shutdown();
+        renderWorker->perform_atomic_swap(job);
+        reloadVideoSlot(2, videoSourcePath3);
+        std::cout << "[Render] Auto-reloaded video 3: " << videoSourcePath3 << '\n';
     }
 }
 
@@ -1252,7 +1435,7 @@ void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job
 // ─────────────────────────────────────────────────────────────────────────────
 
 bool Application::canChangeVideo() const {
-    return !isReloadingVideo && !isReloadingVideo2 && !transitionActive;
+    return !isReloadingVideo && !isReloadingVideo2 && !isReloadingVideo3 && !transitionActive;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1272,11 +1455,20 @@ void Application::handleOscTrigger(const std::string& action) {
         if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
         isReloadingVideo = false;
 
+    } else if (action == "randomizeVideo3") {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
+        if (assets.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets), assets);
+        isReloadingVideo = false;
+
     } else if (action == "randomizePreviewVideo1") {
         uiSystem.forcePreviewShuffle(0);
 
     } else if (action == "randomizePreviewVideo2") {
         uiSystem.forcePreviewShuffle(1);
+
+    } else if (action == "randomizePreviewVideo3") {
+        uiSystem.forcePreviewShuffle(2);
 
     } else if (action == "jumpRandom") {
         if (!videoSubsystemInitialized) return;
@@ -1288,6 +1480,7 @@ void Application::handleOscTrigger(const std::string& action) {
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
+        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
         if (!assets.empty()) {
             selectedVideoAsset = 0;
             reloadVideoSlot(0, assets[0].metadata.path);
@@ -1402,6 +1595,7 @@ void Application::mainLoop() {
                 switch (event.key.keysym.sym) {
                     case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizePreviewVideo1");  break;
                     case SDLK_2: case SDLK_KP_2: handleOscTrigger("randomizePreviewVideo2"); break;
+                    case SDLK_3: case SDLK_KP_3: handleOscTrigger("randomizePreviewVideo3"); break;
                     case SDLK_r: {
                         static std::random_device rd;
                         static std::mt19937 gen(rd());
@@ -1635,6 +1829,7 @@ void Application::mainLoop() {
 
         if (videoSubsystemInitialized)  videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
         if (videoSubsystemInitialized2) videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
+        if (videoSubsystemInitialized3) videoPlayer3.setPlaybackRate(visualControls.playback.video3PlaybackRate);
 
         // Detect playback speed changes and cache them
         if (visualControls.playback.videoPlaybackRate != lastPlaybackRate) {
@@ -1645,11 +1840,17 @@ void Application::mainLoop() {
             lastPlaybackRate2 = visualControls.playback.video2PlaybackRate;
             videoSpeedCache[videoSourcePath2] = lastPlaybackRate2;
         }
+        if (visualControls.playback.video3PlaybackRate != lastPlaybackRate3) {
+            lastPlaybackRate3 = visualControls.playback.video3PlaybackRate;
+            videoSpeedCache[videoSourcePath3] = lastPlaybackRate3;
+        }
 
         if (videoRenderer)  videoRenderer->update(deltaTime, previewFrame->frameIndex);
         if (videoRenderer2) videoRenderer2->update(deltaTime, previewFrame->frameIndex);
+        if (videoRenderer3) videoRenderer3->update(deltaTime, previewFrame->frameIndex);
         if (outputVideoRenderer)  outputVideoRenderer->update(deltaTime, previewFrame->frameIndex);
         if (outputVideoRenderer2) outputVideoRenderer2->update(deltaTime, previewFrame->frameIndex);
+        if (outputVideoRenderer3) outputVideoRenderer3->update(deltaTime, previewFrame->frameIndex);
 
         // ── UI ───────────────────────────────────────────────────────────────
         UIDiagnostics diag;
@@ -1668,13 +1869,13 @@ void Application::mainLoop() {
         diag.gpuTotalTime              = multiPassPipeline.lastGpuTotalTime;
 
         UICallbacks callbacks = buildUICallbacks();
-        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2,
-                        videoPlayer, videoPlayer2, videoRegistry,
-                        selectedVideoAsset, selectedVideoAsset2,
-                        transitionDuration, transitionDuration2,
+        uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoRandomizer3,
+                        videoPlayer, videoPlayer2, videoPlayer3, videoRegistry,
+                        selectedVideoAsset, selectedVideoAsset2, selectedVideoAsset3,
+                        transitionDuration, transitionDuration2, transitionDuration3,
                         allowDimensionChangeRecreation, controlsDirty,
                         rng, diag, callbacks, midiSystem, oscSystem, audioSystem,
-                        videoSourcePath, videoSourcePath2);
+                        videoSourcePath, videoSourcePath2, videoSourcePath3);
 
         // ── Command buffer ───────────────────────────────────────────────────
         recordCommandBuffer(commandBuffers[previewFrame->frameIndex],
@@ -1836,6 +2037,10 @@ void Application::tickAutoRandomize(float dt,
     tick(videoRandomizer2.autoRandomize && visualControls.playback.enableDualVideo,
          videoSubsystemInitialized,
          videoRandomizer2, 1, visualControls.playback.selectedVideo2Folder);
+
+    tick(videoRandomizer3.autoRandomize && visualControls.playback.enableDualVideo,
+         videoSubsystemInitialized,
+         videoRandomizer3, 2, visualControls.playback.selectedVideo3Folder);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1849,20 +2054,29 @@ UICallbacks Application::buildUICallbacks() {
 
     cb.onApplyChanges = [this]() {
         if (!canChangeVideo()) return;
-        const int slot = (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_1) ? 0 : 1;
-        reloadVideoSlot(slot, (slot == 0) ? videoSourcePath : videoSourcePath2);
+        int slot = 0;
+        std::string path = videoSourcePath;
+        if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_2) { slot = 1; path = videoSourcePath2; }
+        else if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_3) { slot = 2; path = videoSourcePath3; }
+        reloadVideoSlot(slot, path);
     };
 
     cb.onFolderChanged = [this]() {
-        // Preview folder changes do NOT reload the renderer.
-        // Only explicit "Enviar a escena" / Enter updates the renderer.
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
+        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
     };
 
     cb.onFolderChanged2 = [this]() {
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
+        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
+    };
+
+    cb.onFolderChanged3 = [this]() {
+        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
+        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
+        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
     };
 
     cb.onRandomizeVideo = [this]() {
@@ -1879,12 +2093,23 @@ UICallbacks Application::buildUICallbacks() {
         isReloadingVideo = false;
     };
 
+    cb.onRandomizeVideo3 = [this]() {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
+        if (assets.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets), assets);
+        isReloadingVideo = false;
+    };
+
     cb.onRandomizePreviewVideo1 = [this]() {
         uiSystem.forcePreviewShuffle(0);
     };
 
     cb.onRandomizePreviewVideo2 = [this]() {
         uiSystem.forcePreviewShuffle(1);
+    };
+
+    cb.onRandomizePreviewVideo3 = [this]() {
+        uiSystem.forcePreviewShuffle(2);
     };
 
     cb.onJumpRandom = [this]() {
@@ -1900,6 +2125,10 @@ UICallbacks Application::buildUICallbacks() {
     cb.onReloadVideo2 = [this](const std::string& path) {
         if (!canChangeVideo()) return;
         reloadVideoSlot(1, path);
+    };
+    cb.onReloadVideo3 = [this](const std::string& path) {
+        if (!canChangeVideo()) return;
+        reloadVideoSlot(2, path);
     };
 
     cb.onGetVideoSpeed = [this](const std::string& path) -> float {
@@ -2032,6 +2261,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.video2Mix = controls.playback.video2Mix;
     ubo.video2Available = (controls.playback.enableDualVideo && videoSubsystemInitialized2 && videoTexture2.isReady()) ? 1.0f : 0.0f;
     ubo.video2BlendMode = controls.playback.video2BlendMode;
+    ubo.video3Mix = controls.playback.video3Mix;
+    ubo.video3Available = (controls.playback.enableDualVideo && videoSubsystemInitialized3 && videoTexture3.isReady()) ? 1.0f : 0.0f;
+    ubo.video3BlendMode = controls.playback.video3BlendMode;
 
     // Set visual control values
     ubo.primaryColor = controls.color.primaryColor;
@@ -2440,8 +2672,10 @@ void Application::cleanup() {
     // freeing the FFmpeg resources they access (formatCtx, etc.)
     videoRenderer.reset();
     videoRenderer2.reset();
+    videoRenderer3.reset();
     outputVideoRenderer.reset();
     outputVideoRenderer2.reset();
+    outputVideoRenderer3.reset();
 
     videoPlayer.shutdown();
     videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
@@ -2449,12 +2683,18 @@ void Application::cleanup() {
     videoPlayer2.shutdown();
     videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
     videoTexture2.cleanup(resourceSystem);
+    videoPlayer3.shutdown();
+    videoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
+    videoTexture3.cleanup(resourceSystem);
     outputVideoPlayer.shutdown();
     outputVideoTexture.destroy(resourceSystem, vulkanContext.getDevice());
     outputVideoTexture.cleanup(resourceSystem);
     outputVideoPlayer2.shutdown();
     outputVideoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
     outputVideoTexture2.cleanup(resourceSystem);
+    outputVideoPlayer3.shutdown();
+    outputVideoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
+    outputVideoTexture3.cleanup(resourceSystem);
 
     uniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
     outputUniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
