@@ -961,6 +961,41 @@ void UISystem::forcePreviewShuffle(int slotIndex) {
     previewAutoRandomizeElapsed[slotIndex] = 0.0f;
 }
 
+void UISystem::processPreviewShuffles(VideoRegistry& registry,
+                                      int& selAsset, int& selAsset2, int& selAsset3,
+                                      const std::string& video1Folder,
+                                      const std::string& video2Folder,
+                                      const std::string& video3Folder) {
+    auto apply = [&](int slotIndex, VideoPreviewSlot& slot, const std::string& folder, int& activeSelection) {
+        if (!previewShuffleRequested[slotIndex]) return;
+        previewShuffleRequested[slotIndex] = false;
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (assets.empty()) {
+            std::cout << "[shuffle] slot " << slotIndex << " folder empty: " << folder << "\n";
+            return;
+        }
+        activeSelection = std::clamp(activeSelection, 0, (int)assets.size() - 1);
+        if (slot.previewSelection < 0)
+            slot.previewSelection = activeSelection;
+        slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
+        if (assets.size() > 1) {
+            std::uniform_int_distribution<int> dist(0, static_cast<int>(assets.size()) - 1);
+            int newSelection;
+            do { newSelection = dist(previewRng); }
+            while (newSelection == slot.previewSelection);
+            slot.previewSelection = newSelection;
+            std::cout << "[shuffle] slot " << slotIndex << " -> " << slot.previewSelection
+                      << " (" << assets[slot.previewSelection].metadata.filename << ")\n";
+        } else {
+            std::cout << "[shuffle] slot " << slotIndex << " only 1 video in folder\n";
+        }
+    };
+
+    apply(0, previewSlotVideo1, video1Folder, selAsset);
+    apply(1, previewSlotVideo2, video2Folder, selAsset2);
+    apply(2, previewSlotVideo3, video3Folder, selAsset3);
+}
+
 void UISystem::randomizeVJayBasics(VisualControls& controls) {
     randomizeVJayBasicsControls(controls, previewRng);
 }
@@ -1087,6 +1122,7 @@ bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren) {
 
     ImGuiIO& io     = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigNavCaptureKeyboard = false; // Don't let keyboard navigation eat global hotkeys
     io.IniFilename  = "imgui.ini";
 
     ImGui::StyleColorsDark();
@@ -1122,8 +1158,9 @@ void UISystem::shutdown() {
     destroyPreviewSlot(previewSlotVideo3);
 }
 
-void UISystem::processEvent(const SDL_Event& ev) {
-    if (initialized) ImGui_ImplSDL2_ProcessEvent(&ev);
+bool UISystem::processEvent(const SDL_Event& ev) {
+    if (initialized) return ImGui_ImplSDL2_ProcessEvent(&ev);
+    return false;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1147,12 +1184,36 @@ void UISystem::render(
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    drawMainNavbar(controls, randomizer, randomizer2, randomizer3, player, player2, player3, registry,
-                   selAsset, selAsset2, selAsset3, transDur, transDur2, transDur3,
-                   allowDimChange, controlsDirty, rng, diag, callbacks,
-                   midiSystem, oscSystem, audioSystem, video1Path, video2Path, video3Path);
+    // Apply preview shuffles requested by hotkeys (1/2/3) even when the Preview tab is not open.
+    processPreviewShuffles(registry, selAsset, selAsset2, selAsset3,
+                           controls.playback.selectedVideoFolder,
+                           controls.playback.selectedVideo2Folder,
+                           controls.playback.selectedVideo3Folder);
 
-    if (showDemoWindow) ImGui::ShowDemoWindow(&showDemoWindow);
+    if (rendererPaused) {
+        // Minimal paused overlay: negligible CPU/GPU cost
+        ImGui::SetNextWindowPos({20, 20});
+        ImGui::SetNextWindowSize({280, 100});
+        if (ImGui::Begin("UI Paused", nullptr,
+                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)) {
+            ImGui::TextColored({1.f, 0.85f, 0.3f, 1.f}, "UI Renderer is PAUSED");
+            ImGui::TextDisabled("CPU/GPU usage reduced");
+            ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
+            if (ImGui::Button("Resume (P)", {200, 30})) {
+                rendererPaused = false;
+            }
+            ImGui::PopItemFlag();
+        }
+        ImGui::End();
+    } else {
+        drawMainNavbar(controls, randomizer, randomizer2, randomizer3, player, player2, player3, registry,
+                       selAsset, selAsset2, selAsset3, transDur, transDur2, transDur3,
+                       allowDimChange, controlsDirty, rng, diag, callbacks,
+                       midiSystem, oscSystem, audioSystem, video1Path, video2Path, video3Path);
+
+        if (showDemoWindow) ImGui::ShowDemoWindow(&showDemoWindow);
+    }
 
     ImGui::Render();
     ImDrawData* dd = ImGui::GetDrawData();
@@ -1168,7 +1229,7 @@ void UISystem::render(
 // ═════════════════════════════════════════════════════════════════════════════
 
 void UISystem::drawPresetsContent(VisualControls& controls, bool& controlsDirty, const UICallbacks& callbacks) {
-    if (!callbacks.onListPresets || !callbacks.onSavePreset || !callbacks.onLoadPreset || !callbacks.onDeletePreset) {
+    if (!callbacks.onListPresets || !callbacks.onSavePreset || !callbacks.onLoadPreset || !callbacks.onDeletePreset || !callbacks.onRenamePreset) {
         ImGui::Text("Preset callbacks not configured.");
         return;
     }
@@ -1201,11 +1262,38 @@ void UISystem::drawPresetsContent(VisualControls& controls, bool& controlsDirty,
             }
         }
         ImGui::SameLine();
+        if (ImGui::Button("Rename")) {
+            renamingPreset = name;
+            std::strncpy(presetNameBuffer, name.c_str(), sizeof(presetNameBuffer) - 1);
+            presetNameBuffer[sizeof(presetNameBuffer) - 1] = '\0';
+        }
+        ImGui::SameLine();
         if (ImGui::Button("Delete")) {
             callbacks.onDeletePreset(name);
         }
         ImGui::SameLine();
         ImGui::Text("%s", name.c_str());
+
+        // Inline rename controls
+        if (renamingPreset == name) {
+            ImGui::Indent();
+            ImGui::InputText("New name", presetNameBuffer, sizeof(presetNameBuffer));
+            if (ImGui::Button("Confirm")) {
+                std::string newName(presetNameBuffer);
+                if (!newName.empty() && newName != name) {
+                    callbacks.onRenamePreset(name, newName);
+                }
+                renamingPreset.clear();
+                presetNameBuffer[0] = '\0';
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                renamingPreset.clear();
+                presetNameBuffer[0] = '\0';
+            }
+            ImGui::Unindent();
+        }
+
         ImGui::PopID();
     }
 }
@@ -1399,6 +1487,11 @@ void UISystem::drawVideoContent(
 
     changed |= ImGui::Checkbox("Bicubic Upscale",  &c.playback.upscaleEnabled);
     changed |= ImGui::Checkbox("Auto Scale Video", &c.playback.autoScaleVideo);
+
+    const char* aspectItems = "Original\0" "4:3\0" "16:9\0" "19:10\0";
+    changed |= ImGui::Combo("Force video 1 aspect", &c.playback.videoAspectRatio, aspectItems);
+    changed |= ImGui::Combo("Force video 2 aspect", &c.playback.video2AspectRatio, aspectItems);
+    changed |= ImGui::Combo("Force video 3 aspect", &c.playback.video3AspectRatio, aspectItems);
 
     if (ImGui::SliderFloat("Decode oversample", &c.playback.videoDecodeOversample, 1.f, 8.f, "%.1fx"))
     {
@@ -1909,7 +2002,32 @@ void UISystem::drawPerformanceContent(const UIDiagnostics& diag)
 
     ImGui::Separator();
     ImGui::Text("Total GPU: %.3f ms", diag.gpuTotalTime);
-    ImGui::Text("ImGui FPS: %.1f", ImGui::GetIO().Framerate);
+
+    ImGui::Separator();
+    ImGui::Text("FPS");
+    ImGui::Text("  App (main loop): %.1f", diag.appFps);
+    ImGui::Text("  Preview window:  %.1f", diag.appFps);
+    ImGui::Text("  Output window:   %.1f", diag.appFps);
+    ImGui::Text("  ImGui render:    %.1f", ImGui::GetIO().Framerate);
+
+    ImGui::Separator();
+    ImGui::Text("CPU Breakdown (ms)");
+    ImGui::Text("  Events:        %.3f", diag.cpuEventsMs);
+    ImGui::Text("  UBO update:    %.3f", diag.cpuUboUpdateMs);
+    ImGui::Text("  Video update:  %.3f", diag.cpuVideoUpdateMs);
+    ImGui::Text("  UI render:     %.3f", diag.cpuUiRenderMs);
+    ImGui::Text("  Record cmd:    %.3f", diag.cpuRecordCmdMs);
+    ImGui::Text("  Submit/Present:%.3f", diag.cpuSubmitPresentMs);
+    ImGui::Text("  Frame total:   %.3f", diag.cpuFrameTotalMs);
+
+    ImGui::Separator();
+    if (ImGui::Checkbox("Pause UI Renderer", &rendererPaused)) {
+        // toggled
+    }
+    if (rendererPaused) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("(press P to resume)");
+    }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

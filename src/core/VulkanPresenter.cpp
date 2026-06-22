@@ -234,8 +234,10 @@ VkSurfaceFormatKHR VulkanPresenter::chooseSwapSurfaceFormat(const std::vector<Vk
 }
 
 VkPresentModeKHR VulkanPresenter::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& available) {
+    // FIFO (VSync) keeps GPU temperature down by throttling to monitor refresh.
+    // Mailbox lets the GPU burn full speed and discard frames — bad for laptops.
     for (const auto& mode : available) {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+        if (mode == VK_PRESENT_MODE_FIFO_KHR) {
             return mode;
         }
     }

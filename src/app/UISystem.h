@@ -45,6 +45,18 @@ struct UIDiagnostics {
     // GPU profiling
     std::array<float, 8> gpuPassTimes{};
     float                gpuTotalTime = 0.0f;
+
+    // CPU profiling (milliseconds per section)
+    float cpuEventsMs = 0.0f;
+    float cpuVideoUpdateMs = 0.0f;
+    float cpuUboUpdateMs = 0.0f;
+    float cpuUiRenderMs = 0.0f;
+    float cpuRecordCmdMs = 0.0f;
+    float cpuSubmitPresentMs = 0.0f;
+    float cpuFrameTotalMs = 0.0f;
+
+    // Frame rate of the main loop (shared by all windows)
+    float appFps = 0.0f;
 };
 
 // ---------------------------------------------------------------------------
@@ -94,6 +106,7 @@ struct UICallbacks {
     std::function<bool(const std::string&)> onSavePreset;
     std::function<bool(const std::string&)> onLoadPreset;
     std::function<bool(const std::string&)> onDeletePreset;
+    std::function<bool(const std::string&, const std::string&)> onRenamePreset;
 };
 
 // ---------------------------------------------------------------------------
@@ -114,8 +127,13 @@ public:
 
     void shutdown();
 
-    // Procesa un evento SDL (llamar antes de newFrame)
-    void processEvent(const SDL_Event& event);
+    // Procesa un evento SDL (llamar antes de newFrame).
+    // Devuelve true si ImGui consumio el evento.
+    bool processEvent(const SDL_Event& event);
+
+    // Pause/resume the ImGui renderer (lightweight overlay when paused)
+    void toggleRendererPause() { rendererPaused = !rendererPaused; }
+    bool isRendererPaused() const { return rendererPaused; }
 
     // Construye y renderiza todas las ventanas ImGui en un frame
     void render(
@@ -147,6 +165,11 @@ public:
     );
 
     void forcePreviewShuffle(int slotIndex);
+    void processPreviewShuffles(VideoRegistry& registry,
+                                int& selAsset, int& selAsset2, int& selAsset3,
+                                const std::string& video1Folder,
+                                const std::string& video2Folder,
+                                const std::string& video3Folder);
 
     // Randomiza los controles VJAY Basics directamente
     void randomizeVJayBasics(VisualControls& controls);
@@ -363,6 +386,7 @@ private:
     SDL_Renderer* renderer = nullptr;
     ImGuiContext* context  = nullptr;
     bool          initialized = false;
+    bool          rendererPaused = false;
 
     VideoPreviewSlot previewSlotVideo1;
     VideoPreviewSlot previewSlotVideo2;
@@ -372,6 +396,7 @@ private:
     std::mt19937 previewRng{std::random_device{}()};
 
     char presetNameBuffer[64] = "";
+    std::string renamingPreset;
 
     void destroyPreviewSlot(VideoPreviewSlot& slot);
     bool loadPreview(VideoPreviewSlot& slot, const std::string& path);

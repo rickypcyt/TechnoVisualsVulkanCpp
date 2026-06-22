@@ -527,6 +527,15 @@ bool Application::deletePreset(const std::string& name) {
     return std::filesystem::remove(path);
 }
 
+bool Application::renamePreset(const std::string& oldName, const std::string& newName) {
+    std::string oldPath = presetsDir + "/" + oldName + ".json";
+    std::string newPath = presetsDir + "/" + newName + ".json";
+    if (!std::filesystem::exists(oldPath)) return false;
+    if (std::filesystem::exists(newPath)) return false;
+    std::filesystem::rename(oldPath, newPath);
+    return true;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────────────────────────────────────
@@ -996,9 +1005,19 @@ void Application::initVideo() {
     using Clock = std::chrono::high_resolution_clock;
     auto t0 = Clock::now();
 
-    std::cout << "[Application] initVideo()\n";
+    std::cout << "[Application] initVideo() START\n";
+    auto tScan = Clock::now();
     videoRegistry.scan(videoAssetsRoot);
+    auto tScanDone = Clock::now();
+    std::cout << "[initVideo] Registry scan: "
+              << std::chrono::duration<double>(tScanDone - tScan).count()
+              << "s, assets=" << videoRegistry.getAssets().size() << "\n";
     glm::ivec2 screenSize = getScreenSize();
+    // Decode preview videos to the preview window size, not full screen.
+    // Preview is only 480p, so decoding to 1080p wastes a lot of startup time.
+    glm::ivec2 previewSize = previewPresenter.getExtent().width > 0 && previewPresenter.getExtent().height > 0
+                             ? glm::ivec2(previewPresenter.getExtent().width, previewPresenter.getExtent().height)
+                             : screenSize;
 
     // ── Resolve paths ───────────────────────────────────────────────────────
     // Prefer saved paths; validate against the whole registry, then locate
@@ -1066,25 +1085,28 @@ void Application::initVideo() {
               << " idx=" << selectedVideoAsset2 << "\n";
     std::cout << "[initVideo] After resolve:  V3 path=" << videoSourcePath3
               << " idx=" << selectedVideoAsset3 << "\n";
-
     // ── Lazy init: only init slots 1 and 2 when dual video is enabled ────────────
     bool initExtraSlots = visualControls.playback.enableDualVideo;
+
+    std::cout << "[initVideo] Preview decode size: " << previewSize.x << "x" << previewSize.y
+              << " (screen=" << screenSize.x << "x" << screenSize.y << ")\n";
+    std::cout << "[initVideo] Dual video enabled: " << (initExtraSlots ? "yes" : "no") << "\n";
 
     // ── Parallel player initialization (heaviest part: disk + codecs) ──────
     auto tPlayer = Clock::now();
 
     auto future0 = std::async(std::launch::async, [&]() {
-        return videoPlayer.initialize(videoSourcePath, screenSize.x, screenSize.y);
+        return videoPlayer.initialize(videoSourcePath, previewSize.x, previewSize.y);
     });
 
     std::future<bool> future1;
     std::future<bool> future2;
     if (initExtraSlots) {
         future1 = std::async(std::launch::async, [&]() {
-            return videoPlayer2.initialize(videoSourcePath2, screenSize.x, screenSize.y);
+            return videoPlayer2.initialize(videoSourcePath2, previewSize.x, previewSize.y);
         });
         future2 = std::async(std::launch::async, [&]() {
-            return videoPlayer3.initialize(videoSourcePath3, screenSize.x, screenSize.y);
+            return videoPlayer3.initialize(videoSourcePath3, previewSize.x, previewSize.y);
         });
     }
 
@@ -1096,6 +1118,27 @@ void Application::initVideo() {
     std::cout << "[Application] Player init: "
               << std::chrono::duration<double>(tPlayerDone - tPlayer).count()
               << "s (slot0=" << ok0 << " slot1=" << ok1 << " slot2=" << ok2 << ")\n";
+    if (ok0) {
+        std::cout << "[initVideo] Slot0 loaded: " << videoSourcePath
+                  << " | decode=" << videoPlayer.width() << "x" << videoPlayer.height()
+                  << " | duration=" << videoPlayer.durationSeconds() << "s\n";
+    } else {
+        std::cerr << "[initVideo] Slot0 FAILED: " << videoSourcePath << "\n";
+    }
+    if (ok1) {
+        std::cout << "[initVideo] Slot1 loaded: " << videoSourcePath2
+                  << " | decode=" << videoPlayer2.width() << "x" << videoPlayer2.height()
+                  << " | duration=" << videoPlayer2.durationSeconds() << "s\n";
+    } else if (initExtraSlots) {
+        std::cerr << "[initVideo] Slot1 FAILED: " << videoSourcePath2 << "\n";
+    }
+    if (ok2) {
+        std::cout << "[initVideo] Slot2 loaded: " << videoSourcePath3
+                  << " | decode=" << videoPlayer3.width() << "x" << videoPlayer3.height()
+                  << " | duration=" << videoPlayer3.durationSeconds() << "s\n";
+    } else if (initExtraSlots) {
+        std::cerr << "[initVideo] Slot2 FAILED: " << videoSourcePath3 << "\n";
+    }
 
     if (!ok0) {
         std::cerr << "[Application] Failed to initialize video player 1\n";
@@ -1139,9 +1182,12 @@ void Application::initVideo() {
     auto tVkDone = Clock::now();
     std::cout << "[Application] Vulkan resources: "
               << std::chrono::duration<double>(tVkDone - tVk).count() << "s\n";
+    std::cout << "[initVideo] Textures ready: v1=" << videoSubsystemInitialized
+              << " v2=" << videoSubsystemInitialized2
+              << " v3=" << videoSubsystemInitialized3 << "\n";
 
     auto t1 = Clock::now();
-    std::cout << "[Application] initVideo() done — total="
+    std::cout << "[Application] initVideo() DONE — total="
               << std::chrono::duration<double>(t1 - t0).count()
               << "s v1=" << videoSubsystemInitialized
               << " v2=" << videoSubsystemInitialized2
@@ -1581,10 +1627,40 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
 
 void Application::mainLoop() {
     while (running) {
+        const auto cpuFrameStart = std::chrono::steady_clock::now();
+        auto cpuLast = cpuFrameStart;
+        UIDiagnostics diag;
+
         // ── Eventos SDL ─────────────────────────────────────────────────────
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            uiSystem.processEvent(event);
+            // Global hotkeys that must work even when ImGui has focus
+            if (event.type == SDL_KEYDOWN && !event.key.repeat) {
+                if (event.key.keysym.sym == SDLK_p) {
+                    uiSystem.toggleRendererPause();
+                    std::cout << "[UI] Renderer " << (uiSystem.isRendererPaused() ? "PAUSED" : "RESUMED") << "\n";
+                    continue;
+                }
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    // Remove window focus so keyboard hotkeys are not captured by ImGui widgets
+                    ImGui::SetWindowFocus(nullptr);
+                    continue;
+                }
+                if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_KP_1) {
+                    handleOscTrigger("randomizePreviewVideo1");
+                    continue;
+                }
+                if (event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_KP_2) {
+                    handleOscTrigger("randomizePreviewVideo2");
+                    continue;
+                }
+                if (event.key.keysym.sym == SDLK_3 || event.key.keysym.sym == SDLK_KP_3) {
+                    handleOscTrigger("randomizePreviewVideo3");
+                    continue;
+                }
+            }
+
+            bool consumed = uiSystem.processEvent(event);
 
             if (event.type == SDL_QUIT) { running = false; break; }
 
@@ -1601,11 +1677,8 @@ void Application::mainLoop() {
                 }
             }
 
-            if (event.type == SDL_KEYDOWN && !event.key.repeat) {
+            if (event.type == SDL_KEYDOWN && !event.key.repeat && !consumed) {
                 switch (event.key.keysym.sym) {
-                    case SDLK_1: case SDLK_KP_1: handleOscTrigger("randomizePreviewVideo1");  break;
-                    case SDLK_2: case SDLK_KP_2: handleOscTrigger("randomizePreviewVideo2"); break;
-                    case SDLK_3: case SDLK_KP_3: handleOscTrigger("randomizePreviewVideo3"); break;
                     case SDLK_r: {
                         static std::random_device rd;
                         static std::mt19937 gen(rd());
@@ -1675,18 +1748,26 @@ void Application::mainLoop() {
                     case SDLK_RETURN:
                         outputVisualControls = visualControls;
                         // Copy video state from preview to output
-                        outputVideoSourcePath = videoSourcePath;
-                        outputVideoSourcePath2 = videoSourcePath2;
-                        outputVideoSourcePath3 = videoSourcePath3;
-                        outputSelectedVideoAsset = selectedVideoAsset;
-                        outputSelectedVideoAsset2 = selectedVideoAsset2;
-                        outputSelectedVideoAsset3 = selectedVideoAsset3;
-                        if (!outputVideoSourcePath.empty())
-                            reloadOutputVideoSlot(0, outputVideoSourcePath);
-                        if (!outputVideoSourcePath2.empty())
-                            reloadOutputVideoSlot(1, outputVideoSourcePath2);
-                        if (!outputVideoSourcePath3.empty())
-                            reloadOutputVideoSlot(2, outputVideoSourcePath3);
+                        // Only reload output players when the path actually changed
+                        // to avoid the big delay of re-initializing the same video.
+                        {
+                            std::string oldOutputVideoSourcePath = outputVideoSourcePath;
+                            std::string oldOutputVideoSourcePath2 = outputVideoSourcePath2;
+                            std::string oldOutputVideoSourcePath3 = outputVideoSourcePath3;
+                            outputVideoSourcePath = videoSourcePath;
+                            outputVideoSourcePath2 = videoSourcePath2;
+                            outputVideoSourcePath3 = videoSourcePath3;
+                            outputSelectedVideoAsset = selectedVideoAsset;
+                            outputSelectedVideoAsset2 = selectedVideoAsset2;
+                            outputSelectedVideoAsset3 = selectedVideoAsset3;
+
+                            if (!outputVideoSourcePath.empty() && outputVideoSourcePath != oldOutputVideoSourcePath)
+                                reloadOutputVideoSlot(0, outputVideoSourcePath);
+                            if (!outputVideoSourcePath2.empty() && outputVideoSourcePath2 != oldOutputVideoSourcePath2)
+                                reloadOutputVideoSlot(1, outputVideoSourcePath2);
+                            if (!outputVideoSourcePath3.empty() && outputVideoSourcePath3 != oldOutputVideoSourcePath3)
+                                reloadOutputVideoSlot(2, outputVideoSourcePath3);
+                        }
                         std::cout << "[Output] Controls + videos committed from preview\n";
                         break;
                     case SDLK_SPACE:
@@ -1724,6 +1805,10 @@ void Application::mainLoop() {
                 handleWindowResize(pendingResizeW, pendingResizeH);
             }
         }
+
+        const auto cpuAfterEvents = std::chrono::steady_clock::now();
+        diag.cpuEventsMs = std::chrono::duration<float, std::milli>(cpuAfterEvents - cpuLast).count();
+        cpuLast = cpuAfterEvents;
 
         // ── Begin frame (dual swapchain) ────────────────────────────────────
         uint32_t    previewImageIndex, outputImageIndex;
@@ -1841,7 +1926,12 @@ void Application::mainLoop() {
         updateUniformBuffer(previewFrame->frameIndex, outputVisualControls,
                             outputUniformBufferManager, outputPresenter, outputAnim,
                             outputVideoTexture, outputVideoTexture2, outputVideoTexture3,
-                            outputVideoSubsystemInitialized, outputVideoSubsystemInitialized2, outputVideoSubsystemInitialized3);
+                            outputVideoSubsystemInitialized, outputVideoSubsystemInitialized2, outputVideoSubsystemInitialized3,
+                            true);
+
+        const auto cpuAfterUbo = std::chrono::steady_clock::now();
+        diag.cpuUboUpdateMs = std::chrono::duration<float, std::milli>(cpuAfterUbo - cpuLast).count();
+        cpuLast = cpuAfterUbo;
 
         ++frameCounter;
 
@@ -1863,15 +1953,22 @@ void Application::mainLoop() {
             videoSpeedCache[videoSourcePath3] = lastPlaybackRate3;
         }
 
-        if (videoRenderer)  videoRenderer->update(deltaTime, previewFrame->frameIndex);
-        if (videoRenderer2) videoRenderer2->update(deltaTime, previewFrame->frameIndex);
-        if (videoRenderer3) videoRenderer3->update(deltaTime, previewFrame->frameIndex);
+        // Only update preview video decoders if the UI is visible and not paused.
+        // This saves 3 FFmpeg decoders when the user pauses the UI renderer.
+        if (!uiSystem.isRendererPaused() && !previewPaused) {
+            if (videoRenderer)  videoRenderer->update(deltaTime, previewFrame->frameIndex);
+            if (videoRenderer2) videoRenderer2->update(deltaTime, previewFrame->frameIndex);
+            if (videoRenderer3) videoRenderer3->update(deltaTime, previewFrame->frameIndex);
+        }
         if (outputVideoRenderer)  outputVideoRenderer->update(deltaTime, previewFrame->frameIndex);
         if (outputVideoRenderer2) outputVideoRenderer2->update(deltaTime, previewFrame->frameIndex);
         if (outputVideoRenderer3) outputVideoRenderer3->update(deltaTime, previewFrame->frameIndex);
 
+        const auto cpuAfterVideo = std::chrono::steady_clock::now();
+        diag.cpuVideoUpdateMs = std::chrono::duration<float, std::milli>(cpuAfterVideo - cpuLast).count();
+        cpuLast = cpuAfterVideo;
+
         // ── UI ───────────────────────────────────────────────────────────────
-        UIDiagnostics diag;
         diag.lastFrameFrameIndex       = previewFrame->frameIndex;
         diag.lastFrameImageIndex       = previewFrame->swapchainImageIndex;
         diag.swapchainWidth            = previewPresenter.getExtent().width;
@@ -1885,6 +1982,7 @@ void Application::mainLoop() {
         diag.animationElapsedSeconds   = debugAnimationElapsedSeconds;
         diag.gpuPassTimes              = multiPassPipeline.lastGpuPassTimes;
         diag.gpuTotalTime              = multiPassPipeline.lastGpuTotalTime;
+        diag.appFps                    = currentFps;
 
         UICallbacks callbacks = buildUICallbacks();
         uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoRandomizer3,
@@ -1895,10 +1993,18 @@ void Application::mainLoop() {
                         rng, diag, callbacks, midiSystem, oscSystem, audioSystem,
                         videoSourcePath, videoSourcePath2, videoSourcePath3);
 
+        const auto cpuAfterUi = std::chrono::steady_clock::now();
+        diag.cpuUiRenderMs = std::chrono::duration<float, std::milli>(cpuAfterUi - cpuLast).count();
+        cpuLast = cpuAfterUi;
+
         // ── Command buffer ───────────────────────────────────────────────────
         recordCommandBuffer(commandBuffers[previewFrame->frameIndex],
                             *previewFrame, previewImageIndex,
                             *outputFrame, outputImageIndex);
+
+        const auto cpuAfterCmd = std::chrono::steady_clock::now();
+        diag.cpuRecordCmdMs = std::chrono::duration<float, std::milli>(cpuAfterCmd - cpuLast).count();
+        cpuLast = cpuAfterCmd;
 
         // ── Submit (wait on both available, signal both finished) ────────────
         auto previewRenderFinished = previewFrameSystem.getRenderFinishedSemaphore(previewImageIndex).value_or(VK_NULL_HANDLE);
@@ -1960,16 +2066,23 @@ void Application::mainLoop() {
         previewFrameSystem.endFrame();
         outputFrameSystem.endFrame();
 
+        const auto cpuFrameEnd = std::chrono::steady_clock::now();
+        diag.cpuSubmitPresentMs = std::chrono::duration<float, std::milli>(cpuFrameEnd - cpuLast).count();
+        diag.cpuFrameTotalMs = std::chrono::duration<float, std::milli>(cpuFrameEnd - cpuFrameStart).count();
+
         // ── Frame rate limiter (adaptive) ─────────────────────────────────
-        // Only sleep if we finished the frame faster than the target.
-        // This reduces input latency compared to a fixed sleep_until.
-        constexpr float targetFrameTime = 1.0f / 120.0f;
+        // Target 60 fps with a small fixed cooldown so the CPU doesn't burn
+        // polling at max speed. On a laptop this dramatically lowers temps.
+        constexpr float targetFrameTime = 1.0f / 60.0f;
+        constexpr auto minCooldown = std::chrono::milliseconds(2);
         const auto frameEnd = std::chrono::steady_clock::now();
         const float elapsed = std::chrono::duration<float>(frameEnd - lastFrameTimestamp).count();
         if (elapsed < targetFrameTime) {
             const auto sleepNs = std::chrono::nanoseconds(
                 static_cast<int64_t>((targetFrameTime - elapsed) * 1e9f));
-            std::this_thread::sleep_for(sleepNs);
+            std::this_thread::sleep_for(sleepNs + minCooldown);
+        } else {
+            std::this_thread::sleep_for(minCooldown);
         }
     }
 }
@@ -2161,6 +2274,7 @@ UICallbacks Application::buildUICallbacks() {
     cb.onSavePreset = [this](const std::string& name) { return savePreset(name); };
     cb.onLoadPreset = [this](const std::string& name) { return loadPreset(name); };
     cb.onDeletePreset = [this](const std::string& name) { return deletePreset(name); };
+    cb.onRenamePreset = [this](const std::string& oldName, const std::string& newName) { return renamePreset(oldName, newName); };
 
     return cb;
 }
@@ -2174,7 +2288,8 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
                                       const VulkanPresenter& presenter,
                                       AnimState& anim,
                                       VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
-                                      bool vid1Init, bool vid2Init, bool vid3Init) {
+                                      bool vid1Init, bool vid2Init, bool vid3Init,
+                                      bool forOutput) {
     GlobalParamsUBO ubo{};
 
     // Calculate time delta and accumulate (similar to your system)
@@ -2284,6 +2399,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.video3Mix = controls.playback.video3Mix;
     ubo.video3Available = (vid3Init && vid3.isReady()) ? 1.0f : 0.0f;
     ubo.video3BlendMode = controls.playback.video3BlendMode;
+    ubo.videoAspectRatio = controls.playback.videoAspectRatio;
+    ubo.video2AspectRatio = controls.playback.video2AspectRatio;
+    ubo.video3AspectRatio = controls.playback.video3AspectRatio;
 
     // Set visual control values
     ubo.primaryColor = controls.color.primaryColor;
@@ -2562,7 +2680,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     reactive.cameraRotation     = ubo.cameraRotation;
 
     // Video transition crossfade progress
-    ubo.transitionProgress = transitionProgress;
+    // For the output window we always use 1.0 so that preview-only transitions
+    // do not disturb the output renderer.
+    ubo.transitionProgress = forOutput ? 1.0f : transitionProgress;
 
     uboManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }

@@ -114,6 +114,7 @@ public:
     bool savePreset(const std::string& name);
     bool loadPreset(const std::string& name);
     bool deletePreset(const std::string& name);
+    bool renamePreset(const std::string& oldName, const std::string& newName);
     std::string presetsDir = "presets";
 
 private:
@@ -484,7 +485,8 @@ private:
                             const VulkanPresenter& presenter,
                             AnimState& anim,
                             VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
-                            bool vid1Init, bool vid2Init, bool vid3Init);
+                            bool vid1Init, bool vid2Init, bool vid3Init,
+                            bool forOutput = false);
     void recordCommandBuffer(VkCommandBuffer commandBuffer,
                              FrameContext& previewFrame, uint32_t previewImageIndex,
                              FrameContext& outputFrame, uint32_t outputImageIndex);

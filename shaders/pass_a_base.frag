@@ -61,6 +61,28 @@ vec3 sampleVideo3(vec2 p) {
     return texture(video3Tex, clamp(p, 0.0, 1.0)).rgb;
 }
 
+vec3 sampleVideoAspect(vec2 uv, int aspectRatio, sampler2D tex) {
+    if (aspectRatio == 0) return texture(tex, clamp(uv, 0.0, 1.0)).rgb;
+
+    float targetAspect = 0.0;
+    if (aspectRatio == 1) targetAspect = 4.0 / 3.0;
+    else if (aspectRatio == 2) targetAspect = 16.0 / 9.0;
+    else if (aspectRatio == 3) targetAspect = 19.0 / 10.0;
+    else return texture(tex, clamp(uv, 0.0, 1.0)).rgb;
+
+    float screenAspect = ubo.resolution.x / max(ubo.resolution.y, 1.0);
+    vec2 scale = vec2(1.0);
+    if (screenAspect > targetAspect) {
+        scale.x = targetAspect / screenAspect;
+    } else {
+        scale.y = screenAspect / targetAspect;
+    }
+    vec2 centered = (uv - 0.5) / scale + 0.5;
+    if (centered.x < 0.0 || centered.x > 1.0 || centered.y < 0.0 || centered.y > 1.0)
+        return vec3(0.0);
+    return texture(tex, clamp(centered, 0.0, 1.0)).rgb;
+}
+
 vec3 sampleBilinear(vec2 p) {
     return sampleVideo(p);
 }
@@ -319,9 +341,9 @@ vec4 dispatchMode(int m, vec2 st) {
 
 void main() {
     vec2 procUV = applyCamera(uv);
-    vec3 video1Color = sampleVideo(uv);
-    vec3 video2Color = sampleVideo2(uv);
-    vec3 video3Color = sampleVideo3(uv);
+    vec3 video1Color = sampleVideoAspect(uv, ubo.videoAspectRatio, videoTex);
+    vec3 video2Color = sampleVideoAspect(uv, ubo.video2AspectRatio, video2Tex);
+    vec3 video3Color = sampleVideoAspect(uv, ubo.video3AspectRatio, video3Tex);
 
     float v2Mix = clamp(ubo.video2Mix * ubo.video2Available, 0.0, 1.0);
     vec3 videoColor = blendTwoVideos(video1Color, video2Color, ubo.video2BlendMode, v2Mix);
@@ -332,7 +354,7 @@ void main() {
     // Real crossfade transition: mix between frozen previous frame (old video)
     // and current frame (new video) during a video swap
     if (ubo.transitionProgress < 1.0 && ubo.videoAvailable > 0.0) {
-        vec3 oldColor = texture(videoTexPrev, clamp(uv, 0.0, 1.0)).rgb;
+        vec3 oldColor = sampleVideoAspect(uv, ubo.videoAspectRatio, videoTexPrev);
         videoColor = mix(oldColor, videoColor, ubo.transitionProgress);
     }
 

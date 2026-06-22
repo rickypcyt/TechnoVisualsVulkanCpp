@@ -31,6 +31,9 @@ struct VisualControls {
         int activeMode = 1;
         float videoMix = 1.0f;
         bool autoScaleVideo = true;
+        int videoAspectRatio = 0;  // 0=original, 1=4:3, 2=16:9, 3=19:10
+        int video2AspectRatio = 0;
+        int video3AspectRatio = 0;
         float grayscaleAmount = 0.0f;
         float sharpenAmount = 0.35f;
         bool upscaleEnabled = true;
