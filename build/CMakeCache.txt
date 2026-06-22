@@ -529,6 +529,9 @@ boost_math_SOURCE_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/_deps/b
 //The directory containing a CMake configuration file for glm.
 glm_DIR:PATH=/usr/lib/cmake/glm
 
+//Dependencies for the target
+imgui_LIB_DEPENDS:STATIC=general;SDL2::SDL2;
+
 //Value Computed by CMake
 kfr_BINARY_DIR:STATIC=/home/ricky/coding/proyects/vulkancpp/build/kfr-build
 

@@ -78,6 +78,18 @@ pkg_check_modules(FFTW REQUIRED fftw3f)
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 set(IMGUI_BACKENDS_DIR ${IMGUI_DIR}/backends)
 
+add_library(imgui STATIC
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_BACKENDS_DIR}/imgui_impl_sdl2.cpp
+    ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
+)
+target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR})
+target_link_libraries(imgui PUBLIC SDL2::SDL2)
+
 set(UBO_LAYOUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/ubo_layout.h)
 set(SHARED_UBO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shared_ubo.glsl)
 add_custom_command(
@@ -121,18 +133,11 @@ add_executable(app
     src/gfx/FrameSystem.cpp
     src/gfx/MemoryAllocator.cpp
     src/gfx/ResourceSystem.cpp
-    ${IMGUI_DIR}/imgui.cpp
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_tables.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_BACKENDS_DIR}/imgui_impl_sdl2.cpp
-    ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
 )
 
 add_dependencies(app gen_ubo)
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR} ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include ${nlohmann_json_SOURCE_DIR}/include)
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include ${nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(app
     Vulkan::Vulkan
@@ -141,6 +146,7 @@ target_link_libraries(app
     PkgConfig::FFMPEG
     rtmidi
     kfr
+    imgui
     ${LIBLO_LIBRARIES}
     ${PORTAUDIO_LIBRARIES}
     ${FFTW_LIBRARIES}

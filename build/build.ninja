@@ -35,6 +35,87 @@ include CMakeFiles/rules.ninja
 # Logical path to working directory; prefix for absolute paths.
 
 cmake_ninja_workdir = /home/ricky/coding/proyects/vulkancpp/build/
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target imgui
+
+
+#############################################
+# Order-only phony target for imgui
+
+build cmake_object_order_depends_target_imgui: phony || .
+
+build CMakeFiles/imgui.dir/third_party/imgui/imgui.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/imgui.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+build CMakeFiles/imgui.dir/third_party/imgui/imgui_demo.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_demo.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/imgui_demo.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+build CMakeFiles/imgui.dir/third_party/imgui/imgui_draw.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_draw.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/imgui_draw.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+build CMakeFiles/imgui.dir/third_party/imgui/imgui_tables.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_tables.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/imgui_tables.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+build CMakeFiles/imgui.dir/third_party/imgui/imgui_widgets.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_widgets.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/imgui_widgets.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+build CMakeFiles/imgui.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui/backends
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+build CMakeFiles/imgui.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o: CXX_COMPILER__imgui_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp || cmake_object_order_depends_target_imgui
+  DEP_FILE = CMakeFiles/imgui.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  OBJECT_FILE_DIR = CMakeFiles/imgui.dir/third_party/imgui/backends
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target imgui
+
+
+#############################################
+# Link the static library libimgui.a
+
+build libimgui.a: CXX_STATIC_LIBRARY_LINKER__imgui_ CMakeFiles/imgui.dir/third_party/imgui/imgui.cpp.o CMakeFiles/imgui.dir/third_party/imgui/imgui_demo.cpp.o CMakeFiles/imgui.dir/third_party/imgui/imgui_draw.cpp.o CMakeFiles/imgui.dir/third_party/imgui/imgui_tables.cpp.o CMakeFiles/imgui.dir/third_party/imgui/imgui_widgets.cpp.o CMakeFiles/imgui.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o CMakeFiles/imgui.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o
+  OBJECT_DIR = CMakeFiles/imgui.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = libimgui.a
+  TARGET_PDB = imgui.a.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles/imgui.dir
+
 
 #############################################
 # Utility command for gen_ubo
@@ -48,13 +129,13 @@ build gen_ubo: phony CMakeFiles/gen_ubo /home/ricky/coding/proyects/vulkancpp/sh
 #############################################
 # Order-only phony target for app
 
-build cmake_object_order_depends_target_app: phony || cmake_object_order_depends_target_rtmidi gen_ubo
+build cmake_object_order_depends_target_app: phony || cmake_object_order_depends_target_imgui cmake_object_order_depends_target_rtmidi gen_ubo
 
 build CMakeFiles/app.dir/src/main.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/src/main.cpp || cmake_object_order_depends_target_app
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/main.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -63,7 +144,7 @@ build CMakeFiles/app.dir/src/app/Application.cpp.o: CXX_COMPILER__app_unscanned_
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/Application.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -72,7 +153,7 @@ build CMakeFiles/app.dir/src/app/UISystem.cpp.o: CXX_COMPILER__app_unscanned_ /h
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/UISystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -81,7 +162,7 @@ build CMakeFiles/app.dir/src/app/ControlState.cpp.o: CXX_COMPILER__app_unscanned
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/ControlState.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -90,7 +171,7 @@ build CMakeFiles/app.dir/src/app/MidiSystem.cpp.o: CXX_COMPILER__app_unscanned_ 
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/MidiSystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -99,7 +180,7 @@ build CMakeFiles/app.dir/src/app/OscSystem.cpp.o: CXX_COMPILER__app_unscanned_ /
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/OscSystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -108,7 +189,7 @@ build CMakeFiles/app.dir/src/app/AudioSystem.cpp.o: CXX_COMPILER__app_unscanned_
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/AudioSystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -117,7 +198,7 @@ build CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o: CXX_COMPILE
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app/parameters
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -126,7 +207,7 @@ build CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o: CXX_CO
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app/parameters
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -135,7 +216,7 @@ build CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o: CXX_
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app/parameters
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -144,7 +225,7 @@ build CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o: CXX_COMPILER__
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app/parameters
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -153,7 +234,7 @@ build CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o: CXX_COMPILE
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app/parameters
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -162,7 +243,7 @@ build CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o: CXX_COMPILER__a
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/app/parameters
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -171,7 +252,7 @@ build CMakeFiles/app.dir/src/core/Window.cpp.o: CXX_COMPILER__app_unscanned_ /ho
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/core/Window.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/core
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -180,7 +261,7 @@ build CMakeFiles/app.dir/src/core/VulkanContext.cpp.o: CXX_COMPILER__app_unscann
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/core/VulkanContext.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/core
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -189,7 +270,7 @@ build CMakeFiles/app.dir/src/core/VulkanPresenter.cpp.o: CXX_COMPILER__app_unsca
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/core/VulkanPresenter.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/core
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -198,7 +279,7 @@ build CMakeFiles/app.dir/src/video/VideoStaging.cpp.o: CXX_COMPILER__app_unscann
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/video/VideoStaging.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/video
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -207,7 +288,7 @@ build CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o: CXX_COMPILER__app_unscanne
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/video
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -216,7 +297,7 @@ build CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o: CXX_COMPILER__app_unscan
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/video
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -225,7 +306,7 @@ build CMakeFiles/app.dir/src/video/VideoTexture.cpp.o: CXX_COMPILER__app_unscann
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/video/VideoTexture.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/video
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -234,7 +315,7 @@ build CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o: CXX_COMPILER__app_unscan
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/video
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -243,7 +324,7 @@ build CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o: CXX_COMPILER__app_u
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/render
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -252,7 +333,7 @@ build CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o: CXX_COMPILER__app_unsc
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/render
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -261,7 +342,7 @@ build CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o: CXX_COMPILER__ap
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/render
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -270,7 +351,7 @@ build CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o: CXX_COMPILER__ap
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/render
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -279,7 +360,7 @@ build CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o: CXX_COMPILER__app_unscanned_
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/gfx
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -288,7 +369,7 @@ build CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o: CXX_COMPILER__app_unscan
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/gfx
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
@@ -297,72 +378,9 @@ build CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o: CXX_COMPILER__app_unscann
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
   DEP_FILE = CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o.d
   FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
+  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -isystem /usr/include/SDL2
   OBJECT_DIR = CMakeFiles/app.dir
   OBJECT_FILE_DIR = CMakeFiles/app.dir/src/gfx
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_demo.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_draw.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_tables.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/imgui_widgets.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdl2.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui/backends
-  TARGET_SUPPORT_DIR = CMakeFiles/app.dir
-
-build CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp || cmake_object_order_depends_target_app
-  DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
-  DEP_FILE = CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o.d
-  FLAGS = -std=gnu++20 -flax-vector-conversions
-  INCLUDES = -I/home/ricky/coding/proyects/vulkancpp/src -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui -I/home/ricky/coding/proyects/vulkancpp/third_party/imgui/backends -I/home/ricky/coding/proyects/vulkancpp/third_party/kfr/include -I/home/ricky/coding/proyects/vulkancpp/third_party/nlohmann_json/include -I/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi -isystem /usr/include/SDL2
-  OBJECT_DIR = CMakeFiles/app.dir
-  OBJECT_FILE_DIR = CMakeFiles/app.dir/third_party/imgui/backends
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
 
 
@@ -373,10 +391,10 @@ build CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.
 #############################################
 # Link the executable app
 
-build app: CXX_EXECUTABLE_LINKER__app_ CMakeFiles/app.dir/src/main.cpp.o CMakeFiles/app.dir/src/app/Application.cpp.o CMakeFiles/app.dir/src/app/UISystem.cpp.o CMakeFiles/app.dir/src/app/ControlState.cpp.o CMakeFiles/app.dir/src/app/MidiSystem.cpp.o CMakeFiles/app.dir/src/app/OscSystem.cpp.o CMakeFiles/app.dir/src/app/AudioSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o CMakeFiles/app.dir/src/core/Window.cpp.o CMakeFiles/app.dir/src/core/VulkanContext.cpp.o CMakeFiles/app.dir/src/core/VulkanPresenter.cpp.o CMakeFiles/app.dir/src/video/VideoStaging.cpp.o CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o CMakeFiles/app.dir/src/video/VideoTexture.cpp.o CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o CMakeFiles/app.dir/third_party/imgui/imgui.cpp.o CMakeFiles/app.dir/third_party/imgui/imgui_demo.cpp.o CMakeFiles/app.dir/third_party/imgui/imgui_draw.cpp.o CMakeFiles/app.dir/third_party/imgui/imgui_tables.cpp.o CMakeFiles/app.dir/third_party/imgui/imgui_widgets.cpp.o CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdl2.cpp.o CMakeFiles/app.dir/third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp.o | /usr/lib/libvulkan.so /usr/lib/libSDL2-2.0.so.0.3200.70 /usr/lib/libglm.a rtmidi-build/librtmidi.so.6.0.0 /usr/lib/libavformat.so /usr/lib/libavcodec.so /usr/lib/libswscale.so /usr/lib/libswresample.so /usr/lib/libavutil.so || gen_ubo rtmidi-build/librtmidi.so rtmidi-build/librtmidi.so
+build app: CXX_EXECUTABLE_LINKER__app_ CMakeFiles/app.dir/src/main.cpp.o CMakeFiles/app.dir/src/app/Application.cpp.o CMakeFiles/app.dir/src/app/UISystem.cpp.o CMakeFiles/app.dir/src/app/ControlState.cpp.o CMakeFiles/app.dir/src/app/MidiSystem.cpp.o CMakeFiles/app.dir/src/app/OscSystem.cpp.o CMakeFiles/app.dir/src/app/AudioSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o CMakeFiles/app.dir/src/core/Window.cpp.o CMakeFiles/app.dir/src/core/VulkanContext.cpp.o CMakeFiles/app.dir/src/core/VulkanPresenter.cpp.o CMakeFiles/app.dir/src/video/VideoStaging.cpp.o CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o CMakeFiles/app.dir/src/video/VideoTexture.cpp.o CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o | /usr/lib/libvulkan.so /usr/lib/libglm.a rtmidi-build/librtmidi.so.6.0.0 libimgui.a /usr/lib/libavformat.so /usr/lib/libavcodec.so /usr/lib/libswscale.so /usr/lib/libswresample.so /usr/lib/libavutil.so /usr/lib/libSDL2-2.0.so.0.3200.70 || gen_ubo libimgui.a rtmidi-build/librtmidi.so rtmidi-build/librtmidi.so
   DEP_FILE = CMakeFiles/app.dir/link.d
   LINK_FLAGS = -Wl,--dependency-file=CMakeFiles/app.dir/link.d
-  LINK_LIBRARIES = -Wl,-rpath,/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build  /usr/lib/libvulkan.so  /usr/lib/libSDL2-2.0.so.0.3200.70  /usr/lib/libglm.a  rtmidi-build/librtmidi.so.6.0.0  -llo  -lportaudio  -lasound  -lm  -lpthread  -lfftw3f  /usr/lib/libavformat.so  /usr/lib/libavcodec.so  /usr/lib/libswscale.so  /usr/lib/libswresample.so  /usr/lib/libavutil.so  -lstdc++  -lm  -lpthread
+  LINK_LIBRARIES = -Wl,-rpath,/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build  /usr/lib/libvulkan.so  /usr/lib/libglm.a  rtmidi-build/librtmidi.so.6.0.0  libimgui.a  -llo  -lportaudio  -lasound  -lm  -lpthread  -lfftw3f  /usr/lib/libavformat.so  /usr/lib/libavcodec.so  /usr/lib/libswscale.so  /usr/lib/libswresample.so  /usr/lib/libavutil.so  -lstdc++  /usr/lib/libSDL2-2.0.so.0.3200.70  -lm  -lpthread
   OBJECT_DIR = CMakeFiles/app.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -2449,6 +2467,8 @@ build boost_math: phony _deps/boost_math-build/boost_math
 
 build cmidiin: phony rtmidi-build/tests/cmidiin
 
+build imgui: phony libimgui.a
+
 build kfr_audio: phony kfr-build/src/audio/libkfr_audio.a
 
 build kfr_dsp_avx: phony kfr-build/src/dsp/libkfr_dsp_avx.a
@@ -2503,7 +2523,7 @@ build uninstall: phony rtmidi-build/uninstall
 #############################################
 # Folder: /home/ricky/coding/proyects/vulkancpp/build
 
-build all: phony app rtmidi-build/all kfr-build/all nlohmann_json-build/all
+build all: phony libimgui.a app rtmidi-build/all kfr-build/all nlohmann_json-build/all
 
 # =============================================================================
 

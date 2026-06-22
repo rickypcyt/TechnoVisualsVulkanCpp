@@ -579,6 +579,16 @@ void Application::run() {
         videoSourcePath3
     );
 
+    // Sync loaded preview state to output so the final renderer starts
+    // with the same configuration as the saved session.
+    outputVisualControls = visualControls;
+    outputVideoSourcePath = videoSourcePath;
+    outputVideoSourcePath2 = videoSourcePath2;
+    outputVideoSourcePath3 = videoSourcePath3;
+    outputSelectedVideoAsset = selectedVideoAsset;
+    outputSelectedVideoAsset2 = selectedVideoAsset2;
+    outputSelectedVideoAsset3 = selectedVideoAsset3;
+
     initVideo();
     initOutputVideo();
 
@@ -650,7 +660,7 @@ void Application::initVulkan() {
 
 void Application::initPresenters() {
     previewPresenter.init(vulkanContext.getInstance(), vulkanContext.getPhysicalDevice(),
-                          vulkanContext.getDevice(), window.getMainWindow(), 1280, 720);
+                          vulkanContext.getDevice(), window.getMainWindow(), 854, 480);
     outputPresenter.init(vulkanContext.getInstance(), vulkanContext.getPhysicalDevice(),
                          vulkanContext.getDevice(), window.getOutputWindow(), 1920, 1080);
 }
@@ -1667,12 +1677,16 @@ void Application::mainLoop() {
                         // Copy video state from preview to output
                         outputVideoSourcePath = videoSourcePath;
                         outputVideoSourcePath2 = videoSourcePath2;
+                        outputVideoSourcePath3 = videoSourcePath3;
                         outputSelectedVideoAsset = selectedVideoAsset;
                         outputSelectedVideoAsset2 = selectedVideoAsset2;
+                        outputSelectedVideoAsset3 = selectedVideoAsset3;
                         if (!outputVideoSourcePath.empty())
                             reloadOutputVideoSlot(0, outputVideoSourcePath);
-                        if (!outputVideoSourcePath2.empty() && visualControls.playback.enableDualVideo)
+                        if (!outputVideoSourcePath2.empty())
                             reloadOutputVideoSlot(1, outputVideoSourcePath2);
+                        if (!outputVideoSourcePath3.empty())
+                            reloadOutputVideoSlot(2, outputVideoSourcePath3);
                         std::cout << "[Output] Controls + videos committed from preview\n";
                         break;
                     case SDLK_SPACE:
@@ -1818,12 +1832,16 @@ void Application::mainLoop() {
         bool updatePreview = (frameCounter % 2 == 0);
         if (updatePreview) {
             updateUniformBuffer(previewFrame->frameIndex, visualControls,
-                                uniformBufferManager, previewPresenter, previewAnim);
+                                uniformBufferManager, previewPresenter, previewAnim,
+                                videoTexture, videoTexture2, videoTexture3,
+                                videoSubsystemInitialized, videoSubsystemInitialized2, videoSubsystemInitialized3);
         }
 
         // Output always renders at 60fps with its own controls
         updateUniformBuffer(previewFrame->frameIndex, outputVisualControls,
-                            outputUniformBufferManager, outputPresenter, outputAnim);
+                            outputUniformBufferManager, outputPresenter, outputAnim,
+                            outputVideoTexture, outputVideoTexture2, outputVideoTexture3,
+                            outputVideoSubsystemInitialized, outputVideoSubsystemInitialized2, outputVideoSubsystemInitialized3);
 
         ++frameCounter;
 
@@ -2154,7 +2172,9 @@ UICallbacks Application::buildUICallbacks() {
 void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& controls,
                                       UniformBufferManager& uboManager,
                                       const VulkanPresenter& presenter,
-                                      AnimState& anim) {
+                                      AnimState& anim,
+                                      VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
+                                      bool vid1Init, bool vid2Init, bool vid3Init) {
     GlobalParamsUBO ubo{};
 
     // Calculate time delta and accumulate (similar to your system)
@@ -2252,17 +2272,17 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.proj[1][1] *= -1.0f;
     ubo.resolution = glm::vec2(static_cast<float>(presenter.getExtent().width),
                                static_cast<float>(presenter.getExtent().height));
-    ubo.videoResolution = glm::vec2(static_cast<float>(videoTexture.getWidth()),
-                                    static_cast<float>(videoTexture.getHeight()));
+    ubo.videoResolution = glm::vec2(static_cast<float>(vid1.getWidth()),
+                                    static_cast<float>(vid1.getHeight()));
     ubo.time = controls.system.enableAudioReactive ? anim.shaderTime : time;
     ubo.mode = controls.playback.activeMode;
     ubo.videoMix = controls.playback.videoMix;
-    ubo.videoAvailable = (videoSubsystemInitialized && videoTexture.isReady()) ? 1.0f : 0.0f;
+    ubo.videoAvailable = (vid1Init && vid1.isReady()) ? 1.0f : 0.0f;
     ubo.video2Mix = controls.playback.video2Mix;
-    ubo.video2Available = (controls.playback.enableDualVideo && videoSubsystemInitialized2 && videoTexture2.isReady()) ? 1.0f : 0.0f;
+    ubo.video2Available = (vid2Init && vid2.isReady()) ? 1.0f : 0.0f;
     ubo.video2BlendMode = controls.playback.video2BlendMode;
     ubo.video3Mix = controls.playback.video3Mix;
-    ubo.video3Available = (controls.playback.enableDualVideo && videoSubsystemInitialized3 && videoTexture3.isReady()) ? 1.0f : 0.0f;
+    ubo.video3Available = (vid3Init && vid3.isReady()) ? 1.0f : 0.0f;
     ubo.video3BlendMode = controls.playback.video3BlendMode;
 
     // Set visual control values
@@ -2561,10 +2581,14 @@ void Application::recordCommandBuffer(VkCommandBuffer cmd,
     videoTexture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
     if (videoSubsystemInitialized2 && videoTexture2.isReady())
         videoTexture2.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (videoSubsystemInitialized3 && videoTexture3.isReady())
+        videoTexture3.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
     if (outputVideoSubsystemInitialized && outputVideoTexture.isReady())
         outputVideoTexture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
     if (outputVideoSubsystemInitialized2 && outputVideoTexture2.isReady())
         outputVideoTexture2.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (outputVideoSubsystemInitialized3 && outputVideoTexture3.isReady())
+        outputVideoTexture3.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
 
     if (previewPaused) {
         // Paused: skip multiPass pipeline, just black + PAUSED label (saves GPU)

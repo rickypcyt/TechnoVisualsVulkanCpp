@@ -20,12 +20,14 @@ float edgeFade(vec2 p) {
     return e.x * e.y;
 }
 
-vec3 sampleBlurredPrev(vec2 p, vec2 texel) {
-    vec3 c = texture(prevFrameTex, p).rgb * 0.4;
-    c += texture(prevFrameTex, clamp(p + texel * vec2( 1.0,  0.0), 0.0, 1.0)).rgb * 0.15;
-    c += texture(prevFrameTex, clamp(p + texel * vec2(-1.0,  0.0), 0.0, 1.0)).rgb * 0.15;
-    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  1.0), 0.0, 1.0)).rgb * 0.15;
-    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0, -1.0), 0.0, 1.0)).rgb * 0.15;
+vec3 sampleMeltBlur(vec2 p, vec2 texel, float strength) {
+    // Directional blur biased downward (melt / drip effect)
+    vec3 c = texture(prevFrameTex, p).rgb * 0.25;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  0.5), 0.0, 1.0)).rgb * 0.20;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  1.0), 0.0, 1.0)).rgb * 0.18;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  1.5), 0.0, 1.0)).rgb * 0.15;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  2.0), 0.0, 1.0)).rgb * 0.12;
+    c += texture(prevFrameTex, clamp(p + texel * vec2( 0.0,  3.0), 0.0, 1.0)).rgb * 0.10;
     return c;
 }
 
@@ -50,7 +52,7 @@ void main() {
 
     float edge = edgeFade(uv);
     float audio = clamp(ubo.energy, 0.0, 1.0);
-    
+
     if (ubo.enableAudioReactive == 1) {
         feedbackMix *= (1.0 + audio * ubo.audioFeedbackResponse);
     }
@@ -60,24 +62,37 @@ void main() {
             float t = float(i) / 3.0;
             vec2 off = vec2(0.0);
 
-            off += centered * t * trailMix * 0.10;
-            off += vec2(0.0, t * 0.02 * temporalMix);
+            // Radial expansion from center
+            off += centered * t * trailMix * 0.08;
 
-            vec2 sampleUV = clamp(uv - off * texel * 20.0, 0.0, 1.0);
-            vec3 s = sampleBlurredPrev(sampleUV, texel);
+            // Downward melt displacement: increases with iteration
+            // so farther history falls lower (drip accumulation)
+            float meltSpeed = 0.04 + temporalMix * 0.06;
+            off += vec2(0.0, t * meltSpeed + t * t * 0.03);
 
-            float w = feedbackMix * decay * (1.0 - t * 0.35) * edge;
+            // Organic wobble: each column drips at slightly different speed
+            float wobble = sin(uv.x * 12.0 + ubo.time * 3.0 + float(i)) * 0.003;
+            off += vec2(wobble * t, 0.0);
+
+            vec2 sampleUV = clamp(uv - off * texel * 30.0, 0.0, 1.0);
+            vec3 s = sampleMeltBlur(sampleUV, texel, temporalMix);
+
+            float w = feedbackMix * decay * (1.0 - t * 0.30) * edge;
             accum = mix(accum, s, w);
         }
     }
 
     if (ubo.enableFeedback == 1 && recursiveMix > 0.0001) {
-        vec3 prev = texture(prevFrameTex, uv).rgb;
+        // Recursive feedback also drifts downward so it doesn't freeze
+        vec2 meltOffset = vec2(0.0, texel.y * (1.0 + temporalMix * 3.0));
+        vec3 prev = texture(prevFrameTex, clamp(uv - meltOffset, 0.0, 1.0)).rgb;
         accum = mix(accum, prev, recursiveMix * decay * edge);
     }
 
     if (ubo.enableTemporal == 1 && frameMix > 0.0001) {
-        vec3 prev = texture(prevFrameTex, uv).rgb;
+        // Temporal accumulation also slides down slightly
+        vec2 meltOffset = vec2(0.0, texel.y * (0.5 + temporalMix * 1.5));
+        vec3 prev = texture(prevFrameTex, clamp(uv - meltOffset, 0.0, 1.0)).rgb;
         float temporalWeight = frameMix * (0.5 + audio * 0.25);
         accum = mix(accum, prev, temporalWeight * edge);
     }

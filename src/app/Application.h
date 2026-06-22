@@ -482,7 +482,9 @@ private:
     void updateUniformBuffer(uint32_t frameIndex, VisualControls& controls,
                             UniformBufferManager& uboManager,
                             const VulkanPresenter& presenter,
-                            AnimState& anim);
+                            AnimState& anim,
+                            VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
+                            bool vid1Init, bool vid2Init, bool vid3Init);
     void recordCommandBuffer(VkCommandBuffer commandBuffer,
                              FrameContext& previewFrame, uint32_t previewImageIndex,
                              FrameContext& outputFrame, uint32_t outputImageIndex);

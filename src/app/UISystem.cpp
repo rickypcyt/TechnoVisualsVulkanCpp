@@ -1057,9 +1057,9 @@ bool UISystem::decodePreviewFrame(VideoPreviewSlot& slot) {
 void UISystem::updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime) {
     if (!slot.player || !slot.player->isReady()) return;
 
-    // Preview doesn't need full video frame rate; cap at 8 FPS to save CPU.
+    // Preview doesn't need full video frame rate; cap at 15 FPS to save CPU.
     // FFmpeg decode + sws_scale on the main thread is expensive.
-    constexpr float previewFrameTime = 1.0f / 8.0f;
+    constexpr float previewFrameTime = 1.0f / 15.0f;
     slot.frameAccumulator += deltaTime;
     if (slot.frameAccumulator < previewFrameTime) return;
 
