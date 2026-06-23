@@ -44,9 +44,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("videoPlaybackRate", &playback.videoPlaybackRate, 0.0f, 5.0f);
     r.registerFloat("videoDecodeOversample", &playback.videoDecodeOversample, 1.0f, 4.0f);
     r.registerBool("autoScaleVideo", &playback.autoScaleVideo);
-    r.registerInt("videoAspectRatio", &playback.videoAspectRatio, 0, 3);
-    r.registerInt("video2AspectRatio", &playback.video2AspectRatio, 0, 3);
-    r.registerInt("video3AspectRatio", &playback.video3AspectRatio, 0, 3);
+    r.registerInt("outputAspectRatio", &playback.outputAspectRatio, 0, 3);
 
     // DUAL VIDEO
     r.registerBool("enableDualVideo", &playback.enableDualVideo);

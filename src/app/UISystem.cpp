@@ -622,12 +622,13 @@ void UISystem::drawPreviewContent(
     {
         const auto& assets = registry.getFilteredAssets(folder);
         if (assets.empty()) {
+            std::cout << "[updateSlotAndDrawImage] " << tag << " folder empty/invalid: '" << folder << "' -> destroying slot\n";
             destroyPreviewSlot(slot);
             return;
         }
 
         activeSelection = std::clamp(activeSelection, 0, (int)assets.size() - 1);
-        if (slot.previewSelection < 0)
+        if (slot.previewSelection < 0 || slot.previewSelection >= (int)assets.size())
             slot.previewSelection = activeSelection;
         slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
         if (slotIndex >= 0 && slotIndex < 3 && previewShuffleRequested[slotIndex]) {
@@ -640,6 +641,8 @@ void UISystem::drawPreviewContent(
                 slot.previewSelection = newSelection;
             }
         }
+        // Final safety clamp after any shuffle
+        slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
         if (slot.confirmedSelection != activeSelection)
             slot.confirmedSelection = activeSelection;
 
@@ -678,17 +681,11 @@ void UISystem::drawPreviewContent(
                             const std::function<void(const std::string&)>& applyCallback,
                             int slotIndex)
     {
-        const auto& assets = registry.getFilteredAssets(folder);
         ImGui::PushID(tag);
         ImGui::Separator();
         ImGui::Text("Controls %s", tag);
-        if (assets.empty()) {
-            ImGui::TextDisabled("No hay videos en esta carpeta");
-            ImGui::PopID();
-            return;
-        }
 
-        // ── Folder & Asset selectors ──
+        // ── Folder selector is always available, even if the current folder is empty ──
         if (drawFolderCombo("Load Folder", folder))
         {
             if (slotIndex == 0 && callbacks.onFolderChanged)
@@ -701,6 +698,17 @@ void UISystem::drawPreviewContent(
 
         ImGui::Text("Current folder: %s",
             folder.empty() ? "All Folders" : folder.c_str());
+
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (assets.empty()) {
+            ImGui::TextDisabled("No hay videos en esta carpeta");
+            ImGui::PopID();
+            return;
+        }
+
+        // Defensive: selection may be stale if the folder changed or was empty before
+        activeSelection = std::clamp(activeSelection, 0, (int)assets.size() - 1);
+        slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
 
         drawAssetCombo("Asset",
             folder,
@@ -895,14 +903,12 @@ void UISystem::drawPreviewContent(
     updateSlotAndDrawImage("V3", previewSlotVideo3,
                            controls.playback.selectedVideo3Folder,
                            selectedVideoAsset3, 2);
-    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
     if (ImGui::SliderFloat("Speed##V3", &controls.playback.video3PlaybackRate, 0.1f, 5.f, "%.2fx")) {
         if (previewSlotVideo3.player)
             previewSlotVideo3.player->setPlaybackRate(controls.playback.video3PlaybackRate);
         if (callbacks.onSetVideoSpeed && !previewSlotVideo3.previewPath.empty())
             callbacks.onSetVideoSpeed(previewSlotVideo3.previewPath, controls.playback.video3PlaybackRate);
     }
-    ImGui::EndDisabled();
     ImGui::EndGroup();
 
     // ── ROW 2+: controls for each slot ──
@@ -940,11 +946,11 @@ void UISystem::drawPreviewContent(
     }
     if (ImGui::IsKeyPressed(ImGuiKey_E)) {
         const auto& assets3 = registry.getFilteredAssets(controls.playback.selectedVideo3Folder);
-        if (!assets3.empty() && previewSlotVideo3.previewSelection >= 0 &&
-            previewSlotVideo3.previewSelection < (int)assets3.size()) {
-            selectedVideoAsset3 = previewSlotVideo3.previewSelection;
+        int sel = std::clamp(previewSlotVideo3.previewSelection, 0, (int)assets3.size() - 1);
+        if (!assets3.empty() && sel >= 0 && sel < (int)assets3.size()) {
+            selectedVideoAsset3 = sel;
             if (callbacks.onReloadVideo3)
-                callbacks.onReloadVideo3(assets3[previewSlotVideo3.previewSelection].metadata.path);
+                callbacks.onReloadVideo3(assets3[sel].metadata.path);
         }
     }
 
@@ -984,6 +990,7 @@ void UISystem::processPreviewShuffles(VideoRegistry& registry,
             do { newSelection = dist(previewRng); }
             while (newSelection == slot.previewSelection);
             slot.previewSelection = newSelection;
+            slot.previewSelection = std::clamp(slot.previewSelection, 0, (int)assets.size() - 1);
             std::cout << "[shuffle] slot " << slotIndex << " -> " << slot.previewSelection
                       << " (" << assets[slot.previewSelection].metadata.filename << ")\n";
         } else {
@@ -1489,9 +1496,7 @@ void UISystem::drawVideoContent(
     changed |= ImGui::Checkbox("Auto Scale Video", &c.playback.autoScaleVideo);
 
     const char* aspectItems = "Original\0" "4:3\0" "16:9\0" "19:10\0";
-    changed |= ImGui::Combo("Force video 1 aspect", &c.playback.videoAspectRatio, aspectItems);
-    changed |= ImGui::Combo("Force video 2 aspect", &c.playback.video2AspectRatio, aspectItems);
-    changed |= ImGui::Combo("Force video 3 aspect", &c.playback.video3AspectRatio, aspectItems);
+    changed |= ImGui::Combo("Force output aspect", &c.playback.outputAspectRatio, aspectItems);
 
     if (ImGui::SliderFloat("Decode oversample", &c.playback.videoDecodeOversample, 1.f, 8.f, "%.1fx"))
     {

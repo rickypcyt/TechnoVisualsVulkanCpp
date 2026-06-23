@@ -108,9 +108,7 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     float video3Mix;
     float video3Available;
     int video3BlendMode;
-    int videoAspectRatio;
-    int video2AspectRatio;
-    int video3AspectRatio;
+    int outputAspectRatio;
     int blendModeProcedural;
     int blendModeFeedback;
     float blendProceduralMix;

@@ -136,9 +136,7 @@ struct GlobalParamsUBO {
     alignas(4) float video3Mix;
     alignas(4) float video3Available;
     alignas(4) int video3BlendMode;
-    alignas(4) int videoAspectRatio;
-    alignas(4) int video2AspectRatio;
-    alignas(4) int video3AspectRatio;
+    alignas(4) int outputAspectRatio;
 
     // BlendingPassUBO
     alignas(4) int blendModeProcedural;

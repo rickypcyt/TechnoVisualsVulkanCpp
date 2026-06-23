@@ -1006,12 +1006,24 @@ void Application::initVideo() {
     auto t0 = Clock::now();
 
     std::cout << "[Application] initVideo() START\n";
+    std::cout << "[initVideo] videoAssetsRoot='" << videoAssetsRoot << "'\n";
+    std::cout << "[initVideo] videoAssetsRoot exists=" << std::filesystem::exists(videoAssetsRoot)
+              << " is_directory=" << std::filesystem::is_directory(videoAssetsRoot) << "\n";
+
+    std::cout << "[initVideo] about to call videoRegistry.scan()...\n";
+    std::cout.flush();
     auto tScan = Clock::now();
     videoRegistry.scan(videoAssetsRoot);
     auto tScanDone = Clock::now();
+    std::cout << "[initVideo] videoRegistry.scan() returned\n";
     std::cout << "[initVideo] Registry scan: "
               << std::chrono::duration<double>(tScanDone - tScan).count()
               << "s, assets=" << videoRegistry.getAssets().size() << "\n";
+    for (const auto& asset : videoRegistry.getAssets()) {
+        std::cout << "[initVideo]   asset: '" << asset.metadata.filename
+                  << "' folder='" << std::filesystem::path(asset.metadata.path).parent_path().string()
+                  << "'\n";
+    }
     glm::ivec2 screenSize = getScreenSize();
     // Decode preview videos to the preview window size, not full screen.
     // Preview is only 480p, so decoding to 1080p wastes a lot of startup time.
@@ -1025,16 +1037,26 @@ void Application::initVideo() {
     // selected folder we keep the path (video will load) and reset the index.
     auto resolvePath = [&](const std::string& folder,
                           int& selAsset,
-                          std::string& path)
+                          std::string& path,
+                          const char* slotName)
     {
+        std::cout << "[initVideo] resolvePath " << slotName
+                  << " folder='" << folder << "' selAsset=" << selAsset
+                  << " path='" << path << "'\n";
+
         bool pathValid = false;
         if (!path.empty()) {
             for (const auto& asset : videoRegistry.getAssets()) {
                 if (asset.metadata.path == path) { pathValid = true; break; }
             }
         }
+        std::cout << "[initVideo] resolvePath " << slotName
+                  << " pathValid=" << pathValid << "\n";
 
         const auto& assets = videoRegistry.getFilteredAssets(folder);
+        std::cout << "[initVideo] resolvePath " << slotName
+                  << " filteredAssets=" << assets.size() << "\n";
+
         if (!assets.empty()) {
             if (pathValid) {
                 for (int i = 0; i < (int)assets.size(); ++i) {
@@ -1058,7 +1080,7 @@ void Application::initVideo() {
             path = assets[selAsset].metadata.path;
             std::cout << "[initVideo] Fallback path: " << path << "\n";
         } else {
-            std::cout << "[initVideo] Folder '" << folder << "' is empty\n";
+            std::cout << "[initVideo] Folder '" << folder << "' is empty -> " << slotName << " path remains empty\n";
         }
     };
 
@@ -1073,11 +1095,11 @@ void Application::initVideo() {
               << visualControls.playback.selectedVideo3Folder << "\n";
 
     resolvePath(visualControls.playback.selectedVideoFolder,
-                selectedVideoAsset, videoSourcePath);
+                selectedVideoAsset, videoSourcePath, "V1");
     resolvePath(visualControls.playback.selectedVideo2Folder,
-                selectedVideoAsset2, videoSourcePath2);
+                selectedVideoAsset2, videoSourcePath2, "V2");
     resolvePath(visualControls.playback.selectedVideo3Folder,
-                selectedVideoAsset3, videoSourcePath3);
+                selectedVideoAsset3, videoSourcePath3, "V3");
 
     std::cout << "[initVideo] After resolve:  V1 path=" << videoSourcePath
               << " idx=" << selectedVideoAsset << "\n";
@@ -1090,12 +1112,18 @@ void Application::initVideo() {
 
     std::cout << "[initVideo] Preview decode size: " << previewSize.x << "x" << previewSize.y
               << " (screen=" << screenSize.x << "x" << screenSize.y << ")\n";
-    std::cout << "[initVideo] Dual video enabled: " << (initExtraSlots ? "yes" : "no") << "\n";
+    std::cout << "[initVideo] enableDualVideo=" << visualControls.playback.enableDualVideo
+              << " -> initExtraSlots=" << initExtraSlots << "\n";
+    if (!initExtraSlots) {
+        std::cout << "[initVideo] Skipping V2 and V3 player init because enableDualVideo is false\n";
+    }
 
     // ── Parallel player initialization (heaviest part: disk + codecs) ──────
     auto tPlayer = Clock::now();
 
+    std::cout << "[initVideo] Launching player init futures...\n";
     auto future0 = std::async(std::launch::async, [&]() {
+        std::cout << "[initVideo] V1 initializing: '" << videoSourcePath << "'\n";
         return videoPlayer.initialize(videoSourcePath, previewSize.x, previewSize.y);
     });
 
@@ -1103,16 +1131,29 @@ void Application::initVideo() {
     std::future<bool> future2;
     if (initExtraSlots) {
         future1 = std::async(std::launch::async, [&]() {
+            std::cout << "[initVideo] V2 initializing: '" << videoSourcePath2 << "'\n";
             return videoPlayer2.initialize(videoSourcePath2, previewSize.x, previewSize.y);
         });
         future2 = std::async(std::launch::async, [&]() {
+            std::cout << "[initVideo] V3 initializing: '" << videoSourcePath3 << "'\n";
             return videoPlayer3.initialize(videoSourcePath3, previewSize.x, previewSize.y);
         });
     }
 
+    std::cout << "[initVideo] Waiting for V1 future...\n";
     bool ok0 = future0.get();
-    bool ok1 = initExtraSlots ? future1.get() : false;
-    bool ok2 = initExtraSlots ? future2.get() : false;
+    std::cout << "[initVideo] V1 future returned: " << ok0 << "\n";
+
+    bool ok1 = false;
+    bool ok2 = false;
+    if (initExtraSlots) {
+        std::cout << "[initVideo] Waiting for V2 future...\n";
+        ok1 = future1.get();
+        std::cout << "[initVideo] V2 future returned: " << ok1 << "\n";
+        std::cout << "[initVideo] Waiting for V3 future...\n";
+        ok2 = future2.get();
+        std::cout << "[initVideo] V3 future returned: " << ok2 << "\n";
+    }
 
     auto tPlayerDone = Clock::now();
     std::cout << "[Application] Player init: "
@@ -1141,9 +1182,10 @@ void Application::initVideo() {
     }
 
     if (!ok0) {
-        std::cerr << "[Application] Failed to initialize video player 1\n";
+        std::cerr << "[Application] Failed to initialize video player 1, aborting initVideo()\n";
         return;
     }
+    std::cout << "[initVideo] V1 ok, configuring autoScale=" << visualControls.playback.autoScaleVideo << "\n";
     videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
 
     // ── Vulkan resources (must be on main thread, but faster) ───────────────
@@ -1158,25 +1200,33 @@ void Application::initVideo() {
         videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
 
     if (initExtraSlots && ok1) {
+        std::cout << "[initVideo] Setting up V2 Vulkan resources (" << videoPlayer2.width() << "x" << videoPlayer2.height() << ")\n";
         videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
         cpuFramePool2.resize(videoPlayer2.width(), videoPlayer2.height(), videoPlayer2.width() * 4);
         videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
                                       vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
                                       videoPlayer2.width(), videoPlayer2.height());
         videoSubsystemInitialized2 = videoTexture2.isReady();
+        std::cout << "[initVideo] V2 texture ready=" << videoSubsystemInitialized2 << "\n";
         if (videoSubsystemInitialized2)
             videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+    } else {
+        std::cout << "[initVideo] V2 skipped: initExtraSlots=" << initExtraSlots << " ok1=" << ok1 << "\n";
     }
 
     if (initExtraSlots && ok2) {
+        std::cout << "[initVideo] Setting up V3 Vulkan resources (" << videoPlayer3.width() << "x" << videoPlayer3.height() << ")\n";
         videoPlayer3.setAutoScale(visualControls.playback.autoScaleVideo);
         cpuFramePool3.resize(videoPlayer3.width(), videoPlayer3.height(), videoPlayer3.width() * 4);
         videoTexture3.createResources(resourceSystem, vulkanContext.getDevice(),
                                       vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
                                       videoPlayer3.width(), videoPlayer3.height());
         videoSubsystemInitialized3 = videoTexture3.isReady();
+        std::cout << "[initVideo] V3 texture ready=" << videoSubsystemInitialized3 << "\n";
         if (videoSubsystemInitialized3)
             videoRenderer3 = std::make_unique<VideoRenderer>(videoPlayer3, videoTexture3, cpuFramePool3);
+    } else {
+        std::cout << "[initVideo] V3 skipped: initExtraSlots=" << initExtraSlots << " ok2=" << ok2 << "\n";
     }
 
     auto tVkDone = Clock::now();
@@ -2399,9 +2449,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.video3Mix = controls.playback.video3Mix;
     ubo.video3Available = (vid3Init && vid3.isReady()) ? 1.0f : 0.0f;
     ubo.video3BlendMode = controls.playback.video3BlendMode;
-    ubo.videoAspectRatio = controls.playback.videoAspectRatio;
-    ubo.video2AspectRatio = controls.playback.video2AspectRatio;
-    ubo.video3AspectRatio = controls.playback.video3AspectRatio;
+    ubo.outputAspectRatio = controls.playback.outputAspectRatio;
 
     // Set visual control values
     ubo.primaryColor = controls.color.primaryColor;

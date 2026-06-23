@@ -281,35 +281,59 @@ vec3 renderMandalaSpin(vec2 st) {
     float dist = length(uv);
     float angle = atan(uv.y, uv.x);
 
-    int petals = 6 + int(uEnergy * 8.0); // 6 to 14 petals
-    float sector = float(petals) * angle + t * 2.0 + uBass * 4.0;
-    float petalPattern = abs(sin(sector * 0.5));
-
-    // Rings that expand/contract with bass
-    float ringCount = 8.0 + uMid * 6.0;
-    float ring = sin(dist * ringCount * 6.283 - t * 3.0 - uBass * 5.0);
-    ring = ring * 0.5 + 0.5;
-
-    float pattern = petalPattern * ring;
+    // Audio drive
+    float drive = max(0.1, ubo.audioReactiveDrive);
+    float bass  = clamp(uBass * drive, 0.0, 1.0);
+    float mid   = clamp(uMid  * drive, 0.0, 1.0);
+    float high  = clamp(uHigh * drive, 0.0, 1.0);
+    float energy= clamp(uEnergy* drive, 0.0, 1.0);
 
     // Pure black background
     vec3 color = vec3(0.0);
 
-    // Color rotates continuously with time and energy
-    float hue = fract(angle / 6.283 + t * 0.05 + uEnergy * 0.25 + dist * 0.3);
-    vec3 petalColor = mix(uPrimaryColor, uSecondaryColor, hue);
-    petalColor *= 0.12 + pattern * 0.3; // lower cap to avoid bright washout
-    color += petalColor * pattern * (0.4 + uEnergy * 0.2);
+    // Infinite fractal mandala: multiple layers with different scales and speeds
+    for (int i = 0; i < 5; ++i) {
+        float fi = float(i);
 
-    // Center vortex (dimmed)
-    float vortex = exp(-dist * (3.0 + uBass * 3.0));
-    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 4.0)) * vortex * (0.08 + uEnergy * 0.1);
+        // Each layer has more petals and spins at different speed
+        float petals = 3.0 + fi * 2.0 + energy * 3.0;
+        float spin = t * (1.0 + fi * 0.4) * (1.0 + bass * 0.5);
+        float sector = petals * (angle + spin) + bass * 2.0;
 
-    // Outer rim glow (dimmed)
-    float rim = smoothstep(0.4, 0.5, dist) * (1.0 - smoothstep(0.5, 0.6, dist));
-    color += uSecondaryColor * rim * uHigh * sin(t * 6.0 + angle * 3.0) * 0.15;
+        // Sharp thin lines (high exponent makes them thin, not bright areas)
+        float line = abs(sin(sector * 0.5));
+        line = pow(line, 18.0 + fi * 4.0 + high * 8.0);
 
-    return clamp(color, 0.0, 0.85);
+        // Expanding rings that pulse inward/outward for infinite depth
+        float ringSpeed = t * (1.2 + fi * 0.3) * (1.0 + mid * 0.5);
+        float ringFreq = 6.0 + fi * 4.0 + energy * 4.0;
+        float ring = sin(dist * ringFreq - ringSpeed);
+        ring = pow(abs(ring), 16.0 + fi * 2.0);
+
+        // Combine: only where line AND ring intersect -> thin colorful threads
+        float pattern = line * ring;
+
+        // Hue shifts per layer for colorful fractal effect
+        float hue = fract(angle / 6.283 + t * 0.07 + fi * 0.17 + energy * 0.2 + dist * 0.25);
+        vec3 lineColor = mix(uPrimaryColor, uSecondaryColor, hue);
+
+        // Dimmer as layers go deeper (falloff)
+        float layerIntensity = 0.35 / (1.0 + fi * 0.6);
+        color += lineColor * pattern * layerIntensity * (0.6 + energy * 0.4);
+    }
+
+    // Infinite spiral vortex: thin colored threads spiraling into the center
+    float spiral = sin(angle * 6.0 + dist * 12.0 - t * 3.0);
+    float spiralLine = pow(abs(spiral), 24.0);
+    float spiralMask = exp(-dist * (2.0 + bass * 2.0));
+    vec3 spiralColor = mix(uSecondaryColor, uPrimaryColor, fract(t * 0.2 + dist * 2.0));
+    color += spiralColor * spiralLine * spiralMask * (0.15 + high * 0.15);
+
+    // Very dim center glow only on bass hits (keeps center dark most of the time)
+    float vortex = exp(-dist * (4.0 + bass * 3.0)) * (0.05 + bass * 0.12);
+    color += mix(uPrimaryColor, uSecondaryColor, sin(t * 3.0)) * vortex;
+
+    return clamp(color, 0.0, 0.9);
 }
 
 // ── Mode 8: Cellular Automata (audio-reactive) ──────────────────────────────

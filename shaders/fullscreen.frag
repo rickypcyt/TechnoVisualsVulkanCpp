@@ -112,6 +112,32 @@ float drawPausedLabel(vec2 uvCoord) {
     return sampleGlyph(PAUSED_GLYPHS[letter], local);
 }
 
+vec2 applyOutputAspect(vec2 uv) {
+    if (ubo.outputAspectRatio == 0) return uv;
+
+    float targetAspect = 0.0;
+    if (ubo.outputAspectRatio == 1) targetAspect = 4.0 / 3.0;
+    else if (ubo.outputAspectRatio == 2) targetAspect = 16.0 / 9.0;
+    else if (ubo.outputAspectRatio == 3) targetAspect = 19.0 / 10.0;
+    else return uv;
+
+    float screenAspect = ubo.resolution.x / max(ubo.resolution.y, 1.0);
+    vec2 scale = vec2(1.0);
+    if (screenAspect > targetAspect) {
+        scale.x = targetAspect / screenAspect;
+    } else {
+        scale.y = screenAspect / targetAspect;
+    }
+    return (uv - 0.5) / scale + 0.5;
+}
+
+vec3 sampleInput(vec2 uv) {
+    vec2 p = applyOutputAspect(uv);
+    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0)
+        return vec3(0.0);
+    return texture(inputTexture, clamp(p, 0.0, 1.0)).rgb;
+}
+
 void main() {
     if (pc.previewOverlay == 2) {
         // Paused: black background + red PAUSED label
@@ -124,7 +150,7 @@ void main() {
         return;
     }
 
-    fragColor = texture(inputTexture, uv);
+    fragColor = vec4(sampleInput(uv), 1.0);
 
     if (pc.previewOverlay == 1) {
         // Cyan border
