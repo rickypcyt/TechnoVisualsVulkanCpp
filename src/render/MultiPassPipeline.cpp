@@ -1040,20 +1040,11 @@ void MultiPassPipeline::updateDescriptorSets(
     VkImageView video3ImageView,
     VkSampler video3Sampler
 ) {
-    // CRITICAL: Validate input handles before proceeding
-    printf("[MultiPass] updateDescriptorSets - videoImageView=%p, videoPrevImageView=%p, videoSampler=%p\n",
-           (void*)videoImageView, (void*)videoPrevImageView, (void*)videoSampler);
-
-    if (videoImageView == VK_NULL_HANDLE) {
-        std::cerr << "[MultiPass] ERROR: videoImageView is VK_NULL_HANDLE!" << std::endl;
-        return;
-    }
-    if (videoSampler == VK_NULL_HANDLE) {
-        std::cerr << "[MultiPass] ERROR: videoSampler is VK_NULL_HANDLE!" << std::endl;
+    if (videoImageView == VK_NULL_HANDLE || videoSampler == VK_NULL_HANDLE) {
         return;
     }
 
-    // CRITICAL: Update stored image views so recreate() uses correct values
+    // Update stored image views so recreate() uses correct values
     this->videoImageView = videoImageView;
     this->videoPrevImageView = videoPrevImageView;
     this->videoSampler = videoSampler;
@@ -1063,20 +1054,16 @@ void MultiPassPipeline::updateDescriptorSets(
     this->video3ImageView = video3ImageView;
     this->video3Sampler = video3Sampler;
 
-    printf("[MultiPass] video2ImageView=%p, video2Sampler=%p, video3ImageView=%p, video3Sampler=%p\n",
-           (void*)video2ImageView, (void*)video2Sampler, (void*)video3ImageView, (void*)video3Sampler);
+    // Accumulate all writes into a single vector to issue one vkUpdateDescriptorSets call.
+    // Note: Set 0 (UBOs) is already updated in createDescriptorSets, so we only update set 1 (textures) here.
+    std::vector<VkWriteDescriptorSet> textureWrites;
+    std::vector<VkDescriptorImageInfo> imageInfos;
+    textureWrites.reserve(NUM_PASSES * uniformBuffers.size() * 4);
+    imageInfos.reserve(NUM_PASSES * uniformBuffers.size() * 4);
 
-    // Update descriptor sets for each pass and frame
-    // Note: Set 0 (UBOs) is already updated in createDescriptorSets, so we only update set 1 (textures) here
     int currentBuffer = 0;  // Ping-pong buffer tracking for descriptor set updates
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
-        // printf("[MultiPass] Processing pass=%d\n", pass);
         for (size_t frame = 0; frame < uniformBuffers.size(); ++frame) {
-            std::vector<VkWriteDescriptorSet> textureWrites;
-            textureWrites.reserve(4);
-            std::vector<VkDescriptorImageInfo> imageInfos;
-            imageInfos.reserve(4);
-
             auto addTextureWrite = [&](uint32_t binding, VkImageView view, VkSampler sampler) {
                 if (view == VK_NULL_HANDLE || sampler == VK_NULL_HANDLE) {
                     return;
@@ -1094,7 +1081,7 @@ void MultiPassPipeline::updateDescriptorSets(
                 write.dstArrayElement = 0;
                 write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write.descriptorCount = 1;
-                write.pImageInfo = &imageInfos.back();
+                write.pImageInfo = &imageInfo;
 
                 textureWrites.push_back(write);
             };
@@ -1127,14 +1114,14 @@ void MultiPassPipeline::updateDescriptorSets(
                 addTextureWrite(0, intermediate[prevBuffer].imageView, videoSampler);
                 addTextureWrite(1, intermediate[prevBuffer].imageView, videoSampler);
             }
-
-            if (!textureWrites.empty()) {
-                vkUpdateDescriptorSets(device, static_cast<uint32_t>(textureWrites.size()),
-                                       textureWrites.data(), 0, nullptr);
-            }
         }
         // Alternate ping-pong buffer after each pass
         currentBuffer = 1 - currentBuffer;
+    }
+
+    if (!textureWrites.empty()) {
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(textureWrites.size()),
+                               textureWrites.data(), 0, nullptr);
     }
 }
 

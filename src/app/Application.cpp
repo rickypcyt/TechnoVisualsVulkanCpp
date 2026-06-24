@@ -2732,6 +2732,25 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     // do not disturb the output renderer.
     ubo.transitionProgress = forOutput ? 1.0f : transitionProgress;
 
+    // Pass culling: disable GPU passes whose effect intensity is zero after
+    // audio reactivity has been applied. This saves a fullscreen drawcall and
+    // its associated render pass when the pass would be a no-op.
+    MultiPassPipeline& pipeline = forOutput ? outputMultiPassPipeline : multiPassPipeline;
+
+    const bool detailPassActive =
+        ubo.gaussianBlur != 0.0f || ubo.directionalBlur != 0.0f || ubo.zoomBlur != 0.0f ||
+        ubo.motionBlur != 0.0f || ubo.temporalBlur != 0.0f ||
+        ubo.unsharpMask != 0.0f || ubo.casAmount != 0.0f || ubo.localContrast != 0.0f;
+    pipeline.setPassEnabled(2, detailPassActive);
+
+    const bool degradationPassActive =
+        ubo.glitchAmount != 0.0f || ubo.glitchDatamosh != 0.0f || ubo.glitchRGBSplit != 0.0f ||
+        ubo.glitchScanlineBreak != 0.0f || ubo.glitchJitter != 0.0f || ubo.glitchTearing != 0.0f ||
+        ubo.glitchPixelSort != 0.0f || ubo.glitchBufferCorruption != 0.0f;
+    pipeline.setPassEnabled(4, degradationPassActive);
+
+    pipeline.setPassEnabled(5, ubo.enableColorGrading != 0);
+
     uboManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }
 
