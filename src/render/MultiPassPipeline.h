@@ -23,9 +23,9 @@
 class MultiPassPipeline {
 public:
     struct PassConfig {
-        VkPipeline pipeline = VK_NULL_HANDLE;
+        VkPipeline computePipeline = VK_NULL_HANDLE;   // Compute dispatch for fullscreen post-processing
         VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-        VkDescriptorSetLayout descriptorSetLayouts[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE}; // Set 0: UBOs, Set 1: Textures
+        VkDescriptorSetLayout descriptorSetLayouts[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE}; // Set 0: UBOs, Set 1: Textures + Storage
         std::vector<VkDescriptorSet> descriptorSets[2]; // descriptorSets[0] for UBOs, descriptorSets[1] for textures
     };
 
@@ -102,9 +102,6 @@ public:
         VkSampler video3Sampler = VK_NULL_HANDLE
     );
 
-    // Update intermediate texture descriptors for passes B-F (called each frame)
-    void updateIntermediateDescriptors(uint32_t frameIndex);
-
     // Recreate on resize
     void recreate(VkExtent2D extent);
 
@@ -155,32 +152,22 @@ private:
     std::array<VkImageLayout, 2> intermediateLayouts{VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED};
     VkImageLayout temporalHistoryLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    // Render pass for offscreen rendering
-    VkRenderPass offscreenRenderPass = VK_NULL_HANDLE;
-    
     // Descriptor pool for all passes
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 
     // GPU profiling
     VkQueryPool queryPool = VK_NULL_HANDLE;
 
-    // Fullscreen quad vertex buffer
-    VkBuffer vertexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-
     // Initialization helpers
-    bool createOffscreenRenderPass();
     bool createIntermediateFramebuffers();
     bool createTemporalHistoryImage();
-    bool createPipelines();
+    bool createComputePipelines();
     bool createDescriptorSets();
-    bool createFullscreenQuad();
     
     void cleanupIntermediateFramebuffers();
     void destroyTemporalHistoryImage();
     void cleanupPipelines();
     void cleanupDescriptorSets();
-    void cleanupFullscreenQuad();
 
     // Shader loading
     std::vector<char> readFile(const std::string& filename);

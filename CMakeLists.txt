@@ -137,6 +137,53 @@ add_executable(app
 
 add_dependencies(app gen_ubo)
 
+# --- Automatic compute shader generation and compilation ---
+find_program(GLSLC glslc REQUIRED)
+
+set(PASS_FRAGS
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_a_base.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_b_spatial.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_c_detail.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_d_temporal.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_e_degradation.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_f_color.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_g_output.frag
+)
+
+set(PASS_COMP_FILES)
+set(PASS_COMP_SPV)
+foreach(frag ${PASS_FRAGS})
+    get_filename_component(name ${frag} NAME_WE)
+    set(comp ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${name}.comp)
+    set(spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${name}.comp.spv)
+    list(APPEND PASS_COMP_FILES ${comp})
+    list(APPEND PASS_COMP_SPV ${spv})
+endforeach()
+
+add_custom_command(
+    OUTPUT ${PASS_COMP_FILES}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/frag_to_compute.py
+    DEPENDS ${PASS_FRAGS} ${CMAKE_CURRENT_SOURCE_DIR}/tools/frag_to_compute.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating compute shaders from fragment shaders"
+)
+
+foreach(frag ${PASS_FRAGS})
+    get_filename_component(name ${frag} NAME_WE)
+    set(comp ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${name}.comp)
+    set(spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${name}.comp.spv)
+    add_custom_command(
+        OUTPUT ${spv}
+        COMMAND ${GLSLC} -fshader-stage=compute ${comp} -o ${spv}
+        DEPENDS ${comp} ${PASS_FRAGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Compiling compute shader ${name}.comp"
+    )
+endforeach()
+
+add_custom_target(compile_compute_shaders DEPENDS ${PASS_COMP_SPV})
+add_dependencies(app compile_compute_shaders)
+
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include ${nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(app

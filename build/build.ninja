@@ -129,7 +129,7 @@ build gen_ubo: phony CMakeFiles/gen_ubo /home/ricky/coding/proyects/vulkancpp/sh
 #############################################
 # Order-only phony target for app
 
-build cmake_object_order_depends_target_app: phony || cmake_object_order_depends_target_imgui cmake_object_order_depends_target_rtmidi gen_ubo
+build cmake_object_order_depends_target_app: phony || cmake_object_order_depends_target_imgui cmake_object_order_depends_target_rtmidi compile_compute_shaders gen_ubo
 
 build CMakeFiles/app.dir/src/main.cpp.o: CXX_COMPILER__app_unscanned_ /home/ricky/coding/proyects/vulkancpp/src/main.cpp || cmake_object_order_depends_target_app
   DEFINES = -DKFR_HAVE_AUDIO -DKFR_HAVE_DSP -DKFR_HAVE_IO -DKFR_NO_DFT
@@ -391,7 +391,7 @@ build CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o: CXX_COMPILER__app_unscann
 #############################################
 # Link the executable app
 
-build app: CXX_EXECUTABLE_LINKER__app_ CMakeFiles/app.dir/src/main.cpp.o CMakeFiles/app.dir/src/app/Application.cpp.o CMakeFiles/app.dir/src/app/UISystem.cpp.o CMakeFiles/app.dir/src/app/ControlState.cpp.o CMakeFiles/app.dir/src/app/MidiSystem.cpp.o CMakeFiles/app.dir/src/app/OscSystem.cpp.o CMakeFiles/app.dir/src/app/AudioSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o CMakeFiles/app.dir/src/core/Window.cpp.o CMakeFiles/app.dir/src/core/VulkanContext.cpp.o CMakeFiles/app.dir/src/core/VulkanPresenter.cpp.o CMakeFiles/app.dir/src/video/VideoStaging.cpp.o CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o CMakeFiles/app.dir/src/video/VideoTexture.cpp.o CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o | /usr/lib/libvulkan.so /usr/lib/libglm.a rtmidi-build/librtmidi.so.6.0.0 libimgui.a /usr/lib/libavformat.so /usr/lib/libavcodec.so /usr/lib/libswscale.so /usr/lib/libswresample.so /usr/lib/libavutil.so /usr/lib/libSDL2-2.0.so.0.3200.70 || gen_ubo libimgui.a rtmidi-build/librtmidi.so rtmidi-build/librtmidi.so
+build app: CXX_EXECUTABLE_LINKER__app_ CMakeFiles/app.dir/src/main.cpp.o CMakeFiles/app.dir/src/app/Application.cpp.o CMakeFiles/app.dir/src/app/UISystem.cpp.o CMakeFiles/app.dir/src/app/ControlState.cpp.o CMakeFiles/app.dir/src/app/MidiSystem.cpp.o CMakeFiles/app.dir/src/app/OscSystem.cpp.o CMakeFiles/app.dir/src/app/AudioSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/VisualControlsRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/ParameterBindingRegistry.cpp.o CMakeFiles/app.dir/src/app/parameters/JsonSerializer.cpp.o CMakeFiles/app.dir/src/app/parameters/MidiBindingSystem.cpp.o CMakeFiles/app.dir/src/app/parameters/PresetMorpher.cpp.o CMakeFiles/app.dir/src/core/Window.cpp.o CMakeFiles/app.dir/src/core/VulkanContext.cpp.o CMakeFiles/app.dir/src/core/VulkanPresenter.cpp.o CMakeFiles/app.dir/src/video/VideoStaging.cpp.o CMakeFiles/app.dir/src/video/VideoPlayer.cpp.o CMakeFiles/app.dir/src/video/VideoRegistry.cpp.o CMakeFiles/app.dir/src/video/VideoTexture.cpp.o CMakeFiles/app.dir/src/video/VideoRenderer.cpp.o CMakeFiles/app.dir/src/render/MultiPassPipeline.cpp.o CMakeFiles/app.dir/src/render/ShaderCompiler.cpp.o CMakeFiles/app.dir/src/render/UniformBufferManager.cpp.o CMakeFiles/app.dir/src/render/DescriptorSetManager.cpp.o CMakeFiles/app.dir/src/gfx/FrameSystem.cpp.o CMakeFiles/app.dir/src/gfx/MemoryAllocator.cpp.o CMakeFiles/app.dir/src/gfx/ResourceSystem.cpp.o | /usr/lib/libvulkan.so /usr/lib/libglm.a rtmidi-build/librtmidi.so.6.0.0 libimgui.a /usr/lib/libavformat.so /usr/lib/libavcodec.so /usr/lib/libswscale.so /usr/lib/libswresample.so /usr/lib/libavutil.so /usr/lib/libSDL2-2.0.so.0.3200.70 || compile_compute_shaders gen_ubo libimgui.a rtmidi-build/librtmidi.so rtmidi-build/librtmidi.so
   DEP_FILE = CMakeFiles/app.dir/link.d
   LINK_FLAGS = -Wl,--dependency-file=CMakeFiles/app.dir/link.d
   LINK_LIBRARIES = -Wl,-rpath,/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build  /usr/lib/libvulkan.so  /usr/lib/libglm.a  rtmidi-build/librtmidi.so.6.0.0  libimgui.a  -llo  -lportaudio  -lasound  -lm  -lpthread  -lfftw3f  /usr/lib/libavformat.so  /usr/lib/libavcodec.so  /usr/lib/libswscale.so  /usr/lib/libswresample.so  /usr/lib/libavutil.so  -lstdc++  /usr/lib/libSDL2-2.0.so.0.3200.70  -lm  -lpthread
@@ -401,6 +401,12 @@ build app: CXX_EXECUTABLE_LINKER__app_ CMakeFiles/app.dir/src/main.cpp.o CMakeFi
   TARGET_FILE = app
   TARGET_PDB = app.dbg
   TARGET_SUPPORT_DIR = CMakeFiles/app.dir
+
+
+#############################################
+# Utility command for compile_compute_shaders
+
+build compile_compute_shaders: phony CMakeFiles/compile_compute_shaders /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp
 
 
 #############################################
@@ -481,6 +487,84 @@ build CMakeFiles/gen_ubo | ${cmake_ninja_workdir}CMakeFiles/gen_ubo: phony /home
 build /home/ricky/coding/proyects/vulkancpp/shaders/shared_ubo.glsl: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/src/ubo_layout.h /home/ricky/coding/proyects/vulkancpp/tools/gen_ubo_glsl.py
   COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/python3.14 /home/ricky/coding/proyects/vulkancpp/tools/gen_ubo_glsl.py
   DESC = Generating shared_ubo.glsl from src/ubo_layout.h
+  restat = 1
+
+
+#############################################
+# Phony custom command for CMakeFiles/compile_compute_shaders
+
+build CMakeFiles/compile_compute_shaders | ${cmake_ninja_workdir}CMakeFiles/compile_compute_shaders: phony /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp.spv /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp.spv
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp.spv
+  DESC = Compiling compute shader pass_a_base.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp.spv
+  DESC = Compiling compute shader pass_b_spatial.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp.spv
+  DESC = Compiling compute shader pass_c_detail.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp.spv
+  DESC = Compiling compute shader pass_d_temporal.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp.spv
+  DESC = Compiling compute shader pass_e_degradation.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp.spv
+  DESC = Compiling compute shader pass_f_color.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp.spv
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp.spv: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/glslc -fshader-stage=compute /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp -o /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp.spv
+  DESC = Compiling compute shader pass_g_output.comp
+  restat = 1
+
+
+#############################################
+# Custom command for /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp
+
+build /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.comp /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.comp: CUSTOM_COMMAND /home/ricky/coding/proyects/vulkancpp/shaders/pass_a_base.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_b_spatial.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_c_detail.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_d_temporal.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_e_degradation.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_f_color.frag /home/ricky/coding/proyects/vulkancpp/shaders/pass_g_output.frag /home/ricky/coding/proyects/vulkancpp/tools/frag_to_compute.py
+  COMMAND = cd /home/ricky/coding/proyects/vulkancpp && /usr/bin/python3.14 /home/ricky/coding/proyects/vulkancpp/tools/frag_to_compute.py
+  DESC = Generating compute shaders from fragment shaders
   restat = 1
 
 # =============================================================================

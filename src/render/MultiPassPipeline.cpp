@@ -12,7 +12,9 @@ VkPipelineStageFlags stageForLayout(VkImageLayout layout) {
         case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
             return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-            return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+        case VK_IMAGE_LAYOUT_GENERAL:
+            return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
         case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
         case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
             return VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -207,11 +209,6 @@ bool MultiPassPipeline::initialize(
     this->uniformBuffers = uniformBuffers;
     this->uniformBufferSize = uniformBufferSize;
 
-    if (!createOffscreenRenderPass()) {
-        std::cerr << "[MultiPass] Failed to create offscreen render pass" << std::endl;
-        return false;
-    }
-
     if (!createIntermediateFramebuffers()) {
         std::cerr << "[MultiPass] Failed to create intermediate framebuffers" << std::endl;
         return false;
@@ -222,13 +219,8 @@ bool MultiPassPipeline::initialize(
         return false;
     }
 
-    if (!createFullscreenQuad()) {
-        std::cerr << "[MultiPass] Failed to create fullscreen quad" << std::endl;
-        return false;
-    }
-
-    if (!createPipelines()) {
-        std::cerr << "[MultiPass] Failed to create pipelines" << std::endl;
+    if (!createComputePipelines()) {
+        std::cerr << "[MultiPass] Failed to create compute pipelines" << std::endl;
         return false;
     }
 
@@ -263,58 +255,8 @@ void MultiPassPipeline::cleanup() {
     cleanupPipelines();
     cleanupIntermediateFramebuffers();
     destroyTemporalHistoryImage();
-    cleanupFullscreenQuad();
 
-    if (offscreenRenderPass != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(device, offscreenRenderPass, nullptr);
-        offscreenRenderPass = VK_NULL_HANDLE;
-    }
     intermediateLayouts = {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED};
-}
-
-bool MultiPassPipeline::createOffscreenRenderPass() {
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = colorFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
-
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
-
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &offscreenRenderPass) != VK_SUCCESS) {
-        return false;
-    }
-
-    std::cout << "[MultiPass] Offscreen render pass created" << std::endl;
-    return true;
 }
 
 bool MultiPassPipeline::createIntermediateFramebuffers() {
@@ -332,7 +274,7 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
         imageInfo.format = colorFormat;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        imageInfo.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -371,179 +313,49 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
             return false;
         }
 
-        // Create framebuffer
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = offscreenRenderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = &intermediate[i].imageView;
-        framebufferInfo.width = extent.width;
-        framebufferInfo.height = extent.height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &intermediate[i].framebuffer) != VK_SUCCESS) {
-            return false;
-        }
-
         intermediateLayouts[i] = VK_IMAGE_LAYOUT_UNDEFINED;
     }
 
-    std::cout << "[MultiPass] Intermediate framebuffers created" << std::endl;
+    std::cout << "[MultiPass] Intermediate storage images created" << std::endl;
     return true;
 }
-bool MultiPassPipeline::createFullscreenQuad() {
-    // Fullscreen quad vertices (position, texcoord)
-    struct Vertex {
-        float pos[2];
-        float texCoord[2];
+bool MultiPassPipeline::createComputePipelines() {
+    // Compute shader file names for each pass (one SPIR-V per pass)
+    static const char* PASS_COMPUTE_SHADERS[] = {
+        "shaders/pass_a_base.comp.spv",
+        "shaders/pass_b_spatial.comp.spv",
+        "shaders/pass_c_detail.comp.spv",
+        "shaders/pass_d_temporal.comp.spv",
+        "shaders/pass_e_degradation.comp.spv",
+        "shaders/pass_f_color.comp.spv",
+        "shaders/pass_g_output.comp.spv"
     };
 
-    const std::vector<Vertex> vertices = {
-        {{-1.0f, -1.0f}, {0.0f, 0.0f}},
-        {{ 1.0f, -1.0f}, {1.0f, 0.0f}},
-        {{-1.0f,  1.0f}, {0.0f, 1.0f}},
-        {{ 1.0f,  1.0f}, {1.0f, 1.0f}}
-    };
+    // Output storage image binding for each pass (after all sampled inputs)
+    static const int PASS_OUTPUT_BINDING[] = {4, 1, 1, 2, 1, 1, 2};
 
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-    // Create vertex buffer
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = bufferSize;
-    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if (vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
-        return false;
-    }
-
-    // Allocate memory
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
-        return false;
-    }
-
-    vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
-
-    // Copy data (simplified - should use staging buffer)
-    void* data;
-    vkMapMemory(device, vertexBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), bufferSize);
-    vkUnmapMemory(device, vertexBufferMemory);
-
-    std::cout << "[MultiPass] Fullscreen quad created" << std::endl;
-    return true;
-}
-
-bool MultiPassPipeline::createPipelines() {
-    // Shader file names for each pass
-    static const char* PASS_SHADERS[][2] = {
-        {"shaders/pass_shared.vert.spv", "shaders/pass_a_base.frag.spv"},      // Pass A
-        {"shaders/pass_shared.vert.spv", "shaders/pass_b_spatial.frag.spv"},   // Pass B
-        {"shaders/pass_shared.vert.spv", "shaders/pass_c_detail.frag.spv"},    // Pass C
-        {"shaders/pass_shared.vert.spv", "shaders/pass_d_temporal.frag.spv"},  // Pass D
-        {"shaders/pass_shared.vert.spv", "shaders/pass_e_degradation.frag.spv"},// Pass E
-        {"shaders/pass_shared.vert.spv", "shaders/pass_f_color.frag.spv"},     // Pass F
-        {"shaders/pass_shared.vert.spv", "shaders/pass_g_output.frag.spv"}     // Pass G
-    };
-
-    // For each pass, create a pipeline
     for (int i = 0; i < NUM_PASSES; ++i) {
-        std::cout << "[MultiPass] Creating pipeline for pass " << i << " (" << PASS_SHADERS[i][0] << ", " << PASS_SHADERS[i][1] << ")" << std::endl;
-        auto vertShaderCode = readFile(PASS_SHADERS[i][0]);
-        auto fragShaderCode = readFile(PASS_SHADERS[i][1]);
-
-        if (vertShaderCode.empty() || fragShaderCode.empty()) {
-            std::cerr << "[MultiPass] Failed to read shader files for pass " << i << std::endl;
+        std::cout << "[MultiPass] Creating compute pipeline for pass " << i << " (" << PASS_COMPUTE_SHADERS[i] << ")" << std::endl;
+        auto compShaderCode = readFile(PASS_COMPUTE_SHADERS[i]);
+        if (compShaderCode.empty()) {
+            std::cerr << "[MultiPass] Failed to read compute shader for pass " << i << std::endl;
             return false;
         }
 
-        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+        VkShaderModule compShaderModule = createShaderModule(compShaderCode);
 
-        VkPipelineShaderStageCreateInfo vertStage{};
-        vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertStage.module = vertShaderModule;
-        vertStage.pName = "main";
+        VkPipelineShaderStageCreateInfo compStage{};
+        compStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        compStage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        compStage.module = compShaderModule;
+        compStage.pName = "main";
 
-        VkPipelineShaderStageCreateInfo fragStage{};
-        fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragStage.module = fragShaderModule;
-        fragStage.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[] = {vertStage, fragStage};
-
-        // No vertex input (fullscreen quad)
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-
-        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-        inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-        inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)extent.width;
-        viewport.height = (float)extent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = extent;
-
-        VkPipelineViewportStateCreateInfo viewportState{};
-        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
-        viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
-
-        VkPipelineRasterizationStateCreateInfo rasterizer{};
-        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE;
-        rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_NONE;
-        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-
-        VkPipelineMultisampleStateCreateInfo multisampling{};
-        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-                                                VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachment.blendEnable = VK_FALSE;
-
-        VkPipelineColorBlendStateCreateInfo colorBlending{};
-        colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        colorBlending.logicOpEnable = VK_FALSE;
-        colorBlending.attachmentCount = 1;
-        colorBlending.pAttachments = &colorBlendAttachment;
-
-        // Create descriptor set layout for set 0 (UBOs) - single binding for GlobalParamsUBO
+        // Set 0: UBO (used in both graphics and compute paths)
         VkDescriptorSetLayoutBinding uboBinding{};
         uboBinding.binding = 0;
         uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboBinding.descriptorCount = 1;
-        uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        uboBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
         VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
         set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -555,80 +367,40 @@ bool MultiPassPipeline::createPipelines() {
             return false;
         }
 
-        // Create descriptor set layout for set 1 (textures) - pass-specific texture bindings
+        // Set 1: sampled input textures + storage output image
         std::vector<VkDescriptorSetLayoutBinding> textureBindings;
 
-        // Pass A needs video textures at bindings 0, 1, 2 and video3 at binding 3
+        auto addSamplerBinding = [&](uint32_t binding) {
+            VkDescriptorSetLayoutBinding b{};
+            b.binding = binding;
+            b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            b.descriptorCount = 1;
+            b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            textureBindings.push_back(b);
+        };
+
         if (i == 0) {
-            VkDescriptorSetLayoutBinding videoTexBinding{};
-            videoTexBinding.binding = 0;
-            videoTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            videoTexBinding.descriptorCount = 1;
-            videoTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(videoTexBinding);
-
-            VkDescriptorSetLayoutBinding videoTexPrevBinding{};
-            videoTexPrevBinding.binding = 1;
-            videoTexPrevBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            videoTexPrevBinding.descriptorCount = 1;
-            videoTexPrevBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(videoTexPrevBinding);
-
-            VkDescriptorSetLayoutBinding video2TexBinding{};
-            video2TexBinding.binding = 2;
-            video2TexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            video2TexBinding.descriptorCount = 1;
-            video2TexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(video2TexBinding);
-
-            VkDescriptorSetLayoutBinding video3TexBinding{};
-            video3TexBinding.binding = 3;
-            video3TexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            video3TexBinding.descriptorCount = 1;
-            video3TexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(video3TexBinding);
+            addSamplerBinding(0); // videoTex
+            addSamplerBinding(1); // videoTexPrev
+            addSamplerBinding(2); // video2Tex
+            addSamplerBinding(3); // video3Tex
+        } else if (i == 3) {
+            addSamplerBinding(0); // inputTex
+            addSamplerBinding(1); // prevFrameTex
+        } else if (i == 6) {
+            addSamplerBinding(0); // inputTex
+            addSamplerBinding(1); // proceduralTex
+        } else {
+            addSamplerBinding(0); // inputTex
         }
-        // Pass D needs inputTex and prevFrameTex
-        else if (i == 3) {
-            VkDescriptorSetLayoutBinding inputTexBinding{};
-            inputTexBinding.binding = 0;
-            inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            inputTexBinding.descriptorCount = 1;
-            inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(inputTexBinding);
 
-            VkDescriptorSetLayoutBinding prevFrameBinding{};
-            prevFrameBinding.binding = 1;
-            prevFrameBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            prevFrameBinding.descriptorCount = 1;
-            prevFrameBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(prevFrameBinding);
-        }
-        // Pass G needs inputTex and proceduralTex
-        else if (i == 6) {
-            VkDescriptorSetLayoutBinding inputTexBinding{};
-            inputTexBinding.binding = 0;
-            inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            inputTexBinding.descriptorCount = 1;
-            inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(inputTexBinding);
-
-            VkDescriptorSetLayoutBinding proceduralBinding{};
-            proceduralBinding.binding = 1;
-            proceduralBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            proceduralBinding.descriptorCount = 1;
-            proceduralBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(proceduralBinding);
-        }
-        // Other passes need just inputTex
-        else {
-            VkDescriptorSetLayoutBinding inputTexBinding{};
-            inputTexBinding.binding = 0;
-            inputTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            inputTexBinding.descriptorCount = 1;
-            inputTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBindings.push_back(inputTexBinding);
-        }
+        // Output storage image binding
+        VkDescriptorSetLayoutBinding outputBinding{};
+        outputBinding.binding = PASS_OUTPUT_BINDING[i];
+        outputBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        outputBinding.descriptorCount = 1;
+        outputBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        textureBindings.push_back(outputBinding);
 
         VkDescriptorSetLayoutCreateInfo set1LayoutInfo{};
         set1LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -640,42 +412,32 @@ bool MultiPassPipeline::createPipelines() {
             return false;
         }
 
-        // Create pipeline layout with both descriptor set layouts
+        // Pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 2;
         pipelineLayoutInfo.pSetLayouts = passes[i].descriptorSetLayouts;
 
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &passes[i].pipelineLayout) != VK_SUCCESS) {
+            std::cerr << "[MultiPass] Failed to create pipeline layout for pass " << i << std::endl;
             return false;
         }
 
-        VkGraphicsPipelineCreateInfo pipelineInfo{};
-        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pViewportState = &viewportState;
-        pipelineInfo.pRasterizationState = &rasterizer;
-        pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pColorBlendState = &colorBlending;
+        // Compute pipeline
+        VkComputePipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        pipelineInfo.stage = compStage;
         pipelineInfo.layout = passes[i].pipelineLayout;
-        pipelineInfo.renderPass = offscreenRenderPass;
-        pipelineInfo.subpass = 0;
 
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &passes[i].pipeline) != VK_SUCCESS) {
-            std::cerr << "[MultiPass] Failed to create pipeline for pass " << i << std::endl;
+        if (vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &passes[i].computePipeline) != VK_SUCCESS) {
+            std::cerr << "[MultiPass] Failed to create compute pipeline for pass " << i << std::endl;
             return false;
         }
 
-        printf("[MultiPass] Pipeline created for pass %d: pipeline=%p\n", i, (void*)passes[i].pipeline);
-
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+        vkDestroyShaderModule(device, compShaderModule, nullptr);
     }
 
-    std::cout << "[MultiPass] Pipelines created for all " << NUM_PASSES << " passes" << std::endl;
+    std::cout << "[MultiPass] Compute pipelines created for all " << NUM_PASSES << " passes" << std::endl;
     return true;
 }
 
@@ -695,7 +457,8 @@ bool MultiPassPipeline::createDescriptorSets() {
     // Calculate pool sizes
     std::vector<VkDescriptorPoolSize> poolSizes = {
         {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_PASSES * numFrames}, // Set 0: one UBO per pass per frame
-        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 4} // Set 1: up to 4 textures per pass per frame
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 4}, // Set 1: up to 4 sampled textures per pass per frame
+        {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, NUM_PASSES * numFrames} // Set 1: one storage output per pass per frame
     };
 
     VkDescriptorPoolCreateInfo poolInfo{};
@@ -871,12 +634,14 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         vkCmdResetQueryPool(cmd, queryPool, 0, TOTAL_QUERIES);
     }
 
+    static const int PASS_OUTPUT_BINDING[] = {4, 1, 1, 2, 1, 1, 2};
+
     for (int pass = 0; pass < NUM_PASSES; ++pass) {
         if (!passEnabled[pass]) continue;
 
         int targetBuffer = (lastOutputBuffer == -1) ? 0 : (1 - lastOutputBuffer);
 
-        // Validate descriptor sets before drawing
+        // Validate descriptor sets before dispatch
         if (frameIndex >= passes[pass].descriptorSets[0].size() ||
             frameIndex >= passes[pass].descriptorSets[1].size() ||
             passes[pass].descriptorSets[0][frameIndex] == VK_NULL_HANDLE ||
@@ -889,40 +654,42 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
             vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool, pass * QUERIES_PER_PASS);
         }
 
-        // Begin render pass
-        ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        // Transition output image to GENERAL for compute write
+        ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_GENERAL);
 
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = offscreenRenderPass;
-        renderPassInfo.framebuffer = intermediate[targetBuffer].framebuffer;
+        // Bind output storage image for this pass (dynamic because ping-pong depends on enabled passes)
+        VkDescriptorImageInfo outputImageInfo{};
+        outputImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        outputImageInfo.imageView = intermediate[targetBuffer].imageView;
 
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = extent;
+        VkWriteDescriptorSet outputWrite{};
+        outputWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        outputWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
+        outputWrite.dstBinding = PASS_OUTPUT_BINDING[pass];
+        outputWrite.dstArrayElement = 0;
+        outputWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        outputWrite.descriptorCount = 1;
+        outputWrite.pImageInfo = &outputImageInfo;
 
-        vkCmdBeginRenderPass(cmd, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkUpdateDescriptorSets(device, 1, &outputWrite, 0, nullptr);
 
-        // Bind pipeline
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, passes[pass].pipeline);
+        // Bind compute pipeline and descriptor sets
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, passes[pass].computePipeline);
 
-        // Bind both descriptor sets (set 0: UBOs, set 1: textures)
         VkDescriptorSet descriptorSetsToBind[2] = {
             passes[pass].descriptorSets[0][frameIndex],
             passes[pass].descriptorSets[1][frameIndex]
         };
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, passes[pass].pipelineLayout,
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, passes[pass].pipelineLayout,
                                 0, 2, descriptorSetsToBind, 0, nullptr);
 
-        // Draw fullscreen quad using vertex shader (no vertex buffer needed)
-        vkCmdDraw(cmd, 4, 1, 0, 0);
+        // Dispatch fullscreen compute (8x8 local size)
+        uint32_t groupX = (extent.width + 7) / 8;
+        uint32_t groupY = (extent.height + 7) / 8;
+        vkCmdDispatch(cmd, groupX, groupY, 1);
 
-        vkCmdEndRenderPass(cmd);
-
-        // Render pass automatically transitions to SHADER_READ_ONLY_OPTIMAL (finalLayout)
-        intermediateLayouts[targetBuffer] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        // Transition output image to SHADER_READ_ONLY_OPTIMAL for the next pass
+        ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         if (pass == 3 && temporalHistory.image != VK_NULL_HANDLE) {
             ensureLayout(intermediate[targetBuffer].image, intermediateLayouts[targetBuffer], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
@@ -1131,9 +898,9 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
     createIntermediateFramebuffers();
     createTemporalHistoryImage();
 
-    // CRITICAL: Recreate pipelines since they depend on render pass
+    // CRITICAL: Recreate compute pipelines after resize
     cleanupPipelines();
-    createPipelines();
+    createComputePipelines();
 
     // CRITICAL: Recreate descriptor sets since their layouts were destroyed
     cleanupDescriptorSets();
@@ -1156,10 +923,6 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
 
 void MultiPassPipeline::cleanupIntermediateFramebuffers() {
     for (int i = 0; i < 2; ++i) {
-        if (intermediate[i].framebuffer != VK_NULL_HANDLE) {
-            vkDestroyFramebuffer(device, intermediate[i].framebuffer, nullptr);
-            intermediate[i].framebuffer = VK_NULL_HANDLE;
-        }
         if (intermediate[i].imageView != VK_NULL_HANDLE) {
             vkDestroyImageView(device, intermediate[i].imageView, nullptr);
             intermediate[i].imageView = VK_NULL_HANDLE;
@@ -1194,9 +957,9 @@ void MultiPassPipeline::destroyTemporalHistoryImage() {
 
 void MultiPassPipeline::cleanupPipelines() {
     for (int i = 0; i < NUM_PASSES; ++i) {
-        if (passes[i].pipeline != VK_NULL_HANDLE) {
-            vkDestroyPipeline(device, passes[i].pipeline, nullptr);
-            passes[i].pipeline = VK_NULL_HANDLE;
+        if (passes[i].computePipeline != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, passes[i].computePipeline, nullptr);
+            passes[i].computePipeline = VK_NULL_HANDLE;
         }
         if (passes[i].pipelineLayout != VK_NULL_HANDLE) {
             vkDestroyPipelineLayout(device, passes[i].pipelineLayout, nullptr);
@@ -1226,16 +989,6 @@ void MultiPassPipeline::cleanupDescriptorSets() {
     }
 }
 
-void MultiPassPipeline::cleanupFullscreenQuad() {
-    if (vertexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, vertexBuffer, nullptr);
-        vertexBuffer = VK_NULL_HANDLE;
-    }
-    if (vertexBufferMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(device, vertexBufferMemory, nullptr);
-        vertexBufferMemory = VK_NULL_HANDLE;
-    }
-}
 
 std::vector<char> MultiPassPipeline::readFile(const std::string& filename) {
     std::cout << "[MultiPass] Reading shader file: " << filename << std::endl;
@@ -1271,77 +1024,3 @@ VkShaderModule MultiPassPipeline::createShaderModule(const std::vector<char>& co
     return shaderModule;
 }
 
-void MultiPassPipeline::updateIntermediateDescriptors(uint32_t frameIndex) {
-    // Update intermediate texture descriptors for passes B-F (passes 1-5)
-    // Pass B (pass 1) reads from intermediate[0] (output of pass A)
-    // Pass C (pass 2) reads from intermediate[1] (output of pass B)
-    // And so on with ping-pong
-
-    std::vector<VkWriteDescriptorSet> writes;
-    writes.reserve(NUM_PASSES);
-    std::vector<VkDescriptorImageInfo> imageInfos;
-    imageInfos.reserve(NUM_PASSES + 1);
-
-    for (int pass = 1; pass < NUM_PASSES - 1; ++pass) {  // Passes B-F (1-5)
-        // Calculate which intermediate buffer this pass should read from
-        // Pass 1 reads from buffer 0 (output of pass 0)
-        // Pass 2 reads from buffer 1 (output of pass 1)
-        // Pass 3 reads from buffer 0 (output of pass 2)
-        // etc.
-        int prevBuffer = (pass % 2 == 1) ? 0 : 1;
-
-        VkDescriptorImageInfo& inputTexInfo = imageInfos.emplace_back();
-        inputTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        inputTexInfo.imageView = intermediate[prevBuffer].imageView;
-        inputTexInfo.sampler = videoSampler;
-
-        VkWriteDescriptorSet& inputTexWrite = writes.emplace_back();
-        inputTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        inputTexWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
-        inputTexWrite.dstBinding = 0;  // Set 1, binding 0
-        inputTexWrite.dstArrayElement = 0;
-        inputTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        inputTexWrite.descriptorCount = 1;
-        inputTexWrite.pImageInfo = &inputTexInfo;
-
-        // Pass D (pass 3) also needs prevFrameTex at binding 1
-        if (pass == 3) {
-            VkDescriptorImageInfo& prevFrameTexInfo = imageInfos.emplace_back();
-            prevFrameTexInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            prevFrameTexInfo.imageView = (temporalHistory.imageView != VK_NULL_HANDLE)
-                ? temporalHistory.imageView
-                : intermediate[prevBuffer].imageView;
-            prevFrameTexInfo.sampler = videoSampler;
-
-            VkWriteDescriptorSet& prevFrameTexWrite = writes.emplace_back();
-            prevFrameTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            prevFrameTexWrite.dstSet = passes[pass].descriptorSets[1][frameIndex];
-            prevFrameTexWrite.dstBinding = 1;  // Set 1, binding 1
-            prevFrameTexWrite.dstArrayElement = 0;
-            prevFrameTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            prevFrameTexWrite.descriptorCount = 1;
-            prevFrameTexWrite.pImageInfo = &prevFrameTexInfo;
-        }
-    }
-
-    // Pass G (pass 6) needs inputTex at binding 0 and proceduralTex at binding 1
-    // Pass G reads from buffer 1 (output of pass F)
-    int passGBuffer = 1;
-    VkDescriptorImageInfo& inputTexInfoG = imageInfos.emplace_back();
-    inputTexInfoG.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    inputTexInfoG.imageView = intermediate[passGBuffer].imageView;
-    inputTexInfoG.sampler = videoSampler;
-
-    VkWriteDescriptorSet& inputTexWriteG = writes.emplace_back();
-    inputTexWriteG.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    inputTexWriteG.dstSet = passes[6].descriptorSets[1][frameIndex];
-    inputTexWriteG.dstBinding = 0;  // Set 1, binding 0
-    inputTexWriteG.dstArrayElement = 0;
-    inputTexWriteG.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    inputTexWriteG.descriptorCount = 1;
-    inputTexWriteG.pImageInfo = &inputTexInfoG;
-
-    if (!writes.empty()) {
-        vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
-    }
-}

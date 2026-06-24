@@ -353,6 +353,9 @@ GITCOMMAND:FILEPATH=/usr/bin/git
 //Git command line client
 GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
+//Path to a program.
+GLSLC:FILEPATH=/usr/bin/glslc
+
 //Path to a library.
 JACK_LIB:FILEPATH=/usr/lib/libjack.so
 

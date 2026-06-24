@@ -1,6 +1,7 @@
 /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/imgui.dir
 /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/gen_ubo.dir
 /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/app.dir
+/home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/compile_compute_shaders.dir
 /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/edit_cache.dir
 /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/rebuild_cache.dir
 /home/ricky/coding/proyects/vulkancpp/build/CMakeFiles/list_install_components.dir
