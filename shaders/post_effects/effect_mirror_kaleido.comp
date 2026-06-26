@@ -1,0 +1,11 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+#include "mirror_common_vulkan.glsl"
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec2 uv = vUV;
+    vec4 result = applyMirrorEffect(uv, 2, uStrength, uTime);
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(result.rgb, 1.0));
+}

@@ -33,6 +33,13 @@ public:
     bool getFrameAtPTS(double targetSeconds, std::vector<uint8_t>& outRGBA, int& outWidth, int& outHeight);
     double getCurrentFramePTS() const;
     const std::string& sourcePath() const;
+
+    // ffprobe-style info getters
+    const char* codecName() const;
+    const char* pixelFormatName() const;
+    int64_t bitrate() const;
+    int numStreams() const;
+    const char* containerFormat() const;
     
     void shutdown();
 

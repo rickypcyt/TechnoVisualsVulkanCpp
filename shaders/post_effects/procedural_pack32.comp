@@ -1,0 +1,203 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float dlfEaseOutCubic(float t) {
+    t -= 1.0;
+    return t * t * t + 1.0;
+}
+float dlfEaseInCubic(float t) {
+    return t * t * t;
+}
+float dlfLinearStep(float begin, float end, float t) {
+    return clamp((t - begin) / (end - begin), 0.0, 1.0);
+}
+float dlfRandom(vec2 st) {
+    return fract(sin(dot(st, vec2(12.9898, 78.233))) * DLF_SEED);
+}
+float dlfNoise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    float a = dlfRandom(i);
+    float b = dlfRandom(i + vec2(1.0, 0.0));
+    float c = dlfRandom(i + vec2(0.0, 1.0));
+    float d = dlfRandom(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+float dlfFBM(vec2 st) {
+    float v = 0.0;
+    float a = 0.5;
+    vec2 shift = vec2(100.0);
+    mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+    for (int i = 0; i < DLF_OCTAVES; ++i) {
+        v += a * dlfNoise(st);
+        st = rot * st * 2.0 + shift;
+        a *= 0.5;
+    }
+    return v;
+}
+float dlfPattern(vec2 p, float m, out vec2 q, out vec2 r) {
+    q.x = dlfFBM(p + vec2(0.0) + m);
+    q.y = dlfFBM(p + vec2(5.2, 1.3) + m);
+    r.x = dlfFBM(p + 4.0 * q + vec2(1.7, 9.2));
+    r.y = dlfFBM(p + 4.0 * q + vec2(8.3, 2.8));
+    return dlfFBM(p + 4.0 * r);
+}
+float dlfSdLine(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * h);
+}
+vec2 dlfCenter(vec2 st) {
+    float aspect = ubo.resolution.x / max(ubo.resolution.y, 1.0);
+    st.x = st.x * aspect - aspect * 0.5 + 0.5;
+    return st;
+}
+vec2 dlfPreparedCoords(vec2 st) {
+    vec2 uv = st;
+    uv.x *= ubo.resolution.y / max(ubo.resolution.x, 1.0);
+    uv = uv * 0.5 + 0.5;
+    uv = dlfCenter(uv);
+    return uv * 2.0 - 1.0;
+}
+vec4 renderDailyFlowLines(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 plane = dlfPreparedCoords(st);
+
+    float beatSpeed = mix(0.6, 1.8, clamp(tempo * 0.35 + energy * 0.4, 0.0, 1.0));
+    float tPhase = fract(time / DLF_SECONDS);
+    float period = mod(time, DLF_SECONDS);
+
+    float motion = dlfEaseOutCubic(dlfLinearStep(0.0, 1.0, period)) * beatSpeed * (1.0 + bass * 0.8);
+    vec2 q, r;
+    float flowWarp = 1.0 + high * 0.35 + mid * 0.2;
+    float pattern = dlfPattern(plane * flowWarp + vec2(bass, high) * 0.25, motion * (0.05 + energy * 0.1), q, r);
+
+    vec2 pos = vec2(2.0);
+    float spacing = mix(0.11, 0.18, clamp(mid * 0.7 + high * 0.3, 0.0, 1.0));
+    float baseSize = mix(0.008, 0.02, clamp(high * 0.8 + energy * 0.5, 0.0, 1.0));
+    float dropOffset = mix(0.9, 1.4, clamp(energy + bass * 0.5, 0.0, 1.0));
+    float posTiming = mod(time + bass * 0.5, DLF_SECONDS * 0.5);
+
+    pos.x = mix(2.0, 0.4 - bass * 0.2, dlfEaseOutCubic(dlfLinearStep(0.0, 2.0, posTiming)));
+    pos.y = mix(2.2 + bass * 0.5, -0.6 - energy * 0.3, dlfEaseOutCubic(dlfLinearStep(0.0, 1.0, posTiming)));
+    float size = mix(baseSize, 0.9, dlfEaseInCubic(dlfLinearStep(1.2, 3.2, posTiming)));
+
+    float invert = step(0.5, fract(tPhase * (2.0 + bass * 1.5))) * step(0.2, high + energy * 0.3);
+
+    vec3 sdf = vec3(1.0);
+    vec2 sdfPos;
+
+    sdfPos = mix(pos, pos, dlfLinearStep(0.0, dropOffset, posTiming));
+    sdf.x = min(sdf.x, dlfSdLine(plane, vec2(sdfPos.x, -spacing * 2.0).yx, vec2(sdfPos.y, -spacing * 2.0).yx) * pattern - size);
+
+    sdfPos = mix(pos + 1.0, pos, dlfLinearStep(0.0, dropOffset, posTiming));
+    sdf.x = min(sdf.x, dlfSdLine(plane, vec2(sdfPos.x, -spacing).yx, vec2(sdfPos.y, -spacing).yx) * pattern - size);
+
+    sdfPos = mix(pos + 2.0, pos, dlfLinearStep(0.0, dropOffset, posTiming));
+    sdf.x = min(sdf.x, dlfSdLine(plane, vec2(sdfPos.x, 0.0).yx, vec2(sdfPos.y, 0.0).yx) * pattern - size);
+
+    sdfPos = mix(pos + 3.0, pos, dlfLinearStep(0.0, dropOffset, posTiming));
+    sdf.x = min(sdf.x, length(plane - vec2(spacing, sdfPos.y)) * pattern - size);
+
+    sdfPos = mix(pos + 4.0, pos, dlfLinearStep(0.0, dropOffset, posTiming));
+    sdf.x = min(sdf.x, dlfSdLine(plane, vec2(sdfPos.x, spacing * 2.0).yx, vec2(sdfPos.y, spacing * 2.0).yx) * pattern - size);
+
+    float stroke = 1.0 - smoothstep(0.0, 0.003 + high * 0.0015 + energy * 0.001, sdf.x);
+    vec3 palette = mix(ubo.primaryColor, ubo.secondaryColor, clamp(ubo.colorBlend + high * 0.4 + mid * 0.2, 0.0, 1.0));
+    vec3 baseGlow = mix(vec3(0.05, 0.06, 0.08), palette, 0.3 + high * 0.2);
+    vec3 color = mix(baseGlow, palette, stroke);
+
+    float shimmer = 0.35 + 0.65 * stroke + bass * 0.25;
+    color *= shimmer * (1.0 + vec3(bass * 0.4, mid * 0.3, high * 0.5));
+    color += palette * stroke * (0.15 + energy * 0.4);
+
+    if (invert > 0.5) {
+        color = mix(vec3(0.95), color, 0.45 + high * 0.3);
+    }
+
+    float alpha = clamp(0.4 + stroke * 0.5 + energy * 0.3 + high * 0.2, 0.0, 1.0);
+    return vec4(clamp(color, 0.0, 1.0), alpha);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderDailyFlowLines(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

@@ -223,4 +223,11 @@ struct GlobalParamsUBO {
 
     // Video transition crossfade (0.0 = old video, 1.0 = new video)
     alignas(4) float transitionProgress;
+
+    // PostEffectPassUBO (selectable post_effects/*.glsl)
+    alignas(4) float postEffectStrength;
+    alignas(4) float postEffectIntensity;
+    alignas(4) int postEffectMode;
+    alignas(4) float postEffectBass;
+    alignas(16) glm::vec3 postEffectRgbAdjust;
 };

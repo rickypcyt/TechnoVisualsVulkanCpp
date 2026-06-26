@@ -1,0 +1,350 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float hash13(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}
+float hash11f(float x) {
+    return fract(sin(x) * 43758.5453);
+}
+float hash12f(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+float voxelRandom(inout float seed) {
+    seed = fract(seed * 43758.5453123 + 0.12345);
+    return seed;
+}
+vec3 voxelHSV(float h, float s, float v) {
+    vec3 res = fract(h + vec3(0.0, 2.0, 1.0) / 3.0);
+    res = clamp(abs(res * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+    res = (res - 1.0) * s + 1.0;
+    res *= v;
+    return res;
+}
+float voxelMap(vec3 p, vec3 camPos, float time, float fallSpeed, float heightRange, out vec3 ID) {
+    float res = 1.0;
+    ID = floor(p);
+    float h = hash12f(ID.xz);
+    ID.y -= floor(max(ID.x * ID.x * 0.1, 5.0) - h * heightRange);
+    float T = time * fallSpeed / kVoxelFallInterval + hash11f(h);
+    if (ID.y > 0.0) {
+        float tmp = ID.y / kVoxelFallInterval + T;
+        if (fract(tmp) * kVoxelFallInterval > 1.0) {
+            res = 0.0;
+        }
+        ID.y = floor(tmp);
+    } else {
+        ID.y += floor(T);
+    }
+
+    vec3 offset = p + 0.5 - camPos;
+    if (dot(offset, offset) < 1.0) {
+        res = 0.0;
+    }
+    return res;
+}
+float voxelCastRay(vec3 ro, vec3 rd, int itr, vec3 camPos, float time, float fallSpeed, float heightRange,
+    pos = floor(ro);
+float voxelEmission(float seed) {
+    return step(hash11f(seed), 0.08) * 10.0;
+}
+vec3 voxelObjectColor(float seed) {
+    return voxelHSV(hash11f(seed), 0.6, 1.0);
+}
+float voxelBumpFunc(vec3 p, vec3 n, float seed) {
+    float nSeed = dot(abs(n), vec3(1.0, 2.0, 4.0));
+    vec2 uv = abs(n.x) > 0.5 ? p.yz : (abs(n.y) > 0.5 ? p.xz : p.xy);
+    uv = fract(uv) - 0.5;
+
+    if (hash11f(seed + nSeed) < 0.5) {
+        uv.y = -uv.y;
+    }
+    if (uv.y < -uv.x) {
+        uv = -uv.yx;
+    }
+    float d = abs(length(uv - 0.5) - 0.5);
+    const float w = 0.15;
+    float tmp = w * w - d * d;
+    return tmp > 0.0 ? -sqrt(tmp) : 0.0;
+}
+vec3 voxelBumpMap(vec3 p, vec3 n, float seed, float bumpFactor) {
+    const vec2 e = vec2(0.002, 0.0);
+    float ref = voxelBumpFunc(p, n, seed);
+    vec3 grad = (vec3(voxelBumpFunc(p - e.xyy, n, seed),
+                      voxelBumpFunc(p - e.yxy, n, seed),
+                      voxelBumpFunc(p - e.yyx, n, seed)) - ref) / e.x;
+    grad -= n * dot(n, grad);
+    return normalize(n + grad * bumpFactor);
+}
+vec3 voxelJitter(vec3 v, float phi, float sinTheta, float cosTheta) {
+    vec3 xAxis = normalize(cross(abs(v.yzx) + 0.001, v));
+    vec3 yAxis = cross(v, xAxis);
+    vec3 zAxis = v;
+    return (xAxis * cos(phi) + yAxis * sin(phi)) * sinTheta + zAxis * cosTheta;
+}
+vec3 voxelPathTrace(vec3 ro, vec3 rd, float time, float fallSpeed, float heightRange, float bumpFactor,
+                    float bass, float mid, float high, inout float pathSeed) {
+    vec3 acc = vec3(0.0);
+    vec3 mask = vec3(1.0);
+
+    vec3 ID;
+    vec3 normal;
+    vec3 pos;
+    float seed;
+
+    float t = voxelCastRay(ro, rd, 60, ro, time, fallSpeed, heightRange, ID, normal, pos, seed);
+    if (t < 0.0) {
+        return vec3(0.0);
+    }
+    ro += t * rd;
+
+    vec3 f = ro - pos - 0.5;
+    vec3 n = normalize(f * pow(abs(f), vec3(8.0)) + 0.0001);
+    n = normalize(n + voxelBumpMap(ro, normal, seed, bumpFactor));
+
+    acc += mask * voxelEmission(seed) * float(kVoxelSamples);
+    mask *= voxelObjectColor(seed);
+
+    vec3 ro0 = ro + n * 0.0008;
+    vec3 n0 = n;
+    vec3 mask0 = mask;
+    for (int i = 0; i < kVoxelSamples; ++i) {
+        ro = ro0;
+        n = n0;
+        mask = mask0;
+        for (int depth = 1; depth < kVoxelMaxDepth; ++depth) {
+            float ur = voxelRandom(pathSeed);
+            rd = voxelJitter(n, voxelRandom(pathSeed) * kTwoPI, sqrt(1.0 - ur), sqrt(ur));
+
+            t = voxelCastRay(ro, rd, 15, ro, time, fallSpeed, heightRange, ID, normal, pos, seed);
+            if (t < 0.0) {
+                break;
+            }
+            ro += t * rd;
+
+            f = ro - pos - 0.5;
+            n = normalize(f * pow(abs(f), vec3(8.0)) + 0.0001);
+
+            float emissionBoost = 1.0 + bass * 1.2 + high * 0.8;
+            acc += mask * voxelEmission(seed) * emissionBoost;
+            mask *= voxelObjectColor(seed);
+            ro += n * 0.0008;
+        }
+    }
+
+    acc /= float(kVoxelSamples);
+    return clamp(acc, 0.0, 1.0);
+}
+float happyStar(vec2 uv, float anim) {
+    uv = abs(uv);
+    vec2 denom = max(abs(uv.yx), vec2(0.0005));
+    vec2 pos = min(uv.xy / denom, vec2(anim));
+    float p = 2.0 - pos.x - pos.y;
+    float denomSum = max(uv.x + uv.y, 0.0005);
+    return (2.0 + p * (p * p - 1.5)) / denomSum;
+}
+float voronoi(vec2 p, out float edge, out float cellSeed) {
+    vec2 n = floor(p);
+    vec2 f = fract(p);
+    float min1 = 10.0;
+    float min2 = 10.0;
+    vec2 best = vec2(0.0);
+
+    for (int y = -1; y <= 1; ++y) {
+        for (int x = -1; x <= 1; ++x) {
+            vec2 g = vec2(float(x), float(y));
+            vec2 offset = hash2(n + g);
+            vec2 r = g + offset - f;
+            float d = dot(r, r);
+            if (d < min1) {
+                min2 = min1;
+                min1 = d;
+                best = g + offset;
+            } else if (d < min2) {
+                min2 = d;
+            }
+        }
+    }
+
+    edge = min2 - min1;
+    cellSeed = hash(n + best);
+    return sqrt(min1);
+}
+float mapScene(vec3 p, float time, float energy, float bass, float mid, float high) {
+    vec3 q = p;
+    q.xz = rotate(q.xz, time * 0.4 + bass * 0.8);
+    q.xy = rotate(q.xy, time * 0.25 + mid * 0.5);
+    float displacement = fbm(q.xz * (2.2 + high * 0.6) + time * 0.3) * (0.12 + energy * 0.15);
+    float sphere = length(q) - (0.65 + bass * 0.35) - displacement;
+    float torus = length(vec2(length(q.xz) - (0.9 + mid * 0.4), q.y)) - (0.23 + high * 0.12) - displacement * 0.5;
+    return min(sphere, torus);
+}
+vec3 estimateNormal(vec3 p, float time, float energy, float bass, float mid, float high) {
+    float eps = 0.0015;
+    vec3 ex = vec3(eps, 0.0, 0.0);
+    vec3 ey = vec3(0.0, eps, 0.0);
+    vec3 ez = vec3(0.0, 0.0, eps);
+    float dx = mapScene(p + ex, time, energy, bass, mid, high) - mapScene(p - ex, time, energy, bass, mid, high);
+    float dy = mapScene(p + ey, time, energy, bass, mid, high) - mapScene(p - ey, time, energy, bass, mid, high);
+    float dz = mapScene(p + ez, time, energy, bass, mid, high) - mapScene(p - ez, time, energy, bass, mid, high);
+    return normalize(vec3(dx, dy, dz));
+}
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+float hash31(vec3 p) {
+    p = fract(p * vec3(123.34, 456.21, 789.32));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y * p.z);
+}
+float map(float value, float min1, float max1, float min2, float max2) {
+    return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+vec3 hsb2rgb(vec3 c) {
+    vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+    rgb = rgb * rgb * (3.0 - 2.0 * rgb);
+    return c.z * mix(vec3(1.0), rgb, c.y);
+}
+vec3 rotateX(vec3 p, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec3(p.x, p.y * c - p.z * s, p.y * s + p.z * c);
+}
+vec3 rotateY(vec3 p, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec3(p.x * c + p.z * s, p.y, -p.x * s + p.z * c);
+}
+vec3 rotateZ(vec3 p, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec3(p.x * c - p.y * s, p.x * s + p.y * c, p.z);
+}
+vec2 rotate2D(vec2 p, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+}
+vec3 sphericalToRectangular(float rho, float theta, float phi) {
+    float phiRad = radians(phi);
+    float thetaRad = radians(theta);
+    return vec3(
+        rho * sin(phiRad) * sin(thetaRad),
+        rho * cos(phiRad),
+        rho * sin(phiRad) * cos(thetaRad)
+    );
+}
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+
+vec4 taylorInvSqrt(vec4 r) {
+    return 1.79284291400159 - 0.85373472095314 * r;
+}
+float snoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+            -0.577350269189626, 0.024390243902439);
+    vec2 i  = floor(v + dot(v, C.yy) );
+    vec2 x0 = v -   i + dot(i, C.xx);
+    vec2 i1;
+    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+    i = mod(i, 289.0);
+    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+        + i.x + vec3(0.0, i1.x, 1.0 ));
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m ;
+    m = m*m ;
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = vec3(0.5);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

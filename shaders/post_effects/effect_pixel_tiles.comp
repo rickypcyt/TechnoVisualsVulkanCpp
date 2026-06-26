@@ -1,0 +1,22 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+const float squares = 10.0;
+const float amt = 0.2;
+const float offset = 0.125;
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec4 sceneColor = texture(uScene, vUV);
+    
+    vec2 tc = vUV;
+    tc.x *= uResolution.x / uResolution.y;
+    
+    vec2 tile = fract(tc * squares);
+    
+    vec3 result = texture(uScene, vUV+(tile*amt)-offset ).rgb;
+    vec3 finalColor = mix(sceneColor.rgb, result, uStrength);
+    
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(finalColor, sceneColor.a));
+}

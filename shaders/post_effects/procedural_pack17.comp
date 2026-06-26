@@ -1,0 +1,227 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+vec3 hash33(vec3 p3) {
+	p3 = fract(p3 * vec3(.1031, .1030, .0973));
+    p3 += dot(p3, p3.yxz+33.33);
+    return fract((p3.xxy + p3.yxx)*p3.zyx);
+}
+float B2( vec2 _P ) {
+    return mod( 2.0*_P.y + _P.x + 1.0, 4.0 );
+}
+float B8( vec2 _P ) {
+    vec2	P1 = mod( _P, 2.0 );					// (P >> 0) & 1
+    vec2	P2 = floor( 0.5 * mod( _P, 4.0 ) );		// (P >> 1) & 1
+    vec2	P4 = floor( 0.25 * mod( _P, 8.0 ) );	// (P >> 2) & 1
+    return 4.0*(4.0*B2(P1) + B2(P2)) + B2(P4);
+}
+vec3 voronoi( in vec3 uv, in vec3 no, inout float rough ) {
+    
+    vec3 center = floor(uv) + 0.5;
+    vec3 bestCenterOffset = vec3(0);
+    float bestDist = 9e9;
+    vec3 bestCenterOffset2 = vec3(0);
+    float bestDist2 = 9e9;
+    
+    for (float x = -0.5 ; x < 1.0 ; x+=1.0)
+    for (float y = -0.5 ; y < 1.0 ; y+=1.0)
+    for (float z = -0.5 ; z < 1.0 ; z+=1.0) {
+		vec3 offset = vec3(x, y, z);
+        vec3 newCenter = center + offset;
+        vec3 newCenterOffset = newCenter + (hash33(newCenter)-0.5) * 0.5;
+        vec3 temp = newCenterOffset - uv;
+        float distSq = dot(temp, temp);
+        if (distSq < bestDist) {
+    		bestCenterOffset2 = bestCenterOffset;
+    		bestDist2 = bestDist;
+            bestCenterOffset = newCenterOffset;
+            bestDist = distSq;
+        } else if (distSq < bestDist2) {
+            bestCenterOffset2 = newCenterOffset;
+            bestDist2 = distSq;
+        }
+    }
+    
+    vec3 n1 = normalize(no + hash33(bestCenterOffset)-0.5);
+    vec3 n2 = normalize(no + hash33(bestCenterOffset2)-0.5);
+    float d = (sqrt(bestDist)-sqrt(bestDist2));
+    float aad = 0.02;
+    return mix(n1, n2, smoothstep(-aad, +aad, d*2.0));
+}
+float smin( float d1, float d2, float k ) {
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h); 
+}
+float cross4D(vec4 p) {
+    float aa = length(p.xy)-0.1;
+    float bb = length(p.zw)-0.02;
+    float cc = length(p.yw)-0.03;
+    float de = smin(smin(aa, bb, 0.1), cc, 0.1)-0.03;
+    return de;
+}
+float de4d(vec4 p) {
+    p.zw *= rot(time*0.148);
+    p.xz *= rot(time*0.241);
+    p.wy *= rot(time*0.187);
+    p.x += time*3.687;
+   	p.y -= time*0.37454;
+    vec4 inG = (fract(p) - 0.5);
+    return cross4D(inG);
+}
+float de(vec3 p) {
+    #ifdef complex
+    float d = dot(p, p);
+    d = de4d(vec4(p/d, d))*d;
+    #else
+    vec4 pp = vec4(p, length(p));
+    float d = dot(pp, pp);
+    d = de4d(pp/d)*d;
+    #endif
+    return d;
+}
+vec3 getNormal(vec3 p) {
+	vec3 e = vec3(0.0, 0.001, 0.0);
+	return normalize(vec3(
+		de(p+e.yxx)-de(p-e.yxx),
+		de(p+e.xyx)-de(p-e.xyx),
+		de(p+e.xxy)-de(p-e.xxy)));	
+}
+float DistributionGGX(vec3 N, vec3 H, float roughness) {
+    float a = roughness*roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+    return num / denom;
+}
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+    float num = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+    return num / denom;
+}
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+    return ggx1 * ggx2;
+}
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+vec3 computeLighting(in vec3 normal, in vec3 viewDir,
+    vec3 result = vec3(0);
+vec3 computeSSS(in vec3 normal, in vec3 viewDir, 
+    float add = 1.0 - index;
+float erf( in float x ) {
+	float sign_x = sign(x);
+	float t = 1.0/(1.0 + 0.47047*abs(x));
+	float result = 1.0 - t*(0.3480242 + t*(-0.0958798 + t*0.7478556))*exp(-(x*x));
+	return result * sign_x;
+}
+float getIntegral(vec3 start, vec3 dir, float dist) {
+    const float a = sunExponent;
+	const float b = sunRadius;
+    float k = start.x;
+    float l = dir.x;
+    float m = start.y;
+    float n = dir.y;
+    float o = start.z;
+    float p = dir.z;
+    float res = sqrt(PI);
+    res *= exp(b+a*(+k*k*(n*n+p*p)
+                    -m*m*(-1.0+n*n)
+                    -o*o*(-1.0+p*p)
+                    -2.0*k*l*o*p
+                    -2.0*m*n*(k*l+o*p) ));
+    res *= - erf(sqrt(-a)*dot(start, dir)) + erf(sqrt(-a)*(dot(start, dir)+dist));
+    res /= 2.0 * sqrt(-a);
+    res *= 500.0;
+    return res;
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = vec3(0.5);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

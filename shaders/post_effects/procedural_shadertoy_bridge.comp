@@ -1,0 +1,181 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float font(vec2 uv, vec2 id) {
+    uv = remapc(uv, vec2(0.0), vec2(1.0), id, id + 1.0) / 16.0;
+    const float w = 0.2;
+    return smoothstep(0.55, 0.45, textureGrad(iChannel1, uv, dFdx(uv), dFdy(uv)).a);
+}
+float pinieon(vec2 uv) {
+    uv = fract(uv);
+    uv = 0.5 + (uv - 0.5) * 0.8;
+    vec2 ruv = uv * 5.0;
+    vec2 fuv = fract(ruv);
+    vec2 iuv = floor(ruv);
+    int idx = int(ruv.x + 2.0) % 3;
+    vec2 id;
+    if (idx == 0) id = vec2(1.0, 12.0);
+    else if (idx == 1) id = vec2(15.0, 13.0);
+    else id = vec2(2.0, 12.0);
+    return font(0.5 + (fuv - 0.5) * 0.7, id) * float(iuv.y == 2.0) * step(0.5, iuv.x) * step(iuv.x, 3.5);
+}
+float hjct(vec2 uv) {
+    uv = fract(uv);
+    uv = 0.5 + (uv - 0.5) * 0.8;
+    vec2 ruv = uv * 5.0;
+    vec2 fuv = fract(ruv);
+    vec2 iuv = floor(ruv);
+    int idx = int(ruv.x + 2.0) % 3;
+    vec2 id;
+    if (idx == 0) id = vec2(1.0, 12.0);
+    else if (idx == 1) id = vec2(15.0, 13.0);
+    else id = vec2(2.0, 12.0);
+    return font(0.5 + (fuv - 0.5) * 0.7, id) * float(iuv.y == 2.0) * step(0.5, iuv.x) * step(iuv.x, 3.5);
+}
+vec3 hash(vec3 x) {
+    uvec3 v = floatBitsToUint(x);
+    v = v * 20240413u + 1212121212u;
+    v.x += v.y * v.z;
+    v.y += v.z * v.x;
+    v.z += v.x * v.y;
+    v ^= v >> 16u;
+    v.x += v.y * v.z;
+    v.y += v.z * v.x;
+    v.z += v.x * v.y;
+    return vec3(v) / float(-1u);
+}
+float iplane(vec3 ro, vec3 rd, vec3 pd, float w) {
+    pd = norm(pd);
+    float l = -(dot(ro, pd) + w) / dot(rd, pd);
+    return (l < 0.0 ? 1e5 : l);
+}
+float fui(vec2 suv, float s) {
+    s = 1.2;
+    suv -= alt * 0.1;
+    suv *= rot(floor(sc(3).x * 4.0) * pi / 2.0);
+    vec2 ruv = suv;
+    rep(i, 4) {
+        if (hash(vec3(floor(ruv) + s, i)).x < 0.5) {
+            ruv *= 2.0;
+        } else {
+            break;
+        }
+    }
+
+    vec3 h = hash(vec3(floor(ruv) + 1.2, s));
+    vec2 fuv = fract(ruv);
+    float c = 0.0;
+    float b = sc(0).x;
+    vec2 au = abs((fuv * 2.0 - 1.0) * rot(floor(h.z * 4.0) * pi / 4.0));
+    if (b < 0.2) {
+        c = pinieon(suv);
+    } else if (b < 0.4) {
+        c = step(fract(dot(vec2(1.0), suv)), 0.1);
+    } else {
+        c = step(max(au.x, au.y), 0.4) * step(min(au.x, au.y), 0.05) * step(h.x, 0.5);
+    }
+    return c;
+}
+float march(vec3 ro, vec3 rd) {
+    int n = 16;
+    float l = 1e9;
+    rep(i, n) {
+        float fi = (float(i) + 0.5) / float(n);
+        vec3 pd = norm(tan(hash(vec3(bt, i, 1.2)) * 2.0 - 1.0));
+        if (sc(0).z < 0.3) {
+            pd = vec3(0.0, 0.0, 1.0);
+        }
+        float w = mix(-5.0, 5.0, fi);
+        float d = iplane(ro, rd, pd, w);
+        vec3 rp = rd * d + ro;
+        vec2 uv = (rp.x * pd.zy + rp.y * pd.xz + rp.z * pd.xy) * 0.5;
+        float s = fui(uv, w);
+        if (s > 0.0) {
+            l = min(l, d);
+        }
+    }
+
+    return l;
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = vec4(col, 1.0);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

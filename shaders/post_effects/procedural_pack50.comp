@@ -1,0 +1,124 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+vec4 renderNoiseDotGrid(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    float xScale = 0.015;
+    float yScale = 0.02;
+    
+    float gap = 0.1 + bass * 0.05;
+    
+    float offset = time * 0.5;
+    
+    vec3 color = vec3(0.0);
+    
+    vec2 gridPos = st * 2.0; // Scale to cover -1 to 1 range
+    
+    vec2 cell = floor(gridPos / gap);
+    vec2 cellUV = mod(gridPos, gap) / gap - 0.5;
+    
+    vec2 noiseCoords = vec2((cell.x + offset) * xScale, (cell.y + offset) * yScale);
+    float noiseValue = noise(noiseCoords);
+    
+    float diameter = noiseValue * gap * 2.5;
+    
+    float dist = length(cellUV);
+    
+    float circle = smoothstep(diameter, diameter * 0.8, dist);
+    
+    vec3 dotColor = vec3(
+        0.5 + 0.5 * sin(noiseValue * 6.28 + time),
+        0.5 + 0.5 * sin(noiseValue * 6.28 + time * 1.3),
+        0.5 + 0.5 * sin(noiseValue * 6.28 + time * 1.7)
+    );
+    
+    dotColor *= 0.8 + bass * 0.4;
+    
+    float glow = smoothstep(diameter * 1.5, diameter * 0.5, dist);
+    dotColor += glow * 0.3 * vec3(0.2, 0.4, 0.8);
+    
+    color = dotColor * circle;
+    
+    return vec4(color, 1.0);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderNoiseDotGrid(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

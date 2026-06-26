@@ -7,6 +7,10 @@
 #include <cstring>
 #include <thread>
 
+extern "C" {
+#include <libavutil/pixdesc.h>
+}
+
 namespace {
     void ensureFFmpegInitialized() {
         static std::once_flag ffmpegInitFlag;
@@ -73,10 +77,59 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     // Skip loop filter for faster decoding (~20-30% speedup, minor quality loss)
     codecCtx->skip_loop_filter = AVDISCARD_ALL;
 
-    if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
-        std::cerr << "[Video] Failed to open codec" << std::endl;
-        shutdown();
-        return false;
+    // Automatic performance optimization for high-bitrate/high-resolution videos
+    AVDictionary* opts = nullptr;
+    bool needsOptimization = false;
+    
+    // Check if video has excessive bitrate
+    if (stream->codecpar->bit_rate > 0) {
+        const int64_t maxBitrate = 50 * 1024 * 1024; // 50 Mbps limit
+        if (stream->codecpar->bit_rate > maxBitrate) {
+            std::cout << "[Video] High bitrate detected: " << (stream->codecpar->bit_rate / 1024 / 1024) 
+                      << " Mbps, applying limits for performance" << std::endl;
+            av_dict_set(&opts, "maxrate", "50M", 0);
+            av_dict_set(&opts, "bufsize", "100M", 0); // 2x maxrate for buffer
+            needsOptimization = true;
+        }
+    }
+    
+    // Check if video has excessive resolution
+    if (stream->codecpar->width > 1920 || stream->codecpar->height > 1080) {
+        std::cout << "[Video] High resolution detected: " << stream->codecpar->width 
+                  << "x" << stream->codecpar->height << ", applying limits for performance" << std::endl;
+        
+        // Force maximum resolution of 1920x1080 for better performance
+        codecCtx->width = std::min(stream->codecpar->width, 1920);
+        codecCtx->height = std::min(stream->codecpar->height, 1080);
+        needsOptimization = true;
+    }
+    
+    // Apply optimizations if needed
+    if (needsOptimization) {
+        // Additional decoder options for performance
+        av_dict_set(&opts, "threads", "auto", 0);
+        av_dict_set(&opts, "fast", "1", 0); // Enable fast decoding mode
+        
+        if (avcodec_open2(codecCtx, codec, &opts) < 0) {
+            std::cerr << "[Video] Failed to open codec with optimizations, trying without..." << std::endl;
+            av_dict_free(&opts);
+            // Restore original dimensions if we modified them
+            codecCtx->width = stream->codecpar->width;
+            codecCtx->height = stream->codecpar->height;
+            
+            if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
+                std::cerr << "[Video] Failed to open codec" << std::endl;
+                shutdown();
+                return false;
+            }
+        }
+        av_dict_free(&opts);
+    } else {
+        if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
+            std::cerr << "[Video] Failed to open codec" << std::endl;
+            shutdown();
+            return false;
+        }
     }
 
     packet = av_packet_alloc();
@@ -137,6 +190,33 @@ double VideoPlayer::durationSeconds() const {
 
 double VideoPlayer::frameDuration() const {
     return frameDurationSeconds / playbackRate;
+}
+
+// ffprobe-style info getters
+const char* VideoPlayer::codecName() const {
+    if (!codecCtx) return "N/A";
+    const AVCodec* codec = avcodec_find_decoder(codecCtx->codec_id);
+    return codec ? codec->name : "unknown";
+}
+
+const char* VideoPlayer::pixelFormatName() const {
+    if (!codecCtx) return "N/A";
+    return av_get_pix_fmt_name(codecCtx->pix_fmt);
+}
+
+int64_t VideoPlayer::bitrate() const {
+    if (!codecCtx) return 0;
+    return codecCtx->bit_rate;
+}
+
+int VideoPlayer::numStreams() const {
+    if (!formatCtx) return 0;
+    return static_cast<int>(formatCtx->nb_streams);
+}
+
+const char* VideoPlayer::containerFormat() const {
+    if (!formatCtx || !formatCtx->iformat) return "N/A";
+    return formatCtx->iformat->name;
 }
 
 void VideoPlayer::setPlaybackRate(double rate) {

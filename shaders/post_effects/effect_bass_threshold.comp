@@ -1,0 +1,22 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec4 sceneColor = texture(uScene, vUV);
+    float bass = clamp(uBassLevel, 0.0, 1.0);
+    float brightness = dot(sceneColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float bandCenter = (sin(uTime * (0.6 + bass * 1.2)) + 1.5) * 0.3;
+    bandCenter = mix(bandCenter, clamp(bass * 0.8, 0.05, 0.95), 0.6);
+    float window = mix(THRESH * 0.35, THRESH + 0.4, clamp(bass * 1.3, 0.0, 1.0));
+    window += uStrength * 0.25;
+    float lower = clamp(bandCenter - window, 0.0, 1.0);
+    float upper = clamp(bandCenter + window, 0.0, 1.0);
+    float mask = step(lower, brightness) * step(brightness, upper);
+    float ridge = smoothstep(0.0, 1.0, abs(brightness - bandCenter) / max(window, 1e-4));
+    float gain = mix(0.6, 1.6, clamp(bass * 1.1, 0.0, 1.0));
+    vec3 result = sceneColor.rgb * mask * gain;
+    result += sceneColor.rgb * (1.0 - mask) * clamp(0.15 - bass * 0.1, 0.0, 0.15);
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(result, sceneColor.a));
+}

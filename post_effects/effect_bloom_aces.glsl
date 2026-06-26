@@ -73,15 +73,16 @@ void main() {
     result.g = textureLod(uScene, uv-mo*0.6, 0.0).g;
     result.b = textureLod(uScene, uv-mo*1.0, 0.0).b;
     
-    result.rgb += bloom * bloom * 2.0; // Reduced intensity to prevent white washout
+    // Softer bloom so the image keeps contrast instead of washing out to white
+    result.rgb += bloom * 0.55;
     vec2 vi = fragCoord / uResolution.xy * 2.0 - 1.0;
     result.rgb *= (1.0-sqrt(dot(vi,vi)*0.45));
     
-    // Invert the effect: make bright areas dark and add subtle glow to dark areas
+    // Keep the experimental inversion look, but much subtler so it doesn't blow out whites
     vec3 inverted = 1.0 - result.rgb;
-    result.rgb = mix(result.rgb, inverted, 0.7); // Mostly inverted
+    result.rgb = mix(result.rgb, inverted, 0.18);
     
-    result.rgb = ACESFitted(result.rgb);
+    result.rgb = ACESFitted(result.rgb * 0.88);
     result.rgb = pow( result.rgb, vec3(1.0/2.2) );
     result.rgb += (rnd-0.5)*0.05; // Reduced noise
     

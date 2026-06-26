@@ -1,0 +1,141 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float mb(vec2 p1, vec2 p0, float beat) { 
+    return (0.04 + beat) / (pow(p1.x - p0.x, 2.0) + pow(p1.y - p0.y, 2.0)); 
+}
+vec4 renderStage7(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    float audioBeat = pow(bass * 0.8 + energy * 0.4, 2.0) * 0.05;
+    float beat = audioBeat; // Use audio instead of channel time
+    
+    vec2 p = (2.0 * st - 1.0);
+    vec2 o = vec2(pow(p.x, 2.0), pow(p.y, 2.0));
+    
+    vec3 col = vec3(pow(2.0 * abs(o.x + o.y) + abs(o.x - o.y), 5.0));
+    col = col * 0.5; // Scale down to prevent oversaturation
+    
+    float t = time + beat * 2.0;
+    
+    float t2 = t * 2.0, t3 = t * 3.0, s2 = sin(t2), s3 = sin(t3), s4 = sin(t * 4.0), c2 = cos(t2), c3 = cos(t3);
+    
+    vec2 mbr, mbg, mbb;
+    mbr = mbg = mbb = vec2(0.0);
+    
+    mbr += vec2(0.10 * s4 + 0.40 * c3, 0.40 * s2 + 0.20 * c3);
+    mbr += vec2(bass * 0.2 * sin(time * 5.0), bass * 0.2 * cos(time * 3.0));
+    
+    mbg += vec2(0.15 * s3 + 0.30 * c2, 0.10 * -s4 + 0.30 * c3);
+    mbg += vec2(mid * 0.15 * sin(time * 4.0 + 1.0), mid * 0.15 * cos(time * 6.0));
+    
+    mbb += vec2(0.10 * s3 + 0.50 * c3, 0.10 * -s4 + 0.50 * c2);
+    mbb += vec2(high * 0.25 * sin(time * 7.0 + 2.0), high * 0.25 * cos(time * 5.0));
+    
+    col.r *= length(mbr.xy - p.xy);
+    col.g *= length(mbg.xy - p.xy);
+    col.b *= length(mbb.xy - p.xy);
+    
+    col *= pow(mb(mbr, p, beat) + mb(mbg, p, beat) + mb(mbb, p, beat), 1.75);
+    
+    vec3 baseColor = mix(ubo.primaryColor, ubo.secondaryColor, ubo.colorBlend);
+    col = mix(col, baseColor, 0.2);
+    
+    col *= (0.8 + energy * 0.4);
+    
+    col.r *= (1.0 + bass * 0.3);
+    col.g *= (1.0 + mid * 0.3);
+    col.b *= (1.0 + high * 0.3);
+    
+    if (energy > 0.6) {
+        float glow = (energy - 0.6) * 2.5;
+        col += vec3(0.2, 0.4, 0.8) * glow;
+    }
+    
+    col = clamp(col, 0.0, 1.0);
+    
+    float alpha = 0.7 + length(col) * 0.15 + energy * 0.3;
+    alpha = clamp(alpha, 0.0, 1.0);
+    
+    return vec4(col, alpha);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderStage7(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

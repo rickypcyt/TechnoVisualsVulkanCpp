@@ -1,0 +1,141 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float randomIkedaGrid(in float x) { 
+    return fract(sin(x) * 43758.5453); 
+}
+float randomIkedaGrid(in vec2 st) { 
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453); 
+}
+float gridIkeda(vec2 st, float res) {
+    vec2 grid = fract(st * res);
+    return 1.0 - (step(res, grid.x) * step(res, grid.y));
+}
+float boxIkeda(in vec2 st, in vec2 size) {
+    size = vec2(0.5) - size * 0.5;
+    vec2 uv = smoothstep(size, size + vec2(0.001), st);
+    uv *= smoothstep(size, size + vec2(0.001), vec2(1.0) - st);
+    return uv.x * uv.y;
+}
+float crossIkeda(in vec2 st, vec2 size) {
+    return clamp(boxIkeda(st, vec2(size.x * 0.5, size.y * 0.125)) +
+            boxIkeda(st, vec2(size.y * 0.125, size.x * 0.5)), 0.0, 1.0);
+}
+vec4 renderIkedaGrid(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    st.x *= ubo.resolution.x / ubo.resolution.y;
+
+    vec3 color = vec3(0.0);
+
+    vec2 grid_st = st * 300.0;
+    color += vec3(1.0, 0.0, 0.0) * gridIkeda(grid_st, 0.01); // Red
+    color += vec3(0.0, 1.0, 0.0) * gridIkeda(grid_st, 0.02); // Green
+    color += vec3(0.0, 0.0, 1.0) * gridIkeda(grid_st, 0.1) * (0.5 + energy * 0.5); // Blue
+
+    vec2 crosses_st = st + 0.5;
+    crosses_st *= 3.0 * (1.0 + bass);
+    vec2 crosses_st_f = fract(crosses_st);
+    color *= 1.0 - crossIkeda(crosses_st_f, vec2(0.3, 0.3));
+    color += vec3(1.0, 1.0, 1.0) * crossIkeda(crosses_st_f, vec2(0.2, 0.2));
+
+    vec2 blocks_st = floor(st * 6.0);
+    float t = time * (0.8 + tempo) + randomIkedaGrid(blocks_st);
+    float time_i = floor(t);
+    float time_f = fract(t);
+    color.rgb += step(0.9, randomIkedaGrid(blocks_st + time_i)) * (1.0 - time_f);
+
+    float brightness = dot(color, vec3(0.299, 0.587, 0.114));
+
+    vec3 bgColor = vec3(0.0);
+    float mixFactor = smoothstep(0.1, 0.4, brightness);
+    color = mix(bgColor, color, mixFactor);
+
+    color *= 0.8;
+
+    color.r *= (1.0 + bass * 0.3);
+    color.g *= (1.0 + mid * 0.3);
+    color.b *= (1.0 + high * 0.3);
+
+    return vec4(color, 1.0);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderIkedaGrid(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

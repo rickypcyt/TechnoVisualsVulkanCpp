@@ -1,0 +1,103 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+
+// Espejo horizontal: mitad derecha refleja izquierda
+vec2 horizontalMirror(vec2 uv) {
+    if (uv.x > 0.5) {
+        uv.x = 1.0 - uv.x;
+    }
+    return uv;
+}
+
+// Espejo vertical: mitad inferior refleja superior
+vec2 verticalMirror(vec2 uv) {
+    if (uv.y > 0.5) {
+        uv.y = 1.0 - uv.y;
+    }
+    return uv;
+}
+
+// Kaleidoscopio circular con 2 espejos
+vec2 kaleidoMirror(vec2 uv, float time) {
+    vec2 centered = uv - 0.5;
+    float angle = atan(centered.y, centered.x);
+    float radius = length(centered);
+    
+    // 2 segmentos = 180 grados cada uno
+    float segments = 2.0;
+    angle = abs(fract(angle / 3.14159 * segments) - 0.5) * 3.14159 / segments;
+    
+    // Reconstruir UV con distorsión sutil
+    vec2 mirrored = vec2(cos(angle), sin(angle)) * radius + 0.5;
+    mirrored += sin(time + radius * 10.0) * 0.01;
+    
+    return mirrored;
+}
+
+// Efecto Rorschach psicodélico con múltiples simetrías
+vec2 rorschachMirror(vec2 uv, float time) {
+    vec2 centered = (uv - 0.5) * 2.0;
+    
+    // Múltiples simetrías
+    vec2 symH = vec2(abs(centered.x), centered.y); // Espejo horizontal
+    vec2 symV = vec2(centered.x, abs(centered.y)); // Espejo vertical
+    vec2 symBoth = vec2(abs(centered.x), abs(centered.y)); // Cuatro cuadrantes
+    
+    // Mezcla animada entre modos
+    float cycle = fract(time * 0.2);
+    vec2 finalUV;
+    if (cycle < 0.33) {
+        finalUV = symH;
+    } else if (cycle < 0.66) {
+        finalUV = mix(symH, symV, smoothstep(0.33, 0.66, cycle));
+    } else {
+        finalUV = mix(symV, symBoth, smoothstep(0.66, 1.0, cycle));
+    }
+    
+    // Zoom pulsante
+    finalUV = finalUV * (1.0 + sin(time) * 0.1) * 0.5 + 0.5;
+    return finalUV;
+}
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec2 uv = vUV;
+    vec2 mirroredUV = uv;
+    
+    // Aplicar modo de espejo seleccionado
+    if (uMirrorMode == 0) {
+        mirroredUV = horizontalMirror(uv);
+    } else if (uMirrorMode == 1) {
+        mirroredUV = verticalMirror(uv);
+    } else if (uMirrorMode == 2) {
+        mirroredUV = kaleidoMirror(uv, uTime);
+    } else if (uMirrorMode == 3) {
+        mirroredUV = rorschachMirror(uv, uTime);
+    }
+    
+    // Samplear textura
+    vec4 mirrored = texture(uScene, mirroredUV);
+    vec4 original = texture(uScene, uv);
+    
+    // Mezclar según intensidad
+    vec4 result = mix(original, mirrored, uIntensity);
+    
+    // Línea divisoria sutil para modos 0 y 1
+    if (uMirrorMode <= 1) {
+        float seamAxis = (uMirrorMode == 0) ? uv.x : uv.y;
+        float seam = smoothstep(0.008, 0.0, abs(seamAxis - 0.5));
+        result.rgb += vec3(seam * 0.4);
+    }
+    
+    // Línea central para kaleido y rorschach
+    if (uMirrorMode >= 2) {
+        float centerLine = smoothstep(0.005, 0.0, abs(uv.x - 0.5));
+        centerLine += smoothstep(0.005, 0.0, abs(uv.y - 0.5));
+        result.rgb += vec3(centerLine * 0.2);
+    }
+    
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(result.rgb, 1.0));
+}
+

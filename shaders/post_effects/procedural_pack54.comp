@@ -1,0 +1,167 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float getCellState(vec2 gridPos, vec2 gridSize, float time, int patternIndex) {
+    vec2 wrapped = mod(gridPos, gridSize);
+    float seed = hash21(wrapped + vec2(float(patternIndex), floor(time * 0.1)));
+    return seed;
+}
+float countSelectedNeighbors(vec2 gridPos, vec2 gridSize, float time, int patternIndex) {
+    float total = 0.0;
+    
+    int patterns[152]; // 19 patterns × 8 neighbors
+    
+    patterns[0] = 0; patterns[1] = 1; patterns[2] = 1; patterns[3] = 1;
+    patterns[4] = 1; patterns[5] = 1; patterns[6] = 1; patterns[7] = 1;
+    patterns[8] = 1; patterns[9] = 0; patterns[10] = 1; patterns[11] = 1;
+    patterns[12] = 1; patterns[13] = 1; patterns[14] = 1; patterns[15] = 1;
+    patterns[16] = 1; patterns[17] = 1; patterns[18] = 0; patterns[19] = 1;
+    patterns[20] = 1; patterns[21] = 1; patterns[22] = 1; patterns[23] = 1;
+    patterns[24] = 1; patterns[25] = 1; patterns[26] = 1; patterns[27] = 0;
+    patterns[28] = 1; patterns[29] = 1; patterns[30] = 1; patterns[31] = 1;
+    patterns[32] = 1; patterns[33] = 1; patterns[34] = 1; patterns[35] = 1;
+    patterns[36] = 0; patterns[37] = 1; patterns[38] = 1; patterns[39] = 1;
+    patterns[40] = 1; patterns[41] = 1; patterns[42] = 1; patterns[43] = 1;
+    patterns[44] = 1; patterns[45] = 0; patterns[46] = 1; patterns[47] = 1;
+    patterns[48] = 1; patterns[49] = 1; patterns[50] = 1; patterns[51] = 1;
+    patterns[52] = 1; patterns[53] = 1; patterns[54] = 0; patterns[55] = 1;
+    patterns[56] = 1; patterns[57] = 1; patterns[58] = 1; patterns[59] = 1;
+    patterns[60] = 1; patterns[61] = 1; patterns[62] = 1; patterns[63] = 0;
+    patterns[64] = 1; patterns[65] = 1; patterns[66] = 1; patterns[67] = 1;
+    patterns[68] = 1; patterns[69] = 1; patterns[70] = 1; patterns[71] = 1;
+    patterns[72] = 0; patterns[73] = 0; patterns[74] = 1; patterns[75] = 1;
+    patterns[76] = 1; patterns[77] = 1; patterns[78] = 1; patterns[79] = 1;
+    patterns[80] = 1; patterns[81] = 0; patterns[82] = 0; patterns[83] = 1;
+    patterns[84] = 1; patterns[85] = 1; patterns[86] = 1; patterns[87] = 1;
+    patterns[88] = 1; patterns[89] = 1; patterns[90] = 1; patterns[91] = 1;
+    patterns[92] = 1; patterns[93] = 1; patterns[94] = 0; patterns[95] = 0;
+    patterns[96] = 1; patterns[97] = 1; patterns[98] = 1; patterns[99] = 1;
+    patterns[100] = 1; patterns[101] = 0; patterns[102] = 0; patterns[103] = 1;
+    patterns[104] = 1; patterns[105] = 1; patterns[106] = 1; patterns[107] = 0;
+    patterns[108] = 1; patterns[109] = 1; patterns[110] = 0; patterns[111] = 1;
+    patterns[112] = 0; patterns[113] = 1; patterns[114] = 0; patterns[115] = 1;
+    patterns[116] = 1; patterns[117] = 1; patterns[118] = 1; patterns[119] = 1;
+    patterns[120] = 1; patterns[121] = 1; patterns[122] = 0; patterns[123] = 0;
+    patterns[124] = 1; patterns[125] = 1; patterns[126] = 1; patterns[127] = 1;
+    patterns[128] = 0; patterns[129] = 1; patterns[130] = 1; patterns[131] = 0;
+    patterns[132] = 1; patterns[133] = 1; patterns[134] = 1; patterns[135] = 1;
+    patterns[136] = 1; patterns[137] = 1; patterns[138] = 1; patterns[139] = 1;
+    patterns[140] = 1; patterns[141] = 0; patterns[142] = 1; patterns[143] = 0;
+    patterns[144] = 0; patterns[145] = 0; patterns[146] = 0; patterns[147] = 0;
+    patterns[148] = 1; patterns[149] = 0; patterns[150] = 0; patterns[151] = 0;
+    
+    int idx = patternIndex * 8;
+    
+    for (int i = 0; i < 8; i++) {
+        if (patterns[idx + i] == 1) {
+            vec2 offset = vec2(0.0);
+            if (i == 0) offset = vec2(-1.0, -1.0);      // left-up
+            else if (i == 1) offset = vec2(0.0, -1.0); // up
+            else if (i == 2) offset = vec2(1.0, -1.0);  // right-up
+            else if (i == 3) offset = vec2(-1.0, 0.0);  // left
+            else if (i == 4) offset = vec2(1.0, 0.0);   // right
+            else if (i == 5) offset = vec2(-1.0, 1.0);  // left-down
+            else if (i == 6) offset = vec2(0.0, 1.0);   // down
+            else if (i == 7) offset = vec2(1.0, 1.0);    // right-down
+            
+            total += getCellState(gridPos + offset, gridSize, time, patternIndex);
+        }
+    }
+    
+    return total;
+}
+float applyCARules(float state, float total, float average, float previous) {
+    if (average >= 254.0) {
+        return 0.0;
+    } else if (average <= 1.0) {
+        return 255.0;
+    } else {
+        float nextState = state + average;
+        if (previous > 0.0) nextState -= previous;
+        return clamp(nextState, 0.0, 255.0);
+    }
+}
+vec4 renderCircularCellularAutomata(
+    vec2  st,
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderCircularCellularAutomata(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

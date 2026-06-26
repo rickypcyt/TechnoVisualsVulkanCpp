@@ -1,0 +1,125 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float randomDataStream(in float x) {
+    return fract(sin(x) * 1e4);
+}
+float randomDataStream(in vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+}
+float patternDataStream(vec2 st, vec2 v, float t) {
+    vec2 p = floor(st + v);
+    return step(t, randomDataStream(100.0 + p * 0.000001) + randomDataStream(p.x) * 0.5);
+}
+vec4 renderIkedaDataStream(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    st.x *= ubo.resolution.x / ubo.resolution.y;
+
+    vec2 grid = vec2(mix(50.0, 150.0, energy), mix(25.0, 75.0, energy));
+    st *= grid;
+
+    vec2 ipos = floor(st);  // integer
+    vec2 fpos = fract(st);  // fraction
+
+    vec2 vel = vec2(time * 2.0 * max(grid.x, grid.y) * (1.0 + tempo));
+    vel *= vec2(-1.0, 0.0) * randomDataStream(1.0 + ipos.y + bass); // direction
+
+    vec2 offset = vec2(0.1, 0.0);
+
+    float threshold = 0.5 + mid * 0.3 + high * 0.2;
+
+    vec3 color = vec3(0.0);
+    color.r = patternDataStream(st + offset, vel, threshold);
+    color.g = patternDataStream(st, vel, threshold);
+    color.b = patternDataStream(st - offset, vel, threshold);
+
+    color *= step(0.2, fpos.y);
+
+    color = vec3(step(0.1, color.r + color.g + color.b));
+    color *= vec3(1.0); // White data stream
+    
+    color = mix(color, ubo.primaryColor, high * 0.3);
+
+    return vec4(color, 1.0);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderIkedaDataStream(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

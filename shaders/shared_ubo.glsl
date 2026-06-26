@@ -173,6 +173,11 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int enableRgbOverlay;
     float masterBrightness;
     float transitionProgress;
+    float postEffectStrength;
+    float postEffectIntensity;
+    int postEffectMode;
+    float postEffectBass;
+    vec3 postEffectRgbAdjust;
 } ubo;
 
 #endif // SHARED_UBO_GLSL

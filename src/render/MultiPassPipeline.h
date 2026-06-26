@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 #include <array>
+#include <string>
+#include <unordered_map>
 #include "EffectChain.h"
 #include "../app/Timeline.h"
 #include "../app/ProjectState.h"
@@ -102,6 +104,12 @@ public:
         VkSampler video3Sampler = VK_NULL_HANDLE
     );
 
+    // Post-effect slot: selectable compute effect from shaders/post_effects/*.comp
+    void loadPostEffects();
+    std::vector<std::string> getPostEffectNames() const;
+    void setPostEffect(const std::string& name); // empty string disables the slot
+    const std::string& getActivePostEffect() const { return activePostEffect; }
+
     // Recreate on resize
     void recreate(VkExtent2D extent);
 
@@ -158,15 +166,28 @@ private:
     // GPU profiling
     VkQueryPool queryPool = VK_NULL_HANDLE;
 
+    // Post-effect slot (dynamic effect from shaders/post_effects)
+    std::unordered_map<std::string, VkPipeline> postEffectPipelines;
+    std::unordered_map<std::string, VkShaderModule> postEffectShaderModules;
+    std::vector<std::string> postEffectNames;
+    VkPipelineLayout postEffectPipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout postEffectSetLayouts[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE}; // Set 0: UBO, Set 1: input sampler + output storage
+    std::vector<VkDescriptorSet> postEffectDescriptorSets[2];
+    std::string activePostEffect;
+    bool postEffectEnabled = false;
+
     // Initialization helpers
     bool createIntermediateFramebuffers();
     bool createTemporalHistoryImage();
     bool createComputePipelines();
+    bool createPostEffectPipeline();
+    bool createPostEffectDescriptorSets();
     bool createDescriptorSets();
     
     void cleanupIntermediateFramebuffers();
     void destroyTemporalHistoryImage();
     void cleanupPipelines();
+    void cleanupPostEffectResources();
     void cleanupDescriptorSets();
 
     // Shader loading

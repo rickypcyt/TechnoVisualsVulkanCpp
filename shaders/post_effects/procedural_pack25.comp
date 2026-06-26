@@ -1,0 +1,260 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float rand2(vec2 n) {
+    return fract(sin(dot(n, vec2(12.9898, 22.1414))) * 43758.5453);
+}
+float noise1(float p) {
+    float fl = floor(p);
+    float fc = fract(p);
+    return mix(rand1(fl), rand1(fl + 1.0), fc);
+}
+float noise2(vec2 n) {
+    const vec2 d = vec2(0.5, 1.0);
+    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+    return mix(mix(rand2(b), rand2(b + d.yx), f.x),
+               mix(rand2(b + d.xy), rand2(b + d.yy), f.x), f.y);
+}
+vec3 GenRay(vec3 dir, vec3 up, float angle, vec2 fragCoord) {
+    vec2 p = (fragCoord * 2.0 - ubo.resolution) / min(ubo.resolution.x, ubo.resolution.y);
+    vec3 u = normalize(cross(up, dir));
+    vec3 v = normalize(cross(dir, u));
+    float fov = angle * PI * 0.5 / 180.0;
+    return normalize(sin(fov) * u * p.x + sin(fov) * v * p.y + cos(fov) * dir);
+}
+float sdBox(vec3 p, vec3 b) {
+    vec3 d = abs(p) - b;
+    return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+}
+float sdCross(vec3 p) {
+    float da = sdBox(p, vec3(9100.0, 1.0, 1.0));
+    float db = sdBox(p, vec3(1.0, 100.0, 1.0));
+    float dc = sdBox(p, vec3(1.0, 1.0, 100.0));
+    return min(da, min(db, dc));
+}
+float Cs(vec3 p) {
+    vec3 c = vec3(4.0);
+    p -= 0.5 * c;
+    p = mod(p, c) - 0.5 * c;
+    return sdCross(p);
+}
+float men(vec3 p, float d) {
+    float s = 1.0 / 3.0;
+    float ratio = 1.0 / (3.0 + 2.0);
+    for (int i = 0; i < 3; ++i) {
+        vec3 r = p / s;
+        d = max(d, -Cs(r) * s);
+        s *= ratio;
+    }
+    return d;
+}
+float sdCylinder(vec3 p, vec3 c) {
+    return length(p.xz - c.xy) - c.z;
+}
+float tunnel(vec3 p) {
+    float d = 999.0;
+    d = sdCylinder(p, vec3(0.6, 0.0, 4.0));
+    d = max(d, -sdCylinder(p, vec3(0.0, 0.0, 3.9)));
+    return d;
+}
+float collapsed(vec3 p) {
+    float d = 9999.0;
+    d = length(p) - 2.4;
+    d = min(tunnel(p - vec3(0.0, 0.0, sin(p.y * 0.2))), d);
+    d = max(d, -Cs(p * rotM(vec3(0.0, 1.0, 0.0), p.y * 0.4)));
+    return d;
+}
+float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+    vec3 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * h) - r;
+}
+float mapCollapsed(vec3 p) {
+    float d = sdBox(p, vec3(1.0));
+    vec3 q = p;
+    vec3 cell = vec3(5.0, 5.0, 3.0);
+    vec2 index = floor(p.xy / cell.xy);
+    q.xy = mod(q.xy, cell.xy) - 0.5 * cell.xy;
+    d = min(d, length(q) - 0.1);
+
+    float h = noise2(index);
+    vec2 up = vec2(index.x, index.y + 1.0);
+    vec2 down = vec2(index.x, index.y - 1.0);
+    vec2 right = vec2(index.x + 1.0, index.y);
+    vec2 left = vec2(index.x - 1.0, index.y);
+
+    float speed = 8.0;
+    float dc = tan(ubo.time * rand2(index) * speed - rand2(index) * 0.4);
+    float dup = sin(ubo.time * rand2(up) * speed - rand2(up) * 0.4);
+    float ddown = sin(ubo.time * rand2(down) * speed - rand2(down) * 0.4);
+    float dright = sin(ubo.time * rand2(right) * speed - rand2(right) * 0.4);
+    float dleft = sin(ubo.time * rand2(left) * speed - rand2(left) * 0.4);
+
+    d = min(d, sdCapsule(q, vec3(0.0, 0.0, h + dc), vec3(cell.x, 0.0, noise2(right) + dright), 0.015));
+    d = min(d, sdCapsule(q, vec3(2.0, 0.0, h + dc), vec3(-cell.x, 0.0, noise2(left) + dleft), 0.015));
+    d = min(d, sdCapsule(q, vec3(0.0, 0.0, h + dc), vec3(0.0, cell.y, noise2(up) + dup), 0.015));
+    d = min(d, sdCapsule(q, vec3(0.0, 0.0, h + dc), vec3(0.0, -cell.y, noise2(down) + ddown), 0.015));
+
+    glowAccum = min(glowAccum, d);
+    return d;
+}
+vec3 getNormalCollapsed(vec3 p) {
+    float eps = 0.001;
+    return normalize(vec3(
+        mapCollapsed(p + vec3(eps, 0.0, 0.0)) - mapCollapsed(p - vec3(eps, 0.0, 0.0)),
+        mapCollapsed(p + vec3(0.0, eps, 0.0)) - mapCollapsed(p - vec3(0.0, eps, 0.0)),
+        mapCollapsed(p + vec3(0.0, 0.0, eps)) - mapCollapsed(p - vec3(0.0, 0.0, eps))
+    ));
+}
+vec4 renderCollapsedTransit(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 fragCoord = (st * 0.5 + 0.5) * ubo.resolution;
+    vec3 lightDir = normalize(vec3(0.2, -0.99, 0.99));
+
+    float camSpeed = 1.5 + tempo * 0.3 + energy * 0.5;
+    float rotSpeed = 0.8 + bass * 0.6;
+
+    vec3 pos = vec3(
+        3.0 * cos(time * camSpeed) * (1.0 + bass * 0.3),
+        3.0 * sin(time * camSpeed * 0.7) * (1.0 + mid * 0.2),
+        4.0 + sin(time * rotSpeed) * 1.5
+    );
+
+    vec3 target = vec3(
+        0.5 * cos(time * rotSpeed * 0.5),
+        0.0,
+        0.5 * sin(time * rotSpeed * 0.5)
+    );
+
+    vec3 forward = normalize(target - pos);
+    vec3 up = vec3(0.0, 0.0, 1.0);
+    up = rotM(forward, time * rotSpeed * 0.3 + high * 0.5) * up;
+
+    vec3 dir = GenRay(forward, up, 130.0 + bass * 20.0, fragCoord);
+
+    glowAccum = 99990.0;
+    float t = 0.0;
+    float dist = 0.0;
+    int iterations = 0;
+
+    for (int i = 0; i < ITE_MAX; ++i) {
+        dist = mapCollapsed(pos + dir * t);
+        if (dist < DIST_MIN) { break; }
+        t += dist * DIST_COEFF;
+        if (t > DIST_MAX) { break; }
+        iterations = i;
+    }
+
+    vec3 ip = pos + dir * t;
+    vec3 color = vec3(0.0);
+    if (dist < DIST_MIN) {
+        vec3 n = getNormalCollapsed(ip);
+        float diff = clamp(dot(lightDir, n), 0.1, 1.0);
+
+        vec3 palette = mix(ubo.primaryColor, ubo.secondaryColor, clamp(ubo.colorBlend + mid * 0.3, 0.0, 1.0));
+        color = palette * diff;
+
+        color *= (1.0 + energy * 0.6);
+        color.r *= (1.0 + bass * 0.4);
+        color.g *= (1.0 + mid * 0.3);
+        color.b *= (1.0 + high * 0.5);
+
+        vec3 viewDir = normalize(pos - ip);
+        vec3 reflectDir = reflect(-lightDir, n);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+        color += vec3(0.3, 0.4, 0.5) * spec * (1.0 + high * 0.6);
+    } else {
+        color += 0.02 / (glowAccum + 0.0001);
+        color *= (1.0 + energy * 0.5);
+    }
+
+    float depthFog = clamp(1.0 - t * 0.02, 0.0, 1.0);
+    vec3 bgColor = vec3(0.02, 0.03, 0.05);
+    color = mix(bgColor, color, depthFog);
+
+    color *= 1.0 + sin(time * 3.0) * 0.1 * energy;
+
+    color = clamp(color, 0.0, 1.0);
+    return vec4(color, 1.0);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderCollapsedTransit(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

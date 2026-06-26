@@ -14,9 +14,16 @@ const float PI = 3.1415926535;
 #define uHigh           ubo.high
 #define uPrimaryColor   ubo.primaryColor.rgb
 #define uSecondaryColor ubo.secondaryColor.rgb
+#define uColorBlend     ubo.colorBlend
+#define uCameraZoom     ubo.camera.zoom
+#define uCameraOffsetX  ubo.cameraPanX
+#define uCameraOffsetY  ubo.cameraPanY
+#define uResolution     ubo.resolution
+#define uIntensity     ubo.energy
 
 #include "procedural_anaglyph.glsl"
 #include "procedural_effects.glsl"
+#include "procedural_all.glsl"
 
 #undef uTime
 #undef uTempo
@@ -26,6 +33,12 @@ const float PI = 3.1415926535;
 #undef uHigh
 #undef uPrimaryColor
 #undef uSecondaryColor
+#undef uColorBlend
+#undef uCameraZoom
+#undef uCameraOffsetX
+#undef uCameraOffsetY
+#undef uResolution
+#undef uIntensity
 
 layout(set = 1, binding = 4, rgba8) uniform writeonly image2D outputImage;
 
@@ -310,6 +323,29 @@ vec4 dispatchMode(int m, vec2 st) {
     if (m == 10) return vec4(renderOscilloscope(st), 1.0);
     if (m == 11) return vec4(renderCornerX(st), 1.0);
     if (m == 12) return vec4(renderElectricRays(st), 1.0);
+    
+    // Procedural modes from simple packs (1-2, 5-15)
+    // These use renderProceduralModeX to avoid conflicts with existing functions
+    if (m == 1) return vec4(renderProceduralMode1(st), 1.0);
+    if (m == 2) return vec4(renderProceduralMode2(st), 1.0);
+    if (m == 3) return vec4(renderProceduralMode3(st), 1.0);
+    if (m == 4) return vec4(renderProceduralMode4(st), 1.0);
+    if (m == 5) return vec4(renderProceduralMode5(st), 1.0);
+    if (m == 6) return vec4(renderProceduralMode6(st), 1.0);
+    if (m == 7) return vec4(renderProceduralMode7(st), 1.0);
+    if (m == 8) return vec4(renderProceduralMode8(st), 1.0);
+    if (m == 9) return vec4(renderProceduralMode9(st), 1.0);
+    if (m == 10) return vec4(renderProceduralMode10(st), 1.0);
+    if (m == 11) return vec4(renderProceduralMode11(st), 1.0);
+    if (m == 12) return vec4(renderProceduralMode12(st), 1.0);
+    if (m == 13) return vec4(renderVoronoiCellsWrapper(st), 1.0);
+    if (m == 14) return vec4(renderRaymarchedObjectWrapper(st), 1.0);
+    if (m == 15) return vec4(renderReactionDiffusionWrapper(st), 1.0);
+    if (m == 16) return vec4(renderLiquidRefractionWrapper(st), 1.0);
+    if (m == 17) return vec4(renderStarfieldWarpWrapper(st), 1.0);
+    if (m == 18) return vec4(renderPlasmaClassicWrapper(st), 1.0);
+    if (m == 19) return vec4(renderDomainWarpedFractalWrapper(st), 1.0);
+    
     if (m == 40) {
         vec2 aspectCorrected = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
         return renderAnaglyphAssembly(aspectCorrected, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);

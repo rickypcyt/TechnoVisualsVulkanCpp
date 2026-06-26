@@ -184,6 +184,49 @@ endforeach()
 add_custom_target(compile_compute_shaders DEPENDS ${PASS_COMP_SPV})
 add_dependencies(app compile_compute_shaders)
 
+# --- Automatic post-effect shader generation and compilation ---
+file(GLOB POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/*.glsl)
+list(REMOVE_ITEM POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/post_common.glsl)
+list(REMOVE_ITEM POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/mirror_common.glsl)
+
+set(POST_EFFECT_COMP_FILES)
+set(POST_EFFECT_SPV)
+foreach(glsl ${POST_EFFECT_GLSL})
+    get_filename_component(name ${glsl} NAME_WE)
+    set(comp ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_effects/${name}.comp)
+    set(spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_effects/${name}.comp.spv)
+    list(APPEND POST_EFFECT_COMP_FILES ${comp})
+    list(APPEND POST_EFFECT_SPV ${spv})
+endforeach()
+
+add_custom_command(
+    OUTPUT ${POST_EFFECT_COMP_FILES}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/post_to_compute.py
+    DEPENDS ${POST_EFFECT_GLSL}
+            ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/post_common.glsl
+            ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/mirror_common.glsl
+            ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_common_vulkan.glsl
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/post_to_compute.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating Vulkan compute shaders from post_effects"
+)
+
+foreach(glsl ${POST_EFFECT_GLSL})
+    get_filename_component(name ${glsl} NAME_WE)
+    set(comp ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_effects/${name}.comp)
+    set(spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_effects/${name}.comp.spv)
+    add_custom_command(
+        OUTPUT ${spv}
+        COMMAND ${GLSLC} -fshader-stage=compute ${comp} -o ${spv}
+        DEPENDS ${comp} ${POST_EFFECT_GLSL} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_common_vulkan.glsl
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Compiling post-effect compute shader ${name}"
+    )
+endforeach()
+
+add_custom_target(compile_post_effects DEPENDS ${POST_EFFECT_SPV})
+add_dependencies(app compile_post_effects)
+
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include ${nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(app

@@ -220,6 +220,13 @@ struct VisualControls {
         bool enablePostGlitch = true;
         bool enablePostColorBalance = true;
         bool enableAnalog = true;
+
+        // Selectable post-effect slot (post_effects/*.glsl)
+        std::string postEffectName;        // empty = disabled
+        float postEffectStrength = 0.5f;
+        float postEffectIntensity = 0.5f;
+        int postEffectMode = 0;
+        glm::vec3 postEffectRgbAdjust = glm::vec3(1.0f);
     } post;
 
     // ============================================================================

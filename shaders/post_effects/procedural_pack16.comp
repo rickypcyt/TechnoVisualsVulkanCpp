@@ -1,0 +1,164 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float weirdRandom(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+mat2 weirdRot(float a) { float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }
+vec3 weirdLook (vec3 eye, vec3 target, vec2 anchor, float fov) {
+    vec3 forward = normalize(target-eye);
+    vec3 right = normalize(cross(forward, vec3(0,1,0)));
+    vec3 up = normalize(cross(right, forward));
+    return normalize(forward * fov + right * anchor.x + up * anchor.y);
+}
+float weirdGeometry (vec3 pos, float time) {
+    float scene = 1., a = 1.;
+    float t = time * .5 + pos.x / 30.;
+    t = floor(t)+smoothstep(0.0,.9,pow(fract(t),2.));
+    pos.x = repeat(pos.x+time, 5.);
+    for (int i = count; i > 0; --i) {
+        pos.x = abs(pos.x)-range*a;
+        pos.xy *= weirdRot(cos(t)*balance/a+a*2.);
+        pos.zy *= weirdRot(sin(t)*balance/a+a*2.);
+        scene = weirdSmoothmin(scene, sdSphere(pos,(radius*a)), blend*a);
+        a /= falloff;
+    }
+    return scene;
+}
+float weirdRaymarch ( vec3 eye, vec3 ray, float time, out float total ) {
+    float dither = weirdRandom(ray.xy+fract(time));
+    total = 0.0;
+    const int count = 20;
+    for (int index = count; index > 0; --index) {
+        float dist = weirdGeometry(eye+total*ray,time);
+        dist *= 0.9+0.1*dither;
+        total += dist;
+        if (dist < 0.001 * total) {
+            return float(index)/float(count);
+        }
+    }
+    return 0.;
+}
+vec3 weirdCamera (vec3 eye, float audioMod) {
+    float audioRotation = audioMod * 0.3;
+    eye.yz *= weirdRot(audioRotation);
+    eye.xz *= weirdRot(audioRotation * 0.7);
+    return eye;
+}
+vec4 renderWeirdCreature(vec2 st, float ubo.time, float ubo.tempo, float ubo.energy, float ubo.bass, float ubo.mid, float ubo.high) {
+    vec2 uv = st * 2.0; // Convert from -1,1 to -2,2 range
+    
+    float audioMod = ubo.bass * 0.5 + ubo.mid * 0.3 + ubo.high * 0.2;
+    float speedMod = speed * (1.0 + audioMod * 0.5);
+    float rangeMod = range * (1.0 + ubo.energy * 0.3);
+    
+    vec3 eye = weirdCamera(vec3(0,0,4), audioMod);
+    vec3 ray = weirdLook(eye, vec3(0), uv, 1.);
+    float total = 0.0;
+    vec4 fragColor = vec4(0);
+    
+    for (float index = motion_frames; index > 0.; --index) {
+        float dither = weirdRandom(ray.xy+fract(ubo.time+index));
+        float time = ubo.time*speedMod+(dither+index)/10./motion_frames;
+        fragColor += vec4(weirdRaymarch(eye, ray, time, total))/motion_frames;
+    }
+    
+    vec3 baseColor = vec3(.7,.8,.9);
+    baseColor.r *= 1.0 + ubo.bass * 0.4;
+    baseColor.g *= 1.0 + ubo.mid * 0.4;
+    baseColor.b *= 1.0 + ubo.high * 0.4;
+    
+    fragColor.rgb *= baseColor;
+    float d = smoothstep(7.,0.,total);
+    
+    vec3 glowColor = vec3(0.8,.6,.5);
+    glowColor.r *= 1.0 + ubo.bass * 0.5;
+    glowColor.g *= 1.0 + ubo.mid * 0.3;
+    glowColor *= d * (1.0 + ubo.energy * 0.5);
+    
+    fragColor.rgb += glowColor;
+    
+    fragColor.rgb *= 1.0 + ubo.energy * 0.2;
+    
+    return fragColor;
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = vec4(0);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

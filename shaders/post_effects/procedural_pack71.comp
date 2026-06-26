@@ -1,0 +1,223 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float lavaFloor(vec3 p, float time, float tempo, float energy, float bass, float mid, float high) {
+    float floorY = -1.0;
+    
+    float fluid = 0.0;
+    float scale = 2.0 + energy * 1.0;
+    
+    fluid += sin(p.x * scale * 0.5 + time * (1.0 + bass * 0.5)) * 0.3;
+    fluid += sin(p.z * scale * 0.5 + time * (0.8 + mid * 0.4)) * 0.3;
+    
+    fluid += sin(p.x * scale * 1.2 + time * (1.5 + high * 0.6)) * 0.15;
+    fluid += sin(p.z * scale * 1.2 + time * (1.2 + bass * 0.3)) * 0.15;
+    
+    fluid += sin(p.x * scale * 2.5 + time * (2.0 + mid * 0.8)) * 0.05;
+    fluid += sin(p.z * scale * 2.5 + time * (1.8 + high * 0.5)) * 0.05;
+    
+    float noise = sin(p.x * 3.0 + p.z * 2.0 + time) * 0.1;
+    noise += cos(p.x * 2.0 - p.z * 3.0 + time * 1.3) * 0.1;
+    fluid += noise;
+    
+    float amplitude = 0.5 + energy * 0.5 + bass * 0.3;
+    fluid *= amplitude;
+    
+    float floorDist = p.y - (floorY + fluid);
+    
+    return floorDist;
+}
+float lavaSpike(vec3 p, float time, float tempo, float energy, float bass, float mid, float high) {
+    float spikeCount = 8.0 + floor(high * 8.0);
+    float angle = atan(p.z, p.x);
+    float sector = mod(angle, 2.0 * PI / spikeCount);
+    float spikeIndex = floor(angle / (2.0 * PI / spikeCount));
+    
+    float spikeTime = time * (1.0 + tempo * 0.3) + spikeIndex * 0.5;
+    float spikeHeight = 0.3 + bass * 0.4 + sin(spikeTime) * 0.2;
+    spikeHeight *= (1.0 + energy * 0.5);
+    
+    float spikeAngle = spikeIndex * (2.0 * PI / spikeCount) + time * 0.1;
+    vec2 spikeCenter = vec2(cos(spikeAngle), sin(spikeAngle)) * 0.5;
+    
+    float distToSpike = length(p.xz - spikeCenter);
+    
+    float spikeWidth = 0.15 + mid * 0.1;
+    float spike = max(distToSpike, (p.y + 1.0) / spikeHeight);
+    spike = spike * spikeWidth;
+    
+    for (int i = 0; i < 3; i++) {
+        float offset = float(i) * 0.5;
+        vec2 secondaryCenter = spikeCenter * (0.3 + offset * 0.3);
+        float secondaryDist = length(p.xz - secondaryCenter);
+        float secondaryHeight = spikeHeight * (0.6 - offset * 0.2);
+        float secondary = max(secondaryDist, (p.y + 1.0) / secondaryHeight);
+        spike = min(spike, secondary * (spikeWidth + offset * 0.1));
+    }
+    
+    return spike;
+}
+float mapLavaScene(vec3 p, float time, float tempo, float energy, float bass, float mid, float high) {
+    float floorDist = lavaFloor(p, time, tempo, energy, bass, mid, high);
+    float spikeDist = lavaSpike(p, time, tempo, energy, bass, mid, high);
+
+    return min(floorDist, spikeDist);
+}
+vec3 estimateLavaNormal(vec3 p, float time, float tempo, float energy, float bass, float mid, float high) {
+    float eps = 0.001;
+    return normalize(vec3(
+        mapLavaScene(p + vec3(eps, 0.0, 0.0), time, tempo, energy, bass, mid, high) - mapLavaScene(p - vec3(eps, 0.0, 0.0), time, tempo, energy, bass, mid, high),
+        mapLavaScene(p + vec3(0.0, eps, 0.0), time, tempo, energy, bass, mid, high) - mapLavaScene(p - vec3(0.0, eps, 0.0), time, tempo, energy, bass, mid, high),
+        mapLavaScene(p + vec3(0.0, 0.0, eps), time, tempo, energy, bass, mid, high) - mapLavaScene(p - vec3(0.0, 0.0, eps), time, tempo, energy, bass, mid, high)
+    ));
+}
+vec4 renderLavaFluidFloor(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec3 ro = vec3(0.0, 0.5, 4.0);
+    vec3 target = vec3(0.0, -0.5, 0.0);
+    vec3 forward = normalize(target - ro);
+    vec3 right = normalize(vec3(forward.z, 0.0, -forward.x));
+    vec3 up = normalize(cross(right, forward));
+    vec3 rd = normalize(forward + right * (-st.x) * 1.4 + up * (-st.y) * 1.0);
+    
+    float t = 0.0;
+    float d = 0.0;
+    bool hit = false;
+    
+    for (int i = 0; i < 64; ++i) {
+        vec3 pos = ro + rd * t;
+        d = mapLavaScene(pos, time, tempo, energy, bass, mid, high);
+        if (d < 0.001) {
+            hit = true;
+            break;
+        }
+        t += d * 0.85;
+        if (t > 15.0) {
+            break;
+        }
+    }
+
+    vec3 color;
+    float alpha;
+
+    if (hit) {
+        vec3 pos = ro + rd * t;
+        vec3 normal = estimateLavaNormal(pos, time, tempo, energy, bass, mid, high);
+        vec3 lightDir = normalize(vec3(0.6, 1.0, -0.4));
+        
+        float diff = max(dot(normal, lightDir), 0.0);
+        float spec = pow(max(dot(reflect(-lightDir, normal), -rd), 0.0), 32.0);
+        float rim = pow(1.0 - max(dot(normal, -rd), 0.0), 4.0);
+        
+        vec3 base = mix(ubo.primaryColor, ubo.secondaryColor, 0.45 + high * 0.35);
+        
+        float heightGlow = smoothstep(-1.0, 0.0, pos.y);
+        vec3 lavaGlow = mix(vec3(1.0, 0.3, 0.0), vec3(1.0, 0.8, 0.2), heightGlow);
+        lavaGlow *= (1.0 + bass * 0.5 + energy * 0.4);
+        
+        color = base * (0.25 + diff * (0.9 + energy * 0.4));
+        color += lavaGlow * diff * (0.6 + bass * 0.4);
+        color += vec3(1.0, 0.6, 0.2) * spec * (0.4 + high * 0.6);
+        color += base.bgr * rim * (0.3 + energy * 0.5);
+        
+        float fluidLines = sin(pos.x * 10.0 + time * 2.0) * sin(pos.z * 10.0 + time * 1.5);
+        fluidLines *= (0.3 + mid * 0.4);
+        color += vec3(1.0, 0.4, 0.0) * fluidLines * (0.2 + bass * 0.3);
+        
+        color = clamp(color, 0.0, 1.0);
+        alpha = clamp(0.4 + diff * 0.4 + rim * 0.3 + energy * 0.25, 0.0, 1.0);
+    } else {
+        float fade = clamp(1.0 - t / 15.0, 0.0, 1.0);
+        vec3 bg = mix(ubo.primaryColor * 0.1, ubo.secondaryColor * 0.2, fade);
+        bg += vec3(0.1, 0.05, 0.0) * fbm(st * 2.0 + time * 0.15);
+        
+        float bgGlow = exp(-t * 0.3) * (0.3 + bass * 0.3);
+        bg += vec3(0.8, 0.2, 0.0) * bgGlow;
+        
+        color = clamp(bg, 0.0, 1.0);
+        alpha = clamp(fade * 0.35, 0.0, 0.5);
+    }
+    
+    return vec4(color, alpha);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderLavaFluidFloor(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

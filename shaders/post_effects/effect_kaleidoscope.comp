@@ -1,0 +1,14 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec4 sceneColor = texture(uScene, vUV);
+    float segments = 6.0 + uStrength * 10.0;
+    vec2 uv = kaleido(vUV, segments, uResolution);
+    vec4 kaleidoColor = texture(uScene, uv);
+    vec3 result = kaleidoColor.rgb;
+    // Alpha 1.0 para que el kaleidoscope siempre sea visible
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(result, 1.0));
+}

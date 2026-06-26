@@ -1,0 +1,283 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float etienne_pmap(float x, float a, float b, float c, float d) {
+    float progress = (x - a) / (b - a);
+    return c + (d - c) * progress;
+}
+float etienne_timeMoves(float x, float duration, float part, float g) {
+    float md = mod(x, duration);
+    float start = floor(x / duration) * duration;
+    float nm = md / duration;
+    float change = clamp(etienne_pmap(nm, part, 1.0, 0.0, 1.0), 0.0, 1.0);
+    change = 1.0 - pow(1.0 - change, g);
+    return start + change * duration;
+}
+vec3 etienne_aces(vec3 x) {
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+float etienne_discre(float a) {
+    return floor(mod(mod(a, 2.0) + 2.0, 2.0));
+}
+float etienne_discre2(float a) {
+    float modulo = mod(mod(a, 2.0) + 2.0, 2.0);
+    float type = floor(modulo);
+    return type == 0.0 ? 0.0 : mod(8.0 * modulo, 2.0);
+}
+float etienne_field1(vec2 pos0, float q) {
+    vec2 pos = pos0;
+    pos *= etienne_rot2D(-0.3 * etienne_pulseTime2);
+    return q - 2.5 * (1.5 * abs(pos.y) + 1.0 * abs(pos.x) + 0.3 * sin(1.2 * pos.x + 1.3 * etienne_pulseTime2));
+}
+float etienne_field2(vec2 pos, float q) {
+    return q - 3.3 * length(pos);
+}
+float etienne_field3(vec2 pos, float q) {
+    return q + 7.0 * length(pos);
+}
+float etienne_field4(vec2 pos, float q) {
+    return q + 13.0 * abs(pos.x);
+}
+float etienne_pcol(vec2 uv, float q, float q2) {
+    float wavyOffset = 1.3 * sin(3.0 * uv.x + 3.0 * etienne_pulseTime) +
+                       1.5 * sin(4.0 * uv.y + 1.1 + 3.0 * etienne_pulseTime);
+    float col = etienne_discre(wavyOffset +
+                               etienne_discre(etienne_field4(uv, q)) +
+                               etienne_discre(etienne_field3(uv, q)) +
+                               etienne_discre(etienne_discre2(etienne_field1(uv, q)) +
+                                              etienne_discre2(etienne_field2(uv, q))));
+    return col;
+}
+float etienne_fui(vec2 suv, float s) {
+    s = 1.2;
+    suv -= etienne_alt * 0.1;
+    suv *= etienne_rot2D(floor(etienne_sc(3).x * 4.0) * (pi / 2.0));
+    vec2 ruv = suv;
+    for (int i = 0; i < 4; ++i) {
+        if (hash(vec3(floor(ruv) + s, float(i))).x < 0.5) {
+            ruv *= 2.0;
+        } else {
+            break;
+        }
+    }
+
+    vec3 h = hash(vec3(floor(ruv) + 1.2, s));
+    vec2 fuv = fract(ruv);
+    float c = 0.0;
+    float b = etienne_sc(0).x;
+    vec2 au = abs((fuv * 2.0 - 1.0) * etienne_rot2D(floor(h.z * 4.0) * (pi / 4.0)));
+    if (b < 0.2) {
+        c = pinieon(suv);
+    } else if (b < 0.4) {
+        c = step(fract(dot(vec2(1.0), suv)), 0.1);
+    } else {
+        c = step(max(au.x, au.y), 0.4) * step(min(au.x, au.y), 0.05) * step(h.x, 0.5);
+    }
+    return c;
+}
+float etienne_march(vec3 ro, vec3 rd) {
+    int n = 16;
+    float l = 1e9;
+    for (int i = 0; i < n; ++i) {
+        float fi = (float(i) + 0.5) / float(n);
+        vec3 pd = norm(tan(hash(vec3(etienne_bt, float(i), 1.2)) * 2.0 - 1.0));
+        if (etienne_sc(0).z < 0.3) {
+            pd = vec3(0.0, 0.0, 1.0);
+        }
+        float w = mix(-5.0, 5.0, fi);
+        float d = iplane(ro, rd, pd, w);
+        vec3 rp = rd * d + ro;
+        vec2 uv = (rp.x * pd.zy + rp.y * pd.xz + rp.z * pd.xy) * 0.5;
+        float s = etienne_fui(uv, w);
+        if (s > 0.0) {
+            l = min(l, d);
+        }
+    }
+    return l;
+}
+vec4 renderEtiennePulse(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 aspect = vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
+    vec2 fragCoord = (st / aspect + 0.5) * ubo.resolution.xy;
+    vec2 s = fragCoord / ubo.resolution.xy;
+    vec2 uv = (s - 0.5) * (ubo.resolution.xx / ubo.resolution.yx);
+
+    float bpm = 176.0 / 2.0;
+    etienne_period = 1.0 / (bpm / 60.0);
+    float TF = 2.0;
+    float phase = 0.05;
+    etienne_t = TF * time;
+    etienne_pulseTime = TF * etienne_timeMoves(time - phase, etienne_period, 0.2, 1.6);
+    etienne_pulseTime = mix(etienne_t, etienne_pulseTime, 0.7);
+
+    etienne_pulseTime2 = TF * etienne_timeMoves(time - phase, 2.0 * etienne_period, 0.2, 1.6);
+    etienne_pulseTime2 = mix(etienne_t, etienne_pulseTime2, 0.7);
+
+    etienne_alt = etienne_lt = time * bpm / 60.0;
+    etienne_tr = 1.0 - exp(-3.0 * fract(etienne_lt));
+    etienne_bt = floor(etienne_lt);
+    etienne_lt = etienne_tr + etienne_bt;
+
+    bool tomaru = int(etienne_bt / 4.0) % 2 == 0;
+    if (tomaru) {
+        etienne_alt = etienne_lt = time * bpm / 60.0 / 4.0;
+        etienne_tr = fract(etienne_lt);
+        etienne_bt = floor(etienne_lt);
+    }
+
+    vec3 ro = vec3(0.0, 0.0, -3.0);
+    vec3 dir = -ro;
+    vec3 rd;
+
+    float sc1y = etienne_sc(1).y;
+    if (sc1y < 0.3) {
+        ro = vec3(mix(-1.0, 1.0, fract(etienne_alt)), 0.0, -3.0);
+        dir = vec3(0.0, 0.0, 1.0);
+    } else if (sc1y < 0.6) {
+        ro = vec3(0.0, 0.0, mix(-5.0, -3.0, etienne_tr));
+        dir = vec3(0.0, 0.0, 1.0);
+    } else {
+        float a = etienne_alt * 0.5;
+        ro = vec3(cos(a), 0.0, sin(a)) * 2.0;
+        dir = -ro;
+    }
+
+    float z = 0.5;
+    if (etienne_sc(1).x < 0.3) {
+        z = mix(0.3, 1.7, etienne_tr);
+    }
+    rd = norm(bnt(dir) * vec3(uv, z));
+    float l = etienne_march(ro, rd);
+    float c = exp(-0.2 * l);
+
+    if (etienne_sc(0).y < 0.2) {
+        c += hjct(uv * 0.5 + 0.5 + vec2(etienne_alt * 0.5, 0.0)) * step(fract(etienne_alt * 4.0), 0.5);
+        c *= step(abs(uv.y), 0.5);
+    }
+    if (etienne_sc(1).z < 0.3) {
+        vec2 ruv = uv * 4.0;
+        vec3 h = hash(vec3(floor(ruv), floor(etienne_alt * 4.0)));
+        vec2 fuv = fract(ruv);
+        vec2 au = abs((fuv * 2.0 - 1.0) * etienne_rot2D(floor(h.z * 4.0) * (pi / 4.0)));
+        c += step(max(au.x, au.y), 0.3) * step(min(au.x, au.y), 0.05) * step(h.x, 0.1);
+    }
+    if (tomaru) {
+        float len = length(uv) - mix(0.2, 0.8, etienne_tr);
+        float nya = step(abs(len), 0.005);
+        if (len < 0.0) {
+            c = 1.0 - c * 1.5;
+        }
+        c += nya;
+    }
+
+    float dt = 0.035;
+    vec3 rgb = vec3(
+        etienne_pcol(uv, etienne_pulseTime, etienne_t),
+        etienne_pcol(uv, etienne_pulseTime - dt, etienne_t - dt),
+        etienne_pcol(uv, etienne_pulseTime - 2.0 * dt, etienne_t - 2.0 * dt)
+    );
+
+    float coff = length(uv);
+    rgb.xy *= etienne_rot2D(0.57 * etienne_t - coff);
+    rgb.yz *= etienne_rot2D(0.87 * etienne_t - coff * 1.2);
+    rgb = abs(rgb);
+
+    float scl = 13.0 + 4.0 * sin(0.37 * etienne_t);
+    vec2 ruv = uv * etienne_rot2D(0.05 * etienne_t);
+    rgb = mix(rgb, vec3(1.0) - rgb, etienne_discre(ruv.x * scl));
+
+    rgb = etienne_aces(etienne_aces(rgb));
+
+    vec3 paletteBase = mix(ubo.primaryColor, ubo.secondaryColor, clamp(ubo.colorBlend, 0.0, 1.0));
+    float energyMix = clamp(0.4 + energy * 0.6 + ubo.energy * 0.4, 0.0, 2.0);
+    rgb = mix(paletteBase, rgb, clamp(energyMix, 0.0, 1.2));
+
+    float alpha = clamp(0.3 + energyMix * 0.35 + c * 0.25, 0.0, 1.0);
+    return vec4(clamp(rgb, 0.0, 1.0), alpha);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderEtiennePulse(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

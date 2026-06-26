@@ -1,0 +1,71 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(push_constant) uniform PushConstants {
+    float intensity;      // 0.0 to 1.0
+    float charSize;       // Size of ASCII characters in pixels
+    vec3 textColor;       // Color of ASCII characters
+    vec3 bgColor;         // Background color
+} pc;
+
+// ASCII character brightness mapping (from dark to light)
+const float asciiBrightness[16] = float[](
+    0.0,   // space
+    0.1,   // .
+    0.15,  // :
+    0.2,   // -
+    0.25,  // =
+    0.3,   // +
+    0.35,  // *
+    0.4,   // #
+    0.45,  // %
+    0.5,   // @
+    0.55,  // &
+    0.6,   // 8
+    0.65,  // B
+    0.7,   // M
+    0.8,   // X
+    1.0    // @
+);
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    // Calculate cell coordinates
+    float cellSize = max(pc.charSize, 4.0);
+    ivec2 cellCoords = ivec2(vec2(pixelCoords) / cellSize);
+    
+    // Sample center of the cell
+    vec2 cellUV = (vec2(cellCoords) * cellSize + cellSize * 0.5) / vec2(imageSize);
+    vec3 color = texelFetch(inputImage, ivec2(cellUV * vec2(imageSize)), 0).rgb;
+    
+    // Calculate brightness
+    float brightness = dot(color, vec3(0.299, 0.587, 0.114));
+    
+    // Map brightness to ASCII character index
+    int charIndex = int(brightness * 15.0);
+    charIndex = clamp(charIndex, 0, 15);
+    
+    // Get the brightness value for this character
+    float charBright = asciiBrightness[charIndex];
+    
+    // Mix between text color and background based on character brightness
+    vec3 finalColor = mix(pc.bgColor, pc.textColor, charBright * pc.intensity);
+    
+    // Add some scanline effect
+    float scanline = sin(float(pixelCoords.y) * 0.3) * 0.03;
+    finalColor -= scanline;
+    
+    // Blend with original based on intensity
+    finalColor = mix(color, finalColor, pc.intensity);
+    
+    imageStore(outputImage, pixelCoords, vec4(finalColor, 1.0));
+}

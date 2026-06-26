@@ -1,0 +1,37 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    // Center coordinates
+    vec2 center = vUV - 0.5;
+    
+    // Distance from center
+    float dist = length(center);
+    
+    // Fisheye strength controlled by uStrength (0.0 = no effect, 1.0 = full fisheye)
+    float strength = mix(0.0, 0.8, uStrength);
+    
+    // Fisheye distortion: maps distance to angle
+    // Equidistant fisheye: r = f * theta, so theta = r / f
+    float theta = dist * strength * PI;
+    
+    // Calculate new radius with fisheye compression
+    // As we go to edges, the compression increases
+    float r = sin(theta) / (strength * PI + 0.001);
+    
+    // Normalize direction
+    vec2 dir = normalize(center + vec2(0.0001));
+    
+    // Calculate distorted UV
+    vec2 uv = dir * r + 0.5;
+    
+    // Handle edge cases where distortion pushes outside [0,1]
+    // Use original UV for extreme edges to avoid artifacts
+    if (dist > 0.5 || r > 0.5 || any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) {
+        uv = vUV;
+    }
+    
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), texture(uScene, uv));
+}

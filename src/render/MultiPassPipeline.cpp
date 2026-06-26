@@ -5,6 +5,8 @@
 #include <fstream>
 #include <cstring>
 #include <chrono>
+#include <filesystem>
+#include <algorithm>
 
 namespace {
 VkPipelineStageFlags stageForLayout(VkImageLayout layout) {
@@ -229,6 +231,13 @@ bool MultiPassPipeline::initialize(
         return false;
     }
 
+    // Load optional post-effect compute shaders (shaders/post_effects/*.comp.spv)
+    loadPostEffects();
+    if (!createPostEffectDescriptorSets()) {
+        std::cerr << "[MultiPass] Failed to create post-effect descriptor sets" << std::endl;
+        return false;
+    }
+
     // CRITICAL: Update descriptor sets with texture bindings during initialization
     // Otherwise passes B-G will have uninitialized descriptors
     updateDescriptorSets(
@@ -252,6 +261,7 @@ bool MultiPassPipeline::initialize(
 void MultiPassPipeline::cleanup() {
     cleanupProfiling(device);
     cleanupDescriptorSets();
+    cleanupPostEffectResources();
     cleanupPipelines();
     cleanupIntermediateFramebuffers();
     destroyTemporalHistoryImage();
@@ -441,6 +451,175 @@ bool MultiPassPipeline::createComputePipelines() {
     return true;
 }
 
+void MultiPassPipeline::loadPostEffects() {
+    postEffectNames.clear();
+    cleanupPostEffectResources();
+
+    std::vector<std::string> spvFiles;
+    for (const auto& entry : std::filesystem::directory_iterator("shaders/post_effects")) {
+        if (entry.is_regular_file() && entry.path().extension() == ".spv" &&
+            entry.path().stem().extension() == ".comp") {
+            spvFiles.push_back(entry.path().string());
+        }
+    }
+    std::sort(spvFiles.begin(), spvFiles.end());
+
+    if (spvFiles.empty()) {
+        std::cout << "[MultiPass] No post-effect shaders found" << std::endl;
+        return;
+    }
+
+    // Create two descriptor set layouts: set 0 (UBO), set 1 (input sampler + output storage image)
+    VkDescriptorSetLayoutBinding uboBinding{};
+    uboBinding.binding = 0;
+    uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboBinding.descriptorCount = 1;
+    uboBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
+    set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    set0LayoutInfo.bindingCount = 1;
+    set0LayoutInfo.pBindings = &uboBinding;
+    if (vkCreateDescriptorSetLayout(device, &set0LayoutInfo, nullptr, &postEffectSetLayouts[0]) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create post-effect set 0 layout" << std::endl;
+        return;
+    }
+
+    VkDescriptorSetLayoutBinding inputBinding{};
+    inputBinding.binding = 0;
+    inputBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    inputBinding.descriptorCount = 1;
+    inputBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    VkDescriptorSetLayoutBinding outputBinding{};
+    outputBinding.binding = 1;
+    outputBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    outputBinding.descriptorCount = 1;
+    outputBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    VkDescriptorSetLayoutBinding set1Bindings[] = {inputBinding, outputBinding};
+    VkDescriptorSetLayoutCreateInfo set1LayoutInfo{};
+    set1LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    set1LayoutInfo.bindingCount = 2;
+    set1LayoutInfo.pBindings = set1Bindings;
+    if (vkCreateDescriptorSetLayout(device, &set1LayoutInfo, nullptr, &postEffectSetLayouts[1]) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create post-effect set 1 layout" << std::endl;
+        return;
+    }
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 2;
+    pipelineLayoutInfo.pSetLayouts = postEffectSetLayouts;
+    if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &postEffectPipelineLayout) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create post-effect pipeline layout" << std::endl;
+        return;
+    }
+
+    for (const auto& spv : spvFiles) {
+        std::string name = std::filesystem::path(spv).stem().stem().string(); // effect_*.comp.spv -> effect_*
+        auto code = readFile(spv);
+        if (code.empty()) continue;
+
+        VkShaderModule module = createShaderModule(code);
+        if (module == VK_NULL_HANDLE) continue;
+
+        VkPipelineShaderStageCreateInfo stage{};
+        stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        stage.module = module;
+        stage.pName = "main";
+
+        VkComputePipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        pipelineInfo.stage = stage;
+        pipelineInfo.layout = postEffectPipelineLayout;
+
+        VkPipeline pipeline = VK_NULL_HANDLE;
+        if (vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) == VK_SUCCESS) {
+            postEffectShaderModules[name] = module;
+            postEffectPipelines[name] = pipeline;
+            postEffectNames.push_back(name);
+        } else {
+            vkDestroyShaderModule(device, module, nullptr);
+            std::cerr << "[MultiPass] Failed to create post-effect pipeline for " << name << std::endl;
+        }
+    }
+
+    std::cout << "[MultiPass] Loaded " << postEffectNames.size() << " post-effect shaders" << std::endl;
+}
+
+bool MultiPassPipeline::createPostEffectDescriptorSets() {
+    if (postEffectSetLayouts[0] == VK_NULL_HANDLE || postEffectPipelines.empty()) {
+        return true;
+    }
+
+    uint32_t numFrames = static_cast<uint32_t>(uniformBuffers.size());
+    postEffectDescriptorSets[0].resize(numFrames);
+    postEffectDescriptorSets[1].resize(numFrames);
+
+    for (uint32_t frame = 0; frame < numFrames; ++frame) {
+        // Allocate set 0 (UBO)
+        VkDescriptorSetAllocateInfo allocInfo0{};
+        allocInfo0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo0.descriptorPool = descriptorPool;
+        allocInfo0.descriptorSetCount = 1;
+        allocInfo0.pSetLayouts = &postEffectSetLayouts[0];
+        if (vkAllocateDescriptorSets(device, &allocInfo0, &postEffectDescriptorSets[0][frame]) != VK_SUCCESS) {
+            std::cerr << "[MultiPass] Failed to allocate post-effect descriptor set 0 for frame " << frame << std::endl;
+            return false;
+        }
+
+        // Allocate set 1 (textures + storage)
+        VkDescriptorSetAllocateInfo allocInfo1{};
+        allocInfo1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo1.descriptorPool = descriptorPool;
+        allocInfo1.descriptorSetCount = 1;
+        allocInfo1.pSetLayouts = &postEffectSetLayouts[1];
+        if (vkAllocateDescriptorSets(device, &allocInfo1, &postEffectDescriptorSets[1][frame]) != VK_SUCCESS) {
+            std::cerr << "[MultiPass] Failed to allocate post-effect descriptor set 1 for frame " << frame << std::endl;
+            return false;
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers[frame];
+        bufferInfo.offset = 0;
+        bufferInfo.range = uniformBufferSize;
+
+        VkWriteDescriptorSet uboWrite{};
+        uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uboWrite.dstSet = postEffectDescriptorSets[0][frame];
+        uboWrite.dstBinding = 0;
+        uboWrite.dstArrayElement = 0;
+        uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboWrite.descriptorCount = 1;
+        uboWrite.pBufferInfo = &bufferInfo;
+
+        vkUpdateDescriptorSets(device, 1, &uboWrite, 0, nullptr);
+    }
+    return true;
+}
+
+std::vector<std::string> MultiPassPipeline::getPostEffectNames() const {
+    return postEffectNames;
+}
+
+void MultiPassPipeline::setPostEffect(const std::string& name) {
+    if (name.empty()) {
+        postEffectEnabled = false;
+        activePostEffect.clear();
+        return;
+    }
+    if (postEffectPipelines.find(name) != postEffectPipelines.end()) {
+        activePostEffect = name;
+        postEffectEnabled = true;
+    } else {
+        std::cerr << "[MultiPass] Post-effect not found: " << name << std::endl;
+        postEffectEnabled = false;
+        activePostEffect.clear();
+    }
+}
+
 bool MultiPassPipeline::createDescriptorSets() {
     printf("[MultiPass] Creating descriptor sets...\n");
 
@@ -452,13 +631,14 @@ bool MultiPassPipeline::createDescriptorSets() {
     }
 
     // Calculate total descriptor sets needed: 2 sets per pass per frame (set 0 for UBOs, set 1 for textures)
-    uint32_t maxSets = NUM_PASSES * numFrames * 2;
+    // Plus 2 extra sets per frame for the optional post-effect slot
+    uint32_t maxSets = NUM_PASSES * numFrames * 2 + numFrames * 2;
 
     // Calculate pool sizes
     std::vector<VkDescriptorPoolSize> poolSizes = {
-        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_PASSES * numFrames}, // Set 0: one UBO per pass per frame
-        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 4}, // Set 1: up to 4 sampled textures per pass per frame
-        {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, NUM_PASSES * numFrames} // Set 1: one storage output per pass per frame
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (NUM_PASSES + 1) * numFrames}, // Set 0: one UBO per pass per frame + post-effect
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NUM_PASSES * numFrames * 4 + numFrames}, // Set 1: up to 4 sampled textures per pass per frame + post-effect input
+        {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, (NUM_PASSES + 1) * numFrames} // Set 1: one storage output per pass per frame + post-effect output
     };
 
     VkDescriptorPoolCreateInfo poolInfo{};
@@ -627,6 +807,14 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         temporalHistoryInitialized = true;
     }
 
+    // Reset intermediate layouts to a known state at the start of every frame.
+    // This prevents stale layout tracking (e.g. after toggling passes or loading
+    // presets) from causing mismatches when passes are sampled as SRO.
+    intermediateLayouts[0] = VK_IMAGE_LAYOUT_UNDEFINED;
+    intermediateLayouts[1] = VK_IMAGE_LAYOUT_UNDEFINED;
+    ensureLayout(intermediate[0].image, intermediateLayouts[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    ensureLayout(intermediate[1].image, intermediateLayouts[1], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
     // Execute all passes in sequence to offscreen buffers
     int lastOutputBuffer = -1;  // -1 = no offscreen output yet (pass A reads external textures)
 
@@ -647,6 +835,13 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
             passes[pass].descriptorSets[0][frameIndex] == VK_NULL_HANDLE ||
             passes[pass].descriptorSets[1][frameIndex] == VK_NULL_HANDLE) {
             std::cerr << "[MultiPass] ERROR: Pass " << pass << " descriptor set is NULL for frame " << frameIndex << std::endl;
+            return;
+        }
+
+        // Validate intermediate buffer before using it
+        if (intermediate[targetBuffer].image == VK_NULL_HANDLE || 
+            intermediate[targetBuffer].imageView == VK_NULL_HANDLE) {
+            std::cerr << "[MultiPass] ERROR: Pass " << pass << " intermediate buffer " << targetBuffer << " is invalid" << std::endl;
             return;
         }
 
@@ -672,6 +867,48 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         outputWrite.pImageInfo = &outputImageInfo;
 
         vkUpdateDescriptorSets(device, 1, &outputWrite, 0, nullptr);
+
+        // Update input sampled descriptor(s) to match the actual ping-pong source.
+        // updateDescriptorSets() assumes a fixed ping-pong with all passes enabled,
+        // so it becomes wrong when passes are culled at runtime.
+        if (pass > 0 && lastOutputBuffer >= 0 && 
+            intermediate[lastOutputBuffer].imageView != VK_NULL_HANDLE) {
+            VkDescriptorImageInfo inputInfos[2]{};
+            VkWriteDescriptorSet inputWrites[2]{};
+            int inputWriteCount = 1;
+
+            inputInfos[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            inputInfos[0].imageView = intermediate[lastOutputBuffer].imageView;
+            inputInfos[0].sampler = videoSampler;
+
+            inputWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            inputWrites[0].dstSet = passes[pass].descriptorSets[1][frameIndex];
+            inputWrites[0].dstBinding = 0;
+            inputWrites[0].dstArrayElement = 0;
+            inputWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            inputWrites[0].descriptorCount = 1;
+            inputWrites[0].pImageInfo = &inputInfos[0];
+
+            if (pass == 6) {
+                inputInfos[1] = inputInfos[0];
+                inputWrites[1] = inputWrites[0];
+                inputWrites[1].dstBinding = 1;
+                inputWrites[1].pImageInfo = &inputInfos[1];
+                inputWriteCount = 2;
+            } else if (pass == 3) {
+                inputInfos[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                inputInfos[1].imageView = temporalHistory.imageView != VK_NULL_HANDLE
+                                            ? temporalHistory.imageView
+                                            : intermediate[lastOutputBuffer].imageView;
+                inputInfos[1].sampler = videoSampler;
+                inputWrites[1] = inputWrites[0];
+                inputWrites[1].dstBinding = 1;
+                inputWrites[1].pImageInfo = &inputInfos[1];
+                inputWriteCount = 2;
+            }
+
+            vkUpdateDescriptorSets(device, inputWriteCount, inputWrites, 0, nullptr);
+        }
 
         // Bind compute pipeline and descriptor sets
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, passes[pass].computePipeline);
@@ -722,12 +959,101 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
 
     // Final pass: render to swapchain
     // The final output is in lastOutputBuffer (dynamically tracked)
-    int finalBuffer = (lastOutputBuffer >= 0) ? lastOutputBuffer : 0;
+    int finalBuffer = (lastOutputBuffer >= 0 && lastOutputBuffer < 2 && 
+                      intermediate[lastOutputBuffer].imageView != VK_NULL_HANDLE) ? lastOutputBuffer : 0;
+    int swapchainFinalBuffer = finalBuffer;
 
-    // Update swapchain descriptor set to point to final multipass output
+    // Optional post-effect slot: apply selected compute shader after the main passes
+    if (postEffectEnabled && !postEffectDescriptorSets[0].empty() && frameIndex < postEffectDescriptorSets[0].size()) {
+        // Validate that finalBuffer is valid before using it for post-effects
+        if (finalBuffer < 0 || finalBuffer >= 2 || 
+            intermediate[finalBuffer].imageView == VK_NULL_HANDLE ||
+            intermediate[finalBuffer].image == VK_NULL_HANDLE) {
+            std::cerr << "[MultiPass] ERROR: Invalid finalBuffer for post-effect, skipping post-effect" << std::endl;
+            return;
+        }
+        
+        int postEffectOutputBuffer = 1 - finalBuffer;
+        
+        // Also validate postEffectOutputBuffer
+        if (postEffectOutputBuffer < 0 || postEffectOutputBuffer >= 2 ||
+            intermediate[postEffectOutputBuffer].imageView == VK_NULL_HANDLE ||
+            intermediate[postEffectOutputBuffer].image == VK_NULL_HANDLE) {
+            std::cerr << "[MultiPass] ERROR: Invalid postEffectOutputBuffer, skipping post-effect" << std::endl;
+            return;
+        }
+
+        // Ensure both input and output are in GENERAL for the compute dispatch.
+        // The input may be in SRO or GENERAL depending on previous layout tracking,
+        // so we always transition it to GENERAL and then back to SRO afterwards.
+        ensureLayout(intermediate[finalBuffer].image, intermediateLayouts[finalBuffer], VK_IMAGE_LAYOUT_GENERAL);
+        ensureLayout(intermediate[postEffectOutputBuffer].image, intermediateLayouts[postEffectOutputBuffer], VK_IMAGE_LAYOUT_GENERAL);
+
+        // Update post-effect set 1: input sampler + output storage image
+        VkDescriptorImageInfo inputInfo{};
+        inputInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        inputInfo.imageView = intermediate[finalBuffer].imageView;
+        inputInfo.sampler = swapchainSampler;
+
+        VkDescriptorImageInfo outputInfo{};
+        outputInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        outputInfo.imageView = intermediate[postEffectOutputBuffer].imageView;
+
+        VkWriteDescriptorSet writes[2]{};
+        writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[0].dstSet = postEffectDescriptorSets[1][frameIndex];
+        writes[0].dstBinding = 0;
+        writes[0].dstArrayElement = 0;
+        writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writes[0].descriptorCount = 1;
+        writes[0].pImageInfo = &inputInfo;
+
+        writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[1].dstSet = postEffectDescriptorSets[1][frameIndex];
+        writes[1].dstBinding = 1;
+        writes[1].dstArrayElement = 0;
+        writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        writes[1].descriptorCount = 1;
+        writes[1].pImageInfo = &outputInfo;
+
+        // Validate descriptor sets before updating
+        if (frameIndex >= postEffectDescriptorSets[1].size() || 
+            postEffectDescriptorSets[1][frameIndex] == VK_NULL_HANDLE) {
+            std::cerr << "[MultiPass] ERROR: Invalid post-effect descriptor set, skipping post-effect" << std::endl;
+            return;
+        }
+
+        vkUpdateDescriptorSets(device, 2, writes, 0, nullptr);
+
+        // Validate pipeline exists before binding
+        if (postEffectPipelines.find(activePostEffect) == postEffectPipelines.end() ||
+            postEffectPipelines[activePostEffect] == VK_NULL_HANDLE) {
+            std::cerr << "[MultiPass] ERROR: Invalid post-effect pipeline, skipping post-effect" << std::endl;
+            return;
+        }
+
+        // Bind and dispatch post-effect
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, postEffectPipelines[activePostEffect]);
+        VkDescriptorSet postEffectSets[2] = {
+            postEffectDescriptorSets[0][frameIndex],
+            postEffectDescriptorSets[1][frameIndex]
+        };
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, postEffectPipelineLayout, 0, 2, postEffectSets, 0, nullptr);
+
+        uint32_t groupX = (extent.width + 7) / 8;
+        uint32_t groupY = (extent.height + 7) / 8;
+        vkCmdDispatch(cmd, groupX, groupY, 1);
+
+        // Return both input and output to SRO so the swapchain and next frame can sample them.
+        ensureLayout(intermediate[finalBuffer].image, intermediateLayouts[finalBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        ensureLayout(intermediate[postEffectOutputBuffer].image, intermediateLayouts[postEffectOutputBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        swapchainFinalBuffer = postEffectOutputBuffer;
+    }
+
+    // Update swapchain descriptor set to point to final multipass output (or post-effect output if active)
     VkDescriptorImageInfo finalOutputInfo{};
     finalOutputInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    finalOutputInfo.imageView = intermediate[finalBuffer].imageView;
+    finalOutputInfo.imageView = intermediate[swapchainFinalBuffer].imageView;
     finalOutputInfo.sampler = swapchainSampler;
 
     VkWriteDescriptorSet finalOutputWrite{};
@@ -906,6 +1232,11 @@ void MultiPassPipeline::recreate(VkExtent2D newExtent) {
     cleanupDescriptorSets();
     createDescriptorSets();
 
+    // Reload post-effect resources from scratch after descriptor pool recreation
+    cleanupPostEffectResources();
+    loadPostEffects();
+    createPostEffectDescriptorSets();
+
     // CRITICAL: Update descriptor sets to point to new intermediate image views
     // Otherwise passes B-G will sample from destroyed image views
     updateDescriptorSets(
@@ -955,6 +1286,41 @@ void MultiPassPipeline::destroyTemporalHistoryImage() {
     temporalHistoryLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
+void MultiPassPipeline::cleanupPostEffectResources() {
+    for (auto& [name, pipeline] : postEffectPipelines) {
+        if (pipeline != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, pipeline, nullptr);
+            pipeline = VK_NULL_HANDLE;
+        }
+    }
+    postEffectPipelines.clear();
+
+    for (auto& [name, module] : postEffectShaderModules) {
+        if (module != VK_NULL_HANDLE) {
+            vkDestroyShaderModule(device, module, nullptr);
+            module = VK_NULL_HANDLE;
+        }
+    }
+    postEffectShaderModules.clear();
+    postEffectNames.clear();
+
+    if (postEffectPipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, postEffectPipelineLayout, nullptr);
+        postEffectPipelineLayout = VK_NULL_HANDLE;
+    }
+    for (int i = 0; i < 2; ++i) {
+        if (postEffectSetLayouts[i] != VK_NULL_HANDLE) {
+            vkDestroyDescriptorSetLayout(device, postEffectSetLayouts[i], nullptr);
+            postEffectSetLayouts[i] = VK_NULL_HANDLE;
+        }
+    }
+
+    postEffectDescriptorSets[0].clear();
+    postEffectDescriptorSets[1].clear();
+    postEffectEnabled = false;
+    activePostEffect.clear();
+}
+
 void MultiPassPipeline::cleanupPipelines() {
     for (int i = 0; i < NUM_PASSES; ++i) {
         if (passes[i].computePipeline != VK_NULL_HANDLE) {
@@ -987,6 +1353,8 @@ void MultiPassPipeline::cleanupDescriptorSets() {
         passes[i].descriptorSets[0].clear();
         passes[i].descriptorSets[1].clear();
     }
+    postEffectDescriptorSets[0].clear();
+    postEffectDescriptorSets[1].clear();
 }
 
 

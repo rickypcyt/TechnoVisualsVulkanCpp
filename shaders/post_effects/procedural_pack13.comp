@@ -1,0 +1,131 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(1.7, 1.2, -1.2, 1.7);
+    for (int i = 0; i < 5; ++i) {
+        value += amp * noise(p);
+        p = m * p + vec2(0.21, 0.17);
+        amp *= 0.5;
+    }
+    return value;
+}
+
+
+float noise(vec2 pos, float evolve) {
+    float e = fract((evolve * 0.01));
+    
+    float cx = pos.x * e;
+    float cy = pos.y * e;
+    
+    return fract(23.0 * fract(2.0 / fract(fract(cx * 2.4 / cy * 23.0) * fract(cx * evolve / pow(abs(cy), 0.050)))));
+}
+vec4 renderEvolutionNoise(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    float audioMod = 1.0 + energy * 0.8 + bass * 0.4;
+    float timeMod = time * audioMod;
+    
+    vec2 scale = vec2(1.0) + vec2(bass, mid) * 0.5;
+    vec2 pos = st * scale * 2.0;
+    
+    vec3 colour = vec3(0.0);
+    int layers = 3; // Reduced for performance
+    
+    for(int i = 0; i < layers; i++) {
+        float layerTime = timeMod + float(i) * 0.1;
+        float noiseValue = noise(pos * (1.0 + float(i) * 0.5), layerTime);
+        
+        if(i == 0) {
+            colour.r = noiseValue; // Bass affects red
+        } else if(i == 1) {
+            colour.g = noiseValue; // Mid affects green  
+        } else {
+            colour.b = noiseValue; // High affects blue
+        }
+    }
+    
+    vec3 baseColor = mix(ubo.primaryColor, ubo.secondaryColor, ubo.colorBlend);
+    colour = mix(colour, baseColor * 0.3, 0.2); // Reduced base color influence
+    
+    colour *= (0.3 + energy * 0.2); // Much lower brightness
+    
+    float pulse = sin(time * tempo * 0.1) * 0.5 + 0.5;
+    colour += pulse * energy * 0.1; // Reduced pulse intensity
+    
+    colour = clamp(colour, 0.1, 0.8); // Clamp to prevent white washout
+    
+    float alpha = 0.6 + energy * 0.4;
+    alpha = clamp(alpha, 0.0, 1.0);
+    
+    return vec4(colour, alpha);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    vec3 color = renderEvolutionNoise(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

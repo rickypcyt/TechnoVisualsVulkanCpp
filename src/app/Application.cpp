@@ -935,14 +935,26 @@ void Application::updateFullscreenDescriptorSets() {
         return; // Descriptor sets not yet created
     }
 
+    const auto& previewBuffers = uniformBufferManager.getBuffers();
+    if (previewBuffers.size() != MAX_FRAMES_IN_FLIGHT) {
+        std::cerr << "[Application] updateFullscreenDescriptorSets: preview UBO buffers not ready\n";
+        return;
+    }
+
     std::vector<VkDescriptorBufferInfo> bufferInfos;
     bufferInfos.reserve(MAX_FRAMES_IN_FLIGHT);
+    std::vector<VkDescriptorBufferInfo> outputBufferInfos;
+    outputBufferInfos.reserve(MAX_FRAMES_IN_FLIGHT);
     std::vector<VkWriteDescriptorSet> writes;
-    writes.reserve(MAX_FRAMES_IN_FLIGHT);
+    writes.reserve(MAX_FRAMES_IN_FLIGHT * 2);
 
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        if (previewBuffers[i] == VK_NULL_HANDLE) {
+            std::cerr << "[Application] updateFullscreenDescriptorSets: preview UBO buffer " << i << " is null\n";
+            continue;
+        }
         VkDescriptorBufferInfo& bufferInfo = bufferInfos.emplace_back();
-        bufferInfo.buffer = uniformBufferManager.getBuffers()[i];
+        bufferInfo.buffer = previewBuffers[i];
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(GlobalParamsUBO);
 
@@ -958,22 +970,29 @@ void Application::updateFullscreenDescriptorSets() {
 
     // Output fullscreen descriptor sets (output UBOs)
     if (outputFullscreenDescriptorSets.size() == MAX_FRAMES_IN_FLIGHT) {
-        std::vector<VkDescriptorBufferInfo> outputBufferInfos;
-        outputBufferInfos.reserve(MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-            VkDescriptorBufferInfo& bufferInfo = outputBufferInfos.emplace_back();
-            bufferInfo.buffer = outputUniformBufferManager.getBuffers()[i];
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(GlobalParamsUBO);
+        const auto& outputBuffers = outputUniformBufferManager.getBuffers();
+        if (outputBuffers.size() != MAX_FRAMES_IN_FLIGHT) {
+            std::cerr << "[Application] updateFullscreenDescriptorSets: output UBO buffers not ready\n";
+        } else {
+            for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+                if (outputBuffers[i] == VK_NULL_HANDLE) {
+                    std::cerr << "[Application] updateFullscreenDescriptorSets: output UBO buffer " << i << " is null\n";
+                    continue;
+                }
+                VkDescriptorBufferInfo& bufferInfo = outputBufferInfos.emplace_back();
+                bufferInfo.buffer = outputBuffers[i];
+                bufferInfo.offset = 0;
+                bufferInfo.range = sizeof(GlobalParamsUBO);
 
-            VkWriteDescriptorSet& uboWrite = writes.emplace_back();
-            uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            uboWrite.dstSet = outputFullscreenDescriptorSets[i];
-            uboWrite.dstBinding = 0;
-            uboWrite.dstArrayElement = 0;
-            uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            uboWrite.descriptorCount = 1;
-            uboWrite.pBufferInfo = &bufferInfo;
+                VkWriteDescriptorSet& uboWrite = writes.emplace_back();
+                uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                uboWrite.dstSet = outputFullscreenDescriptorSets[i];
+                uboWrite.dstBinding = 0;
+                uboWrite.dstArrayElement = 0;
+                uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                uboWrite.descriptorCount = 1;
+                uboWrite.pBufferInfo = &bufferInfo;
+            }
         }
     }
 
@@ -1468,6 +1487,9 @@ void Application::initMultiPassPipeline() {
     } else {
         std::cerr << "[Application] Skipping output MultiPassPipeline — output video not initialized\n";
     }
+
+    // Make the list of loaded post-effect shaders available in the UI
+    uiSystem.setPostEffectNames(multiPassPipeline.getPostEffectNames());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1764,35 +1786,27 @@ void Application::mainLoop() {
                         uiSystem.randomizeVJayExtra(visualControls);
                         break;
                     case SDLK_LEFT: {
-                        int& mode = visualControls.playback.activeMode;
-                        int maxMode = 12;
-                        // Wrap from 40 (anaglyph) to 12 as well
-                        if (mode == 40) mode = maxMode;
-                        else if (mode > 0) mode--;
-                        else mode = maxMode;
+                        visualControls.playback.activeMode = uiSystem.cycleLayerMode(visualControls.playback.activeMode, -1);
                         controlsDirty = true;
-                        std::cout << "[Mode] Previous: " << mode << std::endl;
+                        std::cout << "[Mode] Previous: " << visualControls.playback.activeMode << std::endl;
                         break;
                     }
                     case SDLK_RIGHT: {
-                        int& mode = visualControls.playback.activeMode;
-                        int maxMode = 12;
-                        if (mode >= maxMode) mode = 0;
-                        else mode++;
+                        visualControls.playback.activeMode = uiSystem.cycleLayerMode(visualControls.playback.activeMode, 1);
                         controlsDirty = true;
-                        std::cout << "[Mode] Next: " << mode << std::endl;
+                        std::cout << "[Mode] Next: " << visualControls.playback.activeMode << std::endl;
                         break;
                     }
                     case SDLK_UP: {
-                        visualControls.post.masterBrightness = std::min(2.0f, visualControls.post.masterBrightness + 0.1f);
+                        visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, 1);
                         controlsDirty = true;
-                        std::cout << "[Brightness] Up: " << visualControls.post.masterBrightness << std::endl;
+                        std::cout << "[Post-Effect] Up: " << visualControls.post.postEffectName << std::endl;
                         break;
                     }
                     case SDLK_DOWN: {
-                        visualControls.post.masterBrightness = std::max(0.0f, visualControls.post.masterBrightness - 0.1f);
+                        visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, -1);
                         controlsDirty = true;
-                        std::cout << "[Brightness] Down: " << visualControls.post.masterBrightness << std::endl;
+                        std::cout << "[Post-Effect] Down: " << visualControls.post.postEffectName << std::endl;
                         break;
                     }
                     case SDLK_RETURN:
@@ -1965,6 +1979,8 @@ void Application::mainLoop() {
         // Preview renders at 30fps (update UBOs every 2 frames)
         static uint32_t frameCounter = 0;
         bool updatePreview = (frameCounter % 2 == 0);
+        multiPassPipeline.setPostEffect(visualControls.post.postEffectName);
+        outputMultiPassPipeline.setPostEffect(outputVisualControls.post.postEffectName);
         if (updatePreview) {
             updateUniformBuffer(previewFrame->frameIndex, visualControls,
                                 uniformBufferManager, previewPresenter, previewAnim,
@@ -2750,6 +2766,13 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     pipeline.setPassEnabled(4, degradationPassActive);
 
     pipeline.setPassEnabled(5, ubo.enableColorGrading != 0);
+
+    // Selectable post-effect slot parameters
+    ubo.postEffectStrength = controls.post.postEffectStrength;
+    ubo.postEffectIntensity = controls.post.postEffectIntensity;
+    ubo.postEffectMode = controls.post.postEffectMode;
+    ubo.postEffectBass = controls.audio.bass;
+    ubo.postEffectRgbAdjust = controls.post.postEffectRgbAdjust;
 
     uboManager.update(frameIndex, ubo, vulkanContext.getDevice());
 }

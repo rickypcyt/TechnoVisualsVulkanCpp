@@ -1,0 +1,106 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0) uniform sampler2D inputImage;
+layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+
+layout(set = 1, binding = 0) uniform UniformBufferObject {
+    float time;
+    float tempo;
+    float energy;
+    float bass;
+    float mid;
+    float high;
+    vec3 primaryColor;
+    vec3 secondaryColor;
+    float colorBlend;
+    vec2 resolution;
+    float cameraZoom;
+    float cameraPanX;
+    float cameraPanY;
+} ubo;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453);
+}
+
+// Voronoi function
+float voronoi(vec2 p, out float edge, out float cellSeed) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    
+    float minDist = 1.0;
+    float secondMinDist = 1.0;
+    vec2 minPoint = vec2(0.0);
+    
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            vec2 neighbor = vec2(float(x), float(y));
+            vec2 point = neighbor + hash2(i + neighbor);
+            vec2 diff = point - f;
+            float dist = length(diff);
+            
+            if (dist < minDist) {
+                secondMinDist = minDist;
+                minDist = dist;
+                minPoint = point;
+            } else if (dist < secondMinDist) {
+                secondMinDist = dist;
+            }
+        }
+    }
+    
+    edge = secondMinDist - minDist;
+    cellSeed = hash2(i + minPoint).x;
+    return minDist;
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 imageSize = imageSize(outputImage);
+    
+    if (pixelCoords.x >= imageSize.x || pixelCoords.y >= imageSize.y) {
+        return;
+    }
+    
+    vec2 uv = vec2(pixelCoords) / vec2(imageSize);
+    vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
+    
+    // Voronoi Cells effect
+    float scale = mix(1.4, 3.8, clamp(ubo.bass * 0.9, 0.0, 1.0));
+    vec2 p = (uv - 0.5) * 2.0;
+    p *= ubo.cameraZoom;
+    p = p * (3.0 + ubo.energy * 1.2);
+    p *= scale;
+    
+    float edge;
+    float cellSeed;
+    float distance = voronoi(p + ubo.time * 0.12, edge, cellSeed);
+    float interior = smoothstep(0.0, 0.9, distance * 1.5);
+    float edgeGlow = smoothstep(0.02, 0.2, 1.0 - edge);
+    
+    // Dark background
+    vec3 bgColor = vec3(0.05, 0.05, 0.08);
+    
+    // Darker cell colors
+    vec3 cellColor = mix(ubo.primaryColor * (0.2 + ubo.bass * 0.2),
+                         ubo.secondaryColor * (0.3 + ubo.high * 0.25),
+                         interior);
+    cellColor += vec3(0.08, 0.12, 0.1) * cellSeed * 0.3;
+    cellColor += vec3(0.15, 0.2, 0.25) * edgeGlow * (0.2 + ubo.high * 0.35);
+    cellColor = clamp(cellColor, 0.0, 1.0);
+    
+    // Mix with dark background
+    cellColor = mix(bgColor, cellColor, 0.7);
+    
+    // Mix with original
+    vec3 color = mix(original, cellColor, 0.6);
+    
+    imageStore(outputImage, pixelCoords, vec4(color, 1.0));
+}

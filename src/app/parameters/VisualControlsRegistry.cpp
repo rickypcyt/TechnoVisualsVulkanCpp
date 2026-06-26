@@ -196,6 +196,13 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("vhsDistortion", &post.vhsDistortion, 0.0f, 1.0f);
     r.registerFloat("analogChromaticAberration", &post.analogChromaticAberration, 0.0f, 0.1f);
 
+    // SELECTABLE POST-EFFECT SLOT
+    r.registerString("postEffectName", &post.postEffectName);
+    r.registerFloat("postEffectStrength", &post.postEffectStrength, 0.0f, 1.0f);
+    r.registerFloat("postEffectIntensity", &post.postEffectIntensity, 0.0f, 1.0f);
+    r.registerInt("postEffectMode", &post.postEffectMode, 0, 10);
+    r.registerVec3("postEffectRgbAdjust", &post.postEffectRgbAdjust);
+
     // AUDIO REACTIVE (enableAudioReactive is always ON, not registered)
     r.registerFloat("audioWarpResponse", &audio.warpResponse, 0.0f, 2.0f);
     r.registerFloat("audioFeedbackResponse", &audio.feedbackResponse, 0.0f, 2.0f);

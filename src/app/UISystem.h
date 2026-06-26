@@ -207,6 +207,11 @@ private:
     // Navbar tab selection
     int selectedTab = 0;
 
+public:
+    void setPostEffectNames(const std::vector<std::string>& names);
+    int cycleLayerMode(int currentMode, int delta) const;
+    std::string cyclePostEffect(const std::string& current, int delta) const;
+
 private:
     void drawPerformanceContent(const UIDiagnostics& diag);
 
@@ -222,6 +227,8 @@ private:
         int                       textureHeight      = 0;
         float                     frameAccumulator   = 0.0f;
         std::unique_ptr<VideoPlayer> player;
+        bool                      paused             = false;
+        bool                      manualUnload       = false;
     };
 
     void beginFrame();
@@ -394,9 +401,13 @@ private:
     bool previewShuffleRequested[3] = {false, false, false};
     float previewAutoRandomizeElapsed[3] = {0.0f, 0.0f, 0.0f};
     std::mt19937 previewRng{std::random_device{}()};
+    
+    // Performance option to disable video previews
+    bool enableVideoPreviews = true;
 
     char presetNameBuffer[64] = "";
     std::string renamingPreset;
+    std::vector<std::string> postEffectNames;
 
     void destroyPreviewSlot(VideoPreviewSlot& slot);
     bool loadPreview(VideoPreviewSlot& slot, const std::string& path);
