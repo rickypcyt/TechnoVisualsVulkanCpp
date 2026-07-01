@@ -352,6 +352,7 @@ private:
     bool outputWindowMinimized = false;
     bool outputWindowVisible = true;
     bool outputWindowHidden = false;
+    bool inModalLoop = false;      // Win32 modal drag/resize loop active
 
     // video / control flags
     bool allowDimensionChangeRecreation = false;

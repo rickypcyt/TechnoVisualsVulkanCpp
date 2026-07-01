@@ -1742,6 +1742,25 @@ void Application::handleOutputWindowResize(uint32_t width, uint32_t height) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void Application::mainLoop() {
+
+#ifdef _WIN32
+    // Set up Windows message hook to detect modal drag/resize loops.
+    // When the user drags a window title bar, Win32 enters a modal loop
+    // that blocks SDL_PollEvent. We track this state so the main loop
+    // can take appropriate action.
+    SDL_SetWindowsMessageHook([](void* userdata, void* hWnd, unsigned int message, Uint64 wParam, Sint64 lParam) {
+        Application* app = static_cast<Application*>(userdata);
+        if (!app) return;
+
+        // WM_ENTERSIZEMOVE = 0x0231, WM_EXITSIZEMOVE = 0x0232
+        if (message == 0x0231) {
+            app->inModalLoop = true;
+        } else if (message == 0x0232) {
+            app->inModalLoop = false;
+        }
+    }, this);
+#endif
+
     while (running) {
         const auto cpuFrameStart = std::chrono::steady_clock::now();
         auto cpuLast = cpuFrameStart;
@@ -2201,31 +2220,35 @@ void Application::mainLoop() {
         diag.cpuRecordCmdMs = std::chrono::duration<float, std::milli>(cpuAfterCmd - cpuLast).count();
         cpuLast = cpuAfterCmd;
 
-        // ── Submit (wait on both available, signal both finished) ────────────
+        // ── Submit ────────────────────────────────────────────────────────────
         auto previewRenderFinished = previewFrameSystem.getRenderFinishedSemaphore(previewImageIndex).value_or(VK_NULL_HANDLE);
         if (previewRenderFinished == VK_NULL_HANDLE)
             throw std::runtime_error("invalid preview renderFinished semaphore");
-
-        VkSubmitInfo submit{};
-        submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit.waitSemaphoreCount   = 1;
-        submit.pWaitSemaphores      = &previewFrame->imageAvailableSemaphore;
-        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        submit.pWaitDstStageMask    = &waitStage;
-        submit.commandBufferCount   = 1;
-        submit.pCommandBuffers      = &commandBuffers[previewFrame->frameIndex];
-        submit.signalSemaphoreCount = 1;
-        submit.pSignalSemaphores    = &previewRenderFinished;
-
-        if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS)
-            throw std::runtime_error("failed to submit draw command buffer");
 
         if (outputFrame) {
             auto outputRenderFinished = outputFrameSystem.getRenderFinishedSemaphore(outputImageIndex).value_or(VK_NULL_HANDLE);
             if (outputRenderFinished == VK_NULL_HANDLE)
                 throw std::runtime_error("invalid output renderFinished semaphore");
 
-            // Dummy submit to signal output frame fence so outputFrameSystem can advance
+            // Wait on both acquire semaphores, signal both render-finished
+            VkSemaphore waitSemaphores[] = { previewFrame->imageAvailableSemaphore, outputFrame->imageAvailableSemaphore };
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            VkSemaphore signalSemaphores[] = { previewRenderFinished, outputRenderFinished };
+
+            VkSubmitInfo submit{};
+            submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit.waitSemaphoreCount   = 2;
+            submit.pWaitSemaphores      = waitSemaphores;
+            submit.pWaitDstStageMask    = waitStages;
+            submit.commandBufferCount   = 1;
+            submit.pCommandBuffers      = &commandBuffers[previewFrame->frameIndex];
+            submit.signalSemaphoreCount = 2;
+            submit.pSignalSemaphores    = signalSemaphores;
+
+            if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS)
+                throw std::runtime_error("failed to submit draw command buffer");
+
+            // Signal output fence with a dummy submit so outputFrameSystem can advance
             VkSubmitInfo dummySubmit{};
             dummySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 0, &dummySubmit, outputFrame->inFlightFence) != VK_SUCCESS)
@@ -2252,6 +2275,21 @@ void Application::mainLoop() {
                     resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
                 }
             }
+        } else {
+            // Output hidden — only preview
+            VkSubmitInfo submit{};
+            submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit.waitSemaphoreCount   = 1;
+            submit.pWaitSemaphores      = &previewFrame->imageAvailableSemaphore;
+            VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            submit.pWaitDstStageMask    = &waitStage;
+            submit.commandBufferCount   = 1;
+            submit.pCommandBuffers      = &commandBuffers[previewFrame->frameIndex];
+            submit.signalSemaphoreCount = 1;
+            submit.pSignalSemaphores    = &previewRenderFinished;
+
+            if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS)
+                throw std::runtime_error("failed to submit draw command buffer");
         }
 
         // ── Present preview ────────────────────────────────────────────────────
