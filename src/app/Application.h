@@ -340,9 +340,18 @@ private:
 
     // resize debounce (fixes tiling compositors like Hyprland)
     bool resizePending = false;
+    bool outputResizePending = false;
     std::chrono::steady_clock::time_point resizeDebounceTime;
     uint32_t pendingResizeW = 0;
     uint32_t pendingResizeH = 0;
+    uint32_t pendingOutputResizeW = 0;
+    uint32_t pendingOutputResizeH = 0;
+
+    // window state tracking
+    bool previewWindowMinimized = false;
+    bool outputWindowMinimized = false;
+    bool outputWindowVisible = true;
+    bool outputWindowHidden = false;
 
     // video / control flags
     bool allowDimensionChangeRecreation = false;
@@ -350,7 +359,7 @@ private:
     bool transitionActive = false;
 
     // video assets
-    std::string videoAssetsRoot = "mp4s";
+    std::string videoAssetsRoot = "C:\\Users\\ricar\\Videos\\VISUALES";
 
     // transition durations
     float transitionDuration = 1.0f;
@@ -467,6 +476,7 @@ private:
     void saveState() const;
 
     void handleWindowResize(uint32_t width, uint32_t height);
+    void handleOutputWindowResize(uint32_t width, uint32_t height);
 
     void tickAutoColors(float dt, float energy);
 
@@ -489,7 +499,7 @@ private:
                             bool forOutput = false);
     void recordCommandBuffer(VkCommandBuffer commandBuffer,
                              FrameContext& previewFrame, uint32_t previewImageIndex,
-                             FrameContext& outputFrame, uint32_t outputImageIndex);
+                             FrameContext* outputFrame, uint32_t outputImageIndex);
 
 
     // --------------------------

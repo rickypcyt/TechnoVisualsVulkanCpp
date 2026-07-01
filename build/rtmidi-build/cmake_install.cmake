@@ -1,8 +1,8 @@
-# Install script for directory: /home/ricky/coding/proyects/vulkancpp/third_party/rtmidi
+# Install script for directory: C:/coding/TechnoVisualsVulkanCpp/third_party/rtmidi
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/usr/local")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/VulkanApp")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -27,11 +27,6 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
-# Install shared libraries without execute permission?
-if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
-  set(CMAKE_INSTALL_SO_NO_EXE "0")
-endif()
-
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -39,46 +34,17 @@ endif()
 
 # Set path to fallback-tool for dependency-resolution.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/usr/bin/objdump")
+  set(CMAKE_OBJDUMP "C:/msys64/ucrt64/bin/objdump.exe")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  foreach(file
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/librtmidi.so.6.0.0"
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/librtmidi.so.6"
-      )
-    if(EXISTS "${file}" AND
-       NOT IS_SYMLINK "${file}")
-      file(RPATH_CHECK
-           FILE "${file}"
-           RPATH "")
-    endif()
-  endforeach()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES
-    "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/librtmidi.so.6.0.0"
-    "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/librtmidi.so.6"
-    )
-  foreach(file
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/librtmidi.so.6.0.0"
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/librtmidi.so.6"
-      )
-    if(EXISTS "${file}" AND
-       NOT IS_SYMLINK "${file}")
-      if(CMAKE_INSTALL_DO_STRIP)
-        execute_process(COMMAND "/usr/bin/strip" "${file}")
-      endif()
-    endif()
-  endforeach()
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/librtmidi.so")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/librtmidi.a")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/rtmidi" TYPE FILE FILES
-    "/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi/RtMidi.h"
-    "/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi/rtmidi_c.h"
+    "C:/coding/TechnoVisualsVulkanCpp/third_party/rtmidi/RtMidi.h"
+    "C:/coding/TechnoVisualsVulkanCpp/third_party/rtmidi/rtmidi_c.h"
     )
 endif()
 
@@ -86,7 +52,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/rtmidi/RtMidiTargets.cmake")
     file(DIFFERENT _cmake_export_file_changed FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/rtmidi/RtMidiTargets.cmake"
-         "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/CMakeFiles/Export/59b44ca73b06739567a45c9225d92cf5/RtMidiTargets.cmake")
+         "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/CMakeFiles/Export/59b44ca73b06739567a45c9225d92cf5/RtMidiTargets.cmake")
     if(_cmake_export_file_changed)
       file(GLOB _cmake_old_config_files "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/rtmidi/RtMidiTargets-*.cmake")
       if(_cmake_old_config_files)
@@ -99,26 +65,26 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     endif()
     unset(_cmake_export_file_changed)
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/rtmidi" TYPE FILE FILES "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/CMakeFiles/Export/59b44ca73b06739567a45c9225d92cf5/RtMidiTargets.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/rtmidi" TYPE FILE FILES "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/CMakeFiles/Export/59b44ca73b06739567a45c9225d92cf5/RtMidiTargets.cmake")
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^()$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/rtmidi" TYPE FILE FILES "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/CMakeFiles/Export/59b44ca73b06739567a45c9225d92cf5/RtMidiTargets-noconfig.cmake")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/rtmidi" TYPE FILE FILES "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/CMakeFiles/Export/59b44ca73b06739567a45c9225d92cf5/RtMidiTargets-noconfig.cmake")
   endif()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/rtmidi.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/rtmidi.pc")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/rtmidi" TYPE FILE FILES
-    "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/RtMidi-config.cmake"
-    "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/RtMidi-config-version.cmake"
+    "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/RtMidi-config.cmake"
+    "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/RtMidi-config-version.cmake"
     )
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/install_local_manifest.txt"
+  file(WRITE "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

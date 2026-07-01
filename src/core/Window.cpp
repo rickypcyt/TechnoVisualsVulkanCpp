@@ -66,8 +66,8 @@ void Window::createUiWindow(const std::string& title, int width, int height) {
 void Window::createOutputWindow(const std::string& title, int width, int height) {
     outputWindow = SDL_CreateWindow(
         title.c_str(),
-        SDL_WINDOWPOS_CENTERED_DISPLAY(1),
-        SDL_WINDOWPOS_CENTERED_DISPLAY(1),
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
         width,
         height,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE

@@ -62,7 +62,7 @@ void FrameSystem::init(VkDevice device, uint32_t frameCount, uint32_t swapchainI
     createSwapchainSemaphores(swapchainImageCount);
     m_imagesInFlight.assign(swapchainImageCount, VK_NULL_HANDLE);
 
-    std::cout << "[FrameSystem] Initialized — frames: " << m_maxFrames
+    std::cout << "[FrameSystem] Initialized — frames: " << std::dec << m_maxFrames
               << ", swapchain images: " << swapchainImageCount << '\n';
 }
 

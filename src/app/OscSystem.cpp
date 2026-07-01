@@ -3,11 +3,21 @@
 #include <iostream>
 #include <cstring>
 #include <algorithm>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <net/if.h>
+
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <iphlpapi.h>
+    #pragma comment(lib, "iphlpapi.lib")
+    #pragma comment(lib, "ws2_32.lib")
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <ifaddrs.h>
+    #include <net/if.h>
+    #include <netdb.h>
+#endif
 
 namespace {
 
@@ -104,6 +114,53 @@ void OscSystem::setPort(int port) {
 }
 
 std::string OscSystem::getLocalIPAddress() {
+#ifdef _WIN32
+    // Windows implementation using GetAdaptersAddresses
+    ULONG outBufLen = 15000;
+    PIP_ADAPTER_ADDRESSES pAddresses = (IP_ADAPTER_ADDRESSES *)malloc(outBufLen);
+
+    if (pAddresses == nullptr) {
+        return "127.0.0.1";
+    }
+
+    DWORD dwRetVal = GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_PREFIX, nullptr, pAddresses, &outBufLen);
+
+    if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
+        free(pAddresses);
+        pAddresses = (IP_ADAPTER_ADDRESSES *)malloc(outBufLen);
+        if (pAddresses == nullptr) {
+            return "127.0.0.1";
+        }
+        dwRetVal = GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_PREFIX, nullptr, pAddresses, &outBufLen);
+    }
+
+    if (dwRetVal == NO_ERROR) {
+        for (PIP_ADAPTER_ADDRESSES pCurrAddresses = pAddresses; pCurrAddresses; pCurrAddresses = pCurrAddresses->Next) {
+            // Skip loopback and disconnected adapters
+            if (pCurrAddresses->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
+                continue;
+            }
+            if (pCurrAddresses->OperStatus != IfOperStatusUp) {
+                continue;
+            }
+
+            for (IP_ADAPTER_UNICAST_ADDRESS* pUnicast = pCurrAddresses->FirstUnicastAddress; pUnicast; pUnicast = pUnicast->Next) {
+                sockaddr* sa = pUnicast->Address.lpSockaddr;
+                if (sa->sa_family == AF_INET) {
+                    char ipStr[INET_ADDRSTRLEN];
+                    sockaddr_in* sin = (sockaddr_in*)sa;
+                    inet_ntop(AF_INET, &sin->sin_addr, ipStr, sizeof(ipStr));
+                    free(pAddresses);
+                    return std::string(ipStr);
+                }
+            }
+        }
+    }
+
+    free(pAddresses);
+    return "127.0.0.1";
+#else
+    // Unix implementation using getifaddrs
     struct ifaddrs *ifaddr, *ifa;
     char host[NI_MAXHOST];
 
@@ -163,6 +220,7 @@ std::string OscSystem::getLocalIPAddress() {
 
     freeifaddrs(ifaddr);
     return "127.0.0.1";
+#endif
 }
 
 void OscSystem::update() {

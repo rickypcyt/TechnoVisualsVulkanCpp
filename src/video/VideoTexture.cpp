@@ -17,7 +17,7 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     size_t requiredSize = newLayout.compactSize();
     size_t allocatedSize = frameSize;
 
-    std::cout << "[VideoTexture] Dimension check: allocated=" << allocatedSize 
+    std::cout << "[VideoTexture] Dimension check: allocated=" << std::dec << allocatedSize 
               << " required=" << requiredSize 
               << " width=" << width << " height=" << height 
               << " old=" << this->width << "x" << this->height
@@ -29,7 +29,7 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
         return;
     }
 
-    std::cout << "[VideoTexture] Creating video texture resources: " << width << "x" << height << std::endl;
+    std::cout << "[VideoTexture] Creating video texture resources: " << std::dec << width << "x" << height << std::endl;
 
     this->width = width;
     this->height = height;
@@ -41,7 +41,7 @@ void VideoTexture::createResources(ResourceSystem& resourceSystem, VkDevice devi
     // Create staging ring buffer (dynamic capacity based on current video size)
     if (!stagingRing.getSlot(0).mapped) {
         stagingRing.create(resourceSystem, device, frameSize);
-        std::cout << "[VideoTexture] Staging ring created with capacity: " << stagingRing.getCapacity() << " bytes" << std::endl;
+        std::cout << "[VideoTexture] Staging ring created with capacity: " << std::dec << stagingRing.getCapacity() << " bytes" << std::endl;
     }
 
     // Create current frame texture (needs TRANSFER_SRC for copying to prev frame)

@@ -15,14 +15,16 @@ pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavut
 
 # --- Dependency helpers: prefer local third_party/ copies for offline builds ---
 set(RTMIDI_LOCAL ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rtmidi)
-set(KFR_LOCAL    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/kfr)
 set(NLOHMANN_JSON_LOCAL ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nlohmann_json)
 
-# RtMidi for MIDI support
+# RtMidi for MIDI support (static to avoid DLL issues)
+set(RTMIDI_BUILD_STATIC_LIBS ON CACHE BOOL "Build RtMidi static" FORCE)
+set(RTMIDI_BUILD_SHARED_LIBS OFF CACHE BOOL "No RtMidi shared" FORCE)
 if(EXISTS ${RTMIDI_LOCAL}/CMakeLists.txt)
     message(STATUS "Using local rtmidi from ${RTMIDI_LOCAL}")
     set(rtmidi_SOURCE_DIR ${RTMIDI_LOCAL})
     add_subdirectory(${RTMIDI_LOCAL} ${CMAKE_BINARY_DIR}/rtmidi-build)
+    set_target_properties(rtmidi PROPERTIES POSITION_INDEPENDENT_CODE ON)
 else()
     FetchContent_Declare(
         rtmidi
@@ -31,23 +33,6 @@ else()
         UPDATE_DISCONNECTED TRUE
     )
     FetchContent_MakeAvailable(rtmidi)
-endif()
-
-# KFR for DSP/audio processing
-if(EXISTS ${KFR_LOCAL}/CMakeLists.txt)
-    message(STATUS "Using local kfr from ${KFR_LOCAL}")
-    set(KFR_IO OFF CACHE BOOL "" FORCE)
-    set(kfr_SOURCE_DIR ${KFR_LOCAL})
-    add_subdirectory(${KFR_LOCAL} ${CMAKE_BINARY_DIR}/kfr-build)
-else()
-    set(KFR_IO OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-        kfr
-        GIT_REPOSITORY https://github.com/kfrlib/kfr.git
-        GIT_TAG main
-        UPDATE_DISCONNECTED TRUE
-    )
-    FetchContent_MakeAvailable(kfr)
 endif()
 
 # nlohmann/json for parameter serialization
@@ -227,7 +212,7 @@ endforeach()
 add_custom_target(compile_post_effects DEPENDS ${POST_EFFECT_SPV})
 add_dependencies(app compile_post_effects)
 
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${kfr_SOURCE_DIR}/include ${nlohmann_json_SOURCE_DIR}/include)
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(app
     Vulkan::Vulkan
@@ -235,7 +220,6 @@ target_link_libraries(app
     glm::glm
     PkgConfig::FFMPEG
     rtmidi
-    kfr
     imgui
     ${LIBLO_LIBRARIES}
     ${PORTAUDIO_LIBRARIES}

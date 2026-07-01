@@ -7,7 +7,7 @@ if(CMAKE_VERSION VERSION_LESS "2.8.3")
    message(FATAL_ERROR "CMake >= 2.8.3 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 2.8.3...4.1)
+cmake_policy(VERSION 2.8.3...4.2)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -47,18 +47,18 @@ unset(_cmake_expected_targets)
 
 
 # Create imported target RtMidi::rtmidi
-add_library(RtMidi::rtmidi SHARED IMPORTED)
+add_library(RtMidi::rtmidi STATIC IMPORTED)
 
 set_target_properties(RtMidi::rtmidi PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/ricky/coding/proyects/vulkancpp/third_party/rtmidi"
-  INTERFACE_LINK_LIBRARIES "Threads::Threads"
+  INTERFACE_INCLUDE_DIRECTORIES "C:/coding/TechnoVisualsVulkanCpp/third_party/rtmidi"
+  INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:winmm>"
 )
 
 # Import target "RtMidi::rtmidi" for configuration ""
 set_property(TARGET RtMidi::rtmidi APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 set_target_properties(RtMidi::rtmidi PROPERTIES
-  IMPORTED_LOCATION_NOCONFIG "/home/ricky/coding/proyects/vulkancpp/build/rtmidi-build/librtmidi.so.6.0.0"
-  IMPORTED_SONAME_NOCONFIG "librtmidi.so.6"
+  IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
+  IMPORTED_LOCATION_NOCONFIG "C:/coding/TechnoVisualsVulkanCpp/build/rtmidi-build/librtmidi.a"
   )
 
 # This file does not depend on other imported targets which have

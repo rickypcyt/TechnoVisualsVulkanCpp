@@ -19,9 +19,27 @@
 #include <map>
 #include <vector>
 #include <sstream>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <signal.h>
+
+#ifdef _WIN32
+    #include <windows.h>
+    #include <process.h>
+    typedef HANDLE process_handle_t;
+    #define INVALID_PROCESS_HANDLE NULL
+    #define WNOHANG 1
+    #define SIGTERM 15
+    static inline int kill(process_handle_t pid, int sig) {
+        TerminateProcess(pid, 1);
+        return 0;
+    }
+    static inline int WIFEXITED(int status) { return true; }
+    static inline int WEXITSTATUS(int status) { return status; }
+#else
+    #include <unistd.h>
+    #include <sys/wait.h>
+    #include <signal.h>
+    typedef pid_t process_handle_t;
+    #define INVALID_PROCESS_HANDLE -1
+#endif
 
 // RenderJob - representa un trabajo de render determinista
 struct RenderJob {
@@ -69,7 +87,7 @@ struct RenderJob {
     
     std::atomic<Status> status{Status::PENDING};
     std::string error_message;
-    pid_t ffmpeg_pid = -1;  // Process ID for FFmpeg subprocess
+    process_handle_t ffmpeg_pid = INVALID_PROCESS_HANDLE;  // Process handle for FFmpeg subprocess
     std::atomic<bool> cancelled{false};
 };
 
@@ -229,7 +247,7 @@ public:
     
     // Cancel a specific job
     void cancel_job(std::shared_ptr<RenderJob> job) {
-        if (job->ffmpeg_pid != -1) {
+        if (job->ffmpeg_pid != INVALID_PROCESS_HANDLE) {
             // Kill the FFmpeg subprocess
             kill(job->ffmpeg_pid, SIGTERM);
             job->cancelled = true;
@@ -315,8 +333,32 @@ private:
 
         std::cout << "[FFmpeg] Executing: " << cmd << std::endl;
 
-        // Fork and exec to run FFmpeg in separate process
-        pid_t pid = fork();
+#ifdef _WIN32
+        // Windows implementation using CreateProcess
+        STARTUPINFOA si;
+        PROCESS_INFORMATION pi;
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        ZeroMemory(&pi, sizeof(pi));
+
+        // CreateProcess needs mutable command string
+        std::vector<char> cmd_buf(cmd.begin(), cmd.end());
+        cmd_buf.push_back(0);
+
+        if (!CreateProcessA(NULL, cmd_buf.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+            job->error_message = "Failed to create FFmpeg process";
+            std::cerr << "[FFmpeg] CreateProcess failed" << std::endl;
+            return false;
+        }
+
+        // Close thread handle, keep process handle
+        CloseHandle(pi.hThread);
+        job->ffmpeg_pid = pi.hProcess;
+        std::cout << "[FFmpeg] Spawned with handle: " << pi.hProcess << std::endl;
+        return true;
+#else
+        // Unix implementation using fork
+        process_handle_t pid = fork();
 
         if (pid == -1) {
             // Fork failed
@@ -362,45 +404,37 @@ private:
             std::cout << "[FFmpeg] Spawned with PID: " << pid << std::endl;
             return true;
         }
+#endif
     }
     
     // Monitor thread to wait for completed FFmpeg processes
     void monitor_completed_jobs() {
         while (!monitor_shutdown) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            
+
             std::vector<uint64_t> completed_versions;
-            
+
             {
                 std::lock_guard<std::mutex> lock(active_jobs_mutex);
                 for (auto& [version, job] : active_jobs) {
-                    if (job->ffmpeg_pid != -1) {
-                        // Check if process has completed
-                        int status;
-                        pid_t result = waitpid(job->ffmpeg_pid, &status, WNOHANG);
-                        
-                        if (result == -1) {
-                            // Error waiting for process
-                            job->error_message = "Failed to wait for FFmpeg process";
-                            job->status = RenderJob::Status::FAILED;
-                            job->ffmpeg_pid = -1;
-                            completed_versions.push_back(version);
-                        } else if (result == job->ffmpeg_pid) {
+#ifdef _WIN32
+                    if (job->ffmpeg_pid != INVALID_PROCESS_HANDLE) {
+                        // Check if process has completed (Windows)
+                        DWORD result = WaitForSingleObject(job->ffmpeg_pid, 0);
+
+                        if (result == WAIT_OBJECT_0) {
                             // Process has completed
-                            job->ffmpeg_pid = -1;
-                            
-                            if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                                if (!job->cancelled) {
-                                    job->status = RenderJob::Status::COMPLETED;
+                            DWORD exit_code;
+                            GetExitCodeProcess(job->ffmpeg_pid, &exit_code);
+                            CloseHandle(job->ffmpeg_pid);
+                            job->ffmpeg_pid = INVALID_PROCESS_HANDLE;
 
-                                    // Notify callback that render completed
-                                    // Pass the complete job so callback can handle swap on the main thread
-                                    if (on_render_complete) {
-                                        on_render_complete(job);
-                                    }
+                            if (exit_code == 0 && !job->cancelled) {
+                                job->status = RenderJob::Status::COMPLETED;
 
-                                    // Removed auto-increment to prevent infinite render loop
-                                    // Version should only be incremented on user-initiated state changes
+                                // Notify callback that render completed
+                                if (on_render_complete) {
+                                    on_render_complete(job);
                                 }
                             } else {
                                 job->status = RenderJob::Status::FAILED;
@@ -408,8 +442,40 @@ private:
                             completed_versions.push_back(version);
                         }
                     }
+#else
+                    if (job->ffmpeg_pid != INVALID_PROCESS_HANDLE) {
+                        // Check if process has completed (Unix)
+                        int status;
+                        process_handle_t result = waitpid(job->ffmpeg_pid, &status, WNOHANG);
+
+                        if (result == -1) {
+                            // Error waiting for process
+                            job->error_message = "Failed to wait for FFmpeg process";
+                            job->status = RenderJob::Status::FAILED;
+                            job->ffmpeg_pid = INVALID_PROCESS_HANDLE;
+                            completed_versions.push_back(version);
+                        } else if (result == job->ffmpeg_pid) {
+                            // Process has completed
+                            job->ffmpeg_pid = INVALID_PROCESS_HANDLE;
+
+                            if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                                if (!job->cancelled) {
+                                    job->status = RenderJob::Status::COMPLETED;
+
+                                    // Notify callback that render completed
+                                    if (on_render_complete) {
+                                        on_render_complete(job);
+                                    }
+                                }
+                            } else {
+                                job->status = RenderJob::Status::FAILED;
+                            }
+                            completed_versions.push_back(version);
+                        }
+                    }
+#endif
                 }
-                
+
                 // Remove completed jobs from active map
                 for (uint64_t version : completed_versions) {
                     active_jobs.erase(version);

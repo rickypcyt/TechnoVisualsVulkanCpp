@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/cmake_install.cmake"
+		"C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-subbuild/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

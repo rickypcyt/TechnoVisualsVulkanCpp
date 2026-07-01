@@ -165,7 +165,7 @@ void ResourceSystem::validateMemoryProperties(VkMemoryPropertyFlags required, Vk
     // Check if all required flags are present in actual properties
     if ((required & actual) != required) {
         std::cerr << "Error: Memory property mismatch for " << resourceType << std::endl;
-        std::cerr << "Required: 0x" << std::hex << required << std::endl;
+        std::cerr << "Required: 0x" << std::hex << required << std::dec << std::endl;
         std::cerr << "Actual: 0x" << std::hex << actual << std::dec << std::endl;
         throw std::runtime_error("memory property validation failed");
     }

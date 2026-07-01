@@ -3,9 +3,9 @@
 # No other meaning or use of this file is supported.
 
 method=git
-command=/usr/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/tmp/boost_math-populate-gitclone.cmake
-source_dir=/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-src
-work_dir=/home/ricky/coding/proyects/vulkancpp/build/_deps
+command=C:/Program Files/CMake/bin/cmake.exe;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-subbuild/boost_math-populate-prefix/tmp/boost_math-populate-gitclone.cmake
+source_dir=C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-src
+work_dir=C:/coding/TechnoVisualsVulkanCpp/build/_deps
 repository=https://github.com/boostorg/math.git
 remote=origin
 init_submodules=TRUE

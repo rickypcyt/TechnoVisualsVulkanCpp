@@ -1,7 +1,7 @@
 # Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
 # file LICENSE.rst or https://cmake.org/licensing for details.
 
-cmake_minimum_required(VERSION 4.3.4)
+cmake_minimum_required(VERSION 4.4.0-rc3)
 
 # Reject any attempt to use a toolchain file. We must not use one because
 # we could be downloading it here. If the CMAKE_TOOLCHAIN_FILE environment
@@ -18,18 +18,18 @@ project(boost_math-populate NONE)
 
 # Pass through things we've already detected in the main project to avoid
 # paying the cost of redetecting them again in ExternalProject_Add()
-set(GIT_EXECUTABLE [==[/usr/bin/git]==])
-set(Git_VERSION [==[2.54.0]==])
+set(GIT_EXECUTABLE [==[C:/Program Files/Git/cmd/git.exe]==])
+set(Git_VERSION [==[2.55.0.windows.1]==])
 set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
-  [==[/usr/bin/git;2.54.0]==]
+  [==[C:/Program Files/Git/cmd/git.exe;2.55.0.windows.1]==]
 )
 
 
 include(ExternalProject)
 ExternalProject_Add(boost_math-populate
                      "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/boostorg/math.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "boost-1.89.0"
-                    SOURCE_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-src"
-                    BINARY_DIR          "/home/ricky/coding/proyects/vulkancpp/build/_deps/boost_math-build"
+                    SOURCE_DIR          "C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-src"
+                    BINARY_DIR          "C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-build"
                     CONFIGURE_COMMAND   ""
                     BUILD_COMMAND       ""
                     INSTALL_COMMAND     ""

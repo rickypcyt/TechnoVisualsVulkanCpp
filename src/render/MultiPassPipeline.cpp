@@ -128,7 +128,7 @@ bool MultiPassPipeline::createTemporalHistoryImage() {
     imageInfo.extent.depth = 1;
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
-    imageInfo.format = colorFormat;
+    imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -159,7 +159,7 @@ bool MultiPassPipeline::createTemporalHistoryImage() {
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = temporalHistory.image;
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = colorFormat;
+    viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     viewInfo.subresourceRange.baseMipLevel = 0;
     viewInfo.subresourceRange.levelCount = 1;
@@ -254,7 +254,7 @@ bool MultiPassPipeline::initialize(
 
     initProfiling(device);
 
-    std::cout << "[MultiPass] Initialized successfully with " << NUM_PASSES << " passes" << std::endl;
+    std::cout << "[MultiPass] Initialized successfully with " << std::dec << NUM_PASSES << " passes" << std::endl;
     return true;
 }
 
@@ -281,7 +281,7 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.format = colorFormat;
+        imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageInfo.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -312,7 +312,7 @@ bool MultiPassPipeline::createIntermediateFramebuffers() {
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.image = intermediate[i].image;
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = colorFormat;
+        viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         viewInfo.subresourceRange.baseMipLevel = 0;
         viewInfo.subresourceRange.levelCount = 1;
@@ -345,7 +345,7 @@ bool MultiPassPipeline::createComputePipelines() {
     static const int PASS_OUTPUT_BINDING[] = {4, 1, 1, 2, 1, 1, 2};
 
     for (int i = 0; i < NUM_PASSES; ++i) {
-        std::cout << "[MultiPass] Creating compute pipeline for pass " << i << " (" << PASS_COMPUTE_SHADERS[i] << ")" << std::endl;
+        std::cout << "[MultiPass] Creating compute pipeline for pass " << std::dec << i << " (" << PASS_COMPUTE_SHADERS[i] << ")" << std::endl;
         auto compShaderCode = readFile(PASS_COMPUTE_SHADERS[i]);
         if (compShaderCode.empty()) {
             std::cerr << "[MultiPass] Failed to read compute shader for pass " << i << std::endl;
@@ -447,7 +447,7 @@ bool MultiPassPipeline::createComputePipelines() {
         vkDestroyShaderModule(device, compShaderModule, nullptr);
     }
 
-    std::cout << "[MultiPass] Compute pipelines created for all " << NUM_PASSES << " passes" << std::endl;
+    std::cout << "[MultiPass] Compute pipelines created for all " << std::dec << NUM_PASSES << " passes" << std::endl;
     return true;
 }
 
@@ -469,22 +469,9 @@ void MultiPassPipeline::loadPostEffects() {
         return;
     }
 
-    // Create two descriptor set layouts: set 0 (UBO), set 1 (input sampler + output storage image)
-    VkDescriptorSetLayoutBinding uboBinding{};
-    uboBinding.binding = 0;
-    uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboBinding.descriptorCount = 1;
-    uboBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-    VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
-    set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    set0LayoutInfo.bindingCount = 1;
-    set0LayoutInfo.pBindings = &uboBinding;
-    if (vkCreateDescriptorSetLayout(device, &set0LayoutInfo, nullptr, &postEffectSetLayouts[0]) != VK_SUCCESS) {
-        std::cerr << "[MultiPass] Failed to create post-effect set 0 layout" << std::endl;
-        return;
-    }
-
+    // Create two descriptor set layouts matching post-effect shader expectations:
+    // Set 0: input sampler (binding 0) + output storage image (binding 1)
+    // Set 1: UBO (binding 0)
     VkDescriptorSetLayoutBinding inputBinding{};
     inputBinding.binding = 0;
     inputBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -497,11 +484,26 @@ void MultiPassPipeline::loadPostEffects() {
     outputBinding.descriptorCount = 1;
     outputBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-    VkDescriptorSetLayoutBinding set1Bindings[] = {inputBinding, outputBinding};
+    VkDescriptorSetLayoutBinding set0Bindings[] = {inputBinding, outputBinding};
+    VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
+    set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    set0LayoutInfo.bindingCount = 2;
+    set0LayoutInfo.pBindings = set0Bindings;
+    if (vkCreateDescriptorSetLayout(device, &set0LayoutInfo, nullptr, &postEffectSetLayouts[0]) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create post-effect set 0 layout" << std::endl;
+        return;
+    }
+
+    VkDescriptorSetLayoutBinding uboBinding{};
+    uboBinding.binding = 0;
+    uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboBinding.descriptorCount = 1;
+    uboBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
     VkDescriptorSetLayoutCreateInfo set1LayoutInfo{};
     set1LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    set1LayoutInfo.bindingCount = 2;
-    set1LayoutInfo.pBindings = set1Bindings;
+    set1LayoutInfo.bindingCount = 1;
+    set1LayoutInfo.pBindings = &uboBinding;
     if (vkCreateDescriptorSetLayout(device, &set1LayoutInfo, nullptr, &postEffectSetLayouts[1]) != VK_SUCCESS) {
         std::cerr << "[MultiPass] Failed to create post-effect set 1 layout" << std::endl;
         return;
@@ -546,7 +548,7 @@ void MultiPassPipeline::loadPostEffects() {
         }
     }
 
-    std::cout << "[MultiPass] Loaded " << postEffectNames.size() << " post-effect shaders" << std::endl;
+    std::cout << "[MultiPass] Loaded " << std::dec << postEffectNames.size() << " post-effect shaders" << std::endl;
 }
 
 bool MultiPassPipeline::createPostEffectDescriptorSets() {
@@ -581,6 +583,7 @@ bool MultiPassPipeline::createPostEffectDescriptorSets() {
             return false;
         }
 
+        // Write UBO to set 1 (Set 0 = input+output, Set 1 = UBO)
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[frame];
         bufferInfo.offset = 0;
@@ -588,7 +591,7 @@ bool MultiPassPipeline::createPostEffectDescriptorSets() {
 
         VkWriteDescriptorSet uboWrite{};
         uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        uboWrite.dstSet = postEffectDescriptorSets[0][frame];
+        uboWrite.dstSet = postEffectDescriptorSets[1][frame];
         uboWrite.dstBinding = 0;
         uboWrite.dstArrayElement = 0;
         uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -989,7 +992,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         ensureLayout(intermediate[finalBuffer].image, intermediateLayouts[finalBuffer], VK_IMAGE_LAYOUT_GENERAL);
         ensureLayout(intermediate[postEffectOutputBuffer].image, intermediateLayouts[postEffectOutputBuffer], VK_IMAGE_LAYOUT_GENERAL);
 
-        // Update post-effect set 1: input sampler + output storage image
+        // Update post-effect set 0: input sampler (binding 0) + output storage image (binding 1)
         VkDescriptorImageInfo inputInfo{};
         inputInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         inputInfo.imageView = intermediate[finalBuffer].imageView;
@@ -1001,7 +1004,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
 
         VkWriteDescriptorSet writes[2]{};
         writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[0].dstSet = postEffectDescriptorSets[1][frameIndex];
+        writes[0].dstSet = postEffectDescriptorSets[0][frameIndex];
         writes[0].dstBinding = 0;
         writes[0].dstArrayElement = 0;
         writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1009,7 +1012,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         writes[0].pImageInfo = &inputInfo;
 
         writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[1].dstSet = postEffectDescriptorSets[1][frameIndex];
+        writes[1].dstSet = postEffectDescriptorSets[0][frameIndex];
         writes[1].dstBinding = 1;
         writes[1].dstArrayElement = 0;
         writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -1017,8 +1020,8 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         writes[1].pImageInfo = &outputInfo;
 
         // Validate descriptor sets before updating
-        if (frameIndex >= postEffectDescriptorSets[1].size() || 
-            postEffectDescriptorSets[1][frameIndex] == VK_NULL_HANDLE) {
+        if (frameIndex >= postEffectDescriptorSets[0].size() || 
+            postEffectDescriptorSets[0][frameIndex] == VK_NULL_HANDLE) {
             std::cerr << "[MultiPass] ERROR: Invalid post-effect descriptor set, skipping post-effect" << std::endl;
             return;
         }
@@ -1372,12 +1375,12 @@ std::vector<char> MultiPassPipeline::readFile(const std::string& filename) {
     file.read(buffer.data(), fileSize);
     file.close();
 
-    std::cout << "[MultiPass] Read " << buffer.size() << " bytes from " << filename << std::endl;
+    std::cout << "[MultiPass] Read " << std::dec << buffer.size() << " bytes from " << filename << std::endl;
     return buffer;
 }
 
 VkShaderModule MultiPassPipeline::createShaderModule(const std::vector<char>& code) {
-    std::cout << "[MultiPass] Creating shader module (" << code.size() << " bytes)..." << std::endl;
+    std::cout << "[MultiPass] Creating shader module (" << std::dec << code.size() << " bytes)..." << std::endl;
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
