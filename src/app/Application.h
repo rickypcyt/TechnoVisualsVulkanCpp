@@ -338,6 +338,9 @@ private:
 
     bool animationTimeInitialized = false;
 
+    uint32_t previewFrameCounter = 0; // 30fps throttle for preview UBO updates
+    float currentDeltaTime = 0.0f;    // set by renderOneFrame, used by tryRender*
+
     // resize debounce (fixes tiling compositors like Hyprland)
     bool resizePending = false;
     bool outputResizePending = false;
@@ -353,6 +356,8 @@ private:
     bool outputWindowVisible = true;
     bool outputWindowHidden = false;
     bool inModalLoop = false;      // Win32 modal drag/resize loop active
+    uintptr_t modalTimerId = 0;    // Win32 timer ID for modal loop rendering
+    bool renderingInProgress = false; // Re-entrancy guard for renderOneFrame
 
     // video / control flags
     bool allowDimensionChangeRecreation = false;
@@ -368,8 +373,9 @@ private:
     float transitionDuration3 = 0.5f;
     float transitionProgress = 1.0f;  // 0.0 = old video, 1.0 = new video
 
-    // command buffers
-    std::vector<VkCommandBuffer> commandBuffers;
+    // command buffers (separate per window for independent rendering)
+    std::vector<VkCommandBuffer> previewCommandBuffers;
+    std::vector<VkCommandBuffer> outputCommandBuffers;
 
     // async render jobs
     std::mutex completedRenderJobsMutex;
@@ -478,6 +484,7 @@ private:
 
     void handleWindowResize(uint32_t width, uint32_t height);
     void handleOutputWindowResize(uint32_t width, uint32_t height);
+    void processPendingResizes();
 
     void tickAutoColors(float dt, float energy);
 
@@ -491,6 +498,9 @@ private:
     // Main loop
     // --------------------------
     void mainLoop();
+    void renderOneFrame();
+    bool tryRenderPreview();
+    bool tryRenderOutput();
     void updateUniformBuffer(uint32_t frameIndex, VisualControls& controls,
                             UniformBufferManager& uboManager,
                             const VulkanPresenter& presenter,
@@ -498,9 +508,10 @@ private:
                             VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
                             bool vid1Init, bool vid2Init, bool vid3Init,
                             bool forOutput = false);
-    void recordCommandBuffer(VkCommandBuffer commandBuffer,
-                             FrameContext& previewFrame, uint32_t previewImageIndex,
-                             FrameContext* outputFrame, uint32_t outputImageIndex);
+    void recordPreviewCommandBuffer(VkCommandBuffer cmd,
+                                     FrameContext& previewFrame, uint32_t previewImageIndex);
+    void recordOutputCommandBuffer(VkCommandBuffer cmd,
+                                    FrameContext& outputFrame, uint32_t outputImageIndex);
 
 
     // --------------------------

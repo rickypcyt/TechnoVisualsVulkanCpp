@@ -110,7 +110,7 @@ FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
         &imageIndex
     );
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_ERROR_SURFACE_LOST_KHR || result == VK_NOT_READY) {
         return nullptr;
     }
 
