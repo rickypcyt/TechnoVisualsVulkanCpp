@@ -1,10 +1,10 @@
 #version 450
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(set = 0, binding = 0) uniform sampler2D inputImage;
-layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+layout(set = 1, binding = 0) uniform sampler2D inputImage;
+layout(set = 1, binding = 1, rgba8) uniform image2D outputImage;
 
-layout(set = 1, binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) uniform UniformBufferObject {
     float time;
     float tempo;
     float energy;
@@ -85,7 +85,7 @@ vec2 kochSubdivide(vec2 p0, vec2 p1, float t, float rotAngle) {
     if (t >= 0.33 && t <= 0.67) {
         vec2 mid = p0 + v * 0.5;
         vec2 perp = vec2(-v.y, v.x);
-        perp = normalize(perp) * length(v) * 0.2887; // tan(30°) / 3
+        perp = normalize(perp) * length(v) * 0.2887; // tan(30Â°) / 3
         perp = rotate2D(perp, rotAngle);
         p = mid + perp * (t - 0.5) * 3.0;
     }

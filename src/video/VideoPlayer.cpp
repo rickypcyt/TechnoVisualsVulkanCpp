@@ -77,10 +77,43 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     // Skip loop filter for faster decoding (~20-30% speedup, minor quality loss)
     codecCtx->skip_loop_filter = AVDISCARD_ALL;
 
+    // Compute target output dimensions BEFORE opening codec, so we can
+    // determine the optimal lowres level for reduced-resolution decoding.
+    int targetOutW = codecCtx->width;
+    int targetOutH = codecCtx->height;
+    computeOutputDimensions(codecCtx->width, codecCtx->height, targetOutW, targetOutH, targetScreenWidth, targetScreenHeight, autoScaleEnabled);
+
     // Automatic performance optimization for high-bitrate/high-resolution videos
     AVDictionary* opts = nullptr;
     bool needsOptimization = false;
-    
+    bool usedLowres = false;
+    int lowresLevel = 0;
+
+    // Determine lowres level: lowres=N divides resolution by 2^N.
+    // Pick the highest lowres that still gives enough resolution for the target.
+    if (stream->codecpar->width > 1920 || stream->codecpar->height > 1080) {
+        int srcW = stream->codecpar->width;
+        int srcH = stream->codecpar->height;
+        for (int level = 1; level <= 3; ++level) {
+            int decW = srcW >> level;
+            int decH = srcH >> level;
+            if (decW >= targetOutW && decH >= targetOutH) {
+                lowresLevel = level;
+            } else {
+                break;
+            }
+        }
+        if (lowresLevel > 0) {
+            std::cout << "[Video] High resolution detected: " << stream->codecpar->width
+                      << "x" << stream->codecpar->height << ", using lowres=" << lowresLevel
+                      << " (decode at " << (srcW >> lowresLevel)
+                      << "x" << (srcH >> lowresLevel) << ")" << std::endl;
+            codecCtx->lowres = lowresLevel;
+            usedLowres = true;
+            needsOptimization = true;
+        }
+    }
+
     // Check if video has excessive bitrate
     if (stream->codecpar->bit_rate > 0) {
         const int64_t maxBitrate = 50 * 1024 * 1024; // 50 Mbps limit
@@ -92,31 +125,22 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
             needsOptimization = true;
         }
     }
-    
-    // Check if video has excessive resolution
-    if (stream->codecpar->width > 1920 || stream->codecpar->height > 1080) {
-        std::cout << "[Video] High resolution detected: " << stream->codecpar->width 
-                  << "x" << stream->codecpar->height << ", applying limits for performance" << std::endl;
-        
-        // Force maximum resolution of 1920x1080 for better performance
-        codecCtx->width = std::min(stream->codecpar->width, 1920);
-        codecCtx->height = std::min(stream->codecpar->height, 1080);
-        needsOptimization = true;
-    }
-    
+
     // Apply optimizations if needed
     if (needsOptimization) {
         // Additional decoder options for performance
         av_dict_set(&opts, "threads", "auto", 0);
         av_dict_set(&opts, "fast", "1", 0); // Enable fast decoding mode
-        
+
         if (avcodec_open2(codecCtx, codec, &opts) < 0) {
             std::cerr << "[Video] Failed to open codec with optimizations, trying without..." << std::endl;
             av_dict_free(&opts);
-            // Restore original dimensions if we modified them
-            codecCtx->width = stream->codecpar->width;
-            codecCtx->height = stream->codecpar->height;
-            
+            // Reset lowres if it was set, since some codecs don't support it
+            if (usedLowres) {
+                codecCtx->lowres = 0;
+                usedLowres = false;
+            }
+
             if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
                 std::cerr << "[Video] Failed to open codec" << std::endl;
                 shutdown();
@@ -146,6 +170,10 @@ bool VideoPlayer::initialize(const std::string& path, int screenW, int screenH) 
     int originalHeight = outputHeight;
     computeOutputDimensions(outputWidth, outputHeight, outputWidth, outputHeight, targetScreenWidth, targetScreenHeight, autoScaleEnabled);
 
+    if (usedLowres) {
+        std::cout << "[Video] lowres active: codec reports " << originalWidth << "x" << originalHeight
+                  << " (source was " << stream->codecpar->width << "x" << stream->codecpar->height << ")" << std::endl;
+    }
     if (outputWidth != originalWidth || outputHeight != originalHeight) {
         std::cout << "[Video] Downscaling " << originalWidth << "x" << originalHeight
                   << " to " << outputWidth << "x" << outputHeight << " for playback" << std::endl;

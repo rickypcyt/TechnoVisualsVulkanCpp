@@ -1,10 +1,10 @@
 #version 450
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(set = 0, binding = 0) uniform sampler2D inputImage;
-layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+layout(set = 1, binding = 0) uniform sampler2D inputImage;
+layout(set = 1, binding = 1, rgba8) uniform image2D outputImage;
 
-layout(set = 1, binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) uniform UniformBufferObject {
     float time;
     float tempo;
     float energy;
@@ -309,7 +309,7 @@ vec4 renderVolumetricStarfield(vec2 st, float time, float tempo, float energy, f
     }
     
     v = mix(vec3(length(v) * 0.3), v * 0.5, kVolSaturation);
-    color += v * 0.002; // Contribución mínima al color
+    color += v * 0.002; // ContribuciÃ³n mÃ­nima al color
     
     
     float vignette = 1.0 - smoothstep(0.3, 1.2, dot(uv, uv));

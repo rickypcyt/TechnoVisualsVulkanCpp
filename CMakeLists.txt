@@ -225,3 +225,7 @@ target_link_libraries(app
     ${PORTAUDIO_LIBRARIES}
     ${FFTW_LIBRARIES}
 )
+
+if(WIN32)
+    target_link_libraries(app ole32 shell32)
+endif()

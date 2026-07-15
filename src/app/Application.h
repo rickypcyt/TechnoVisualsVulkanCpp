@@ -344,6 +344,7 @@ private:
     // resize debounce (fixes tiling compositors like Hyprland)
     bool resizePending = false;
     bool outputResizePending = false;
+    int consecutiveRenderErrors = 0;
     std::chrono::steady_clock::time_point resizeDebounceTime;
     uint32_t pendingResizeW = 0;
     uint32_t pendingResizeH = 0;
@@ -356,6 +357,8 @@ private:
     bool outputWindowVisible = true;
     bool outputWindowHidden = false;
     bool inModalLoop = false;      // Win32 modal drag/resize loop active
+    bool modalPreviewResize = false;
+    bool modalOutputResize = false;
     uintptr_t modalTimerId = 0;    // Win32 timer ID for modal loop rendering
     bool renderingInProgress = false; // Re-entrancy guard for renderOneFrame
 
@@ -365,7 +368,7 @@ private:
     bool transitionActive = false;
 
     // video assets
-    std::string videoAssetsRoot = "C:\\Users\\ricar\\Videos\\VISUALES";
+    std::string videoAssetsRoot;
 
     // transition durations
     float transitionDuration = 1.0f;
@@ -498,6 +501,9 @@ private:
     // Main loop
     // --------------------------
     void mainLoop();
+#ifdef _WIN32
+    static void CALLBACK modalTimerProc(HWND hwnd, UINT message, UINT_PTR timerId, DWORD timestamp);
+#endif
     void renderOneFrame();
     bool tryRenderPreview();
     bool tryRenderOutput();

@@ -1,15 +1,10 @@
 #version 450
+#include "shared_ubo.glsl"
+
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(set = 0, binding = 0) uniform sampler2D inputImage;
-layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
-
-layout(push_constant) uniform PushConstants {
-    float intensity;      // 0.0 to 1.0
-    float charSize;       // Size of ASCII characters in pixels
-    vec3 textColor;       // Color of ASCII characters
-    vec3 bgColor;         // Background color
-} pc;
+layout(set = 1, binding = 0) uniform sampler2D inputImage;
+layout(set = 1, binding = 1, rgba8) uniform image2D outputImage;
 
 // ASCII character brightness mapping (from dark to light)
 const float asciiBrightness[16] = float[](
@@ -40,7 +35,7 @@ void main() {
     }
     
     // Calculate cell coordinates
-    float cellSize = max(pc.charSize, 4.0);
+    float cellSize = max(8.0 + ubo.postEffectStrength * 24.0, 4.0);
     ivec2 cellCoords = ivec2(vec2(pixelCoords) / cellSize);
     
     // Sample center of the cell
@@ -58,14 +53,16 @@ void main() {
     float charBright = asciiBrightness[charIndex];
     
     // Mix between text color and background based on character brightness
-    vec3 finalColor = mix(pc.bgColor, pc.textColor, charBright * pc.intensity);
+    vec3 textColor = ubo.primaryColor.rgb;
+    vec3 bgColor = vec3(0.0);
+    vec3 finalColor = mix(bgColor, textColor, charBright * ubo.postEffectIntensity);
     
     // Add some scanline effect
     float scanline = sin(float(pixelCoords.y) * 0.3) * 0.03;
     finalColor -= scanline;
     
     // Blend with original based on intensity
-    finalColor = mix(color, finalColor, pc.intensity);
+    finalColor = mix(color, finalColor, ubo.postEffectIntensity);
     
     imageStore(outputImage, pixelCoords, vec4(finalColor, 1.0));
 }

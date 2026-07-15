@@ -470,8 +470,23 @@ void MultiPassPipeline::loadPostEffects() {
     }
 
     // Create two descriptor set layouts matching post-effect shader expectations:
-    // Set 0: input sampler (binding 0) + output storage image (binding 1)
-    // Set 1: UBO (binding 0)
+    // Set 0: UBO (binding 0) — matches shared_ubo.glsl layout(set=0, binding=0)
+    // Set 1: input sampler (binding 0) + output storage image (binding 1) — matches post_common_vulkan.glsl
+    VkDescriptorSetLayoutBinding uboBinding{};
+    uboBinding.binding = 0;
+    uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboBinding.descriptorCount = 1;
+    uboBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
+    set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    set0LayoutInfo.bindingCount = 1;
+    set0LayoutInfo.pBindings = &uboBinding;
+    if (vkCreateDescriptorSetLayout(device, &set0LayoutInfo, nullptr, &postEffectSetLayouts[0]) != VK_SUCCESS) {
+        std::cerr << "[MultiPass] Failed to create post-effect set 0 layout" << std::endl;
+        return;
+    }
+
     VkDescriptorSetLayoutBinding inputBinding{};
     inputBinding.binding = 0;
     inputBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -484,26 +499,11 @@ void MultiPassPipeline::loadPostEffects() {
     outputBinding.descriptorCount = 1;
     outputBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-    VkDescriptorSetLayoutBinding set0Bindings[] = {inputBinding, outputBinding};
-    VkDescriptorSetLayoutCreateInfo set0LayoutInfo{};
-    set0LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    set0LayoutInfo.bindingCount = 2;
-    set0LayoutInfo.pBindings = set0Bindings;
-    if (vkCreateDescriptorSetLayout(device, &set0LayoutInfo, nullptr, &postEffectSetLayouts[0]) != VK_SUCCESS) {
-        std::cerr << "[MultiPass] Failed to create post-effect set 0 layout" << std::endl;
-        return;
-    }
-
-    VkDescriptorSetLayoutBinding uboBinding{};
-    uboBinding.binding = 0;
-    uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboBinding.descriptorCount = 1;
-    uboBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
+    VkDescriptorSetLayoutBinding set1Bindings[] = {inputBinding, outputBinding};
     VkDescriptorSetLayoutCreateInfo set1LayoutInfo{};
     set1LayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    set1LayoutInfo.bindingCount = 1;
-    set1LayoutInfo.pBindings = &uboBinding;
+    set1LayoutInfo.bindingCount = 2;
+    set1LayoutInfo.pBindings = set1Bindings;
     if (vkCreateDescriptorSetLayout(device, &set1LayoutInfo, nullptr, &postEffectSetLayouts[1]) != VK_SUCCESS) {
         std::cerr << "[MultiPass] Failed to create post-effect set 1 layout" << std::endl;
         return;
@@ -561,7 +561,7 @@ bool MultiPassPipeline::createPostEffectDescriptorSets() {
     postEffectDescriptorSets[1].resize(numFrames);
 
     for (uint32_t frame = 0; frame < numFrames; ++frame) {
-        // Allocate set 0 (UBO)
+        // Allocate set 0 (UBO) — matches shader set 0
         VkDescriptorSetAllocateInfo allocInfo0{};
         allocInfo0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo0.descriptorPool = descriptorPool;
@@ -572,7 +572,7 @@ bool MultiPassPipeline::createPostEffectDescriptorSets() {
             return false;
         }
 
-        // Allocate set 1 (textures + storage)
+        // Allocate set 1 (input sampler + output storage) — matches shader set 1
         VkDescriptorSetAllocateInfo allocInfo1{};
         allocInfo1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo1.descriptorPool = descriptorPool;
@@ -583,7 +583,7 @@ bool MultiPassPipeline::createPostEffectDescriptorSets() {
             return false;
         }
 
-        // Write UBO to set 1 (Set 0 = input+output, Set 1 = UBO)
+        // Write UBO to set 0 (Set 0 = UBO, Set 1 = input+output)
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[frame];
         bufferInfo.offset = 0;
@@ -591,7 +591,7 @@ bool MultiPassPipeline::createPostEffectDescriptorSets() {
 
         VkWriteDescriptorSet uboWrite{};
         uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        uboWrite.dstSet = postEffectDescriptorSets[1][frame];
+        uboWrite.dstSet = postEffectDescriptorSets[0][frame];
         uboWrite.dstBinding = 0;
         uboWrite.dstArrayElement = 0;
         uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -992,7 +992,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         ensureLayout(intermediate[finalBuffer].image, intermediateLayouts[finalBuffer], VK_IMAGE_LAYOUT_GENERAL);
         ensureLayout(intermediate[postEffectOutputBuffer].image, intermediateLayouts[postEffectOutputBuffer], VK_IMAGE_LAYOUT_GENERAL);
 
-        // Update post-effect set 0: input sampler (binding 0) + output storage image (binding 1)
+        // Update post-effect set 1: input sampler (binding 0) + output storage image (binding 1)
         VkDescriptorImageInfo inputInfo{};
         inputInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         inputInfo.imageView = intermediate[finalBuffer].imageView;
@@ -1004,7 +1004,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
 
         VkWriteDescriptorSet writes[2]{};
         writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[0].dstSet = postEffectDescriptorSets[0][frameIndex];
+        writes[0].dstSet = postEffectDescriptorSets[1][frameIndex];
         writes[0].dstBinding = 0;
         writes[0].dstArrayElement = 0;
         writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1012,7 +1012,7 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         writes[0].pImageInfo = &inputInfo;
 
         writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[1].dstSet = postEffectDescriptorSets[0][frameIndex];
+        writes[1].dstSet = postEffectDescriptorSets[1][frameIndex];
         writes[1].dstBinding = 1;
         writes[1].dstArrayElement = 0;
         writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -1020,8 +1020,8 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         writes[1].pImageInfo = &outputInfo;
 
         // Validate descriptor sets before updating
-        if (frameIndex >= postEffectDescriptorSets[0].size() || 
-            postEffectDescriptorSets[0][frameIndex] == VK_NULL_HANDLE) {
+        if (frameIndex >= postEffectDescriptorSets[1].size() ||
+            postEffectDescriptorSets[1][frameIndex] == VK_NULL_HANDLE) {
             std::cerr << "[MultiPass] ERROR: Invalid post-effect descriptor set, skipping post-effect" << std::endl;
             return;
         }
@@ -1222,26 +1222,29 @@ void MultiPassPipeline::updateDescriptorSets(
 }
 
 void MultiPassPipeline::recreate(VkExtent2D newExtent) {
-    cleanupIntermediateFramebuffers();
     extent = newExtent;
+
+    // Only recreate extent-dependent resources: intermediate framebuffers + temporal history
+    cleanupIntermediateFramebuffers();
     createIntermediateFramebuffers();
+    destroyTemporalHistoryImage();
+    temporalHistoryInitialized = false;
     createTemporalHistoryImage();
 
-    // CRITICAL: Recreate compute pipelines after resize
-    cleanupPipelines();
-    createComputePipelines();
-
-    // CRITICAL: Recreate descriptor sets since their layouts were destroyed
+    // Descriptor sets reference intermediate image views, so they must be recreated.
+    // However, the descriptor set LAYOUTS and compute pipelines are extent-independent
+    // and do NOT need recreation — only the descriptor pool and sets need it.
     cleanupDescriptorSets();
     createDescriptorSets();
 
-    // Reload post-effect resources from scratch after descriptor pool recreation
-    cleanupPostEffectResources();
-    loadPostEffects();
-    createPostEffectDescriptorSets();
+    // Post-effect descriptor sets also reference intermediate image views.
+    // But post-effect pipelines/shaders are extent-independent — don't reload them.
+    // Only recreate the descriptor sets, not the pipelines.
+    if (!postEffectPipelines.empty()) {
+        createPostEffectDescriptorSets();
+    }
 
-    // CRITICAL: Update descriptor sets to point to new intermediate image views
-    // Otherwise passes B-G will sample from destroyed image views
+    // Update descriptor sets to point to new intermediate image views
     updateDescriptorSets(
         uniformBuffers,
         videoImageView,

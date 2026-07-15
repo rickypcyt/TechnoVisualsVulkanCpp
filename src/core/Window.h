@@ -38,6 +38,9 @@ public:
     // Drawable size queries
     void getDrawableSize(uint32_t& width, uint32_t& height) const;
 
+    // DPI scale
+    float getDpiScale() const { return dpiScale; }
+
 private:
     SDL_Window* window = nullptr;
     SDL_Window* uiWindow = nullptr;
@@ -49,4 +52,5 @@ private:
     bool framebufferResized = false;
     mutable uint32_t lastDrawableWidth = 0;
     mutable uint32_t lastDrawableHeight = 0;
+    float dpiScale = 1.0f;
 };

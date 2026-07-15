@@ -133,8 +133,6 @@ vec2 applyOutputAspect(vec2 uv) {
 
 vec3 sampleInput(vec2 uv) {
     vec2 p = applyOutputAspect(uv);
-    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0)
-        return vec3(0.0);
     return texture(inputTexture, clamp(p, 0.0, 1.0)).rgb;
 }
 

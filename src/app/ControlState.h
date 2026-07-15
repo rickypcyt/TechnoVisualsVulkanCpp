@@ -27,7 +27,8 @@ void load(
     int&                selectedVideoAsset3,
     std::string&        videoSourcePath,
     std::string&        videoSourcePath2,
-    std::string&        videoSourcePath3
+    std::string&        videoSourcePath3,
+    std::string&        videoAssetsRoot
 );
 
 void save(
@@ -42,7 +43,8 @@ void save(
     int                       selectedVideoAsset3,
     const std::string&        videoSourcePath,
     const std::string&        videoSourcePath2,
-    const std::string&        videoSourcePath3
+    const std::string&        videoSourcePath3,
+    const std::string&        videoAssetsRoot
 );
 
 } // namespace ControlState

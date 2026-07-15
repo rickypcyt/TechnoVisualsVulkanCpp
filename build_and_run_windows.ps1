@@ -118,6 +118,89 @@ foreach ($shader in $shaders) {
     }
 }
 
+# ── Compile post-effect compute shaders ──────────────────────────────────────
+Write-Host "[build_and_run_windows] Compiling post-effect compute shaders..." -ForegroundColor Cyan
+$postEffectDir = "$shadersDir\post_effects"
+if (Test-Path $postEffectDir) {
+    # Check if any shared include file changed — if so, force recompile all
+    $forcePeRecompile = $false
+    $includeFiles = Get-ChildItem -Path "$shadersDir\*.glsl" -ErrorAction SilentlyContinue
+    foreach ($inc in $includeFiles) {
+        $incSpvTime = [datetime]::MaxValue
+        $anySpv = Get-ChildItem -Path $postEffectDir -Filter "*.comp.spv" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($anySpv) { $incSpvTime = $anySpv.LastWriteTime }
+        if ($inc.LastWriteTime -gt $incSpvTime) { $forcePeRecompile = $true; break }
+    }
+    # Also check includes inside post_effects dir
+    $peIncludes = Get-ChildItem -Path "$postEffectDir\*.glsl" -ErrorAction SilentlyContinue
+    foreach ($inc in $peIncludes) {
+        $incSpvTime = [datetime]::MaxValue
+        $anySpv = Get-ChildItem -Path $postEffectDir -Filter "*.comp.spv" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($anySpv) { $incSpvTime = $anySpv.LastWriteTime }
+        if ($inc.LastWriteTime -gt $incSpvTime) { $forcePeRecompile = $true; break }
+    }
+
+    # Known-broken procedural shaders that always fail to compile — skip them
+    # to avoid wasting time on every build. Remove from this list once fixed.
+    $brokenProcedural = @(
+        "procedural_breathing.comp",
+        "procedural_cylinder_repeat.comp",
+        "procedural_eiyeron.comp",
+        "procedural_flopine.comp",
+        "procedural_flopine2.comp",
+        "procedural_kaleidoscope.comp",
+        "procedural_pouet.comp",
+        "procedural_power_particle.comp",
+        "procedural_shadertoy_bridge.comp",
+        "procedural_head.comp",
+        "procedural_header.comp",
+        "procedural_helpers.comp",
+        "procedural_message.comp"
+    )
+    # Also skip all procedural_pack* shaders (known to have compile errors)
+    $brokenProceduralPattern = "procedural_pack"
+
+    $compShaders = Get-ChildItem -Path $postEffectDir -Filter "*.comp" -ErrorAction SilentlyContinue
+    $peOk = 0
+    $peSkip = 0
+    foreach ($comp in $compShaders) {
+        # Skip known-broken shaders entirely
+        if ($brokenProcedural -contains $comp.Name) {
+            $peSkip++
+            continue
+        }
+        if ($comp.Name.StartsWith($brokenProceduralPattern)) {
+            $peSkip++
+            continue
+        }
+
+        $spvOut = $comp.FullName + ".spv"
+        $needsCompile = $forcePeRecompile
+        if (-not $needsCompile) {
+            if (-not (Test-Path $spvOut)) {
+                $needsCompile = $true
+            } elseif ($comp.LastWriteTime -gt (Get-Item $spvOut).LastWriteTime) {
+                $needsCompile = $true
+            }
+        }
+        if ($needsCompile) {
+            $tmpOut = [System.IO.Path]::GetTempFileName()
+            $tmpErr = [System.IO.Path]::GetTempFileName()
+            $proc = Start-Process -FilePath $glslcPath -ArgumentList @("-I", $shadersDir, "-I", $postEffectDir, $comp.FullName, "-o", $spvOut) -NoNewWindow -PassThru -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr -Wait
+            Remove-Item $tmpOut, $tmpErr -Force -ErrorAction SilentlyContinue
+            if ($proc.ExitCode -eq 0) {
+                Write-Host "  [OK] $($comp.Name)" -ForegroundColor Green
+                $peOk++
+            } else {
+                Write-Host "  [SKIP] $($comp.Name) (compile errors)" -ForegroundColor Yellow
+                if (Test-Path $spvOut) { Remove-Item $spvOut -Force }
+                $peSkip++
+            }
+        }
+    }
+    Write-Host "  Post-effects: $peOk compiled, $peSkip skipped" -ForegroundColor Cyan
+}
+
 Write-Host "[build_and_run_windows] Configuring CMake..." -ForegroundColor Cyan
 
 $vcpkgDir = "$scriptDir\vcpkg"

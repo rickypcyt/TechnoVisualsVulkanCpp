@@ -67,6 +67,9 @@ public:
         size_t uniformBufferSize
     );
 
+    // Check if pipeline has been initialized (descriptor pool allocated)
+    bool isInitialized() const { return descriptorPool != VK_NULL_HANDLE; }
+
     // Cleanup all resources
     void cleanup();
 

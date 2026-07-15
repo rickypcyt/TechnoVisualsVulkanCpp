@@ -98,7 +98,11 @@ FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
 
     // 1. Wait for previous use of this frame slot
     //    (frees imageAvailableSemaphore for reuse)
-    vkWaitForFences(m_device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+    VkResult fenceResult = vkWaitForFences(m_device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+    if (fenceResult == VK_ERROR_DEVICE_LOST) {
+        result = fenceResult;
+        return nullptr;
+    }
 
     // 2. Acquire next swapchain image
     result = vkAcquireNextImageKHR(
@@ -110,7 +114,7 @@ FrameContext* FrameSystem::beginFrame(VkSwapchainKHR swapchain,
         &imageIndex
     );
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_ERROR_SURFACE_LOST_KHR || result == VK_NOT_READY) {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_ERROR_SURFACE_LOST_KHR || result == VK_NOT_READY || result == VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT || result == VK_ERROR_DEVICE_LOST) {
         return nullptr;
     }
 

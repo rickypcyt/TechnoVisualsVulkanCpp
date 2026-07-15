@@ -24,6 +24,9 @@
 #include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+#ifdef _WIN32
+#include <SDL2/SDL_syswm.h>
+#endif
 #include "imgui.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,13 +40,16 @@ glm::ivec2 Application::getScreenSize() const {
 
 // Sincroniza todos los descriptor sets con el estado actual de las texturas.
 void Application::updateAllDescriptorSets() {
-    // Descriptor sets principales (multipass)
+    const bool vid1Ready = videoTexture.isReady();
+    const bool outVid1Ready = outputVideoTexture.isReady();
+
+    // Descriptor sets principales (multipass) — only bind image if texture is ready
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         descriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             uniformBufferManager.getBuffers()[i],
-            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+            vid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()) : nullptr,
+            vid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()) : nullptr
         );
     }
     // Output descriptor sets
@@ -51,39 +57,43 @@ void Application::updateAllDescriptorSets() {
         outputDescriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             outputUniformBufferManager.getBuffers()[i],
-            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()),
-            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo())
+            outVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()) : nullptr,
+            outVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo()) : nullptr
         );
     }
     updateFullscreenDescriptorSets();
 
-    // Multipass pipeline usa las tres fuentes de vídeo
-    const bool has2 = videoTexture2.isReady();
-    const bool has3 = videoTexture3.isReady();
-    multiPassPipeline.updateDescriptorSets(
-        uniformBufferManager.getBuffers(),
-        videoTexture.getImageView(),
-        videoTexture.getPrevImageView(),
-        videoTexture.getSampler(),
-        videoTexture.getSampler(),
-        has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-        has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
-        has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
-        has3 ? videoTexture3.getSampler()   : videoTexture.getSampler()
-    );
-    const bool outputHas2 = outputVideoTexture2.isReady();
-    const bool outputHas3 = outputVideoTexture3.isReady();
-    outputMultiPassPipeline.updateDescriptorSets(
-        outputUniformBufferManager.getBuffers(),
-        outputVideoTexture.getImageView(),
-        outputVideoTexture.getPrevImageView(),
-        outputVideoTexture.getSampler(),
-        outputVideoTexture.getSampler(),
-        outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
-        outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
-        outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
-        outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler()
-    );
+    // Multipass pipeline — skip if texture not ready OR pipeline not yet initialized
+    if (vid1Ready && multiPassPipeline.isInitialized()) {
+        const bool has2 = videoTexture2.isReady();
+        const bool has3 = videoTexture3.isReady();
+        multiPassPipeline.updateDescriptorSets(
+            uniformBufferManager.getBuffers(),
+            videoTexture.getImageView(),
+            videoTexture.getPrevImageView(),
+            videoTexture.getSampler(),
+            videoTexture.getSampler(),
+            has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
+            has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
+            has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
+            has3 ? videoTexture3.getSampler()   : videoTexture.getSampler()
+        );
+    }
+    if (outVid1Ready && outputMultiPassPipeline.isInitialized()) {
+        const bool outputHas2 = outputVideoTexture2.isReady();
+        const bool outputHas3 = outputVideoTexture3.isReady();
+        outputMultiPassPipeline.updateDescriptorSets(
+            outputUniformBufferManager.getBuffers(),
+            outputVideoTexture.getImageView(),
+            outputVideoTexture.getPrevImageView(),
+            outputVideoTexture.getSampler(),
+            outputVideoTexture.getSampler(),
+            outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
+            outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
+            outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
+            outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler()
+        );
+    }
 }
 
 // Reconstruye GPU texture + CPU pool para un slot ya inicializado.
@@ -396,7 +406,8 @@ void Application::saveState() const {
         selectedVideoAsset3,
         videoSourcePath,
         videoSourcePath2,
-        videoSourcePath3
+        videoSourcePath3,
+        videoAssetsRoot
     );
     saveVideoSpeeds();
 }
@@ -557,12 +568,13 @@ Application::~Application() {
 
 void Application::run() {
     window.initSDL();
-    window.createMainWindow("[PREVIEW] Vulkan", 1280, 720);
-    SDL_SetWindowPosition(window.getMainWindow(), 50, 50);
-    window.createOutputWindow("[OUTPUT] Final", 1280, 720);
-    SDL_SetWindowPosition(window.getOutputWindow(), 50, 820);
-    window.createUiWindow("[CONTROLS] UI", 420, 720);
-    SDL_SetWindowPosition(window.getUiWindow(), 1350, 50);
+    const float s = window.getDpiScale();
+    window.createMainWindow("[PREVIEW] Vulkan", (int)(1280 * s), (int)(720 * s));
+    SDL_SetWindowPosition(window.getMainWindow(), (int)(50 * s), (int)(50 * s));
+    window.createOutputWindow("[OUTPUT] Final", (int)(1280 * s), (int)(720 * s));
+    SDL_SetWindowPosition(window.getOutputWindow(), (int)(50 * s), (int)(820 * s));
+    window.createUiWindow("[CONTROLS] UI", (int)(420 * s), (int)(720 * s));
+    SDL_SetWindowPosition(window.getUiWindow(), (int)(1350 * s), (int)(50 * s));
 
     initVulkan();
     initPresenters();
@@ -592,7 +604,8 @@ void Application::run() {
         selectedVideoAsset3,
         videoSourcePath,
         videoSourcePath2,
-        videoSourcePath3
+        videoSourcePath3,
+        videoAssetsRoot
     );
 
     // Sync loaded preview state to output so the final renderer starts
@@ -610,18 +623,20 @@ void Application::run() {
 
     descriptorSetManager.createSets(vulkanContext.getDevice());
     outputDescriptorSetManager.createSets(vulkanContext.getDevice());
+    const bool initVid1Ready = videoTexture.isReady();
+    const bool initOutVid1Ready = outputVideoTexture.isReady();
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         descriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             uniformBufferManager.getBuffers()[i],
-            const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()),
-            const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo())
+            initVid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()) : nullptr,
+            initVid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()) : nullptr
         );
         outputDescriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             outputUniformBufferManager.getBuffers()[i],
-            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()),
-            const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo())
+            initOutVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()) : nullptr,
+            initOutVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo()) : nullptr
         );
     }
 
@@ -1364,7 +1379,7 @@ void Application::initOutputVideo() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void Application::initUI() {
-    if (!uiSystem.initialize(window.getUiWindow(), window.getUiRenderer()))
+    if (!uiSystem.initialize(window.getUiWindow(), window.getUiRenderer(), window.getDpiScale()))
         throw std::runtime_error("failed to initialize UI system");
 }
 
@@ -1653,17 +1668,15 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
     // Recreate preview swapchain with actual window size
     previewPresenter.recreate(width, height, renderPass);
 
-    updateAllDescriptorSets();
-
-    if (videoSubsystemInitialized) {
+    if (videoSubsystemInitialized && multiPassPipeline.isInitialized()) {
         multiPassPipeline.recreate(previewPresenter.getExtent());
     }
+
+    updateAllDescriptorSets();
 
     previewFrameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
                             static_cast<uint32_t>(previewPresenter.getImageCount()));
     previewFrameSystem.resetCurrentFrame();
-    previewFrameSystem.recreateSemaphores();
-    previewFrameSystem.waitForAllFences();
 }
 
 void Application::handleOutputWindowResize(uint32_t width, uint32_t height) {
@@ -1676,24 +1689,29 @@ void Application::handleOutputWindowResize(uint32_t width, uint32_t height) {
     }
     if (width == 0 || height == 0) return;
 
-    std::cout << "[Resize] Output window: " << width << "x" << height << "\n";
+    std::cout << "[Resize] Output window requested: " << width << "x" << height << "\n";
     vkDeviceWaitIdle(vulkanContext.getDevice());
     outputFrameSystem.cleanup();
 
     // Recreate output swapchain with actual window size
     outputPresenter.recreate(width, height, renderPass);
+    std::cout << "[Resize] Output swapchain extent: " << outputPresenter.getExtent().width
+              << "x" << outputPresenter.getExtent().height << "\n";
+
+    if (outputVideoSubsystemInitialized && outputMultiPassPipeline.isInitialized()) {
+        outputMultiPassPipeline.recreate(outputPresenter.getExtent());
+        std::cout << "[Resize] Output multipass pipeline recreated\n";
+    } else {
+        std::cout << "[Resize] Output multipass pipeline NOT recreated (vidInit="
+                  << outputVideoSubsystemInitialized << " pipelineInit="
+                  << outputMultiPassPipeline.isInitialized() << ")\n";
+    }
 
     updateAllDescriptorSets();
-
-    if (outputVideoSubsystemInitialized) {
-        outputMultiPassPipeline.recreate(outputPresenter.getExtent());
-    }
 
     outputFrameSystem.init(vulkanContext.getDevice(), MAX_FRAMES_IN_FLIGHT,
                            static_cast<uint32_t>(outputPresenter.getImageCount()));
     outputFrameSystem.resetCurrentFrame();
-    outputFrameSystem.recreateSemaphores();
-    outputFrameSystem.waitForAllFences();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1710,15 +1728,101 @@ void Application::processPendingResizes() {
     // forces resizeDebounceTime to now).
     if (inModalLoop) return;
 
+    const auto now = std::chrono::steady_clock::now();
+    uint32_t drawableWidth = 0;
+    uint32_t drawableHeight = 0;
+    window.getDrawableSize(drawableWidth, drawableHeight);
+    if (drawableWidth > 0 && drawableHeight > 0 &&
+        (drawableWidth != previewPresenter.getExtent().width ||
+         drawableHeight != previewPresenter.getExtent().height)) {
+        pendingResizeW = drawableWidth;
+        pendingResizeH = drawableHeight;
+        resizePending = true;
+        resizeDebounceTime = std::min(resizeDebounceTime, now);
+    }
+
+    int outputDrawableWidth = 0;
+    int outputDrawableHeight = 0;
+    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &outputDrawableWidth, &outputDrawableHeight);
+    if (outputDrawableWidth > 0 && outputDrawableHeight > 0 &&
+        (static_cast<uint32_t>(outputDrawableWidth) != outputPresenter.getExtent().width ||
+         static_cast<uint32_t>(outputDrawableHeight) != outputPresenter.getExtent().height)) {
+        pendingOutputResizeW = static_cast<uint32_t>(outputDrawableWidth);
+        pendingOutputResizeH = static_cast<uint32_t>(outputDrawableHeight);
+        outputResizePending = true;
+        resizeDebounceTime = std::min(resizeDebounceTime, now);
+    }
+
     if (resizePending || outputResizePending) {
         if (std::chrono::steady_clock::now() >= resizeDebounceTime) {
             if (resizePending) {
-                resizePending = false;
-                handleWindowResize(pendingResizeW, pendingResizeH);
+                if (pendingResizeW == 0 || pendingResizeH == 0) {
+                    // Fullscreen and borderless transitions are asynchronous on SDL/Win32.
+                    // Always sample the final drawable size at processing time;
+                    // dimensions captured when the toggle was pressed can be stale.
+                    uint32_t w = 0, h = 0;
+                    window.getDrawableSize(w, h);
+                    if (w == 0 || h == 0) {
+                        w = pendingResizeW;
+                        h = pendingResizeH;
+                    }
+                    if (w > 0 && h > 0) {
+                        resizePending = false;
+                        handleWindowResize(w, h);
+                    } else {
+                        resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                    }
+                } else {
+                    // Re-query even when an event supplied dimensions: a fullscreen
+                    // transition may emit SIZE_CHANGED before the final drawable size.
+                    uint32_t w = 0, h = 0;
+                    window.getDrawableSize(w, h);
+                    if (w == 0 || h == 0) {
+                        w = pendingResizeW;
+                        h = pendingResizeH;
+                    }
+                    if (w > 0 && h > 0) {
+                        resizePending = false;
+                        handleWindowResize(w, h);
+                    } else {
+                        resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                    }
+                }
             }
             if (outputResizePending) {
-                outputResizePending = false;
-                handleOutputWindowResize(pendingOutputResizeW, pendingOutputResizeH);
+                if (pendingOutputResizeW == 0 || pendingOutputResizeH == 0) {
+                    // Fullscreen and borderless transitions are asynchronous on SDL/Win32.
+                    // Always sample the final drawable size at processing time.
+                    int ow = 0, oh = 0;
+                    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
+                    if (ow == 0 || oh == 0) {
+                        ow = static_cast<int>(pendingOutputResizeW);
+                        oh = static_cast<int>(pendingOutputResizeH);
+                    }
+                    std::cout << "[Resize] Output drawable size query: " << ow << "x" << oh << "\n";
+                    if (ow > 0 && oh > 0) {
+                        outputResizePending = false;
+                        handleOutputWindowResize(static_cast<uint32_t>(ow), static_cast<uint32_t>(oh));
+                    } else {
+                        resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                    }
+                } else {
+                    // Re-query the drawable size because SIZE_CHANGED can precede
+                    // the final size reported after a fullscreen transition.
+                    int ow = 0, oh = 0;
+                    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
+                    if (ow == 0 || oh == 0) {
+                        ow = static_cast<int>(pendingOutputResizeW);
+                        oh = static_cast<int>(pendingOutputResizeH);
+                    }
+                    std::cout << "[Resize] Output drawable size: " << ow << "x" << oh << "\n";
+                    if (ow > 0 && oh > 0) {
+                        outputResizePending = false;
+                        handleOutputWindowResize(static_cast<uint32_t>(ow), static_cast<uint32_t>(oh));
+                    } else {
+                        resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                    }
+                }
             }
         }
     }
@@ -1861,7 +1965,8 @@ void Application::renderOneFrame() {
                     transitionDuration, transitionDuration2, transitionDuration3,
                     allowDimensionChangeRecreation, controlsDirty,
                     rng, diag, callbacks, midiSystem, oscSystem, audioSystem,
-                    videoSourcePath, videoSourcePath2, videoSourcePath3);
+                    videoSourcePath, videoSourcePath2, videoSourcePath3,
+                    videoAssetsRoot);
 
     // ── Render preview and output independently ──────────────────────────
     tryRenderPreview();
@@ -1874,6 +1979,7 @@ void Application::renderOneFrame() {
 
 bool Application::tryRenderPreview() {
     if (previewWindowMinimized ||
+        (inModalLoop && modalPreviewResize) ||
         previewPresenter.getExtent().width == 0 || previewPresenter.getExtent().height == 0)
         return false;
 
@@ -1885,7 +1991,8 @@ bool Application::tryRenderPreview() {
     if (!previewFrame) {
         if (previewResult == VK_ERROR_OUT_OF_DATE_KHR ||
             previewResult == VK_ERROR_SURFACE_LOST_KHR ||
-            previewResult == VK_NOT_READY)
+            previewResult == VK_NOT_READY ||
+            previewResult == VK_ERROR_DEVICE_LOST)
         {
             uint32_t w, h;
             window.getDrawableSize(w, h);
@@ -1938,8 +2045,17 @@ bool Application::tryRenderPreview() {
     submit.signalSemaphoreCount = 1;
     submit.pSignalSemaphores    = &previewRenderFinished;
 
-    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS)
-        throw std::runtime_error("failed to submit preview command buffer");
+    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS) {
+        std::cerr << "[tryRenderPreview] vkQueueSubmit failed — device may be lost\n";
+        // Fence was reset in beginFrame but never signaled because submit failed.
+        // Submit an empty queue operation to signal the fence so the next
+        // beginFrame's vkWaitForFences doesn't block forever.
+        VkSubmitInfo emptySubmit{};
+        emptySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &emptySubmit, previewFrame->inFlightFence);
+        previewFrameSystem.endFrame();
+        return false;
+    }
 
     // Present
     VkSwapchainKHR previewSc = previewPresenter.getSwapchain();
@@ -1974,6 +2090,7 @@ bool Application::tryRenderPreview() {
 
 bool Application::tryRenderOutput() {
     if (outputWindowHidden || outputWindowMinimized ||
+        (inModalLoop && modalOutputResize) ||
         outputPresenter.getExtent().width == 0 || outputPresenter.getExtent().height == 0)
         return false;
 
@@ -1985,7 +2102,8 @@ bool Application::tryRenderOutput() {
     if (!outputFrame) {
         if (outputResult == VK_ERROR_OUT_OF_DATE_KHR ||
             outputResult == VK_ERROR_SURFACE_LOST_KHR ||
-            outputResult == VK_NOT_READY)
+            outputResult == VK_NOT_READY ||
+            outputResult == VK_ERROR_DEVICE_LOST)
         {
             int ow = 0, oh = 0;
             SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
@@ -2032,8 +2150,17 @@ bool Application::tryRenderOutput() {
     submit.signalSemaphoreCount = 1;
     submit.pSignalSemaphores    = &outputRenderFinished;
 
-    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, outputFrame->inFlightFence) != VK_SUCCESS)
-        throw std::runtime_error("failed to submit output command buffer");
+    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, outputFrame->inFlightFence) != VK_SUCCESS) {
+        std::cerr << "[tryRenderOutput] vkQueueSubmit failed — device may be lost\n";
+        // Fence was reset in beginFrame but never signaled because submit failed.
+        // Submit an empty queue operation to signal the fence so the next
+        // beginFrame's vkWaitForFences doesn't block forever.
+        VkSubmitInfo emptySubmit{};
+        emptySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &emptySubmit, outputFrame->inFlightFence);
+        outputFrameSystem.endFrame();
+        return false;
+    }
 
     // Present
     VkSwapchainKHR outputSc = outputPresenter.getSwapchain();
@@ -2066,6 +2193,18 @@ bool Application::tryRenderOutput() {
 // Main loop
 // ─────────────────────────────────────────────────────────────────────────────
 
+#ifdef _WIN32
+void CALLBACK Application::modalTimerProc(HWND hwnd, UINT, UINT_PTR, DWORD) {
+    auto* app = reinterpret_cast<Application*>(GetPropW(hwnd, L"TechnoVisualsVulkanApp"));
+    if (!app || !app->inModalLoop || app->renderingInProgress) return;
+
+    try {
+        app->renderOneFrame();
+    } catch (...) {
+    }
+}
+#endif
+
 void Application::mainLoop() {
 
 #ifdef _WIN32
@@ -2080,22 +2219,43 @@ void Application::mainLoop() {
         // WM_ENTERSIZEMOVE = 0x0231, WM_EXITSIZEMOVE = 0x0232
         if (message == 0x0231) {
             app->inModalLoop = true;
+
+            SDL_SysWMinfo wmInfo{};
+            SDL_VERSION(&wmInfo.version);
+            if (SDL_GetWindowWMInfo(app->window.getMainWindow(), &wmInfo) == SDL_TRUE &&
+                wmInfo.info.win.window == hWnd) {
+                app->modalPreviewResize = true;
+                app->modalOutputResize = false;
+            } else if (SDL_GetWindowWMInfo(app->window.getOutputWindow(), &wmInfo) == SDL_TRUE &&
+                       wmInfo.info.win.window == hWnd) {
+                app->modalPreviewResize = false;
+                app->modalOutputResize = true;
+            } else {
+                app->modalPreviewResize = false;
+                app->modalOutputResize = false;
+            }
+
             // Install a high-frequency timer so WM_TIMER messages keep flowing
             // through the hook during the modal loop, ensuring renderOneFrame()
             // is called even when DefWindowProc swallows mouse/keyboard messages.
-            SetTimer((HWND)hWnd, 1, 8, nullptr); // ~120fps timer
+            SetPropW((HWND)hWnd, L"TechnoVisualsVulkanApp", app);
+            SetTimer((HWND)hWnd, 1, 8, &Application::modalTimerProc); // ~120fps timer
         } else if (message == 0x0232) {
             app->inModalLoop = false;
+            app->modalPreviewResize = false;
+            app->modalOutputResize = false;
             KillTimer((HWND)hWnd, 1);
+            RemovePropW((HWND)hWnd, L"TechnoVisualsVulkanApp");
             // Force immediate resize processing on next renderOneFrame.
             // processPendingResizes() was skipped during the modal loop,
             // so the swapchain needs to be recreated now that the drag ended.
             app->resizeDebounceTime = std::chrono::steady_clock::time_point::min();
         }
 
-        // Render on any message during modal loop (not just WM_TIMER)
-        // The re-entrancy guard prevents double rendering
-        if (app->inModalLoop && !app->renderingInProgress) {
+        // Render only from the timer during the modal loop. Rendering from
+        // every resize/mouse message can recursively enter Vulkan while the
+        // window is still being resized and stall the other windows.
+        if (app->inModalLoop && message == 0x0113 && !app->renderingInProgress) {
             try {
                 app->renderOneFrame();
             } catch (...) {
@@ -2123,6 +2283,7 @@ void Application::mainLoop() {
                     continue;
                 }
                 if (event.key.keysym.sym == SDLK_F11) {
+                    int postW = 0, postH = 0;
                     if (!outputWindowVisible) {
                         SDL_ShowWindow(window.getOutputWindow());
                         outputWindowVisible = true;
@@ -2131,28 +2292,53 @@ void Application::mainLoop() {
                     } else {
                         uint32_t flags = SDL_GetWindowFlags(window.getOutputWindow());
                         bool isFs = (flags & SDL_WINDOW_FULLSCREEN);
-                        SDL_SetWindowFullscreen(window.getOutputWindow(), isFs ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-                        std::cout << "[Output] Fullscreen: " << (!isFs ? "ON" : "OFF") << std::endl;
+                        int preW = 0, preH = 0;
+                        SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &preW, &preH);
+                        std::cout << "[F11] Pre-toggle drawable: " << preW << "x" << preH
+                                  << " flags=0x" << std::hex << flags << std::dec
+                                  << " isFs=" << isFs << "\n";
+                        if (!isFs) {
+                            SDL_SetWindowBordered(window.getOutputWindow(), SDL_FALSE);
+                            SDL_SetWindowFullscreen(window.getOutputWindow(), SDL_WINDOW_FULLSCREEN_DESKTOP);
+                        } else {
+                            SDL_SetWindowFullscreen(window.getOutputWindow(), 0);
+                            SDL_SetWindowBordered(window.getOutputWindow(), SDL_TRUE);
+                        }
+                        SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &postW, &postH);
+                        std::cout << "[F11] Post-toggle drawable: " << postW << "x" << postH
+                                  << " Fullscreen: " << (!isFs ? "ON" : "OFF") << "\n";
                     }
-                    // Let the generic SDL_WINDOWEVENT_SIZE_CHANGED handler deal with this;
-                    // use a longer debounce because Win32 fullscreen transition is async.
+                    // Use the drawable size we just queried (post-toggle) as the
+                    // pending resize dims.  The SIZE_CHANGED event may still fire
+                    // and update them, but this way we have a valid size even if
+                    // the user presses F11 again quickly.
                     outputResizePending = true;
+                    // The immediate query can still return the pre-toggle size.
+                    // Force processPendingResizes() to query the final size later.
                     pendingOutputResizeW = 0;
                     pendingOutputResizeH = 0;
-                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(150);
+                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
                     continue;
                 }
                 if (event.key.keysym.sym == SDLK_F12) {
                     uint32_t flags = SDL_GetWindowFlags(window.getMainWindow());
                     bool isFs = (flags & SDL_WINDOW_FULLSCREEN);
-                    SDL_SetWindowFullscreen(window.getMainWindow(), isFs ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    if (!isFs) {
+                        SDL_SetWindowBordered(window.getMainWindow(), SDL_FALSE);
+                        SDL_SetWindowFullscreen(window.getMainWindow(), SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    } else {
+                        SDL_SetWindowFullscreen(window.getMainWindow(), 0);
+                        SDL_SetWindowBordered(window.getMainWindow(), SDL_TRUE);
+                    }
                     std::cout << "[Preview] Fullscreen: " << (!isFs ? "ON" : "OFF") << std::endl;
-                    // Let the generic SDL_WINDOWEVENT_SIZE_CHANGED handler deal with this;
-                    // use a longer debounce because Win32 fullscreen transition is async.
+                    int preW2 = 0, preH2 = 0;
+                    SDL_Vulkan_GetDrawableSize(window.getMainWindow(), &preW2, &preH2);
                     resizePending = true;
+                    // The immediate query can still return the pre-toggle size.
+                    // Force processPendingResizes() to query the final size later.
                     pendingResizeW = 0;
                     pendingResizeH = 0;
-                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(150);
+                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
                     continue;
                 }
                 if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_KP_1) {
@@ -2316,15 +2502,14 @@ void Application::mainLoop() {
                     (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
                 {
                     window.resetResizeFlag();
-                    // Don't overwrite pending dimensions if fullscreen toggle
-                    // set them to 0 (meaning: query at resize time, when the
-                    // async Win32 transition has finished).
-                    if (pendingResizeW == 0 && pendingResizeH == 0) {
-                        uint32_t w, h;
-                        window.getDrawableSize(w, h);
-                        pendingResizeW = w;
-                        pendingResizeH = h;
-                    }
+                    // Always query fresh drawable size so we get the FINAL
+                    // dimensions after async Win32 fullscreen transitions.
+                    // (Previously we skipped this when pendingResizeW was 0,
+                    //  which meant F12's 0-values got stuck at the old size.)
+                    uint32_t w, h;
+                    window.getDrawableSize(w, h);
+                    pendingResizeW = w;
+                    pendingResizeH = h;
                     resizePending = true;
                     // Don't reduce a longer debounce set by fullscreen toggle (F12)
                     auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
@@ -2334,15 +2519,13 @@ void Application::mainLoop() {
                 if (src == window.getOutputWindow() && initializationComplete &&
                     (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
                 {
-                    // Don't overwrite pending dimensions if fullscreen toggle
-                    // set them to 0 (meaning: query at resize time, when the
-                    // async Win32 transition has finished).
-                    if (pendingOutputResizeW == 0 && pendingOutputResizeH == 0) {
-                        int ow = 0, oh = 0;
-                        SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
-                        pendingOutputResizeW = static_cast<uint32_t>(ow > 0 ? ow : 0);
-                        pendingOutputResizeH = static_cast<uint32_t>(oh > 0 ? oh : 0);
-                    }
+                    // Always query fresh drawable size so we get the FINAL
+                    // dimensions after async Win32 fullscreen transitions.
+                    int ow = 0, oh = 0;
+                    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
+                    std::cout << "[Event] Output SIZE_CHANGED: " << ow << "x" << oh << "\n";
+                    pendingOutputResizeW = static_cast<uint32_t>(ow > 0 ? ow : 0);
+                    pendingOutputResizeH = static_cast<uint32_t>(oh > 0 ? oh : 0);
                     outputResizePending = true;
                     // Don't reduce a longer debounce set by fullscreen toggle (F11)
                     auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
@@ -2356,7 +2539,29 @@ void Application::mainLoop() {
         processPendingResizes();
 
         // ── Render one frame ──────────────────────────────────────────────────
-        renderOneFrame();
+        try {
+            renderOneFrame();
+            consecutiveRenderErrors = 0;
+        } catch (const std::exception& e) {
+            std::cerr << "[MainLoop] Exception during renderOneFrame: " << e.what() << "\n";
+            consecutiveRenderErrors++;
+            if (consecutiveRenderErrors >= 3) {
+                std::cerr << "[MainLoop] Too many consecutive render errors, exiting\n";
+                break;
+            }
+            // Force resize on next iteration to recover from swapchain/device errors
+            if (previewPresenter.getExtent().width > 0) {
+                resizePending = true;
+                resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+            }
+        } catch (...) {
+            std::cerr << "[MainLoop] Unknown exception during renderOneFrame\n";
+            consecutiveRenderErrors++;
+            if (consecutiveRenderErrors >= 3) {
+                std::cerr << "[MainLoop] Too many consecutive render errors, exiting\n";
+                break;
+            }
+        }
 
         // ── Frame rate limiter (adaptive) ─────────────────────────────────
         constexpr float targetFrameTime = 1.0f / 60.0f;
@@ -2554,6 +2759,44 @@ UICallbacks Application::buildUICallbacks() {
     };
     cb.onSetVideoSpeed = [this](const std::string& path, float speed) {
         videoSpeedCache[path] = speed;
+    };
+
+    cb.onVideoAssetsRootChanged = [this](const std::string& newPath) {
+        if (newPath.empty() || !std::filesystem::exists(newPath) || !std::filesystem::is_directory(newPath)) {
+            std::cerr << "[Application] onVideoAssetsRootChanged: invalid path '" << newPath << "'\n";
+            return;
+        }
+        videoAssetsRoot = newPath;
+        std::cout << "[Application] Video assets root changed to: " << videoAssetsRoot << "\n";
+
+        // Re-scan registry with new root
+        videoRegistry.scan(videoAssetsRoot);
+
+        // Reset folder selections so they fall back to "All Folders"
+        visualControls.playback.selectedVideoFolder.clear();
+        visualControls.playback.selectedVideo2Folder.clear();
+        visualControls.playback.selectedVideo3Folder.clear();
+
+        // Clear saved paths so resolvePath picks fresh defaults from the new root
+        videoSourcePath.clear();
+        videoSourcePath2.clear();
+        videoSourcePath3.clear();
+        selectedVideoAsset = 0;
+        selectedVideoAsset2 = 0;
+        selectedVideoAsset3 = 0;
+
+        // Reinitialize video players from the new root
+        initVideo();
+        initOutputVideo();
+
+        // If MultiPassPipeline wasn't initialized (e.g. app started with no video),
+        // initialize it now that video textures are available.
+        if (videoSubsystemInitialized && !multiPassPipeline.isInitialized()) {
+            initMultiPassPipeline();
+        }
+
+        updateAllDescriptorSets();
+        saveState();
     };
 
     cb.onListPresets = [this]() { return listPresets(); };
@@ -3037,7 +3280,7 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
         vkCmdSetScissor(cmd, 0, 1, &sc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
         vkCmdEndRenderPass(cmd);
-    } else if (videoSubsystemInitialized) {
+    } else if (videoSubsystemInitialized && multiPassPipeline.isInitialized()) {
         multiPassPipeline.execute(
             cmd, previewFrame.frameIndex,
             descriptorSetManager.getSet(previewFrame.frameIndex),
@@ -3089,7 +3332,7 @@ void Application::recordOutputCommandBuffer(VkCommandBuffer cmd,
     if (outputVideoSubsystemInitialized3 && outputVideoTexture3.isReady())
         outputVideoTexture3.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
 
-    if (outputVideoSubsystemInitialized) {
+    if (outputVideoSubsystemInitialized && outputMultiPassPipeline.isInitialized()) {
         outputMultiPassPipeline.execute(
             cmd, outputFrame.frameIndex,
             outputDescriptorSetManager.getSet(outputFrame.frameIndex),

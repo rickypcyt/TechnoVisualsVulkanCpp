@@ -101,6 +101,9 @@ struct UICallbacks {
     std::function<float(const std::string&)> onGetVideoSpeed;
     std::function<void(const std::string&, float)> onSetVideoSpeed;
 
+    // Pide cambiar el directorio raiz de videos
+    std::function<void(const std::string& newPath)> onVideoAssetsRootChanged;
+
     // Presets
     std::function<std::vector<std::string>()> onListPresets;
     std::function<bool(const std::string&)> onSavePreset;
@@ -123,7 +126,7 @@ public:
     UISystem& operator=(const UISystem&) = delete;
 
     // Inicializa ImGui sobre una ventana SDL + renderer SDL
-    bool initialize(SDL_Window* window, SDL_Renderer* renderer);
+    bool initialize(SDL_Window* window, SDL_Renderer* renderer, float dpiScale = 1.0f);
 
     void shutdown();
 
@@ -161,7 +164,8 @@ public:
         AudioSystem&          audioSystem,
         const std::string&    video1Path,
         const std::string&    video2Path,
-        const std::string&    video3Path
+        const std::string&    video3Path,
+        const std::string&    videoAssetsRoot
     );
 
     void forcePreviewShuffle(int slotIndex);
@@ -294,7 +298,8 @@ private:
         AudioSystem&          audioSystem,
         const std::string&    video1Path,
         const std::string&    video2Path,
-        const std::string&    video3Path
+        const std::string&    video3Path,
+        const std::string&    videoAssetsRoot
     );
     
     // Content functions for tabs (extracted from window functions)
@@ -341,7 +346,8 @@ private:
         bool&                 allowDimensionChangeRecreation,
         bool&                 controlsDirty,
         const UIDiagnostics&  diag,
-        const UICallbacks&    callbacks
+        const UICallbacks&    callbacks,
+        const std::string&    videoAssetsRoot
     );
     
     void drawVJayExtraContent(
@@ -394,6 +400,7 @@ private:
     ImGuiContext* context  = nullptr;
     bool          initialized = false;
     bool          rendererPaused = false;
+    float         dpiScale = 1.0f;
 
     VideoPreviewSlot previewSlotVideo1;
     VideoPreviewSlot previewSlotVideo2;

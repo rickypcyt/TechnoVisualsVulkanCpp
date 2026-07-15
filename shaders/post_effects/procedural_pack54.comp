@@ -1,10 +1,10 @@
 #version 450
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(set = 0, binding = 0) uniform sampler2D inputImage;
-layout(set = 0, binding = 1, rgba16f) uniform image2D outputImage;
+layout(set = 1, binding = 0) uniform sampler2D inputImage;
+layout(set = 1, binding = 1, rgba8) uniform image2D outputImage;
 
-layout(set = 1, binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) uniform UniformBufferObject {
     float time;
     float tempo;
     float energy;
@@ -75,7 +75,7 @@ float getCellState(vec2 gridPos, vec2 gridSize, float time, int patternIndex) {
 float countSelectedNeighbors(vec2 gridPos, vec2 gridSize, float time, int patternIndex) {
     float total = 0.0;
     
-    int patterns[152]; // 19 patterns × 8 neighbors
+    int patterns[152]; // 19 patterns Ã— 8 neighbors
     
     patterns[0] = 0; patterns[1] = 1; patterns[2] = 1; patterns[3] = 1;
     patterns[4] = 1; patterns[5] = 1; patterns[6] = 1; patterns[7] = 1;

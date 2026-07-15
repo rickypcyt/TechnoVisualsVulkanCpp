@@ -149,7 +149,8 @@ void ControlState::load(
     int&                  selectedVideoAsset3,
     std::string&          videoSourcePath,
     std::string&          videoSourcePath2,
-    std::string&          videoSourcePath3)
+    std::string&          videoSourcePath3,
+    std::string&          videoAssetsRoot)
 {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -215,6 +216,7 @@ void ControlState::load(
     videoSourcePath     = readString(kv, "videoSourcePath",  videoSourcePath);
     videoSourcePath2    = readString(kv, "videoSourcePath2", videoSourcePath2);
     videoSourcePath3    = readString(kv, "videoSourcePath3", videoSourcePath3);
+    videoAssetsRoot     = readString(kv, "videoAssetsRoot", videoAssetsRoot);
 
     std::cout << "[ControlState::load] Loaded V1 idx=" << selectedVideoAsset
               << " path='" << videoSourcePath << "'\n";
@@ -246,7 +248,8 @@ void ControlState::save(
     int                       selectedVideoAsset3,
     const std::string&        videoSourcePath,
     const std::string&        videoSourcePath2,
-    const std::string&        videoSourcePath3)
+    const std::string&        videoSourcePath3,
+    const std::string&        videoAssetsRoot)
 {
     std::ofstream file(path);
     if (!file.is_open()) {
@@ -292,6 +295,7 @@ void ControlState::save(
     file << "videoSourcePath=" << videoSourcePath << "\n";
     file << "videoSourcePath2=" << videoSourcePath2 << "\n";
     file << "videoSourcePath3=" << videoSourcePath3 << "\n";
+    file << "videoAssetsRoot=" << videoAssetsRoot << "\n";
 
     std::cout << "[ControlState::save] Saved V1 idx=" << selectedVideoAsset
               << " path='" << videoSourcePath << "'\n";

@@ -3,6 +3,16 @@
 #include <stdexcept>
 #include <iostream>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
+
 Window::Window() = default;
 
 Window::~Window() {
@@ -10,10 +20,20 @@ Window::~Window() {
 }
 
 void Window::initSDL() {
+#ifdef _WIN32
+    ::SetProcessDPIAware();
+#endif
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         throw std::runtime_error(std::string("failed to initialize SDL: ") + SDL_GetError());
     }
     sdlInitialized = true;
+
+    float dpi = 96.0f;
+    if (SDL_GetDisplayDPI(0, &dpi, nullptr, nullptr) == 0 && dpi > 0.0f) {
+        dpiScale = dpi / 96.0f;
+        if (dpiScale < 1.0f) dpiScale = 1.0f;
+    }
+    std::cout << "[Window] DPI scale: " << dpiScale << std::endl;
 }
 
 void Window::createMainWindow(const std::string& title, int width, int height) {
@@ -23,7 +43,7 @@ void Window::createMainWindow(const std::string& title, int width, int height) {
         SDL_WINDOWPOS_CENTERED,
         width,
         height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
 
     if (!window) {
@@ -38,7 +58,7 @@ void Window::createUiWindow(const std::string& title, int width, int height) {
         SDL_WINDOWPOS_CENTERED,
         width,
         height,
-        SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
 
     if (!uiWindow) {
@@ -70,7 +90,7 @@ void Window::createOutputWindow(const std::string& title, int width, int height)
         SDL_WINDOWPOS_UNDEFINED,
         width,
         height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
 
     if (!outputWindow) {

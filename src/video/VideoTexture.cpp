@@ -423,7 +423,8 @@ void VideoTexture::initializeVideoImage(VkDevice device, VkCommandPool commandPo
 
     if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-        throw std::runtime_error("failed to submit command buffer for video image init");
+        std::cerr << "[VideoTexture] vkQueueSubmit failed for video image init — device may be in error state\n";
+        return;
     }
 
     vkQueueWaitIdle(graphicsQueue);

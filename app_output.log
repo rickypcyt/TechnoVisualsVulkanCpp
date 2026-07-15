@@ -1,0 +1,1280 @@
+[Window] DPI scale: 1.25
+[VulkanContext] Found 2 physical devices
+[VulkanContext]   [0] AMD Radeon(TM) Vega 8 Graphics (Integrated)
+[VulkanContext]   [1] NVIDIA GeForce GTX 1650 (Discrete)
+[VulkanContext] Device is discrete GPU
+[VulkanContext] Selected GPU: NVIDIA GeForce GTX 1650 (Discrete (auto))
+[VulkanContext] Graphics queue family: 0
+[VulkanContext] Present queue family: 0
+[VulkanContext] Command pool created with queue family 0
+[ControlState::load] Loaded V1 idx=61 path='C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4'
+[ControlState::load] Loaded V2 idx=445 path='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4'
+[ControlState::load] Loaded V3 idx=406 path='C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4'
+[Application] initVideo() START
+[initVideo] videoAssetsRoot='C:\Users\ricar\Videos\0 VISUALES'
+[initVideo] videoAssetsRoot exists=1 is_directory=1
+[initVideo] about to call videoRegistry.scan()...
+[VideoRegistry] scan starting: 'C:\Users\ricar\Videos\0 VISUALES'
+[VideoRegistry] scanning progress: 0 files checked, 0 video probes done
+[VideoRegistry] scanning progress: 10 files checked, 10 video probes done
+[VideoRegistry] scanning progress: 20 files checked, 20 video probes done
+[VideoRegistry] scanning progress: 30 files checked, 30 video probes done
+[VideoRegistry] scanning progress: 40 files checked, 40 video probes done
+[VideoRegistry] scanning progress: 50 files checked, 50 video probes done
+[VideoRegistry] scanning progress: 60 files checked, 60 video probes done
+[VideoRegistry] scanning progress: 70 files checked, 70 video probes done
+[VideoRegistry] scanning progress: 80 files checked, 80 video probes done
+[VideoRegistry] scanning progress: 90 files checked, 90 video probes done
+[VideoRegistry] scanning progress: 100 files checked, 100 video probes done
+[VideoRegistry] scanning progress: 110 files checked, 110 video probes done
+[VideoRegistry] scanning progress: 120 files checked, 120 video probes done
+[VideoRegistry] scanning progress: 130 files checked, 130 video probes done
+[VideoRegistry] scanning progress: 140 files checked, 140 video probes done
+[VideoRegistry] scanning progress: 150 files checked, 150 video probes done
+[VideoRegistry] scanning progress: 160 files checked, 160 video probes done
+[VideoRegistry] scanning progress: 170 files checked, 170 video probes done
+[VideoRegistry] scanning progress: 180 files checked, 180 video probes done
+[VideoRegistry] scanning progress: 190 files checked, 190 video probes done
+[VideoRegistry] scanning progress: 200 files checked, 200 video probes done
+[VideoRegistry] scanning progress: 210 files checked, 210 video probes done
+[VideoRegistry] scanning progress: 220 files checked, 220 video probes done
+[VideoRegistry] scanning progress: 230 files checked, 230 video probes done
+[VideoRegistry] scanning progress: 240 files checked, 240 video probes done
+[VideoRegistry] scanning progress: 250 files checked, 250 video probes done
+[VideoRegistry] scanning progress: 260 files checked, 260 video probes done
+[VideoRegistry] scanning progress: 270 files checked, 270 video probes done
+[VideoRegistry] scanning progress: 280 files checked, 280 video probes done
+[VideoRegistry] scanning progress: 290 files checked, 290 video probes done
+[VideoRegistry] scanning progress: 300 files checked, 300 video probes done
+[VideoRegistry] scanning progress: 310 files checked, 310 video probes done
+[VideoRegistry] scanning progress: 320 files checked, 320 video probes done
+[VideoRegistry] scanning progress: 330 files checked, 330 video probes done
+[VideoRegistry] scanning progress: 340 files checked, 340 video probes done
+[VideoRegistry] scanning progress: 350 files checked, 350 video probes done
+[VideoRegistry] scanning progress: 360 files checked, 360 video probes done
+[VideoRegistry] scanning progress: 370 files checked, 370 video probes done
+[VideoRegistry] scanning progress: 380 files checked, 380 video probes done
+[VideoRegistry] scanning progress: 390 files checked, 390 video probes done
+[VideoRegistry] scanning progress: 400 files checked, 400 video probes done
+[VideoRegistry] scanning progress: 410 files checked, 410 video probes done
+[VideoRegistry] scanning progress: 420 files checked, 420 video probes done
+[VideoRegistry] scanning progress: 430 files checked, 430 video probes done
+[VideoRegistry] scanning progress: 440 files checked, 440 video probes done
+[VideoRegistry] scanning progress: 450 files checked, 450 video probes done
+[VideoRegistry] scanning progress: 460 files checked, 460 video probes done
+[VideoRegistry] scanning progress: 470 files checked, 470 video probes done
+[VideoRegistry] scanning progress: 480 files checked, 480 video probes done
+[VideoRegistry] scanning progress: 490 files checked, 490 video probes done
+[VideoRegistry] scanning progress: 500 files checked, 500 video probes done
+[VideoRegistry] scanning progress: 510 files checked, 510 video probes done
+[VideoRegistry] scanning progress: 520 files checked, 520 video probes done
+[VideoRegistry] scanning progress: 530 files checked, 530 video probes done
+[VideoRegistry] scanning progress: 540 files checked, 540 video probes done
+[VideoRegistry] scanning progress: 550 files checked, 550 video probes done
+[VideoRegistry] scanning progress: 560 files checked, 560 video probes done
+[VideoRegistry] scanning progress: 570 files checked, 570 video probes done
+[VideoRegistry] scanning progress: 580 files checked, 580 video probes done
+[VideoRegistry] scanning progress: 590 files checked, 590 video probes done
+[VideoRegistry] scanning progress: 600 files checked, 600 video probes done
+[VideoRegistry] scan complete: 607 video assets (scanned 607 video files, 607 cache hits)
+[initVideo] videoRegistry.scan() returned
+[initVideo] Registry scan: 0.23394s, assets=607
+[initVideo]   asset: '(1930) The creepiest stop-motion cartoon ever∩╝Ü Hearts and Flowers. [4k, 60fps, colorized] [tHmOF6qkRtY].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: '07. National Geographic - Inside the Soviet Circus (1988).ia.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Circo Ruso'
+[initVideo]   asset: '11996440-hd_1920_1080_30fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '12149178_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '12721926-hd_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '12767975_1920_1080_30fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '128587-741747748_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '13931692_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14170343_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '14205-255658030_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '14311445_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14366250_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14380225_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14414004_1920_1080_24fps (1).mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14414004_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14418517_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '14956569_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '150150-797999302_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '153976-817104245_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '15426346_1920_1080_24fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '15703650_3840_2160_50fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '161561-823944363_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '1655400962-1655400962-stock-video-animation-of-digital-networks-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: '1655404098-1655404098-stock-video-black-and-white-tunnel-with-fractal-shapes-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '1655448167-1655448167-stock-video-digital-tunnel-with-sound-spectra-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '1655448186-1655448186-stock-video-digital-fireworks-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '1655451554-1655451554-stock-video-flashing-light-on-industrial-machinery-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655453836-1655453836-stock-video-grunge-industrial-gears-on-black-background-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: '1655455381-1655455381-stock-video-futuristic-shiny-digital-square-tunnel-live-wallpaper-for-pc.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '1655457342-1655457342-stock-video-industrial-machinery-animated-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655457353-1655457353-stock-video-industrial-glasss-machinery-animated-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655457388-1655457388-stock-video-industrial-chimneys-above-the-clouds-and-environmental-pollution-animated-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655457390-1655457390-stock-video-industrial-chimney-unloading-pollution-to-the-air-animated-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655460557-1655460557-stock-video-machinery-moving-close-up-animated-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655460558-1655460558-stock-video-machinery-in-a-workshop-animated-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655465624-1655465624-stock-video-motor-of-an-industrial-machine-that-moves-a-belt-live-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655468604-1655468604-video-stock-person-using-an-industrial-grinder-live-wallpaper-free.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655474875-1655474875-free-video-stock-steam-out-of-industrial-complex-live-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655474880-1655474880-free-video-stock-steam-rising-from-an-industrial-site-live-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: '1655550186-1655550186-abstract-digital-waves-video-live-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: '1655550377-1655550377-underwater-rays-video-live-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '1661770030-1661770030-dune-hud-hd-live-wallpaper.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: '1675711850-1675711850-digital-data.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '173887-850026370_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '185726-876210695_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.01.33.808-00.01.45.312-seg01.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.03.24.130-00.04.02.355-seg02.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.06.06.599-00.06.27.847-seg03.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.09.06.602-00.09.28.364-seg04.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.09.30.769-00.10.19.605-seg05.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.11.53.988-00.12.17.936-seg06.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.12.33.936-00.13.11.167-seg07.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.13.19.160-00.13.46.346-seg08.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.14.26.595-00.15.10.566-seg09.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.15.25.918-00.15.53.292-seg10.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS-00.42.52.871-00.43.04.015-seg11.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '1988 VHS ΓÇó Psychick Television 8Transmissions8 Psychic TV 60 FPS.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Largos'
+[initVideo]   asset: '2.5D-Outline-Glow.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '201308-915375262_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '236928_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '26097-357512275_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '27706-365890968_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: '28417-369533738_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '287510_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: '32962_1411112556_s01_The_Jester_Narren_Grappen-00.00.44.750-00.01.06.573-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '32962_1411112556_s01_The_Jester_Narren_Grappen-00.01.19.304-00.02.31.784-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '32962_1411112556_s01_The_Jester_Narren_Grappen-00.03.15.255-00.03.52.955-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '32962_1411112556_s01_The_Jester_Narren_Grappen-00.04.47.092-00.05.31.081-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '33628-397860881_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '3L_OP_02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_05_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_08_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_10_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_12_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_14_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_16_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_19_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_21_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_24_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_35_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OP_38_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OPwheel_29_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OPwheel_31_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OPwheel_33_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_OPwheel_35_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_Opwheel_10_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_Opwheel_13_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_Opwheel_15_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_Opwheel_17_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_amoebayellow_29_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_bars_01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_bars_06_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_bars_20_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_bluehouse_17_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_butterfly_26_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_eyes_03_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: '3L_eyes_05_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_eyes_30_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_eyes_38_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: '3L_eyes_48_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_eyes_58_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_eyes_59_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_fishred_32_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_fishred_33_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_fishred_36_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_glob_01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_glob_03_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_glob_06_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_glob_08_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_jellyblue_29_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_jellyblue_31_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_rainlines_02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_sanddots_04_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_sanddots_09_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_sanddots_13_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tube_01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tube_02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tube_04_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tv_02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tv_19_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tv_30_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tv_36_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tv_37_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '3L_tv_39_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: '4990242-hd_1920_1080_30fps.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: '57963-486900368_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: '69.23 A Better New York City 1937.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: '69.32 Molecular Theory of Matter.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: '78 Tours, by Georges Schwizgebel [xSrE3oNZz3w].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: '86508-593944940_medium.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: '90s Late Night Adult Hotline Commercials Vol 1 ΓÇó 60 FPS 1990s-00.00.03.066-00.00.24.048-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '90s Late Night Adult Hotline Commercials Vol 1 ΓÇó 60 FPS 1990s-00.00.31.905-00.00.57.486-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '90s Late Night Adult Hotline Commercials Vol 1 ΓÇó 60 FPS 1990s-00.01.05.150-00.01.28.757-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'AI Loopflicker.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'Abstract-Dark-Background-Effect-Creepy-Trip-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Abstract-Floral-Glitch-Trippy-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'BWdotSphereAVS01_1_640_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Bold-Glitch-Graphic-Rhythmic-VJ-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'BrownPaperScrunch_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'CA Larger than Life-00.09.25.227-00.10.48.612-seg1-00.00.06.702-00.01.27.970.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'CA Larger than Life-00.10.59.000-00.11.47.158-seg2-00.00.00.000-00.00.58.325.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'CA Larger than Life-00.12.20.012-00.12.55.239-seg3-00.00.06.328-00.00.42.408.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'CA Larger than Life-00.15.14.832-00.16.22.207-seg4-00.00.10.913-00.01.13.138.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'CUBE 90 TURN.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Cinematic Industrial Foundry 4K [d-OoVwyyZXU].webm' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: 'Circle tubes zoom.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'CircusDay.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'City-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'City4_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Clip 01_The Fight for Life.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'CloudySky-GoodWeather.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Colorful-TV-Noise-Glitch-Visually-Broken-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Creepy-Overlay-Light-Demonic-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'CublicFloorLayerPanned02_640_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Cyberpunk VHS ΓÇó 60 FPS 1990.ia.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Largos'
+[initVideo]   asset: 'DaftRainbowSwirlAVS1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Dancing Club Stock Video Free Download. [tr4Uk7WaBKo].webm' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Dark-Glitch-Pattern-Lofi-Error-Effect-Layer.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Dark_Structure_Horror_Motion_Background.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'Designfo1956_512kb-00.07.50.921-00.08.10.995-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Designfo1956_512kb-00.08.13.591-00.08.23.866-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Designfo1956_512kb-00.08.26.119-00.08.49.098-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Digital_Glitch_Unique_Efecto_Background_Overlay.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Dissected-View-Through-Trees-Background-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'DoubleFaceSpin_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'Drugs ∩╜£ Off The Air ∩╜£ adult swim [dS-MaUk6YBI].webm' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Dynamic-Connections-Psychedelic-Lines-FX-LOOP.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'ENDING.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'EVENT2.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'EVENT3.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'EVENT6.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'EarthDay2020-00.00.04.168-00.01.05.587.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Electrons.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'Evolu (1974) [_i-XGVutP7Y].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'FOR1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'FUTURESELFBEATS+-+MACHINE+ECHOES.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'FUTURESELFBEATS+-+ZIP+[4K].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'FUTURESELFBEATS-DRIPDROP.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'FUTURESELFBEATS-FADE.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'FUTURESELFBEATS-SPRINKLE.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'FUTURESELFBEATS-STREAMER.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Falling-Strange-Particles-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Firearcraft-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'FlowStripes01_1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'FlowerColor1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'FlowerColor2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'For2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Funky-Dot-Texture-Background-Loop-Effect.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'GLASS RING.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'GLB.ChaosMixer_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.LorenzoDj_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.dotKaos_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.industrialbackground_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.kaleidogirls_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.psystorm01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.psystorm02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.pulsinggrid_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.redinthesky_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.sexyshape1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.sexyshape2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.sexyshape3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'GLB.tralicci1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'GLB.triumph_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Georges Schwizgebel - Fugue (1998) [7FsIkLDP1Vk].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'Glitch-Light-Spots-Lofi-Effect-Layer-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Glitch-Mirror-Core-Broken-Vibe-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Glitch-Pattern-Crypt-Trippy-Flickering-Effect.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Glitch-Plant-RGB-Split-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'Glitchy-Kaleidoscope-Blurred-Pattern-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'HowtheEy1941_512kb-00.00.18.146-00.11.17.209-00.00.00.000-00.00.27.903-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'HowtheEy1941_512kb-00.00.18.146-00.11.17.209-00.04.41.222-00.04.58.067-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'HowtheEy1941_512kb-00.00.18.146-00.11.17.209-00.09.20.954-00.10.00.173-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'HowtheEy1941_512kb-00.00.18.146-00.11.17.209-00.10.50.844-00.10.59.215-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Hypercycle.ia.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'LEDwallRGBbulgAVS01_1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'LOOP 1_clear0001-0240.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'LSD Dream Emulator in-Game videos-00.00.36.809-00.00.51.719-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'LSD Dream Emulator in-Game videos-00.02.48.668-00.03.04.510-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'LSD Dream Emulator in-Game videos-00.03.07.771-00.03.23.613-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'LSD Dream Emulator in-Game videos-00.05.00.993-00.05.19.164-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'LSD Dream Emulator in-Game videos-00.07.09.125-00.07.20.307-seg5.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'La Sir├¿ne (1904) Georges M├⌐li├¿s [AIG01ZEROL0].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'La_pista_Gianluigi_Toccafondo_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'Le Ravissement de Frank N. Stein [XmMyx2_4STg].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'Le Voyage dans la Lune (1902) - Georges M├⌐li├¿s  - (HQ) - Music by David Short - Billi Brass Quintet [ZNAHcMMOHE8].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'Light flashing panel(1080P_HD) Vj Karan [hEuvNOv4I38].webm' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Light-Background-Effect-Frost-RGB.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Lights_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Little Tich - Big Boot Dance (1900) [MFB4oHajwGw].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.00.12.747-00.00.17.978-seg09.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.00.33.104-00.00.39.919-seg10.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.00.51.230-00.01.03.620-seg11.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.01.08.314-00.01.14.222-seg12.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.01.19.178-00.01.26.434-seg13.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.01.29.991-00.01.37.259-seg14.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.01.41.448-00.01.48.616-seg15.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.01.53.220-00.01.58.208-seg16.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.03.01.964-00.03.55.621-seg01.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.06.08.367-00.06.46.244-seg02.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.08.07.718-00.08.59.962-seg03.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.11.31.164-00.12.12.038-seg04.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.13.01.383-00.13.39.856-seg05.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.31.04.651-00.31.57.422-seg06.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.32.25.997-00.33.35.203-seg07.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'Luminous Visions VHS ΓÇó 60 FPS 1998-00.34.24.128-00.35.51.486-seg08.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\Luminous Visions'
+[initVideo]   asset: 'METROPOLIS 1927 - In Color [AJcyWGQW6JI].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'Melting-Plasma-Trippy-Abstract-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'MorePsy-1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.00.04.962-00.00.42.322-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.00.42.652-00.01.13.497-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.01.38.897-00.02.17.055-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.02.36.721-00.02.46.394-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.02.52.880-00.03.00.454-seg5.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.03.00.640-00.04.10.251-seg6.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.04.11.251-00.04.25.251-seg7.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.04.33.251-00.04.54.251-seg8.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'Motion Extraction [NSS6yAMZF78]-00.05.17.884-00.06.45.200-seg9.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\MOTION EXTRACTION'
+[initVideo]   asset: 'MultiGhostTurntable01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'MysticMothMirror-HorrorBackground.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'NWO-1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NWO-2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NWO-5_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Naturesand-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewAction4_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewBack1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewBack2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewCity2-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewCity3-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewFastDrive-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewFlower4-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewFlower5-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewFlowers-10-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewFlowers6-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-20-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-21-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-30-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-31-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-32-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-35_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-7-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-8-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy-9-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy33-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewPsy34_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NewTch-35_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NewTech-34_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Newflower3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Newtech36_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Night club party laser lighting effect 01 ∩╜£ Free Stock Footage [zfheXzXa9uU].webm' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'NightChurch_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NowhereInEverywhere1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NowhereInEverywhere3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'NowhereInEverywhere7_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NowhereInEverywhere8_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'NuRaveKali01_1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'NuclearReactor-AtomicFootage.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: 'Nwo3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'OACastleFilms.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'OACleansingTheSinner.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'OADeadlySpiders.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'OAElectrostatics.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'OAMoths.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'OPENINGA.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OPENINGB.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OPENINGC.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OPENINGD.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OPENINGE.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OPENINGF.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OPENINGG.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'OdditiesOfNature.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'Organic-Pattern-Breathing-Background-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Organic-Pattern-Mescaline-Trippy-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'PAPERS [56EG957YinM].webm' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'PIXEL SORT1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Patters_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Pixelated-Glitch-Effect-Dots-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Plasma-Ball-Round-Abstract-Effect-Layer-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Polyphia - CAN YOU FEEL IT [QB15JltRf-M].webm' folder='C:\Users\ricar\Videos\0 VISUALES'
+[initVideo]   asset: 'Psy2-10_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-4_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-5_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-6_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-7_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy2-8_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-11_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-12_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-13_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-14_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-15_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-16_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-17_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-18_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-19_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'Psy3-20_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'RGBsoftDots3dtunnelMove01_1_640_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Random Dirty Movie Clips News 3-00.01.18.986-00.01.27.107-seg3-00.00.04.396-00.00.16.297.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Random Dirty Movie Clips News 3-00.01.37.063-00.01.54.052-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Red-Creepy-Wood-Horror-Background-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Red-TV-Screen-Broken-VHS-VCR-Error-Effect.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'Retro70sColourChannel011_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'ReverseFire_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Rockbreakthrough-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'SPDAY01A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY01B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY02A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY03A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY03B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY04A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY04B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY05A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY05B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY06A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY06B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY07A.STR[0]-00.00.00.656-00.00.08.972.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY07B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY08A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY08B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY09A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY09B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY10A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY10B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY11A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY11B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY12A.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'SPDAY12B.STR[0].mp4' folder='C:\Users\ricar\Videos\0 VISUALES\3D\lsd-dream-emulator-fmv'
+[initVideo]   asset: 'STARS zoom.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'ScopeOnYellow_640_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'Severely-Broken-Glitch-Symbol-Dark-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'Slow-Down-Glitch-Effect-Loop-Defect-Screen.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'SpaceStation_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'SparkleRope01_1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'SpeedTrainRiverCrossing-UrbanFootage-GlitchEffect.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'StarWithColourClone02_640_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'StarterPack_02_VJLoopEDM_4K.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'StaticScreen-BrokenTVEffect-NoiseBackground.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'StaticTVNoisevsGlitchEffects.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Strange-Psychedelic-Light-Frame-Effect-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Syo1VEbaF7LWEom_abstract-obj-ae_2_prob4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'TRIPPY NAPKIN DOTS.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'TV_Eros_America_1984-00.09.39.983-00.10.54.579-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'TV_Eros_America_1984-00.11.24.417-00.12.25.959-seg2-00.00.16.046-00.01.02.128.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'TV_Eros_America_1984-00.12.27.824-00.13.12.581-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'TV_Eros_America_1984-00.13.16.311-00.15.10.070-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'TV_Eros_America_1984-00.24.31.287-00.26.31.848-seg5-00.00.16.833-00.00.51.855.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'TV_Static_Glitch_Overlay_Absolute_Horror_Sound_Effects.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'Tantalizing_Fly_1919_512kb-00.00.50.819-00.03.30.004.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Tech Zoom.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'The Frog (1908) WΓº╕ NEW ORIGINAL SCORE [zl2dCI5KSQ8].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'The Power and Beauty of Construction Sites∩╝Ü A Cinematic Reel [4BzjUq921Y4].webm' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: 'TimeLapsetrain-Mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'ToNewHor1940_512kb-00.01.13.047-00.01.55.414-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'ToNewHor1940_512kb-00.02.42.163-00.03.28.913-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'ToNewHor1940_512kb-00.05.56.467-00.08.45.935-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'ToNewHor1940_512kb-00.12.44.067-00.14.10.262-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'ToNewHor1940_512kb-00.19.53.581-00.21.54.839-seg5.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'ToNewHor1940_512kb-00.22.05.065-00.22.48.893-seg6.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'Twists_1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'Twists_2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'Twists_3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'UNIQUE∩╝Ü Alice in Wonderland (1915) in color! [A.I. enhanced & colorized] [jGiVXD2MENs].mkv' folder='C:\Users\ricar\Videos\0 VISUALES\Largos'
+[initVideo]   asset: 'Upgrade Club Ready Teaser.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'Urban Grunge.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'VibrateEye_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'WAVE WARP.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'WHITE-DOT-ARRAY.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Wave-Noise-TV-Static-Black-Dark-Sound.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'White-Outline-Squares-BW-Glitched-Error-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'Wobbly-Glitch-Structure-RGB-Shift-Loop.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: '[4K] Grunge Loop Overlay [0fpV2vVcvp0].webm' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: '[4K] Horror Grunge Light Transition Overlay [YuhAqQzGjxA].webm' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: '[4k, 50fps, colorized] (1907) The disturbing story of the dancing pig. Le Cochon Danseur. [BU4W858uiGY].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: '[4k, 60fps, colorized] (1906) New York skyscraper building. Safety first∩╝ƒ [wS-R3CH4JZk].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: '[4k, 60fps, colorized] (1927)  Metropolis, Fritz Lang. Dance scene. [Be955EMr13o].webm' folder='C:\Users\ricar\Videos\0 VISUALES\CORTOS YT'
+[initVideo]   asset: 'abovethehorizon.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'abstract anime .mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'afterlifeapreslavie.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'arrive_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'artbreeder-scifi-ai-DOTS.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'back__pure_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'big_red_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'blue tunnel t.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'bw_girl10_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'cell_churn (1080p)-00.00.03.058-00.00.42.216.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'cellulart02_512kb-00.00.10.931-00.00.53.614.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_1-1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_1-2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_1-3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_10-1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_10-2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'colour_3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition1440_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition501_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition511_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition512_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition57_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition59_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition664_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition713_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition755_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'composition756_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'controllingbehaviorthroughreinforcement.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'crazybat_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'crystal zoom.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'cyber samurai pan.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'dgfsdfgsd.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'dovedance_cubist_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'fans (1).mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: 'fans.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: 'fantasmagori_512kb-00.00.21.723-00.01.30.513-00.00.05.462-00.00.30.901-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'fantasmagori_512kb-00.00.21.723-00.01.30.513-00.00.42.198-00.01.06.814-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'forward_backward_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'generators and pipes.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'girl20_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'girl23_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'glitchy halftone.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'headphonestrings_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'heartscan_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'heartshake_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'heartshimmy_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'hollowsphereloop1_1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'hollowsphereloop1_2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'hollowsphereloop1_3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'hollowsphereloop1_4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'hollowsphereloop1_5.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'hollowsphereloop1_6.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'icecreamparade-dot_halos_k-w-mjpg_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'laborcomesofage.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'laserskull_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'light array.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'lightball_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'line ghost rotate0001-0333.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'lines-10_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'lines-1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lines-2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lines-3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'lines-4_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'lines-5_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lines-6_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lines-7_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lines-8_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lines-9_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'liquid_nebula_01.mov' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'liquid_nebula_02.mov' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'liquid_nebula_04.mov' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'longred_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'longslored_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-b10_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-b11_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-b12_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-b13_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-x01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-x02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-x03_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'lucidloop-x04_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'luma_line_upndown_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'madheart2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'madheart_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'madrobot_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs'
+[initVideo]   asset: 'magic_tentacle_plant_rgba_60fps_8s_120bpm.mov' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'magic_tentacle_rgba_60fps_8s_120bpm.mov' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'manos2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\HOUSERO'
+[initVideo]   asset: 'mixkit-abstract-virtual-reality-dark-tunnel-31573-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-countryside-meadow-4075-full-hd.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'mixkit-exploring-the-jungle-among-plants-and-palm-trees-32977-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'mixkit-hallway-with-golden-figures-on-the-surfaces-loop-26802-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-huge-trees-in-a-large-green-forest-5040-full-hd.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'mixkit-infinity-corridor-with-futuristic-style-32960-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-red-matter-in-a-black-hole-loop-video-31548-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-red-neon-futuristic-tunnel-35333-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-silver-award-stage-curtains-loop-video-26788-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-traveling-through-a-tunnel-of-black-cubes-in-3d-31497-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'mixkit-traveling-through-the-nebulae-of-space-30889-hd-ready.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'new tunnel0001-0240.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'newtech-33-mind_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'niceRGBavsdotwall_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'nwo-4_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\Psy'
+[initVideo]   asset: 'particle turn0001-0385_Custom.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'pipes tunnel.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'psychedelic_bic_lighters.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'rainoil_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'razluchennye-00.00.54.560-00.01.15.680-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'razluchennye-00.01.26.030-00.01.35.755-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'razluchennye-00.10.54.518-00.11.14.554-seg3.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'razluchennye-00.23.55.483-00.24.13.503-seg4.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'rcaflash_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'red_smoke_particles_02.mov' folder='C:\Users\ricar\Videos\0 VISUALES\TECHNO'
+[initVideo]   asset: 'rednick_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redsectora_dt_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redsectora_hm_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redsectora_mc_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redsectora_ot_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redsectora_wp_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redskyclops_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'redsquare_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'rgb_shift_dancing_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'rgb_strobe_lines_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'rock pan.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'rural_civil_defense_tv_spots_1965_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'sUBWAY_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'saturn_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'seenic wireframe tunnel tunnel.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'silversky_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'slow_pulse_4k.mov' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'slowoil_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'slowred_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'slurry_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'soundsky_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'space fractal.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'space-ai-colorama.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'sparks_01.mov' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'sphereblinds2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'sphereblinds3_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'sphereblinds_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'spiderman_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'squares_4k.mov' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'stars1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\TUNELES'
+[initVideo]   asset: 'still_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'surreal_girl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'surreal_girl_on_fire_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'tardisballs2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'tardisballs_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'tech mirror.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\INDUSTRIAL'
+[initVideo]   asset: 'tobee1_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'tobee2_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'traffic_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'tunnal.mov' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'upper_hands_pure_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_a_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_b_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_c_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_d_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_e_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_g_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_h_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_i_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_j_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'vJ_SPLASZ_LOOPS_BACKGROUNDS_l_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'valley_01.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'valley_04.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\CHILL'
+[initVideo]   asset: 'videoloops001vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops002vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops003vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops004vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops005vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops006vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops007vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops008vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops009vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops010vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops011vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops012vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops013vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'videoloops014vl_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'voronoi blue_Custom.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'wave glitchy.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\1080'
+[initVideo]   asset: 'waysofseeingfineartsandcommerce.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo]   asset: 'where_does_the_stairs_lead_01_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'where_does_the_stairs_lead_02_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'where_does_the_stairs_lead_03_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'white_man_plugturn_512kb.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG'
+[initVideo]   asset: 'world_trade_center_512kb-00.00.46.342-00.02.58.976-seg1.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: 'world_trade_center_512kb-00.03.49.047-00.04.03.162-seg2.mp4' folder='C:\Users\ricar\Videos\0 VISUALES\VHS'
+[initVideo]   asset: '╨í╨₧╨¥ (The Dream), 1987 [PooqEDU3D70].mkv' folder='C:\Users\ricar\Videos\0 VISUALES\VHS 2'
+[initVideo] Before resolve: V1 path=C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4 idx=61 folder=
+[initVideo] Before resolve: V2 path=C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4 idx=445 folder=
+[initVideo] Before resolve: V3 path=C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4 idx=406 folder=
+[initVideo] resolvePath V1 folder='' selAsset=61 path='C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4'
+[initVideo] resolvePath V1 pathValid=1
+[initVideo] resolvePath V1 filteredAssets=607
+[initVideo] Path found in folder '' at index 61: C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4
+[initVideo] resolvePath V2 folder='' selAsset=445 path='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4'
+[initVideo] resolvePath V2 pathValid=1
+[initVideo] resolvePath V2 filteredAssets=607
+[initVideo] Path found in folder '' at index 445: C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4
+[initVideo] resolvePath V3 folder='' selAsset=406 path='C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4'
+[initVideo] resolvePath V3 pathValid=1
+[initVideo] resolvePath V3 filteredAssets=607
+[initVideo] Path found in folder '' at index 406: C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4
+[initVideo] After resolve:  V1 path=C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4 idx=61
+[initVideo] After resolve:  V2 path=C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4 idx=445
+[initVideo] After resolve:  V3 path=C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4 idx=406
+[initVideo] Preview decode size: 1600x900 (screen=1600x900)
+[initVideo] enableDualVideo=1 -> initExtraSlots=1
+[initVideo] Launching player init futures...
+[initVideo] Waiting for V1 future...
+[initVideo] V1 initializing: 'C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4'
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0 frame=0 swsCtx=0 codecCtx=0 formatCtx=0
+[FFmpeg] Player shutdown complete
+[initVideo] V2 initializing: 'C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4'
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0 frame=0 swsCtx=0 codecCtx=0 formatCtx=0
+[FFmpeg] Player shutdown complete
+[initVideo] V3 initializing: 'C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4'
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0 frame=0 swsCtx=0 codecCtx=0 formatCtx=0
+[FFmpeg] Player shutdown complete
+[Video] Initialized C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4 (320x240)
+[Video] Downscaling 2560x1440 to 1600x900 for playback
+[Video] Initialized C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4 (1600x900)
+[initVideo] V1 future returned: 1
+[initVideo] Waiting for V2 future...
+[initVideo] V2 future returned: 1
+[initVideo] Waiting for V3 future...
+[Video] Downscaling 1920x1080 to 1600x900 for playback
+[Video] Initialized C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4 (1600x900)
+[initVideo] V3 future returned: 1
+[Application] Player init: 0.0593017s (slot0=1 slot1=1 slot2=1)
+[initVideo] Slot0 loaded: C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4 | decode=1600x900 | duration=10s
+[initVideo] Slot1 loaded: C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4 | decode=320x240 | duration=8.68s
+[initVideo] Slot2 loaded: C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4 | decode=1600x900 | duration=7s
+[initVideo] V1 ok, configuring autoScale=1
+[VideoTexture] Dimension check: allocated=4 required=5760000 width=1600 height=900 old=1x1 ready=0
+[VideoTexture] Creating video texture resources: 1600x900
+[VideoTexture] Staging ring created with capacity: 5760064 bytes
+[VideoTexture] Resources created successfully
+[initVideo] Setting up V2 Vulkan resources (320x240)
+[VideoTexture] Dimension check: allocated=4 required=307200 width=320 height=240 old=1x1 ready=0
+[VideoTexture] Creating video texture resources: 320x240
+[VideoTexture] Staging ring created with capacity: 307264 bytes
+[VideoTexture] Resources created successfully
+[initVideo] V2 texture ready=1
+[initVideo] Setting up V3 Vulkan resources (1600x900)
+[VideoTexture] Dimension check: allocated=4 required=5760000 width=1600 height=900 old=1x1 ready=0
+[VideoTexture] Creating video texture resources: 1600x900
+[VideoTexture] Staging ring created with capacity: 5760064 bytes
+[VideoTexture] Resources created successfully
+[initVideo] V3 texture ready=1
+[Application] Vulkan resources: 0.0421883s
+[initVideo] Textures ready: v1=1 v2=1 v3=1
+[Application] initVideo() DONE ΓÇö total=0.340616s v1=1 v2=1 v3=1
+[Application] initOutputVideo()
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0 frame=0 swsCtx=0 codecCtx=0 formatCtx=0
+[FFmpeg] Player shutdown complete
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0 frame=0 swsCtx=0 codecCtx=0 formatCtx=0
+[FFmpeg] Player shutdown complete
+[Video] Initialized C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4 (320x240)
+[Video] Scaling decode 2560x1440 ΓåÆ 1600x900 (screen 1600x900)
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0 frame=0 swsCtx=0 codecCtx=0 formatCtx=0
+[FFmpeg] Player shutdown complete
+[Video] Scaling decode 1920x1080 ΓåÆ 1600x900 (screen 1600x900)
+[Video] Downscaling 1920x1080 to 1600x900 for playback
+[Video] Initialized C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4 (1600x900)
+[Video] Downscaling 2560x1440 to 1600x900 for playback
+[Video] Initialized C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4 (1600x900)
+[VideoTexture] Dimension check: allocated=4 required=5760000 width=1600 height=900 old=1x1 ready=0
+[VideoTexture] Creating video texture resources: 1600x900
+[VideoTexture] Staging ring created with capacity: 5760064 bytes
+[VideoTexture] Resources created successfully
+[VideoTexture] Dimension check: allocated=4 required=307200 width=320 height=240 old=1x1 ready=0
+[VideoTexture] Creating video texture resources: 320x240
+[VideoTexture] Staging ring created with capacity: 307264 bytes
+[VideoTexture] Resources created successfully
+[VideoTexture] Dimension check: allocated=4 required=5760000 width=1600 height=900 old=1x1 ready=0
+[VideoTexture] Creating video texture resources: 1600x900
+[VideoTexture] Staging ring created with capacity: 5760064 bytes
+[VideoTexture] Resources created successfully
+[Application] initOutputVideo() done ΓÇö total=0.129476s v1=1 v2=1 v3=1
+[Video] Scaling decode 2560x1440 ΓåÆ 1600x900 (screen 1600x900)
+[ShaderCompiler] Loading shader: shaders/fullscreen.vert.spv
+[ShaderCompiler] Reading file: shaders/fullscreen.vert.spv
+[ShaderCompiler] Loaded SPIR-V shader: shaders/fullscreen.vert.spv (10772 bytes)
+[ShaderCompiler] Loading shader: shaders/fullscreen.frag.spv
+[ShaderCompiler] Reading file: shaders/fullscreen.frag.spv
+[ShaderCompiler] Loaded SPIR-V shader: shaders/fullscreen.frag.spv (21628 bytes)
+[ShaderCompiler] Creating shader module (10772 bytes)...
+[ShaderCompiler] Shader module created successfully
+[ShaderCompiler] Creating shader module (21628 bytes)...
+[ShaderCompiler] Shader module created successfully
+[MultiPass] Intermediate storage images created
+[MultiPass] Creating compute pipeline for pass 0 (shaders/pass_a_base.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_a_base.comp.spv
+[MultiPass] Read 234228 bytes from shaders/pass_a_base.comp.spv
+[MultiPass] Creating shader module (234228 bytes)...
+[Video] Scaling decode 1920x1080 ΓåÆ 1600x900 (screen 1600x900)
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 1 (shaders/pass_b_spatial.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_b_spatial.comp.spv
+[MultiPass] Read 23448 bytes from shaders/pass_b_spatial.comp.spv
+[MultiPass] Creating shader module (23448 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 2 (shaders/pass_c_detail.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_c_detail.comp.spv
+[MultiPass] Read 27032 bytes from shaders/pass_c_detail.comp.spv
+[MultiPass] Creating shader module (27032 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 3 (shaders/pass_d_temporal.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_d_temporal.comp.spv
+[MultiPass] Read 19812 bytes from shaders/pass_d_temporal.comp.spv
+[MultiPass] Creating shader module (19812 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 4 (shaders/pass_e_degradation.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_e_degradation.comp.spv
+[MultiPass] Read 21596 bytes from shaders/pass_e_degradation.comp.spv
+[MultiPass] Creating shader module (21596 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 5 (shaders/pass_f_color.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_f_color.comp.spv
+[MultiPass] Read 18900 bytes from shaders/pass_f_color.comp.spv
+[MultiPass] Creating shader module (18900 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 6 (shaders/pass_g_output.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_g_output.comp.spv
+[MultiPass] Read 32788 bytes from shaders/pass_g_output.comp.spv
+[MultiPass] Creating shader module (32788 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Compute pipelines created for all 7 passes
+[MultiPass] Creating descriptor sets...
+[MultiPass] Reading shader file: shaders/post_effects\effect_ascii.comp.spv
+[MultiPass] Read 13464 bytes from shaders/post_effects\effect_ascii.comp.spv
+[MultiPass] Creating shader module (13464 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_bass_threshold.comp.spv
+[MultiPass] Read 13220 bytes from shaders/post_effects\effect_bass_threshold.comp.spv
+[MultiPass] Creating shader module (13220 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_bloom_aces.comp.spv
+[MultiPass] Read 18640 bytes from shaders/post_effects\effect_bloom_aces.comp.spv
+[MultiPass] Creating shader module (18640 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_chromatic_pulse.comp.spv
+[MultiPass] Read 12812 bytes from shaders/post_effects\effect_chromatic_pulse.comp.spv
+[MultiPass] Creating shader module (12812 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_crt.comp.spv
+[MultiPass] Read 13152 bytes from shaders/post_effects\effect_crt.comp.spv
+[MultiPass] Creating shader module (13152 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_digital_glitch.comp.spv
+[MultiPass] Read 12828 bytes from shaders/post_effects\effect_digital_glitch.comp.spv
+[MultiPass] Creating shader module (12828 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_filmic.comp.spv
+[MultiPass] Read 14004 bytes from shaders/post_effects\effect_filmic.comp.spv
+[MultiPass] Creating shader module (14004 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_grayscale.comp.spv
+[MultiPass] Read 11472 bytes from shaders/post_effects\effect_grayscale.comp.spv
+[MultiPass] Creating shader module (11472 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_kaleidoscope.comp.spv
+[MultiPass] Read 12888 bytes from shaders/post_effects\effect_kaleidoscope.comp.spv
+[MultiPass] Creating shader module (12888 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_kaleidoscope_mirror.comp.spv
+[MultiPass] Read 13044 bytes from shaders/post_effects\effect_kaleidoscope_mirror.comp.spv
+[MultiPass] Creating shader module (13044 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_lens_distort.comp.spv
+[MultiPass] Read 11808 bytes from shaders/post_effects\effect_lens_distort.comp.spv
+[MultiPass] Creating shader module (11808 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_little_planet.comp.spv
+[MultiPass] Read 12024 bytes from shaders/post_effects\effect_little_planet.comp.spv
+[MultiPass] Creating shader module (12024 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror.comp.spv
+[MultiPass] Read 17488 bytes from shaders/post_effects\effect_mirror.comp.spv
+[MultiPass] Creating shader module (17488 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_horizontal.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_horizontal.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_kaleido.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_kaleido.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_rorschach.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_rorschach.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_vertical.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_vertical.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_passthrough.comp.spv
+[MultiPass] Read 10604 bytes from shaders/post_effects\effect_passthrough.comp.spv
+[MultiPass] Creating shader module (10604 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixel_tiles.comp.spv
+[MultiPass] Read 11688 bytes from shaders/post_effects\effect_pixel_tiles.comp.spv
+[MultiPass] Creating shader module (11688 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_128.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_128.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_192.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_192.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_256.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_256.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_64.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_64.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_plasma_overlay.comp.spv
+[MultiPass] Read 12572 bytes from shaders/post_effects\effect_plasma_overlay.comp.spv
+[MultiPass] Creating shader module (12572 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_posterize_edge.comp.spv
+[MultiPass] Read 23044 bytes from shaders/post_effects\effect_posterize_edge.comp.spv
+[MultiPass] Creating shader module (23044 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_radial_blur.comp.spv
+[MultiPass] Read 12696 bytes from shaders/post_effects\effect_radial_blur.comp.spv
+[MultiPass] Creating shader module (12696 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_recursive_energy.comp.spv
+[MultiPass] Read 13288 bytes from shaders/post_effects\effect_recursive_energy.comp.spv
+[MultiPass] Creating shader module (13288 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_recursive_feedback.comp.spv
+[MultiPass] Read 12104 bytes from shaders/post_effects\effect_recursive_feedback.comp.spv
+[MultiPass] Creating shader module (12104 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_rgb_shift.comp.spv
+[MultiPass] Read 13716 bytes from shaders/post_effects\effect_rgb_shift.comp.spv
+[MultiPass] Creating shader module (13716 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_ring_distortion.comp.spv
+[MultiPass] Read 12320 bytes from shaders/post_effects\effect_ring_distortion.comp.spv
+[MultiPass] Creating shader module (12320 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_rotating_lens.comp.spv
+[MultiPass] Read 13908 bytes from shaders/post_effects\effect_rotating_lens.comp.spv
+[MultiPass] Creating shader module (13908 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_sobel_advanced.comp.spv
+[MultiPass] Read 14916 bytes from shaders/post_effects\effect_sobel_advanced.comp.spv
+[MultiPass] Creating shader module (14916 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_sobel_edge.comp.spv
+[MultiPass] Read 13584 bytes from shaders/post_effects\effect_sobel_edge.comp.spv
+[MultiPass] Creating shader module (13584 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_threshold_levels.comp.spv
+[MultiPass] Read 12136 bytes from shaders/post_effects\effect_threshold_levels.comp.spv
+[MultiPass] Creating shader module (12136 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_warp.comp.spv
+[MultiPass] Read 11232 bytes from shaders/post_effects\effect_warp.comp.spv
+[MultiPass] Creating shader module (11232 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\procedural_main.comp.spv
+[MultiPass] Read 2700 bytes from shaders/post_effects\procedural_main.comp.spv
+[MultiPass] Creating shader module (2700 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\procedural_voronoi_cells.comp.spv
+[MultiPass] Read 7892 bytes from shaders/post_effects\procedural_voronoi_cells.comp.spv
+[MultiPass] Creating shader module (7892 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Loaded 37 post-effect shaders
+[MultiPass] Initialized successfully with 7 passes
+[Application] Preview MultiPassPipeline initialized
+[MultiPass] Intermediate storage images created
+[MultiPass] Creating compute pipeline for pass 0 (shaders/pass_a_base.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_a_base.comp.spv
+[MultiPass] Read 234228 bytes from shaders/pass_a_base.comp.spv
+[MultiPass] Creating shader module (234228 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 1 (shaders/pass_b_spatial.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_b_spatial.comp.spv
+[MultiPass] Read 23448 bytes from shaders/pass_b_spatial.comp.spv
+[MultiPass] Creating shader module (23448 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 2 (shaders/pass_c_detail.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_c_detail.comp.spv
+[MultiPass] Read 27032 bytes from shaders/pass_c_detail.comp.spv
+[MultiPass] Creating shader module (27032 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 3 (shaders/pass_d_temporal.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_d_temporal.comp.spv
+[MultiPass] Read 19812 bytes from shaders/pass_d_temporal.comp.spv
+[MultiPass] Creating shader module (19812 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 4 (shaders/pass_e_degradation.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_e_degradation.comp.spv
+[MultiPass] Read 21596 bytes from shaders/pass_e_degradation.comp.spv
+[MultiPass] Creating shader module (21596 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 5 (shaders/pass_f_color.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_f_color.comp.spv
+[MultiPass] Read 18900 bytes from shaders/pass_f_color.comp.spv
+[MultiPass] Creating shader module (18900 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Creating compute pipeline for pass 6 (shaders/pass_g_output.comp.spv)
+[MultiPass] Reading shader file: shaders/pass_g_output.comp.spv
+[MultiPass] Read 32788 bytes from shaders/pass_g_output.comp.spv
+[MultiPass] Creating shader module (32788 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Compute pipelines created for all 7 passes
+[MultiPass] Creating descriptor sets...
+[MultiPass] Reading shader file: shaders/post_effects\effect_ascii.comp.spv
+[MultiPass] Read 13464 bytes from shaders/post_effects\effect_ascii.comp.spv
+[MultiPass] Creating shader module (13464 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_bass_threshold.comp.spv
+[MultiPass] Read 13220 bytes from shaders/post_effects\effect_bass_threshold.comp.spv
+[MultiPass] Creating shader module (13220 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_bloom_aces.comp.spv
+[MultiPass] Read 18640 bytes from shaders/post_effects\effect_bloom_aces.comp.spv
+[MultiPass] Creating shader module (18640 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_chromatic_pulse.comp.spv
+[MultiPass] Read 12812 bytes from shaders/post_effects\effect_chromatic_pulse.comp.spv
+[MultiPass] Creating shader module (12812 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_crt.comp.spv
+[MultiPass] Read 13152 bytes from shaders/post_effects\effect_crt.comp.spv
+[MultiPass] Creating shader module (13152 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_digital_glitch.comp.spv
+[MultiPass] Read 12828 bytes from shaders/post_effects\effect_digital_glitch.comp.spv
+[MultiPass] Creating shader module (12828 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_filmic.comp.spv
+[MultiPass] Read 14004 bytes from shaders/post_effects\effect_filmic.comp.spv
+[MultiPass] Creating shader module (14004 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_grayscale.comp.spv
+[MultiPass] Read 11472 bytes from shaders/post_effects\effect_grayscale.comp.spv
+[MultiPass] Creating shader module (11472 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_kaleidoscope.comp.spv
+[MultiPass] Read 12888 bytes from shaders/post_effects\effect_kaleidoscope.comp.spv
+[MultiPass] Creating shader module (12888 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_kaleidoscope_mirror.comp.spv
+[MultiPass] Read 13044 bytes from shaders/post_effects\effect_kaleidoscope_mirror.comp.spv
+[MultiPass] Creating shader module (13044 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_lens_distort.comp.spv
+[MultiPass] Read 11808 bytes from shaders/post_effects\effect_lens_distort.comp.spv
+[MultiPass] Creating shader module (11808 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_little_planet.comp.spv
+[MultiPass] Read 12024 bytes from shaders/post_effects\effect_little_planet.comp.spv
+[MultiPass] Creating shader module (12024 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror.comp.spv
+[MultiPass] Read 17488 bytes from shaders/post_effects\effect_mirror.comp.spv
+[MultiPass] Creating shader module (17488 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_horizontal.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_horizontal.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_kaleido.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_kaleido.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_rorschach.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_rorschach.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_mirror_vertical.comp.spv
+[MultiPass] Read 17268 bytes from shaders/post_effects\effect_mirror_vertical.comp.spv
+[MultiPass] Creating shader module (17268 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_passthrough.comp.spv
+[MultiPass] Read 10604 bytes from shaders/post_effects\effect_passthrough.comp.spv
+[MultiPass] Creating shader module (10604 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixel_tiles.comp.spv
+[MultiPass] Read 11688 bytes from shaders/post_effects\effect_pixel_tiles.comp.spv
+[MultiPass] Creating shader module (11688 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_128.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_128.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_192.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_192.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_256.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_256.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_pixelate_64.comp.spv
+[MultiPass] Read 12112 bytes from shaders/post_effects\effect_pixelate_64.comp.spv
+[MultiPass] Creating shader module (12112 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_plasma_overlay.comp.spv
+[MultiPass] Read 12572 bytes from shaders/post_effects\effect_plasma_overlay.comp.spv
+[MultiPass] Creating shader module (12572 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_posterize_edge.comp.spv
+[MultiPass] Read 23044 bytes from shaders/post_effects\effect_posterize_edge.comp.spv
+[MultiPass] Creating shader module (23044 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_radial_blur.comp.spv
+[MultiPass] Read 12696 bytes from shaders/post_effects\effect_radial_blur.comp.spv
+[MultiPass] Creating shader module (12696 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_recursive_energy.comp.spv
+[MultiPass] Read 13288 bytes from shaders/post_effects\effect_recursive_energy.comp.spv
+[MultiPass] Creating shader module (13288 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_recursive_feedback.comp.spv
+[MultiPass] Read 12104 bytes from shaders/post_effects\effect_recursive_feedback.comp.spv
+[MultiPass] Creating shader module (12104 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_rgb_shift.comp.spv
+[MultiPass] Read 13716 bytes from shaders/post_effects\effect_rgb_shift.comp.spv
+[MultiPass] Creating shader module (13716 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_ring_distortion.comp.spv
+[MultiPass] Read 12320 bytes from shaders/post_effects\effect_ring_distortion.comp.spv
+[MultiPass] Creating shader module (12320 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_rotating_lens.comp.spv
+[MultiPass] Read 13908 bytes from shaders/post_effects\effect_rotating_lens.comp.spv
+[MultiPass] Creating shader module (13908 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_sobel_advanced.comp.spv
+[MultiPass] Read 14916 bytes from shaders/post_effects\effect_sobel_advanced.comp.spv
+[MultiPass] Creating shader module (14916 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_sobel_edge.comp.spv
+[MultiPass] Read 13584 bytes from shaders/post_effects\effect_sobel_edge.comp.spv
+[MultiPass] Creating shader module (13584 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_threshold_levels.comp.spv
+[MultiPass] Read 12136 bytes from shaders/post_effects\effect_threshold_levels.comp.spv
+[MultiPass] Creating shader module (12136 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\effect_warp.comp.spv
+[MultiPass] Read 11232 bytes from shaders/post_effects\effect_warp.comp.spv
+[MultiPass] Creating shader module (11232 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\procedural_main.comp.spv
+[MultiPass] Read 2700 bytes from shaders/post_effects\procedural_main.comp.spv
+[MultiPass] Creating shader module (2700 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Reading shader file: shaders/post_effects\procedural_voronoi_cells.comp.spv
+[MultiPass] Read 7892 bytes from shaders/post_effects\procedural_voronoi_cells.comp.spv
+[MultiPass] Creating shader module (7892 bytes)...
+[MultiPass] Shader module created successfully
+[MultiPass] Loaded 37 post-effect shaders
+[MultiPass] Initialized successfully with 7 passes
+[Application] Output MultiPassPipeline initialized
+
+MidiInWinMM::initialize: no MIDI input devices currently available.
+
+[MidiSystem] Initialized successfully
+[Application] MIDI ports: 0
+[OscSystem] Initialized on port 9000
+[OscSystem] Started listening on port 9000
+[Application] OSC started on port 9000
+[AudioSystem] Input device: Microphone (Realtek(R) Audio) Sample rate: 44100
+'pactl' is not recognized as an internal or external command,
+operable program or batch file.
+'pactl' is not recognized as an internal or external command,
+operable program or batch file.
+'pactl' is not recognized as an internal or external command,
+operable program or batch file.
+[AudioSystem] Found 0 PulseAudio sources (default idx=-1)
+[AudioSystem] Stream opened successfully
+[AudioSystem] Stream started successfully
+[Application] Audio started
+[FrameSystem] Initialized ΓÇö frames: 3, swapchain images: 3
+[FrameSystem] Initialized ΓÇö frames: 3, swapchain images: 3
+[Application] FrameSystems initialized
+[F11] Pre-toggle drawable: 1600x900 flags=0x10002024 isFs=0
+[F11] Post-toggle drawable: 1920x1080 Fullscreen: ON
+[Event] Output SIZE_CHANGED: 1920x1080
+[Event] Output SIZE_CHANGED: 1920x1080
+[F11] Pre-toggle drawable: 1920x1080 flags=0x10003435 isFs=1
+[F11] Post-toggle drawable: 1600x900 Fullscreen: OFF
+[Event] Output SIZE_CHANGED: 1600x900
+[Event] Output SIZE_CHANGED: 1600x900
+[Resize] Output using pending dims: 1600x900
+[Resize] Output window requested: 1600x900
+[Resize] Output swapchain extent: 1600x900
+[MultiPass] Intermediate storage images created
+[MultiPass] Creating descriptor sets...
+[Resize] Output multipass pipeline recreated
+[FrameSystem] Initialized ΓÇö frames: 3, swapchain images: 3
+[Event] Output SIZE_CHANGED: 1920x991
+[Event] Output SIZE_CHANGED: 1920x991
+[F11] Pre-toggle drawable: 1920x991 flags=0x100026a4 isFs=0
+[F11] Post-toggle drawable: 1920x1080 Fullscreen: ON
+[Event] Output SIZE_CHANGED: 1920x1080
+[Event] Output SIZE_CHANGED: 1920x1080
+[F11] Pre-toggle drawable: 1920x1080 flags=0x10003635 isFs=1
+[F11] Post-toggle drawable: 1920x991 Fullscreen: OFF
+[Event] Output SIZE_CHANGED: 1920x991
+[Event] Output SIZE_CHANGED: 1920x991
+[F11] Pre-toggle drawable: 1920x991 flags=0x100026a4 isFs=0
+[F11] Post-toggle drawable: 1920x1080 Fullscreen: ON
+[Event] Output SIZE_CHANGED: 1920x1080
+[Event] Output SIZE_CHANGED: 1920x1080
+[F11] Pre-toggle drawable: 1920x1080 flags=0x10003635 isFs=1
+[F11] Post-toggle drawable: 1920x991 Fullscreen: OFF
+[Event] Output SIZE_CHANGED: 1920x991
+[Event] Output SIZE_CHANGED: 1920x991
+[Output] Window hidden (use F11 to restore)
+[Resize] Output using pending dims: 1920x991
+[Resize] Output window requested: 1920x991
+[Resize] Output swapchain extent: 1920x991
+[MultiPass] Intermediate storage images created
+[MultiPass] Creating descriptor sets...
+[Resize] Output multipass pipeline recreated
+[FrameSystem] Initialized ΓÇö frames: 3, swapchain images: 3
+[ControlState::save] Saved V1 idx=61 path='C:\Users\ricar\Videos\0 VISUALES\TECHNO\27706-365890968_medium.mp4'
+[ControlState::save] Saved V2 idx=445 path='C:\Users\ricar\Videos\0 VISUALES\ARCHIVE ORG\favs\crazybat_512kb.mp4'
+[ControlState::save] Saved V3 idx=406 path='C:\Users\ricar\Videos\0 VISUALES\1080\WAVE WARP.mp4'
+[UISystem] Saving ImGui settings to: imgui.ini
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0x29d4e3914c0 frame=0x29d57f7ed40 swsCtx=0x29d69195b80 codecCtx=0x29d4e3abb80 formatCtx=0x29d4ddda480
+[FFmpeg] Player shutdown complete
+[VideoTexture] Destroy called
+[VideoTexture] Destroy completed
+[VideoTexture] Cleanup called - destroying staging ring
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0x29d7f3c3b40 frame=0x29d583e4040 swsCtx=0x29d61541480 codecCtx=0x29d40dbf4c0 formatCtx=0x29d4ddd8900
+[FFmpeg] Player shutdown complete
+[VideoTexture] Destroy called
+[VideoTexture] Destroy completed
+[VideoTexture] Cleanup called - destroying staging ring
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0x29d7f3bfd00 frame=0x29d4df98740 swsCtx=0x29d6c3e0200 codecCtx=0x29d4df13e80 formatCtx=0x29d4ddd6800
+[FFmpeg] Player shutdown complete
+[VideoTexture] Destroy called
+[VideoTexture] Destroy completed
+[VideoTexture] Cleanup called - destroying staging ring
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0x29d6b9e4d80 frame=0x29d6ca15e00 swsCtx=0x29d77487640 codecCtx=0x29d663c12c0 formatCtx=0x29d4ddd9f00
+[FFmpeg] Player shutdown complete
+[VideoTexture] Destroy called
+[VideoTexture] Destroy completed
+[VideoTexture] Cleanup called - destroying staging ring
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0x29d58404780 frame=0x29d682d5a00 swsCtx=0x29d72cbdac0 codecCtx=0x29d664ff9c0 formatCtx=0x29d4ddd8bc0
+[FFmpeg] Player shutdown complete
+[VideoTexture] Destroy called
+[VideoTexture] Destroy completed
+[VideoTexture] Cleanup called - destroying staging ring
+[FFmpeg] Shutting down player...
+[FFmpeg] Before FREE: packet=0x29d68787f40 frame=0x29d691714c0 swsCtx=0x29e0041d880 codecCtx=0x29d66500100 formatCtx=0x29d4ddd7e00
+[FFmpeg] Player shutdown complete
+[VideoTexture] Destroy called
+[VideoTexture] Destroy completed
+[VideoTexture] Cleanup called - destroying staging ring
+[OscSystem] Stopped listening

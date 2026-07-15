@@ -29,8 +29,60 @@ extern "C" {
 #include <regex>
 #include <random>
 #include <unordered_map>
+#include <set>
+#include <cstring>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <windows.h>
+#include <shobjidl.h>
+#include <objbase.h>
+#endif
 
 namespace fs = std::filesystem;
+
+#ifdef _WIN32
+static std::string pickFolderDialog(const std::string& currentPath) {
+    std::string result;
+    IFileOpenDialog* pDlg = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL,
+                                  IID_PPV_ARGS(&pDlg));
+    if (FAILED(hr) || !pDlg) return result;
+
+    pDlg->SetOptions(FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
+
+    if (!currentPath.empty()) {
+        std::wstring wPath(currentPath.begin(), currentPath.end());
+        IShellItem* pItem = nullptr;
+        if (SUCCEEDED(SHCreateItemFromParsingName(wPath.c_str(), nullptr, IID_PPV_ARGS(&pItem))) && pItem) {
+            pDlg->SetFolder(pItem);
+            pItem->Release();
+        }
+    }
+
+    hr = pDlg->Show(nullptr);
+    if (SUCCEEDED(hr)) {
+        IShellItem* pResult = nullptr;
+        hr = pDlg->GetResult(&pResult);
+        if (SUCCEEDED(hr) && pResult) {
+            PWSTR pwszPath = nullptr;
+            hr = pResult->GetDisplayName(SIGDN_FILESYSPATH, &pwszPath);
+            if (SUCCEEDED(hr) && pwszPath) {
+                int len = WideCharToMultiByte(CP_UTF8, 0, pwszPath, -1, nullptr, 0, nullptr, nullptr);
+                if (len > 0) {
+                    result.resize(len - 1);
+                    WideCharToMultiByte(CP_UTF8, 0, pwszPath, -1, result.data(), len, nullptr, nullptr);
+                }
+                CoTaskMemFree(pwszPath);
+            }
+            pResult->Release();
+        }
+    }
+    pDlg->Release();
+    return result;
+}
+#endif
 
 // ── Tipos públicos ────────────────────────────────────────────────────────────
 
@@ -354,13 +406,14 @@ const std::vector<const char*>& paramDisplayPtrs() {
     return v;
 }
 
-// ── Folder list (singleton para evitar el static duplicado) ──────────────────
+// ── Folder list (derived from registry assets) ───────────────────────────────
 
 const std::vector<std::string>& getAvailableFolders() {
     static std::vector<std::string> folders;
     static bool scanned = false;
     if (!scanned) {
         folders.push_back("All Folders");
+        // Fallback: scan mp4s/ if it exists
         try {
             fs::path root("mp4s");
             if (fs::exists(root) && fs::is_directory(root))
@@ -373,6 +426,25 @@ const std::vector<std::string>& getAvailableFolders() {
         scanned = true;
     }
     return folders;
+}
+
+// Rebuild folder list from registry assets (called when registry is available)
+void rebuildAvailableFolders(const VideoRegistry& registry) {
+    auto& folders = const_cast<std::vector<std::string>&>(getAvailableFolders());
+    folders.clear();
+    folders.push_back("All Folders");
+
+    std::set<std::string> seen;
+    for (const auto& asset : registry.getAssets()) {
+        fs::path p(asset.metadata.path);
+        if (p.has_parent_path()) {
+            std::string folderName = p.parent_path().filename().string();
+            if (!folderName.empty() && seen.find(folderName) == seen.end()) {
+                seen.insert(folderName);
+                folders.push_back(folderName);
+            }
+        }
+    }
 }
 
 // Devuelve el índice en la lista para un nombre de carpeta dado
@@ -658,6 +730,9 @@ void UISystem::drawPreviewContent(
     const std::string&    video3Path,
     std::mt19937&         rng)
 {
+    // Rebuild folder list from registry assets so all subfolders are available
+    rebuildAvailableFolders(registry);
+
     // Performance control at the top of Preview tab
     ImGui::Text("Performance Settings:");
     if (ImGui::Checkbox("Enable Video Previews", &enableVideoPreviews)) {
@@ -782,8 +857,21 @@ void UISystem::drawPreviewContent(
     {
         const auto& assets = registry.getFilteredAssets(folder);
         if (assets.empty()) {
-            std::cout << "[updateSlotAndDrawImage] " << tag << " folder empty/invalid: '" << folder << "' -> destroying slot\n";
-            destroyPreviewSlot(slot);
+            // Don't destroy the slot — just skip preview update. The slot stays
+            // alive so switching to a valid folder restores it immediately.
+            ImGui::PushID(tag);
+            if (slot.texture) {
+                float aspect = (slot.textureHeight > 0) ? (float)slot.textureWidth / (float)slot.textureHeight : 1.0f;
+                float width  = kPreviewMaxWidth;
+                float height = width / std::max(0.001f, aspect);
+                if (height > kPreviewMaxHeight) {
+                    height = kPreviewMaxHeight;
+                    width  = height * aspect;
+                }
+                ImGui::Image((ImTextureID)slot.texture, {width, height});
+            }
+            ImGui::TextColored({0.8f, 0.6f, 0.2f, 1.0f}, "  [No videos in folder '%s']", folder.c_str());
+            ImGui::PopID();
             return;
         }
 
@@ -977,65 +1065,6 @@ void UISystem::drawPreviewContent(
     ImGui::Text("🎬 MIX 3: %s", video3Path.empty() ? "(vacío)" : baseName(video3Path).c_str());
     ImGui::PopStyleColor();
 
-    // ── Video Mix sliders + Blend mode (always on top) ──
-    changed |= ImGui::SliderFloat("Mix V1", &controls.playback.videoMix, 0.f, 1.f);
-    changed |= ImGui::Combo("Blend mode V1", &controls.blending.blendModeProcedural, BLEND_ITEMS);
-    changed |= ImGui::SliderFloat("Blend amount V1", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
-    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
-    changed |= ImGui::SliderFloat("Mix V2", &controls.playback.video2Mix, 0.f, 1.f);
-    changed |= ImGui::Combo("Blend mode V2", &controls.playback.video2BlendMode,
-                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
-    changed |= ImGui::SliderFloat("Mix V3", &controls.playback.video3Mix, 0.f, 1.f);
-    changed |= ImGui::Combo("Blend mode V3", &controls.playback.video3BlendMode,
-                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
-    ImGui::EndDisabled();
-    ImGui::Separator();
-
-    // ── Favorite tools (always on top) ──
-    changed |= ImGui::SliderFloat("Brightness", &controls.post.masterBrightness, 0.0f, 2.0f, "%.2f");
-    changed |= ImGui::SliderFloat("Contrast", &controls.color.gradeContrast, 0.0f, 2.0f, "%.2f");
-    changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
-    ImGui::SameLine();
-    if (ImGui::Checkbox("##lock_grid", &controls.locks.lockGrid)) changed = true;
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock grid during randomize");
-    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockGrid ? "(locked)" : "(unlocked)");
-    if (controls.grid.enabled) {
-        changed |= ImGui::Combo("Grid mode", &controls.grid.mode, "Vertical\0Horizontal\0Matrix\0");
-        if (controls.grid.mode == 2) {
-            changed |= ImGui::SliderInt("Rows",    &controls.grid.rows,    1, 8);
-            changed |= ImGui::SliderInt("Columns", &controls.grid.columns, 1, 8);
-        } else {
-            changed |= ImGui::SliderInt("Grid count", &controls.grid.count, 1, 8);
-        }
-        changed |= ImGui::Checkbox("Mirror cells",  &controls.grid.mirrorCells);
-        changed |= ImGui::Checkbox("Show grid lines", &controls.grid.showLines);
-    }
-    ImGui::Separator();
-
-    // ── Locked parameters ( preserved during randomization ) ──
-    ImGui::TextColored({1.f,0.85f,0.3f,1.f}, "Locked Parameters");
-
-    // RGB Mix
-    ImGui::Checkbox("Enable RGB Mix", &controls.post.enablePostColorBalance);
-    ImGui::SameLine();
-    if (ImGui::Checkbox("##lock_rgbmix", &controls.locks.lockColorBalance)) changed = true;
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock RGB Mix during randomize");
-    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockColorBalance ? "(locked)" : "(unlocked)");
-    if (controls.post.enablePostColorBalance) {
-        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.color.colorBalance), 0.f, 2.f);
-    }
-
-    // Threshold
-    ImGui::Checkbox("Enable Threshold", &controls.fx.enableThreshold);
-    ImGui::SameLine();
-    if (ImGui::Checkbox("##lock_threshold", &controls.locks.lockThreshold)) changed = true;
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock Threshold during randomize");
-    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockThreshold ? "(locked)" : "(unlocked)");
-    if (controls.fx.enableThreshold) {
-        changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
-    }
-    ImGui::Separator();
-
     // ── Section 1: Video 1 ──
     if (ImGui::CollapsingHeader("Video 1", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::TextDisabled(diag.videoReady ? "online" : "offline");
@@ -1048,6 +1077,10 @@ void UISystem::drawPreviewContent(
             if (callbacks.onSetVideoSpeed && !previewSlotVideo1.previewPath.empty())
                 callbacks.onSetVideoSpeed(previewSlotVideo1.previewPath, controls.playback.videoPlaybackRate);
         }
+        drawControls("V1", previewSlotVideo1,
+                     controls.playback.selectedVideoFolder,
+                     selectedVideoAsset,
+                     callbacks.onReloadVideo, 0);
     }
 
     // ── Section 2: Video 2 ──
@@ -1063,6 +1096,10 @@ void UISystem::drawPreviewContent(
                 callbacks.onSetVideoSpeed(previewSlotVideo2.previewPath, controls.playback.video2PlaybackRate);
         }
         ImGui::EndDisabled();
+        drawControls("V2", previewSlotVideo2,
+                     controls.playback.selectedVideo2Folder,
+                     selectedVideoAsset2,
+                     callbacks.onReloadVideo2, 1);
     }
 
     // ── Section 3: Video 3 ──
@@ -1076,6 +1113,10 @@ void UISystem::drawPreviewContent(
             if (callbacks.onSetVideoSpeed && !previewSlotVideo3.previewPath.empty())
                 callbacks.onSetVideoSpeed(previewSlotVideo3.previewPath, controls.playback.video3PlaybackRate);
         }
+        drawControls("V3", previewSlotVideo3,
+                     controls.playback.selectedVideo3Folder,
+                     selectedVideoAsset3,
+                     callbacks.onReloadVideo3, 2);
     }
 
     // ── Section 4: Video Preview Mix ──
@@ -1364,10 +1405,11 @@ void UISystem::updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime) {
 
 UISystem::~UISystem() { shutdown(); }
 
-bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren) {
+bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren, float scale) {
     if (initialized) return true;
     window   = win;
     renderer = ren;
+    dpiScale = scale;
 
     IMGUI_CHECKVERSION();
     context = ImGui::CreateContext();
@@ -1380,6 +1422,12 @@ bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren) {
     ImGui::StyleColorsDark();
     ImGui::GetStyle().WindowRounding = 6.f;
     ImGui::GetStyle().FrameRounding  = 4.f;
+
+    // Apply DPI scaling to ImGui style and fonts
+    if (dpiScale > 1.0f) {
+        ImGui::GetStyle().ScaleAllSizes(dpiScale);
+        ImGui::GetStyle().FontScaleDpi = dpiScale;
+    }
 
     if (!ImGui_ImplSDL2_InitForSDLRenderer(window, renderer)) {
         ImGui::DestroyContext(context); context = nullptr; return false;
@@ -1429,13 +1477,15 @@ void UISystem::render(
     bool& controlsDirty, std::mt19937& rng, const UIDiagnostics& diag,
     const UICallbacks& callbacks, MidiSystem& midiSystem,
     OscSystem& oscSystem, AudioSystem& audioSystem,
-    const std::string& video1Path, const std::string& video2Path, const std::string& video3Path)
+    const std::string& video1Path, const std::string& video2Path, const std::string& video3Path,
+    const std::string& videoAssetsRoot)
 {
     if (!initialized || !renderer) return;
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
+    try {
     // Apply preview shuffles requested by hotkeys (1/2/3) even when the Preview tab is not open.
     processPreviewShuffles(registry, selAsset, selAsset2, selAsset3,
                            controls.playback.selectedVideoFolder,
@@ -1462,17 +1512,29 @@ void UISystem::render(
         drawMainNavbar(controls, randomizer, randomizer2, randomizer3, player, player2, player3, registry,
                        selAsset, selAsset2, selAsset3, transDur, transDur2, transDur3,
                        allowDimChange, controlsDirty, rng, diag, callbacks,
-                       midiSystem, oscSystem, audioSystem, video1Path, video2Path, video3Path);
+                       midiSystem, oscSystem, audioSystem, video1Path, video2Path, video3Path,
+                       videoAssetsRoot);
 
         if (showDemoWindow) ImGui::ShowDemoWindow(&showDemoWindow);
+    }
+    } catch (const std::exception& e) {
+        std::cerr << "[UISystem] Exception during UI render: " << e.what() << "\n";
+        ImGui::EndFrame();
+        return;
+    } catch (...) {
+        std::cerr << "[UISystem] Unknown exception during UI render\n";
+        ImGui::EndFrame();
+        return;
     }
 
     ImGui::Render();
     ImDrawData* dd = ImGui::GetDrawData();
     SDL_SetRenderDrawColor(renderer, 12, 12, 12, 255);
     SDL_RenderClear(renderer);
-    if (dd && dd->DisplaySize.x > 0 && dd->DisplaySize.y > 0)
+    if (dd && dd->DisplaySize.x > 0 && dd->DisplaySize.y > 0) {
+        SDL_RenderSetScale(renderer, dd->FramebufferScale.x, dd->FramebufferScale.y);
         ImGui_ImplSDLRenderer2_RenderDrawData(dd, renderer);
+    }
     SDL_RenderPresent(renderer);
 }
 
@@ -1564,7 +1626,8 @@ void UISystem::drawMainNavbar(
     bool& controlsDirty, std::mt19937& rng, const UIDiagnostics& diag,
     const UICallbacks& callbacks, MidiSystem& midiSystem,
     OscSystem& oscSystem, AudioSystem& audioSystem,
-    const std::string& video1Path, const std::string& video2Path, const std::string& video3Path)
+    const std::string& video1Path, const std::string& video2Path, const std::string& video3Path,
+    const std::string& videoAssetsRoot)
 {
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
@@ -1585,7 +1648,7 @@ void UISystem::drawMainNavbar(
         if (ImGui::BeginTabItem("Video")) {
             drawVideoContent(controls, randomizer, randomizer2, randomizer3, registry,
                 selAsset, selAsset2, selAsset3, transDur, transDur2, transDur3,
-                allowDimChange, controlsDirty, diag, callbacks);
+                allowDimChange, controlsDirty, diag, callbacks, videoAssetsRoot);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Post FX"))     { drawPostFxContent(controls, controlsDirty, rng);  ImGui::EndTabItem(); }
@@ -1715,9 +1778,47 @@ void UISystem::drawVideoContent(
     VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
     float& transDur, float& transDur2, float& transDur3,
     bool& allowDimChange, bool& controlsDirty,
-    const UIDiagnostics& diag, const UICallbacks& callbacks)
+    const UIDiagnostics& diag, const UICallbacks& callbacks,
+    const std::string& videoAssetsRoot)
 {
     bool changed = false;
+
+    // ─────────────────────────────────────────────────────────────
+    // VIDEO ASSETS ROOT FOLDER
+    // ─────────────────────────────────────────────────────────────
+    ImGui::Text("Video Assets Root");
+    ImGui::Separator();
+
+    {
+        char rootBuf[1024];
+        std::strncpy(rootBuf, videoAssetsRoot.c_str(), sizeof(rootBuf) - 1);
+        rootBuf[sizeof(rootBuf) - 1] = '\0';
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() - 200);
+        ImGui::InputText("##videoAssetsRoot", rootBuf, sizeof(rootBuf));
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        if (ImGui::Button("Browse...")) {
+#ifdef _WIN32
+            std::string picked = pickFolderDialog(videoAssetsRoot);
+            if (!picked.empty() && callbacks.onVideoAssetsRootChanged) {
+                callbacks.onVideoAssetsRootChanged(picked);
+            }
+#endif
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Apply")) {
+            if (callbacks.onVideoAssetsRootChanged) {
+                callbacks.onVideoAssetsRootChanged(std::string(rootBuf));
+            }
+        }
+        if (videoAssetsRoot.empty()) {
+            ImGui::TextColored({1.f, 0.4f, 0.4f, 1.f}, "No folder set — click Browse to select your video folder");
+        } else if (!std::filesystem::exists(videoAssetsRoot)) {
+            ImGui::TextColored({1.f, 0.4f, 0.4f, 1.f}, "Folder does not exist: %s", videoAssetsRoot.c_str());
+        }
+    }
+
+    ImGui::Spacing();
 
     // ─────────────────────────────────────────────────────────────
     // GLOBAL VIDEO TWEAKS
