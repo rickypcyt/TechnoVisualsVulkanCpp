@@ -418,3 +418,66 @@ vec3 renderPlasmaClassicWrapper(vec2 st) {
 vec3 renderDomainWarpedFractalWrapper(vec2 st) {
     return renderDomainWarpedFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
 }
+
+#include "../procedural/procedural_pack76.glsl"
+
+// Mode 102: Melting Red Fractal
+vec3 renderMeltingRedFractalWrapper(vec2 st) {
+    return renderMeltingRedFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack77.glsl"
+
+// Mode 103: Liquid Kali Fractal
+vec3 renderLiquidKaliFractalWrapper(vec2 st) {
+    return renderLiquidKaliFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack78.glsl"
+
+// Mode 104: Julia Color Fractal
+vec3 renderJuliaColorFractalWrapper(vec2 st) {
+    return renderJuliaColorFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack79.glsl"
+
+// Mode 105: Newton RGB Fractal
+vec3 renderNewtonRGBFractalWrapper(vec2 st) {
+    return renderNewtonRGBFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack80.glsl"
+
+// Mode 106: Color Process 5-Point
+vec3 renderColorProcess5PointWrapper(vec2 st) {
+    return renderColorProcess5Point(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack81.glsl"
+
+// Mode 107: Cellular Simulation
+vec3 renderCellularSimulationWrapper(vec2 st) {
+    return renderCellularSimulation(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack82.glsl"
+
+// Mode 108: CFD Fluid Simulation
+vec3 renderCFDFluidWrapper(vec2 st) {
+    return renderCFDFluid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack83.glsl"
+
+// Mode 109: Pixel Sort Luminance
+vec3 renderPixelSortLuminanceWrapper(vec2 st) {
+    return renderPixelSortLuminance(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+#include "../procedural/procedural_pack84.glsl"
+
+// Mode 110: Stylized Oscilloscope
+vec3 renderStylizedOscilloscopeWrapper(vec2 st) {
+    return renderStylizedOscilloscope(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}

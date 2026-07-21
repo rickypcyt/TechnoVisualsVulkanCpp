@@ -1,0 +1,99 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+/*
+  VJ Extra Threshold — advanced luminance threshold with red color mapping.
+  Multi-band thresholding with edge glow, audio-reactive bands, and
+  downward color flow. Maps scene luminance into a red palette on black.
+*/
+
+float luma(vec3 c) {
+    return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec4 sceneColor = texture(uScene, vUV);
+    vec3 col = sceneColor.rgb;
+    float lum = luma(col);
+
+    // Audio-reactive threshold band center
+    float bass = clamp(uBassLevel, 0.0, 1.0);
+    float bandCenter = mix(0.35, 0.75, 0.5 + 0.5 * sin(uTime * 0.4));
+    bandCenter = mix(bandCenter, 0.2 + bass * 0.6, 0.5);
+
+    // Band width controlled by uStrength and bass
+    float bandWidth = mix(0.08, 0.35, uStrength) + bass * 0.15;
+    float lower = clamp(bandCenter - bandWidth, 0.0, 1.0);
+    float upper = clamp(bandCenter + bandWidth, 0.0, 1.0);
+
+    // === Multi-band threshold: 4 levels mapped to red palette ===
+    // Below threshold → black
+    // Lower band → dark red
+    // Mid band → bright red
+    // Upper band → orange/yellow
+    // Above → white-hot
+
+    vec3 black    = vec3(0.0);
+    vec3 darkRed  = vec3(0.25, 0.01, 0.0);
+    vec3 bloodRed = vec3(0.55, 0.03, 0.0);
+    vec3 red      = vec3(0.9, 0.08, 0.0);
+    vec3 ember    = vec3(1.0, 0.3, 0.0);
+    vec3 hot      = vec3(1.0, 0.6, 0.1);
+    vec3 spark    = vec3(1.0, 0.9, 0.3);
+
+    vec3 result;
+    if (lum < lower) {
+        // Below threshold: black with slight dark red bleed
+        result = black;
+        // Small amount of original color preserved in deep shadows
+        result += col * 0.03;
+    } else if (lum < bandCenter) {
+        float t = (lum - lower) / max(bandCenter - lower, 0.001);
+        result = mix(darkRed, bloodRed, t);
+    } else if (lum < upper) {
+        float t = (lum - bandCenter) / max(upper - bandCenter, 0.001);
+        result = mix(bloodRed, red, t * 0.5 + 0.5);
+        // Add ember highlights in upper portion
+        result = mix(result, ember, smoothstep(0.6, 1.0, t));
+    } else {
+        // Above upper threshold: hot zone
+        float t = (lum - upper) / max(1.0 - upper, 0.001);
+        result = mix(ember, mix(hot, spark, t), t);
+    }
+
+    // === Edge glow: Sobel-like edge detection at threshold boundaries ===
+    vec2 texel = 1.0 / uResolution.xy;
+    float lumL = luma(texture(uScene, vUV - vec2(texel.x, 0.0)).rgb);
+    float lumR = luma(texture(uScene, vUV + vec2(texel.x, 0.0)).rgb);
+    float lumU = luma(texture(uScene, vUV - vec2(0.0, texel.y)).rgb);
+    float lumD = luma(texture(uScene, vUV + vec2(0.0, texel.y)).rgb);
+    float edge = abs(lumR - lumL) + abs(lumD - lumU);
+    edge = smoothstep(0.08, 0.25, edge);
+
+    // Edges glow bright red/orange
+    result += vec3(1.0, 0.4, 0.05) * edge * (0.5 + bass * 0.5);
+
+    // === Downward color flow: shift hue slightly over time ===
+    float flowPhase = vUV.y * 3.0 - uTime * 0.4;
+    float flowMod = sin(flowPhase) * 0.08;
+    result.r += flowMod * 0.3;
+    result.g += flowMod * 0.1;
+
+    // === Posterization: quantize for extra VJ look ===
+    float levels = mix(8.0, 3.0, uStrength);
+    result = floor(result * levels + 0.5) / levels;
+
+    // === Scanline overlay for VJ aesthetic ===
+    float scan = sin(vUV.y * uResolution.y * 0.8) * 0.04 * uStrength;
+    result -= scan;
+
+    // === Mix with original based on strength ===
+    vec3 finalColor = mix(sceneColor.rgb * 0.05, result, uStrength);
+
+    // === Bass flash: brief brightness pulse on heavy bass ===
+    finalColor *= 1.0 + bass * 0.3;
+
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(clamp(finalColor, 0.0, 1.0), sceneColor.a));
+}

@@ -216,6 +216,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("audioMidGain", &audio.midGain, 0.0f, 4.0f);
     r.registerFloat("audioHighGain", &audio.highGain, 0.0f, 4.0f);
     r.registerFloat("audioReactiveDrive", &audio.reactiveDrive, 0.0f, 10.0f);
+    r.registerFloat("audioSmoothAmount", &audio.smoothAmount, 0.0f, 0.95f);
 
     // EXTRA EFFECTS / EDGE
     r.registerFloat("pixelateAmount", &fx.pixelateAmount, 0.0f, 1.0f);

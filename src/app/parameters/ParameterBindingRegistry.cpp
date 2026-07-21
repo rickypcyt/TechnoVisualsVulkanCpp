@@ -356,6 +356,7 @@ const std::unordered_map<std::string, ParamBinding>& ParameterBindingRegistry::g
         { "audio.midGain", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.midGain; }} },
         { "audio.highGain", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.highGain; }} },
         { "audio.reactiveDrive", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.reactiveDrive; }} },
+        { "audio.smoothAmount", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.smoothAmount; }} },
         { "audio.enabled", {ParamBinding::Type::Bool, nullptr, nullptr, [](VisualControls& c) -> bool& { return c.audio.enabled; }} },
 
         // Legacy flat names for Audio
@@ -375,7 +376,7 @@ const std::unordered_map<std::string, ParamBinding>& ParameterBindingRegistry::g
         { "audioMidGain", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.midGain; }} },
         { "audioHighGain", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.highGain; }} },
         { "audioReactiveDrive", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.reactiveDrive; }} },
-        // enableAudioReactive is always ON, not exposed
+        { "audioSmoothAmount", {ParamBinding::Type::Float, [](VisualControls& c) -> float& { return c.audio.smoothAmount; }} },
 
         // ============================================================================
         // TEMPORAL DOMAIN

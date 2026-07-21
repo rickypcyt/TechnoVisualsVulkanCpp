@@ -283,6 +283,15 @@ private:
     AnimState previewAnim;
     AnimState outputAnim;
 
+    // Temporal smoothing state for audio values
+    struct AudioSmoothState {
+        float energy = 0.0f;
+        float bass = 0.0f;
+        float mid = 0.0f;
+        float high = 0.0f;
+    };
+    AudioSmoothState prevAudioSmooth;
+
 
     // --------------------------
     // UI / Control

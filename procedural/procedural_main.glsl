@@ -211,6 +211,8 @@ void main() {
         color = renderTizianoSterpaGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh);
     } else if (uMode == 101) {
         color = renderBohmGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh);
+    } else if (uMode == 102) {
+        color = renderMeltingRedFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh);
     }
     
     // Invalid modes will show black/pink error color

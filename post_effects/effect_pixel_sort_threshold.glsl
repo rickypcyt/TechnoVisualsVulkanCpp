@@ -1,0 +1,115 @@
+#version 430 core
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D uScene;
+layout(binding = 1, rgba16f) uniform writeonly image2D outputImage;
+
+layout(std140, binding = 2) uniform UBO {
+    vec2 uResolution;
+    float uTime;
+    float uStrength;
+    float uBassLevel;
+};
+
+/*
+  Pixel Sorting Threshold post-effect — based on threshold-based vertical sorting.
+  Finds bright regions, samples pixels, sorts by luminance, and reorders them.
+  Creates a "glitchy" sorting effect where bright areas get reorganized.
+*/
+
+float pixelRandom(vec2 xy) {
+    return fract(sin(dot(xy.xy, vec2(12.0, 78.0))));
+}
+
+float luminance(vec4 color) {
+    return (color.r * 0.3 + color.g * 0.6 + color.b * 0.1) * color.a;
+}
+
+// Returns the y coordinate of the first pixel that is brighter than the threshold
+float getFirstThresholdPixel(vec2 xy, float threshold) {
+    float luma = luminance(texture(uScene, xy / uResolution.xy));
+
+    // Increment by dividing image height in sections with randomness
+    float increment = uResolution.y / (30.0 + (pixelRandom(xy.xx) * 6.0));
+
+    while (luma <= threshold) {
+        xy.y -= increment;
+        if (xy.y <= 0.0) return 0.0;
+        luma = luminance(texture(uScene, xy / uResolution.xy));
+    }
+
+    return xy.y;
+}
+
+// Puts 10 pixels in an array
+void putItIn(vec2 startxy, float size, inout vec4 colorarray[10]) {
+    vec2 xy;
+    for (int j = 9; j >= 0; --j) {
+        xy = vec2(startxy.x, startxy.y + (size / 9.0) * float(j));
+        colorarray[j] = texture(uScene, xy / uResolution.xy);
+    }
+}
+
+// Bubble sort for 10 pixels, sorting them from darkest to brightest
+void sortArray(inout vec4 colorarray[10]) {
+    vec4 tempcolor;
+    int swapped = 1;
+
+    while (swapped > 0) {
+        swapped = 0;
+        for (int j = 9; j > 0; --j) {
+            if (luminance(colorarray[j]) > luminance(colorarray[j - 1])) {
+                tempcolor = colorarray[j];
+                colorarray[j] = colorarray[j - 1];
+                colorarray[j - 1] = tempcolor;
+                ++swapped;
+            }
+        }
+    }
+}
+
+void main() {
+    vec2 uv = vec2(gl_GlobalInvocationID.xy) / uResolution.xy;
+    vec2 fragCoord = gl_GlobalInvocationID.xy;
+    vec4 sceneColor = texture(uScene, uv);
+
+    float strength = clamp(uStrength, 0.0, 1.0);
+    
+    // Adjust thresholds based on strength and audio
+    float firstThreshold = mix(0.0, 0.1, 1.0 - strength);
+    float secondThreshold = mix(0.5, 0.7, 1.0 - strength);
+
+    float firsty = getFirstThresholdPixel(vec2(fragCoord.x, uResolution.y), firstThreshold);
+    float secondy = getFirstThresholdPixel(vec2(fragCoord.x, firsty - 1.0), secondThreshold);
+
+    // Only work on pixels between the two threshold pixels
+    if (fragCoord.y < firsty && fragCoord.y > secondy) {
+        float size = firsty - secondy;
+
+        vec4 colorarray[10];
+        putItIn(vec2(fragCoord.x, secondy), size, colorarray);
+        sortArray(colorarray);
+
+        float sectionSize = size / 9.0;
+        float location = floor((fragCoord.y - secondy) / sectionSize);
+        float bottom = secondy + (sectionSize * location);
+        float locationBetween = (fragCoord.y - bottom) / sectionSize;
+
+        // Clamp location to valid array indices
+        int locIdx = int(location);
+        if (locIdx < 0) locIdx = 0;
+        if (locIdx > 8) locIdx = 8;
+
+        // Fade between sorted colors
+        vec4 topColor = colorarray[locIdx + 1] * locationBetween;
+        vec4 bottomColor = colorarray[locIdx] * (1.0 - locationBetween);
+
+        vec4 sortedColor = topColor + bottomColor;
+        
+        // Mix with original based on strength
+        imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), mix(sceneColor, sortedColor, strength));
+    } else {
+        imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), sceneColor);
+    }
+}

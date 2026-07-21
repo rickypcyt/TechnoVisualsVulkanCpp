@@ -1,0 +1,107 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../post_common_vulkan.glsl"
+
+/*
+  Threshold Pixel Sort — vertical pixel melting effect.
+  Samples a fixed window of pixels in the current column, sorts them by
+  luminance (brightest at top, darkest at bottom), and remaps the current
+  pixel. Creates a "melting down" effect on bright regions without grid artifacts.
+*/
+
+#define WINDOW_SIZE 16
+
+float lumWeighted(vec4 color) {
+    return ((color.r * 0.3) + (color.g * 0.6) + (color.b * 0.1)) * color.a;
+}
+
+void main() {
+    vUV = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputImage));
+    vec2 fragCoord = vUV * uResolution.xy;
+
+    float strength = clamp(uStrength, 0.0, 1.0);
+    float threshold = mix(0.2, 0.05, strength);
+    threshold *= mix(0.4, 1.0, uBassLevel);
+
+    float x = fragCoord.x;
+    float y = fragCoord.y;
+    float texelY = 1.0 / uResolution.y;
+
+    // Sample current pixel
+    vec4 curColor = texture(uScene, vUV);
+    float curLuma = lumWeighted(curColor);
+
+    // Only sort pixels above threshold
+    if (curLuma < threshold) {
+        imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), curColor);
+        return;
+    }
+
+    // Sample a window of WINDOW_SIZE pixels centered on current pixel
+    vec4 samples[WINDOW_SIZE];
+    float lumas[WINDOW_SIZE];
+    for (int i = 0; i < WINDOW_SIZE; i++) {
+        float offset = float(i - WINDOW_SIZE / 2);
+        vec2 sampleUV = vec2(vUV.x, vUV.y + offset * texelY);
+        sampleUV.y = clamp(sampleUV.y, 0.0, 1.0);
+        samples[i] = texture(uScene, sampleUV);
+        lumas[i] = lumWeighted(samples[i]);
+    }
+
+    // Count how many pixels in the window are above threshold
+    int brightCount = 0;
+    for (int i = 0; i < WINDOW_SIZE; i++) {
+        if (lumas[i] > threshold) brightCount++;
+    }
+
+    // If not enough bright pixels, pass through
+    if (brightCount < 2) {
+        imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), curColor);
+        return;
+    }
+
+    // Sort the bright pixels in the window — brightest first (top), darkest last (bottom)
+    // Simple insertion sort on bright pixels only
+    vec4 brightColors[WINDOW_SIZE];
+    float brightLumas[WINDOW_SIZE];
+    int count = 0;
+    for (int i = 0; i < WINDOW_SIZE; i++) {
+        if (lumas[i] > threshold) {
+            brightColors[count] = samples[i];
+            brightLumas[count] = lumas[i];
+            count++;
+        }
+    }
+
+    // Insertion sort: brightest at index 0, darkest at index count-1
+    for (int i = 1; i < count; i++) {
+        vec4 keyColor = brightColors[i];
+        float keyLuma = brightLumas[i];
+        int j = i - 1;
+        while (j >= 0 && brightLumas[j] < keyLuma) {
+            brightColors[j + 1] = brightColors[j];
+            brightLumas[j + 1] = brightLumas[j];
+            j--;
+        }
+        brightColors[j + 1] = keyColor;
+        brightLumas[j + 1] = keyLuma;
+    }
+
+    // Find the rank of the current pixel among bright pixels in the window
+    // Current pixel is at index WINDOW_SIZE/2 in the original samples
+    int curIdx = WINDOW_SIZE / 2;
+    int myRank = 0;
+    for (int i = 0; i < WINDOW_SIZE; i++) {
+        if (lumas[i] > threshold && lumas[i] > curLuma) myRank++;
+    }
+
+    // Remap: brightest goes to top of the bright region, darkest to bottom
+    // The sorted position creates the melting-down effect
+    int sortedIdx = clamp(myRank, 0, count - 1);
+    vec4 sortedColor = brightColors[sortedIdx];
+
+    // Mix with original based on strength
+    vec4 result = mix(curColor, sortedColor, strength);
+
+    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), result);
+}

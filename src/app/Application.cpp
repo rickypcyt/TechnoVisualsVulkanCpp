@@ -2872,7 +2872,8 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
         float drive = controls.audio.reactiveDrive;
         float curvedEnergy = std::pow(liveEnergy, 1.5f);
         tempoValue = curvedEnergy * 5.0f * drive;
-        tempoValue = std::clamp(tempoValue, 0.0f, 5.0f);
+        // Clamp to minimum 1.0x speed (Shadertoy standard) and maximum 5.0x
+        tempoValue = std::clamp(tempoValue, 1.0f, 5.0f);
         // Sync playback.tempo so the UI slider moves too
         controls.playback.tempo = tempoValue;
         // Note: video playback rate is NOT synced to tempo — videos keep their manual speed
@@ -2888,9 +2889,23 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     // Shader time: accumulates at tempo speed so procedural layers
     // (Layer 0, Layer 1, Anaglyph) animate with audio energy
     if (controls.system.enableAudioReactive) {
+        // In audio-reactive mode, use tempo-modulated time
         anim.shaderTime += globalDeltaTime * tempoValue;
     } else {
-        anim.shaderTime += globalDeltaTime * std::max(0.01f, controls.playback.animationSpeed);
+        // Standard Shadertoy behavior: time accumulates at 1.0x speed
+        anim.shaderTime += globalDeltaTime;
+    }
+
+    // Debug: Print time values every 60 frames
+    static int debugFrameCount = 0;
+    debugFrameCount++;
+    if (debugFrameCount % 60 == 0) {
+        std::cout << "[DEBUG] shaderTime: " << anim.shaderTime 
+                  << " | globalDeltaTime: " << globalDeltaTime
+                  << " | tempoValue: " << tempoValue
+                  << " | animationSpeed: " << controls.playback.animationSpeed
+                  << " | enableAudioReactive: " << controls.system.enableAudioReactive
+                  << std::endl;
     }
 
     auto& reactive = controls.runtime.audioReactive;
@@ -2900,11 +2915,25 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     reactive.mid    = liveMid;
     reactive.high   = liveHigh;
 
+    // Apply user-controlled temporal smoothing to audio values
+    // smoothAmount: 0 = raw (no extra smoothing), 1 = very smooth
+    if (controls.audio.smoothAmount > 0.001f) {
+        float smoothRate = 1.0f - std::pow(1.0f - controls.audio.smoothAmount, globalDeltaTime * 60.0f);
+        reactive.energy = glm::mix(reactive.energy, prevAudioSmooth.energy, smoothRate);
+        reactive.bass   = glm::mix(reactive.bass,   prevAudioSmooth.bass,   smoothRate);
+        reactive.mid    = glm::mix(reactive.mid,    prevAudioSmooth.mid,    smoothRate);
+        reactive.high   = glm::mix(reactive.high,   prevAudioSmooth.high,   smoothRate);
+    }
+    prevAudioSmooth.energy = reactive.energy;
+    prevAudioSmooth.bass   = reactive.bass;
+    prevAudioSmooth.mid    = reactive.mid;
+    prevAudioSmooth.high   = reactive.high;
+
     if (controls.system.enableAudioReactive) {
-        controls.audio.energy = liveEnergy;
-        controls.audio.bass   = liveBass;
-        controls.audio.mid    = liveMid;
-        controls.audio.high   = liveHigh;
+        controls.audio.energy = reactive.energy;
+        controls.audio.bass   = reactive.bass;
+        controls.audio.mid    = reactive.mid;
+        controls.audio.high   = reactive.high;
     }
 
     // Set basic UBO values

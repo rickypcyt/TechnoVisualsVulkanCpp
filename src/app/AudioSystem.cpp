@@ -38,6 +38,7 @@ AudioSystem::AudioSystem() {
 
 AudioSystem::~AudioSystem() {
     shutdown();
+    cleanupAudioFile();
 
     fftwf_destroy_plan(fftPlan);
 
@@ -74,28 +75,39 @@ bool AudioSystem::initialize() {
 
 bool AudioSystem::openStream() {
     PaStreamParameters input{};
+    PaStreamParameters output{};
 
-    input.device = inputDevice;
-    input.channelCount = CHANNELS;
-    input.sampleFormat = paFloat32;
-    input.suggestedLatency =
-        Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
+    if (inputMode.load() == InputMode::Microphone) {
+        input.device = inputDevice;
+        input.channelCount = CHANNELS;
+        input.sampleFormat = paFloat32;
+        input.suggestedLatency =
+            Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
+    } else {
+        // File mode: use output stream for playback
+        output.device = Pa_GetDefaultOutputDevice();
+        output.channelCount = CHANNELS;
+        output.sampleFormat = paFloat32;
+        output.suggestedLatency =
+            Pa_GetDeviceInfo(output.device)->defaultLowOutputLatency;
+    }
 
     PaError err = Pa_OpenStream(
         &stream,
-        &input,
-        nullptr,
+        inputMode.load() == InputMode::Microphone ? &input : nullptr,
+        inputMode.load() == InputMode::File ? &output : nullptr,
         sampleRate,
         HOP_SIZE,
         paNoFlag,
-        audioCallback,
+        inputMode.load() == InputMode::Microphone ? audioCallback : fileAudioCallback,
         this
     );
 
     if (err != paNoError) {
         std::cerr << "[AudioSystem] Pa_OpenStream failed: " << Pa_GetErrorText(err) << std::endl;
     } else {
-        std::cout << "[AudioSystem] Stream opened successfully" << std::endl;
+        std::cout << "[AudioSystem] Stream opened successfully (mode: "
+                  << (inputMode.load() == InputMode::Microphone ? "Microphone" : "File") << ")" << std::endl;
     }
 
     return err == paNoError;
@@ -490,4 +502,205 @@ void AudioSystem::calculateBands() {
     );
 
     previousKick = k;
+}
+
+// === Audio file methods ===
+
+bool AudioSystem::loadAudioFile(const std::string& filepath) {
+    cleanupAudioFile();
+
+    if (decodeAudioFile(filepath)) {
+        currentFilePath = filepath;
+        fileLoaded.store(true);
+        std::cout << "[AudioSystem] Loaded audio file: " << filepath << std::endl;
+        return true;
+    }
+
+    return false;
+}
+
+void AudioSystem::setInputMode(InputMode mode) {
+    if (inputMode.load() == mode) return;
+
+    bool wasRunning = running.load();
+    if (wasRunning) {
+        stop();
+    }
+
+    inputMode.store(mode);
+
+    if (wasRunning) {
+        start();
+    }
+}
+
+bool AudioSystem::decodeAudioFile(const std::string& filepath) {
+    AVFormatContext* fmtCtx = nullptr;
+    AVCodecContext* codCtx = nullptr;
+    SwrContext* swr = nullptr;
+    int audioIdx = -1;
+
+    // Open file
+    if (avformat_open_input(&fmtCtx, filepath.c_str(), nullptr, nullptr) != 0) {
+        std::cerr << "[AudioSystem] Could not open file: " << filepath << std::endl;
+        return false;
+    }
+
+    // Find stream info
+    if (avformat_find_stream_info(fmtCtx, nullptr) < 0) {
+        std::cerr << "[AudioSystem] Could not find stream info" << std::endl;
+        avformat_close_input(&fmtCtx);
+        return false;
+    }
+
+    // Find audio stream
+    for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
+        if (fmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audioIdx = i;
+            break;
+        }
+    }
+
+    if (audioIdx == -1) {
+        std::cerr << "[AudioSystem] No audio stream found" << std::endl;
+        avformat_close_input(&fmtCtx);
+        return false;
+    }
+
+    // Get codec
+    AVCodecParameters* codecPar = fmtCtx->streams[audioIdx]->codecpar;
+    const AVCodec* codec = avcodec_find_decoder(codecPar->codec_id);
+    if (!codec) {
+        std::cerr << "[AudioSystem] Unsupported codec" << std::endl;
+        avformat_close_input(&fmtCtx);
+        return false;
+    }
+
+    // Allocate codec context
+    codCtx = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(codCtx, codecPar);
+
+    if (avcodec_open2(codCtx, codec, nullptr) < 0) {
+        std::cerr << "[AudioSystem] Could not open codec" << std::endl;
+        avcodec_free_context(&codCtx);
+        avformat_close_input(&fmtCtx);
+        return false;
+    }
+
+    // Setup resampler to convert to mono 44.1kHz float
+    AVChannelLayout in_ch_layout = codCtx->ch_layout;
+    AVChannelLayout out_ch_layout = AV_CHANNEL_LAYOUT_MONO;
+
+    swr = swr_alloc();
+    int ret = swr_alloc_set_opts2(&swr,
+                                   &out_ch_layout, AV_SAMPLE_FMT_FLT, (int)sampleRate,
+                                   &in_ch_layout, codCtx->sample_fmt, codCtx->sample_rate,
+                                   0, nullptr);
+    if (ret < 0) {
+        std::cerr << "[AudioSystem] Failed to set resampler options" << std::endl;
+        swr_free(&swr);
+        avcodec_free_context(&codCtx);
+        avformat_close_input(&fmtCtx);
+        return false;
+    }
+    swr_init(swr);
+
+    // Read and decode audio
+    AVPacket* packet = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
+
+    std::vector<float> decodedData;
+    uint8_t* outBuffer = nullptr;
+    int outLinesize = 0;
+    int outSamples = 0;
+
+    while (av_read_frame(fmtCtx, packet) >= 0) {
+        if (packet->stream_index == audioIdx) {
+            if (avcodec_send_packet(codCtx, packet) == 0) {
+                while (avcodec_receive_frame(codCtx, frame) == 0) {
+                    outSamples = swr_get_out_samples(swr, frame->nb_samples);
+                    av_samples_alloc(&outBuffer, &outLinesize, 1, outSamples, AV_SAMPLE_FMT_FLT, 0);
+                    int converted = swr_convert(swr, &outBuffer, outSamples,
+                                                (const uint8_t**)frame->data, frame->nb_samples);
+
+                    if (converted > 0) {
+                        float* samples = (float*)outBuffer;
+                        decodedData.insert(decodedData.end(), samples, samples + converted);
+                    }
+
+                    av_freep(&outBuffer);
+                }
+            }
+        }
+        av_packet_unref(packet);
+    }
+
+    av_packet_free(&packet);
+    av_frame_free(&frame);
+    swr_free(&swr);
+    avcodec_free_context(&codCtx);
+    avformat_close_input(&fmtCtx);
+
+    if (decodedData.empty()) {
+        std::cerr << "[AudioSystem] No audio data decoded" << std::endl;
+        return false;
+    }
+
+    // Store decoded data
+    {
+        std::lock_guard<std::mutex> lock(fileMutex);
+        audioFileData = std::move(decodedData);
+        fileReadPosition = 0;
+    }
+
+    return true;
+}
+
+void AudioSystem::cleanupAudioFile() {
+    std::lock_guard<std::mutex> lock(fileMutex);
+    audioFileData.clear();
+    fileReadPosition = 0;
+    fileLoaded.store(false);
+    currentFilePath.clear();
+}
+
+int AudioSystem::fileAudioCallback(
+    const void* input,
+    void* output,
+    unsigned long frameCount,
+    const PaStreamCallbackTimeInfo* timeInfo,
+    PaStreamCallbackFlags statusFlags,
+    void* userData
+) {
+    AudioSystem* sys = static_cast<AudioSystem*>(userData);
+    float* out = static_cast<float*>(output);
+
+    std::lock_guard<std::mutex> lock(sys->fileMutex);
+
+    if (sys->audioFileData.empty()) {
+        std::fill(out, out + frameCount, 0.0f);
+        return paContinue;
+    }
+
+    for (unsigned long i = 0; i < frameCount; i++) {
+        if (sys->fileReadPosition >= sys->audioFileData.size()) {
+            if (sys->fileLoop) {
+                sys->fileReadPosition = 0;
+            } else {
+                out[i] = 0.0f;
+                continue;
+            }
+        }
+        out[i] = sys->audioFileData[sys->fileReadPosition++];
+
+        // Feed ring buffer for FFT analysis (same as microphone callback)
+        {
+            std::lock_guard<std::mutex> ringLock(sys->ringMutex);
+            sys->ringBuffer[sys->writeIndex] = out[i];
+            sys->writeIndex = (sys->writeIndex + 1) % sys->ringBuffer.size();
+        }
+    }
+
+    sys->cv.notify_one();
+    return paContinue;
 }

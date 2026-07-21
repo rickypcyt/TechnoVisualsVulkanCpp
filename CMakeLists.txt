@@ -212,6 +212,27 @@ endforeach()
 add_custom_target(compile_post_effects DEPENDS ${POST_EFFECT_SPV})
 add_dependencies(app compile_post_effects)
 
+# --- Standalone post-effect compute shaders (not generated from .glsl) ---
+# These are hand-written .comp files that don't go through post_to_compute.py
+set(STANDALONE_POST_COMPS
+    # No standalone shaders currently
+)
+set(STANDALONE_POST_SPVS)
+foreach(comp ${STANDALONE_POST_COMPS})
+    get_filename_component(name ${comp} NAME_WE)
+    set(spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_effects/${name}.comp.spv)
+    list(APPEND STANDALONE_POST_SPVS ${spv})
+    add_custom_command(
+        OUTPUT ${spv}
+        COMMAND ${GLSLC} -fshader-stage=compute ${comp} -o ${spv}
+        DEPENDS ${comp} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shared_ubo.glsl
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Compiling standalone post-effect compute shader ${name}"
+    )
+endforeach()
+add_custom_target(compile_standalone_post_effects DEPENDS ${STANDALONE_POST_SPVS})
+add_dependencies(compile_post_effects compile_standalone_post_effects)
+
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBLO_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(app

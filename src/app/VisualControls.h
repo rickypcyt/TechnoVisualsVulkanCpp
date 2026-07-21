@@ -252,6 +252,7 @@ struct VisualControls {
         float midGain = 1.0f;        // EQ gain for mid band
         float highGain = 1.0f;       // EQ gain for high band
         float reactiveDrive = 1.0f;
+        float smoothAmount = 0.0f;    // 0=raw, 1=very smooth (temporal lerp)
 
         bool enabled = true;
     } audio;

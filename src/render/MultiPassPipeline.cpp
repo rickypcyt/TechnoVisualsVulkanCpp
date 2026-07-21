@@ -1043,9 +1043,17 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
         };
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, postEffectPipelineLayout, 0, 2, postEffectSets, 0, nullptr);
 
-        uint32_t groupX = (extent.width + 7) / 8;
-        uint32_t groupY = (extent.height + 7) / 8;
-        vkCmdDispatch(cmd, groupX, groupY, 1);
+        // Dispatch dimensions depend on the shader's workgroup size.
+        // Standard post-effects use 8x8 workgroups; bitonic sort uses 256x1.
+        if (activePostEffect == "effect_bitonic_sort") {
+            uint32_t groupX = (extent.width + 255) / 256;
+            uint32_t groupY = extent.height;
+            vkCmdDispatch(cmd, groupX, groupY, 1);
+        } else {
+            uint32_t groupX = (extent.width + 7) / 8;
+            uint32_t groupY = (extent.height + 7) / 8;
+            vkCmdDispatch(cmd, groupX, groupY, 1);
+        }
 
         // Return both input and output to SRO so the swapchain and next frame can sample them.
         ensureLayout(intermediate[finalBuffer].image, intermediateLayouts[finalBuffer], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

@@ -82,6 +82,53 @@ static std::string pickFolderDialog(const std::string& currentPath) {
     pDlg->Release();
     return result;
 }
+
+static std::string pickAudioFileDialog(const std::string& currentPath) {
+    std::string result;
+    IFileOpenDialog* pDlg = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL,
+                                  IID_PPV_ARGS(&pDlg));
+    if (FAILED(hr) || !pDlg) return result;
+
+    // Set file filters for audio formats
+    COMDLG_FILTERSPEC rgSpec[] = {
+        { L"Audio Files", L"*.mp3;*.wav;*.flac;*.ogg;*.m4a;*.aac" },
+        { L"All Files", L"*.*" }
+    };
+    pDlg->SetFileTypes(2, rgSpec);
+    pDlg->SetFileTypeIndex(0);
+    pDlg->SetOptions(FOS_FORCEFILESYSTEM);
+
+    if (!currentPath.empty()) {
+        std::wstring wPath(currentPath.begin(), currentPath.end());
+        IShellItem* pItem = nullptr;
+        if (SUCCEEDED(SHCreateItemFromParsingName(wPath.c_str(), nullptr, IID_PPV_ARGS(&pItem))) && pItem) {
+            pDlg->SetFolder(pItem);
+            pItem->Release();
+        }
+    }
+
+    hr = pDlg->Show(nullptr);
+    if (SUCCEEDED(hr)) {
+        IShellItem* pResult = nullptr;
+        hr = pDlg->GetResult(&pResult);
+        if (SUCCEEDED(hr) && pResult) {
+            PWSTR pwszPath = nullptr;
+            hr = pResult->GetDisplayName(SIGDN_FILESYSPATH, &pwszPath);
+            if (SUCCEEDED(hr) && pwszPath) {
+                int len = WideCharToMultiByte(CP_UTF8, 0, pwszPath, -1, nullptr, 0, nullptr, nullptr);
+                if (len > 0) {
+                    result.resize(len - 1);
+                    WideCharToMultiByte(CP_UTF8, 0, pwszPath, -1, result.data(), len, nullptr, nullptr);
+                }
+                CoTaskMemFree(pwszPath);
+            }
+            pResult->Release();
+        }
+    }
+    pDlg->Release();
+    return result;
+}
 #endif
 
 // ── Tipos públicos ────────────────────────────────────────────────────────────
@@ -371,6 +418,7 @@ static const ParameterInfo PARAMETER_INFOS[] = {
     {"VJay Extra","audioGlitchResponse",    0.f, 1.f},
     {"VJay Extra","audioBeatSync",          0.f, 2.f},
     {"VJay Extra","audioLfoRate",           0.f, 2.f},
+    {"VJay Extra","audioSmoothAmount",      0.f, 0.95f},
     {"VJay Extra","temporalInterpolation",  0.f, 1.f},
     {"VJay Extra","temporalBlendStrength",  0.f, 1.f},
     {"VJay Extra","slowMotionFactor",       0.1f,2.f},
@@ -2759,6 +2807,50 @@ void UISystem::drawOscControlsContent(OscSystem& osc) {
 void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
     ImGui::TextColored({0,1,0.5f,1}, "Audio Reactive Debug"); ImGui::Separator();
 
+    // Input mode selection
+    ImGui::Text("Input Mode");
+    const char* modeNames[] = {"Microphone", "Audio File"};
+    int currentMode = static_cast<int>(audio.getInputMode());
+    if (ImGui::Combo("##AudioMode", &currentMode, modeNames, 2)) {
+        audio.setInputMode(static_cast<AudioSystem::InputMode>(currentMode));
+    }
+
+    // Audio file loading
+    if (audio.getInputMode() == AudioSystem::InputMode::File) {
+        ImGui::Separator();
+        ImGui::Text("Audio File");
+        static char audioFilePath[512] = "";
+        static bool showFileDialog = false;
+
+        if (ImGui::Button("Browse...")) {
+            showFileDialog = true;
+        }
+        ImGui::SameLine();
+        ImGui::InputText("File Path", audioFilePath, sizeof(audioFilePath));
+        ImGui::SameLine();
+        if (ImGui::Button("Load")) {
+            if (audio.loadAudioFile(audioFilePath)) {
+                ImGui::TextColored({0,1,0,1}, "Loaded: %s", audio.getCurrentFilePath().c_str());
+            } else {
+                ImGui::TextColored({1,0,0,1}, "Failed to load file");
+            }
+        }
+
+        if (showFileDialog) {
+            std::string selectedFile = pickAudioFileDialog(audioFilePath);
+            if (!selectedFile.empty()) {
+                strncpy(audioFilePath, selectedFile.c_str(), sizeof(audioFilePath) - 1);
+                audioFilePath[sizeof(audioFilePath) - 1] = '\0';
+            }
+            showFileDialog = false;
+        }
+
+        if (audio.isFileLoaded()) {
+            ImGui::TextColored({0,1,0,1}, "Playing: %s", audio.getCurrentFilePath().c_str());
+        }
+        ImGui::Separator();
+    }
+
     // Manual inputs
     ImGui::Text("Audio-inspired inputs");
     if (c.system.enableAudioReactive) {
@@ -2784,6 +2876,8 @@ void UISystem::drawAudioDebugContent(AudioSystem& audio, VisualControls& c) {
     ImGui::SliderFloat("Mid gain",      &c.audio.midGain,   0.0f, 4.0f, "%.2fx");
     ImGui::SliderFloat("High gain",     &c.audio.highGain,  0.0f, 4.0f, "%.2fx");
     ImGui::SliderFloat("Procedural audio drive", &c.audio.reactiveDrive, 0.5f,3.f,"%.2fx");
+    ImGui::SliderFloat("Audio smoothing",  &c.audio.smoothAmount, 0.0f, 0.95f, "%.2f");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Smooths audio band values over time to reduce jitter. 0=raw, 0.95=very smooth.");
     ImGui::Separator();
     ImGui::TextColored({0,1,0.5f,1}, "Audio Reactivity (always ON)");
     ImGui::SliderFloat("Warp response",    &c.audio.warpResponse,    0,2,"%.2f");

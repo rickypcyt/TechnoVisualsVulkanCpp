@@ -49,6 +49,12 @@ if ($null -eq $glslcPath) {
 
 Write-Host "[build_and_run_windows] Compiling shaders..." -ForegroundColor Cyan
 
+# Delete all .spv files to force full recompile
+Write-Host "  Cleaning old .spv files..." -ForegroundColor Cyan
+$postEffectDir = "$shadersDir\post_effects"
+Get-ChildItem -Path "$shadersDir\*.spv" -ErrorAction SilentlyContinue | Remove-Item -Force
+Get-ChildItem -Path "$postEffectDir\*.spv" -ErrorAction SilentlyContinue | Remove-Item -Force
+
 $shaders = @(
     "triangle.vert",
     "triangle.frag",
@@ -80,6 +86,18 @@ if ($null -ne $oldestSpv) {
     foreach ($glsl in Get-ChildItem -Path "$shadersDir\*.glsl" -ErrorAction SilentlyContinue) {
         if ($glsl.LastWriteTime -gt (Get-Item $oldestSpv).LastWriteTime) {
             $forceRecompile = $true
+            break
+        }
+    }
+    # Also check procedural/ directory for changes
+    foreach ($glsl in Get-ChildItem -Path "$scriptDir\procedural\*.glsl" -ErrorAction SilentlyContinue) {
+        if ($glsl.LastWriteTime -gt (Get-Item $oldestSpv).LastWriteTime) {
+            $forceRecompile = $true
+            # Also delete pass_a_base.frag.spv to force recompile
+            $passASpv = "$shadersDir\pass_a_base.frag.spv"
+            if (Test-Path $passASpv) {
+                Remove-Item $passASpv -Force
+            }
             break
         }
     }
@@ -140,40 +158,15 @@ if (Test-Path $postEffectDir) {
         if ($inc.LastWriteTime -gt $incSpvTime) { $forcePeRecompile = $true; break }
     }
 
-    # Known-broken procedural shaders that always fail to compile — skip them
-    # to avoid wasting time on every build. Remove from this list once fixed.
-    $brokenProcedural = @(
-        "procedural_breathing.comp",
-        "procedural_cylinder_repeat.comp",
-        "procedural_eiyeron.comp",
-        "procedural_flopine.comp",
-        "procedural_flopine2.comp",
-        "procedural_kaleidoscope.comp",
-        "procedural_pouet.comp",
-        "procedural_power_particle.comp",
-        "procedural_shadertoy_bridge.comp",
-        "procedural_head.comp",
-        "procedural_header.comp",
-        "procedural_helpers.comp",
-        "procedural_message.comp"
-    )
-    # Also skip all procedural_pack* shaders (known to have compile errors)
-    $brokenProceduralPattern = "procedural_pack"
-
-    $compShaders = Get-ChildItem -Path $postEffectDir -Filter "*.comp" -ErrorAction SilentlyContinue
+    $compShaders = Get-ChildItem -Path $postEffectDir -Filter "*.glsl" -ErrorAction SilentlyContinue
     $peOk = 0
     $peSkip = 0
     foreach ($comp in $compShaders) {
-        # Skip known-broken shaders entirely
-        if ($brokenProcedural -contains $comp.Name) {
+        # Skip include files (not standalone shaders)
+        if ($comp.Name -match "_common\.glsl$") {
             $peSkip++
             continue
         }
-        if ($comp.Name.StartsWith($brokenProceduralPattern)) {
-            $peSkip++
-            continue
-        }
-
         $spvOut = $comp.FullName + ".spv"
         $needsCompile = $forcePeRecompile
         if (-not $needsCompile) {

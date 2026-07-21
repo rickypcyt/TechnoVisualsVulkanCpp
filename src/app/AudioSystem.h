@@ -11,8 +11,23 @@
 #include <portaudio.h>
 #include <fftw3.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libswresample/swresample.h>
+#ifdef __cplusplus
+}
+#endif
+
 class AudioSystem {
 public:
+    enum class InputMode {
+        Microphone,
+        File
+    };
+
     AudioSystem();
     ~AudioSystem();
 
@@ -54,6 +69,13 @@ public:
     void refreshPulseAudioSources();
     bool restartStream();
 
+    // Audio file methods
+    bool loadAudioFile(const std::string& filepath);
+    void setInputMode(InputMode mode);
+    InputMode getInputMode() const { return inputMode.load(); }
+    bool isFileLoaded() const { return fileLoaded.load(); }
+    std::string getCurrentFilePath() const { return currentFilePath; }
+
 private:
     static constexpr int FFT_SIZE = 2048;
     static constexpr int HOP_SIZE = FFT_SIZE / 2;
@@ -75,6 +97,7 @@ private:
     int pulseSourceIndex = -1;
 
     std::atomic<bool> running = false;
+    std::atomic<InputMode> inputMode = InputMode::Microphone;
 
     // Ring buffer
     std::vector<float> ringBuffer;
@@ -114,10 +137,33 @@ private:
 
     float previousKick = 0.0f;
 
+    // Audio file playback
+    std::atomic<bool> fileLoaded = false;
+    std::string currentFilePath;
+    std::vector<float> audioFileData;
+    size_t fileReadPosition = 0;
+    std::mutex fileMutex;
+    bool fileLoop = true;
+
+    // FFmpeg context
+    AVFormatContext* formatCtx = nullptr;
+    AVCodecContext* codecCtx = nullptr;
+    SwrContext* swrCtx = nullptr;
+    int audioStreamIndex = -1;
+
 private:
     bool openStream();
 
     static int audioCallback(
+        const void* input,
+        void* output,
+        unsigned long frameCount,
+        const PaStreamCallbackTimeInfo* timeInfo,
+        PaStreamCallbackFlags statusFlags,
+        void* userData
+    );
+
+    static int fileAudioCallback(
         const void* input,
         void* output,
         unsigned long frameCount,
@@ -137,4 +183,8 @@ private:
     );
 
     int hzToBin(float hz) const;
+
+    // Audio file methods
+    bool decodeAudioFile(const std::string& filepath);
+    void cleanupAudioFile();
 };

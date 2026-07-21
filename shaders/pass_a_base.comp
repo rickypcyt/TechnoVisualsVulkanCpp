@@ -345,7 +345,17 @@ vec4 dispatchMode(int m, vec2 st) {
     if (m == 17) return vec4(renderStarfieldWarpWrapper(st), 1.0);
     if (m == 18) return vec4(renderPlasmaClassicWrapper(st), 1.0);
     if (m == 19) return vec4(renderDomainWarpedFractalWrapper(st), 1.0);
-    
+
+    if (m == 102) return vec4(renderMeltingRedFractalWrapper(st), 1.0);
+    if (m == 103) return vec4(renderLiquidKaliFractalWrapper(st), 1.0);
+    if (m == 104) return vec4(renderJuliaColorFractalWrapper(st), 1.0);
+    if (m == 105) return vec4(renderNewtonRGBFractalWrapper(st), 1.0);
+    if (m == 106) return vec4(renderColorProcess5PointWrapper(st), 1.0);
+    if (m == 107) return vec4(renderCellularSimulationWrapper(st), 1.0);
+    if (m == 108) return vec4(renderCFDFluidWrapper(st), 1.0);
+    if (m == 109) return vec4(renderPixelSortLuminanceWrapper(st), 1.0);
+    if (m == 110) return vec4(renderStylizedOscilloscopeWrapper(st), 1.0);
+
     if (m == 40) {
         vec2 aspectCorrected = (st - 0.5) * vec2(ubo.resolution.x / max(ubo.resolution.y, 1.0), 1.0);
         return renderAnaglyphAssembly(aspectCorrected, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);

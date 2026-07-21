@@ -3,6 +3,7 @@ C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/gen_ubo.dir
 C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/app.dir
 C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/compile_compute_shaders.dir
 C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/compile_post_effects.dir
+C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/compile_standalone_post_effects.dir
 C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/edit_cache.dir
 C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/rebuild_cache.dir
 C:/coding/TechnoVisualsVulkanCpp/build/CMakeFiles/list_install_components.dir
