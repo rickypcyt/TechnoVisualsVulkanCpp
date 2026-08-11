@@ -290,7 +290,8 @@ private:
         float mid = 0.0f;
         float high = 0.0f;
     };
-    AudioSmoothState prevAudioSmooth;
+    AudioSmoothState prevAudioSmooth;      // for preview
+    AudioSmoothState outputPrevAudioSmooth; // for output
 
 
     // --------------------------

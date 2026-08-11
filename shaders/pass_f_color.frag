@@ -136,5 +136,48 @@ void main() {
         color *= ubo.colorBalance;
     }
 
+    // === Invert: negative colors ===
+    if (ubo.enableInvert == 1) {
+        color = vec3(1.0) - color;
+    }
+
+    // === Posterize: quantize color levels ===
+    if (ubo.enablePosterize == 1 && ubo.posterizeLevels > 1.0) {
+        float levels = max(ubo.posterizeLevels, 2.0);
+        color = floor(color * levels) / levels;
+    }
+
+    // === RGB shift: chromatic aberration via channel offset ===
+    if (ubo.enableRGBShift == 1 && ubo.rgbShiftAmount > 0.0001) {
+        vec2 texel = 1.0 / ubo.resolution;
+        float shift = ubo.rgbShiftAmount;
+        float r = texture(inputTex, uv + vec2(shift, 0.0)).r;
+        float b = texture(inputTex, uv - vec2(shift, 0.0)).b;
+        color = vec3(r, color.g, b);
+    }
+
+    // === Infrared: false-color thermal look ===
+    if (ubo.enableInfrared == 1) {
+        float lum = dot(color, vec3(0.299, 0.587, 0.114));
+        // Map luminance to thermal palette: black → blue → magenta → red → yellow → white
+        vec3 ir;
+        if (lum < 0.25) {
+            ir = mix(vec3(0.0, 0.0, 0.2), vec3(0.0, 0.0, 0.8), lum / 0.25);
+        } else if (lum < 0.5) {
+            ir = mix(vec3(0.0, 0.0, 0.8), vec3(0.6, 0.0, 0.6), (lum - 0.25) / 0.25);
+        } else if (lum < 0.75) {
+            ir = mix(vec3(0.6, 0.0, 0.6), vec3(1.0, 0.3, 0.0), (lum - 0.5) / 0.25);
+        } else {
+            ir = mix(vec3(1.0, 0.3, 0.0), vec3(1.0, 1.0, 0.8), (lum - 0.75) / 0.25);
+        }
+        color = ir;
+    }
+
+    // === Strobe: full-screen white flash at strobeSpeed Hz ===
+    if (ubo.enableStrobe == 1 && ubo.strobeSpeed > 0.0001) {
+        float strobe = step(0.5, fract(ubo.time * ubo.strobeSpeed));
+        color = mix(color, vec3(1.0), strobe);
+    }
+
     outColor = vec4(clamp(color, 0.0, 2.0), 1.0);
 }

@@ -20,6 +20,8 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     float cameraPanY;
 } ubo;
 
+#define PI 3.14159265359
+
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -549,14 +551,9 @@ vec3 calcNormal(vec3 pos){
         map(pos + e.yyx) - map(pos - e.yyx)
     ));
 }
-vec4 renderSingleHead(vec2 st, float ubo.time, float ubo.tempo, float ubo.energy, float ubo.bass, float ubo.mid, float ubo.high);
-
-vec4 renderHead(vec2 st, float ubo.time, float ubo.tempo, float ubo.energy, float ubo.bass, float ubo.mid, float ubo.high) {
-    return renderSingleHead(st, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
-}
-vec4 renderSingleHead(vec2 st, float ubo.time, float ubo.tempo, float ubo.energy, float ubo.bass, float ubo.mid, float ubo.high) {
-    st *= uCameraZoom;
-    st += vec2(uCameraOffsetX, uCameraOffsetY);
+vec4 renderSingleHead(vec2 st) {
+    st *= ubo.cameraZoom;
+    st += vec2(ubo.cameraPanX, ubo.cameraPanY);
     
     float pixelCount = ubo.resolution.x * ubo.resolution.y;
     float resolutionScale = 1.0;
@@ -567,7 +564,7 @@ vec4 renderSingleHead(vec2 st, float ubo.time, float ubo.tempo, float ubo.energy
     }
     st *= resolutionScale;
     
-    float camZ = 3.5 / max(uCameraZoom, 0.1);  // Prevent division by zero
+    float camZ = 3.5 / max(ubo.cameraZoom, 0.1);  // Prevent division by zero
     vec3 camPos = vec3(0, 0.1, camZ);
     vec3 rayDirection = normalize(vec3(st.x, st.y - 0.1, -4));
     
@@ -584,7 +581,7 @@ vec4 renderSingleHead(vec2 st, float ubo.time, float ubo.tempo, float ubo.energy
         vec2 mapResult = mapWithEye(rayPosition);
         dist = mapResult.x;
 
-        float eps = .001 * max(uCameraZoom, 0.1);
+        float eps = .001 * max(ubo.cameraZoom, 0.1);
         if (abs(dist) < eps) {
             hitIsEye = mapResult.y > 0.5;
         	break;
@@ -631,7 +628,7 @@ void main() {
     vec2 uv = vec2(pixelCoords) / vec2(imageSize);
     vec3 original = texelFetch(inputImage, pixelCoords, 0).rgb;
     
-    vec3 color = renderSingleHead(uv, ubo.time, ubo.tempo, ubo.energy, ubo.bass, ubo.mid, ubo.high);
+    vec3 color = renderSingleHead(uv).rgb;
     
     imageStore(outputImage, pixelCoords, vec4(color, 1.0));
 }

@@ -163,7 +163,7 @@ if (Test-Path $postEffectDir) {
     $peSkip = 0
     foreach ($comp in $compShaders) {
         # Skip include files (not standalone shaders)
-        if ($comp.Name -match "_common\.glsl$") {
+        if ($comp.Name -match "_common.*\.glsl$") {
             $peSkip++
             continue
         }

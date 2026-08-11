@@ -103,6 +103,10 @@ struct VisualControls {
 
         // Color grading toggle
         bool enableColorGrading = true;
+
+        // Audio-driven RGB: bass→R, mid→G, high→B modulates primary/secondary colors
+        bool enableAudioColorRGB = false;
+        float audioColorRGBAmount = 0.5f;
     } color;
 
     // ============================================================================

@@ -2112,6 +2112,9 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         changed |= ImGui::ColorEdit3("Split tone shadows",     glm::value_ptr(c.color.splitToneShadows));
         changed |= ImGui::ColorEdit3("Split tone highlights",  glm::value_ptr(c.color.splitToneHighlights));
     )
+    TOGGLED_SECTION("1b. Audio RGB (bass→R, mid→G, high→B)", c.color.enableAudioColorRGB,
+        changed |= ImGui::SliderFloat("RGB amount", &c.color.audioColorRGBAmount, 0.f, 2.f, "%.2f");
+    )
     TOGGLED_SECTION("2. Feedback temporal", c.temporal.enableFeedback,
         changed |= ImGui::SliderFloat("Feedback",              &c.temporal.feedbackAmount,      0,1,"%.2f");
         changed |= ImGui::SliderFloat("Trails",                &c.temporal.trailStrength,       0,1,"%.2f");

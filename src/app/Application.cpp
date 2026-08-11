@@ -428,17 +428,23 @@ bool Application::savePreset(const std::string& name) {
     std::filesystem::create_directories(presetsDir);
     std::string path = presetsDir + "/" + name + ".json";
 
-    nlohmann::json j;
-    j["version"] = 2;
-    j["visualControls"] = JsonSerializer::toJson(parameterRegistry);
+    // Build a temporary registry pointing to the OUTPUT controls so the preset
+    // captures exactly what is on the final output window.
+    ParameterRegistry outputRegistry;
+    VisualControlsRegistry::build(outputRegistry, outputVisualControls);
 
+    nlohmann::json j;
+    j["version"] = 3;
+    j["visualControls"] = JsonSerializer::toJson(outputRegistry);
+
+    // Save OUTPUT video state so the preset restores the exact output sources
     nlohmann::json video;
-    video["videoSourcePath"] = videoSourcePath;
-    video["videoSourcePath2"] = videoSourcePath2;
-    video["videoSourcePath3"] = videoSourcePath3;
-    video["selectedVideoAsset"] = selectedVideoAsset;
-    video["selectedVideoAsset2"] = selectedVideoAsset2;
-    video["selectedVideoAsset3"] = selectedVideoAsset3;
+    video["videoSourcePath"] = outputVideoSourcePath;
+    video["videoSourcePath2"] = outputVideoSourcePath2;
+    video["videoSourcePath3"] = outputVideoSourcePath3;
+    video["selectedVideoAsset"] = outputSelectedVideoAsset;
+    video["selectedVideoAsset2"] = outputSelectedVideoAsset2;
+    video["selectedVideoAsset3"] = outputSelectedVideoAsset3;
     video["allowDimensionChangeRecreation"] = allowDimensionChangeRecreation;
 
     nlohmann::json r1;
@@ -532,6 +538,20 @@ bool Application::loadPreset(const std::string& name) {
         if (!videoSourcePath.empty()) reloadVideoSlot(0, videoSourcePath);
         if (!videoSourcePath2.empty()) reloadVideoSlot(1, videoSourcePath2);
         if (!videoSourcePath3.empty()) reloadVideoSlot(2, videoSourcePath3);
+    }
+
+    // Sync output to match the loaded preset so preview == output
+    outputVisualControls = visualControls;
+    outputVideoSourcePath = videoSourcePath;
+    outputVideoSourcePath2 = videoSourcePath2;
+    outputVideoSourcePath3 = videoSourcePath3;
+    outputSelectedVideoAsset = selectedVideoAsset;
+    outputSelectedVideoAsset2 = selectedVideoAsset2;
+    outputSelectedVideoAsset3 = selectedVideoAsset3;
+    if (canChangeVideo()) {
+        if (!outputVideoSourcePath.empty()) reloadOutputVideoSlot(0, outputVideoSourcePath);
+        if (!outputVideoSourcePath2.empty()) reloadOutputVideoSlot(1, outputVideoSourcePath2);
+        if (!outputVideoSourcePath3.empty()) reloadOutputVideoSlot(2, outputVideoSourcePath3);
     }
 
     controlsDirty = true;
@@ -1969,6 +1989,8 @@ void Application::renderOneFrame() {
                     videoAssetsRoot);
 
     // ── Render preview and output independently ──────────────────────────
+    // Output is only updated from preview via the ENTER key commit,
+    // not every frame — they are independent windows.
     tryRenderPreview();
     tryRenderOutput();
 }
@@ -2563,17 +2585,23 @@ void Application::mainLoop() {
             }
         }
 
-        // ── Frame rate limiter (adaptive) ─────────────────────────────────
+        // ── Frame rate limiter (high-precision) ────────────────────────────
+        // std::this_thread::sleep_for has ~15ms resolution on Windows which
+        // makes 60fps impossible. Use a hybrid: sleep for most of the wait,
+        // then spin-wait the last ~2ms for precision.
         constexpr float targetFrameTime = 1.0f / 60.0f;
-        constexpr auto minCooldown = std::chrono::milliseconds(2);
         const auto frameEnd = std::chrono::steady_clock::now();
         const float elapsed = std::chrono::duration<float>(frameEnd - lastFrameTimestamp).count();
         if (elapsed < targetFrameTime) {
-            const auto sleepNs = std::chrono::nanoseconds(
-                static_cast<int64_t>((targetFrameTime - elapsed) * 1e9f));
-            std::this_thread::sleep_for(sleepNs + minCooldown);
-        } else {
-            std::this_thread::sleep_for(minCooldown);
+            const auto targetTime = lastFrameTimestamp + std::chrono::microseconds(
+                static_cast<int64_t>(targetFrameTime * 1e6f));
+            const auto sleepUntil = targetTime - std::chrono::milliseconds(2);
+            if (sleepUntil > frameEnd)
+                std::this_thread::sleep_until(sleepUntil);
+            // Spin-wait the remaining time for precision
+            while (std::chrono::steady_clock::now() < targetTime) {
+                std::this_thread::yield();
+            }
         }
     }
 }
@@ -2917,17 +2945,19 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
 
     // Apply user-controlled temporal smoothing to audio values
     // smoothAmount: 0 = raw (no extra smoothing), 1 = very smooth
+    // Use separate smoothing state for preview vs output so they don't interfere
+    AudioSmoothState& smooth = forOutput ? outputPrevAudioSmooth : prevAudioSmooth;
     if (controls.audio.smoothAmount > 0.001f) {
         float smoothRate = 1.0f - std::pow(1.0f - controls.audio.smoothAmount, globalDeltaTime * 60.0f);
-        reactive.energy = glm::mix(reactive.energy, prevAudioSmooth.energy, smoothRate);
-        reactive.bass   = glm::mix(reactive.bass,   prevAudioSmooth.bass,   smoothRate);
-        reactive.mid    = glm::mix(reactive.mid,    prevAudioSmooth.mid,    smoothRate);
-        reactive.high   = glm::mix(reactive.high,   prevAudioSmooth.high,   smoothRate);
+        reactive.energy = glm::mix(reactive.energy, smooth.energy, smoothRate);
+        reactive.bass   = glm::mix(reactive.bass,   smooth.bass,   smoothRate);
+        reactive.mid    = glm::mix(reactive.mid,    smooth.mid,    smoothRate);
+        reactive.high   = glm::mix(reactive.high,   smooth.high,   smoothRate);
     }
-    prevAudioSmooth.energy = reactive.energy;
-    prevAudioSmooth.bass   = reactive.bass;
-    prevAudioSmooth.mid    = reactive.mid;
-    prevAudioSmooth.high   = reactive.high;
+    smooth.energy = reactive.energy;
+    smooth.bass   = reactive.bass;
+    smooth.mid    = reactive.mid;
+    smooth.high   = reactive.high;
 
     if (controls.system.enableAudioReactive) {
         controls.audio.energy = reactive.energy;
@@ -2964,6 +2994,20 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.primaryColor = controls.color.primaryColor;
     ubo.secondaryColor = controls.color.secondaryColor;
     ubo.colorBlend = controls.color.colorBlend;
+
+    // Audio-driven RGB color modulation: bass→R, mid→G, high→B
+    if (controls.color.enableAudioColorRGB) {
+        float amt = controls.color.audioColorRGBAmount;
+        float bMod = 1.0f + liveBass * amt;
+        float gMod = 1.0f + liveMid * amt;
+        float rMod = 1.0f + liveHigh * amt;
+        ubo.primaryColor.r   *= rMod;
+        ubo.primaryColor.g   *= gMod;
+        ubo.primaryColor.b   *= bMod;
+        ubo.secondaryColor.r *= rMod;
+        ubo.secondaryColor.g *= gMod;
+        ubo.secondaryColor.b *= bMod;
+    }
     ubo.tempo = tempoValue;
     ubo.energy = controls.audio.energy;
     ubo.bass = controls.audio.bass;
@@ -3172,28 +3216,28 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     float glitchGain   = std::max(0.0f, controls.audio.glitchResponse);
 
     if (controls.system.enableAudioReactive) {
-        // Spatial distortion (Pass B)
-        ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    envClamped  * 0.15f * warpGain);
-        ubo.rippleStrength    = std::max(ubo.rippleStrength,    bassClamped * 0.30f * warpGain);
-        ubo.swirlStrength     = std::max(ubo.swirlStrength,     bassClamped * 0.20f * warpGain);
-        ubo.displacementAmount= std::max(ubo.displacementAmount,envClamped  * 0.12f * warpGain);
-        ubo.bendAmount        = std::max(ubo.bendAmount,        envClamped  * 0.10f * warpGain);
+        // Spatial distortion (Pass B) — only boost effects the user has enabled (>0)
+        if (ubo.uvWarpStrength    > 0.0001f) ubo.uvWarpStrength    = std::max(ubo.uvWarpStrength,    envClamped  * 0.15f * warpGain);
+        if (ubo.rippleStrength    > 0.0001f) ubo.rippleStrength    = std::max(ubo.rippleStrength,    bassClamped * 0.30f * warpGain);
+        if (ubo.swirlStrength      > 0.0001f) ubo.swirlStrength     = std::max(ubo.swirlStrength,     bassClamped * 0.20f * warpGain);
+        if (ubo.displacementAmount> 0.0001f) ubo.displacementAmount= std::max(ubo.displacementAmount,envClamped  * 0.12f * warpGain);
+        if (ubo.bendAmount        > 0.0001f) ubo.bendAmount        = std::max(ubo.bendAmount,        envClamped  * 0.10f * warpGain);
 
         // Temporal / feedback (Pass D)
-        ubo.feedbackAmount    = std::max(ubo.feedbackAmount,    envClamped  * 0.25f * feedbackGain);
-        ubo.trailStrength     = std::max(ubo.trailStrength,     bassClamped * 0.20f * feedbackGain);
+        if (ubo.feedbackAmount    > 0.0001f) ubo.feedbackAmount    = std::max(ubo.feedbackAmount,    envClamped  * 0.25f * feedbackGain);
+        if (ubo.trailStrength     > 0.0001f) ubo.trailStrength     = std::max(ubo.trailStrength,     bassClamped * 0.20f * feedbackGain);
 
         // Degradation / glitch (Pass E)
-        ubo.glitchJitter      = std::max(ubo.glitchJitter,      envClamped  * 0.15f * glitchGain);
-        ubo.glitchRGBSplit    = std::max(ubo.glitchRGBSplit,    bassClamped * 0.10f * glitchGain);
-        ubo.glitchTearing     = std::max(ubo.glitchTearing,     midClamped  * 0.08f * glitchGain);
-        ubo.grainStrength     = std::max(ubo.grainStrength,     envClamped  * 0.20f * blurGain);
+        if (ubo.glitchJitter      > 0.0001f) ubo.glitchJitter      = std::max(ubo.glitchJitter,      envClamped  * 0.15f * glitchGain);
+        if (ubo.glitchRGBSplit    > 0.0001f) ubo.glitchRGBSplit    = std::max(ubo.glitchRGBSplit,    bassClamped * 0.10f * glitchGain);
+        if (ubo.glitchTearing     > 0.0001f) ubo.glitchTearing     = std::max(ubo.glitchTearing,     midClamped  * 0.08f * glitchGain);
+        if (ubo.grainStrength     > 0.0001f) ubo.grainStrength     = std::max(ubo.grainStrength,     envClamped  * 0.20f * blurGain);
 
         // Output extras (Pass G)
-        ubo.zoomPulseAmount   = std::max(ubo.zoomPulseAmount,   envClamped  * 0.25f * colorGain);
-        ubo.slowZoomAmount    = std::max(ubo.slowZoomAmount,    envClamped  * 0.30f * blurGain);
-        ubo.strobeSpeed       = std::max(ubo.strobeSpeed,       bassClamped * 3.0f * colorGain);
-        ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    highClamped * 0.03f * colorGain);
+        if (ubo.zoomPulseAmount   > 0.0001f) ubo.zoomPulseAmount   = std::max(ubo.zoomPulseAmount,   envClamped  * 0.25f * colorGain);
+        if (ubo.slowZoomAmount    > 0.0001f) ubo.slowZoomAmount    = std::max(ubo.slowZoomAmount,    envClamped  * 0.30f * blurGain);
+        if (ubo.strobeSpeed       > 0.0001f) ubo.strobeSpeed       = std::max(ubo.strobeSpeed,       bassClamped * 3.0f * colorGain);
+        if (ubo.rgbShiftAmount    > 0.0001f) ubo.rgbShiftAmount    = std::max(ubo.rgbShiftAmount,    highClamped * 0.03f * colorGain);
 
         // Camera movement (2D layer camera)
         if (controls.camera.enableMovement) {
@@ -3246,11 +3290,26 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     // its associated render pass when the pass would be a no-op.
     MultiPassPipeline& pipeline = forOutput ? outputMultiPassPipeline : multiPassPipeline;
 
+    // Pass 1 (B-spatial): skip if no spatial distortion is active
+    const bool spatialPassActive =
+        ubo.uvWarpStrength > 0.0001f || ubo.rippleStrength > 0.0001f ||
+        abs(ubo.swirlStrength) > 0.0001f || ubo.displacementAmount > 0.0001f ||
+        ubo.tunnelDepth > 0.0001f || ubo.bendAmount > 0.0001f ||
+        ubo.enablePixelate == 1 || ubo.enableSlowZoom == 1 ||
+        ubo.enableMirror == 1 || ubo.enableZoomPulse == 1 ||
+        ubo.enablePostBend == 1;
+    pipeline.setPassEnabled(1, spatialPassActive);
+
     const bool detailPassActive =
         ubo.gaussianBlur != 0.0f || ubo.directionalBlur != 0.0f || ubo.zoomBlur != 0.0f ||
         ubo.motionBlur != 0.0f || ubo.temporalBlur != 0.0f ||
         ubo.unsharpMask != 0.0f || ubo.casAmount != 0.0f || ubo.localContrast != 0.0f;
     pipeline.setPassEnabled(2, detailPassActive);
+
+    // Pass 3 (D-temporal): skip if no feedback/temporal effect is active
+    const bool temporalPassActive =
+        ubo.enableFeedback == 1 || ubo.enableTemporal == 1;
+    pipeline.setPassEnabled(3, temporalPassActive);
 
     const bool degradationPassActive =
         ubo.glitchAmount != 0.0f || ubo.glitchDatamosh != 0.0f || ubo.glitchRGBSplit != 0.0f ||
@@ -3259,6 +3318,18 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     pipeline.setPassEnabled(4, degradationPassActive);
 
     pipeline.setPassEnabled(5, ubo.enableColorGrading != 0);
+
+    // Pass 6 (G-output): skip if no output effect is active
+    const bool outputPassActive =
+        ubo.enableFXAA == 1 || ubo.enableEdgeDetect == 1 ||
+        ubo.crtCurvature > 0.0001f || ubo.crtScanlineIntensity > 0.0001f ||
+        ubo.crtMaskIntensity > 0.0001f || ubo.crtVignette > 0.0001f ||
+        ubo.crtFishEye > 0.0001f || ubo.bloomIntensity > 0.0001f ||
+        ubo.aberrationAmount > 0.0001f || ubo.grainStrength > 0.0001f ||
+        ubo.enableGrid == 1 || ubo.enableCameraMovement == 1 ||
+        ubo.enableRgbOverlay == 1 || ubo.masterBrightness != 1.0f ||
+        !controls.post.postEffectName.empty();
+    pipeline.setPassEnabled(6, outputPassActive);
 
     // Selectable post-effect slot parameters
     ubo.postEffectStrength = controls.post.postEffectStrength;

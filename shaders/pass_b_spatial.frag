@@ -128,6 +128,21 @@ void main() {
         p = z + (p - z) * zoomFactor;
     }
 
+    // === Mirror: reflect UVs around horizontal/vertical axis ===
+    if (ubo.enableMirror == 1 && ubo.mirrorAmount > 0.0001) {
+        float m = ubo.mirrorAmount;
+        // Horizontal mirror (left-right flip) blended by amount
+        vec2 mirrored = vec2(1.0 - p.x, p.y);
+        p = mix(p, mirrored, m);
+    }
+
+    // === Zoom pulse: rhythmic zoom driven by time ===
+    if (ubo.enableZoomPulse == 1 && ubo.zoomPulseAmount > 0.0001) {
+        float pulse = 1.0 + sin(ubo.time * 4.0) * ubo.zoomPulseAmount * 0.15;
+        vec2 z = vec2(0.5);
+        p = z + (p - z) * pulse;
+    }
+
     p = safeSampleUV(p);
     vec3 color = texture(inputTex, p).rgb;
 

@@ -128,6 +128,8 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("splitToneBalance", &color.splitToneBalance, 0.0f, 1.0f);
     r.registerVec3("splitToneShadows", &color.splitToneShadows);
     r.registerVec3("splitToneHighlights", &color.splitToneHighlights);
+    r.registerBool("enableAudioColorRGB", &color.enableAudioColorRGB);
+    r.registerFloat("audioColorRGBAmount", &color.audioColorRGBAmount, 0.0f, 2.0f);
 
     // TEMPORAL / FEEDBACK
     r.registerBool("enableFeedback", &temporal.enableFeedback);
@@ -203,7 +205,9 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerInt("postEffectMode", &post.postEffectMode, 0, 10);
     r.registerVec3("postEffectRgbAdjust", &post.postEffectRgbAdjust);
 
-    // AUDIO REACTIVE (enableAudioReactive is always ON, not registered)
+    // AUDIO REACTIVE
+    r.registerBool("enableAudioReactive", &system.enableAudioReactive);
+    r.registerBool("audioEnabled", &audio.enabled);
     r.registerFloat("audioWarpResponse", &audio.warpResponse, 0.0f, 2.0f);
     r.registerFloat("audioFeedbackResponse", &audio.feedbackResponse, 0.0f, 2.0f);
     r.registerFloat("audioBlurResponse", &audio.blurResponse, 0.0f, 2.0f);
