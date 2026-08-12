@@ -181,6 +181,9 @@ public:
     // Randomiza los controles VJAY Extra directamente
     void randomizeVJayExtra(VisualControls& controls);
 
+    // Randomiza los Post FX directamente
+    void randomizePostFx(VisualControls& controls);
+
 private:
     void drawProceduralControls(
         VisualControls&       controls,
@@ -215,6 +218,7 @@ public:
     void setPostEffectNames(const std::vector<std::string>& names);
     int cycleLayerMode(int currentMode, int delta) const;
     std::string cyclePostEffect(const std::string& current, int delta) const;
+    const std::vector<std::string>& getPostEffectNames() const { return postEffectNames; }
 
 private:
     void drawPerformanceContent(const UIDiagnostics& diag);

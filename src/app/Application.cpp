@@ -13,6 +13,7 @@
 #include <fstream>
 #include <cmath>
 #include <algorithm>
+#include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -1423,9 +1424,10 @@ void Application::initMidi() {
     }
     midiSystem.setEventCallback([this](const MidiMessage& msg) {
         midiSystem.applyToVisualControls(msg, visualControls);
+        midiSystem.applyToVisualControls(msg, outputVisualControls);
     });
     midiSystem.setTriggerCallback([this](const std::string& action) {
-        handleOscTrigger(action);
+        handleOscTrigger(action, -1);
     });
 
     const unsigned int n = midiSystem.getPortCount();
@@ -1443,9 +1445,11 @@ void Application::initOsc() {
     }
     oscSystem.setEventCallback([this](const OscMessage& msg) {
         oscSystem.applyToVisualControls(msg, visualControls);
+        // Also apply to output for live mixing (videoMix, blend, etc.)
+        oscSystem.applyToVisualControls(msg, outputVisualControls);
     });
-    oscSystem.setTriggerCallback([this](const std::string& action) {
-        handleOscTrigger(action);
+    oscSystem.setTriggerCallback([this](const std::string& action, int arg) {
+        handleOscTrigger(action, arg);
     });
     oscSystem.onMappingsChanged = [this]() { saveState(); };
 
@@ -1617,7 +1621,7 @@ bool Application::canChangeVideo() const {
 // OSC / Trigger dispatcher
 // ─────────────────────────────────────────────────────────────────────────────
 
-void Application::handleOscTrigger(const std::string& action) {
+void Application::handleOscTrigger(const std::string& action, int arg) {
     if (action == "randomizeVideo") {
         if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
@@ -1636,6 +1640,16 @@ void Application::handleOscTrigger(const std::string& action) {
         if (assets.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets), assets);
         isReloadingVideo = false;
 
+    } else if (action == "randomizeAllVideos") {
+        if (!canChangeVideo()) return;
+        const auto& assets1 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
+        const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
+        const auto& assets3 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
+        if (assets1.size() > 1) reloadVideoAtIndex(pickNextVideoIndex(assets1), assets1);
+        if (assets2.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets2), assets2);
+        if (assets3.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets3), assets3);
+        isReloadingVideo = false;
+
     } else if (action == "randomizePreviewVideo1") {
         uiSystem.forcePreviewShuffle(0);
 
@@ -1650,21 +1664,187 @@ void Application::handleOscTrigger(const std::string& action) {
         const double dur = videoPlayer.durationSeconds();
         if (dur > 0) videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
 
+    } else if (action == "jumpRandom2") {
+        if (!videoSubsystemInitialized2) return;
+        const double dur = videoPlayer2.durationSeconds();
+        if (dur > 0) videoPlayer2.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+
+    } else if (action == "jumpRandom3") {
+        if (!videoSubsystemInitialized3) return;
+        const double dur = videoPlayer3.durationSeconds();
+        if (dur > 0) videoPlayer3.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+
     } else if (action == "folderChanged") {
         if (!canChangeVideo()) return;
-        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
         videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
         videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
-        if (!assets.empty()) {
+        // Reload all 3 preview slots from their respective folders
+        const auto& assets1 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
+        const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
+        const auto& assets3 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
+        if (!assets1.empty()) {
             selectedVideoAsset = 0;
-            reloadVideoSlot(0, assets[0].metadata.path);
+            reloadVideoSlot(0, assets1[0].metadata.path);
+        }
+        if (!assets2.empty()) {
+            selectedVideoAsset2 = 0;
+            reloadVideoSlot(1, assets2[0].metadata.path);
+        }
+        if (!assets3.empty()) {
+            selectedVideoAsset3 = 0;
+            reloadVideoSlot(2, assets3[0].metadata.path);
         }
         isReloadingVideo = false;
 
     } else if (action == "applyChanges") {
         controlsDirty = true;
+
+    } else if (action == "selectVideo1") {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
+        if (arg >= 0 && arg < static_cast<int>(assets.size())) {
+            reloadVideoAtIndex(arg, assets);
+            isReloadingVideo = false;
+        }
+
+    } else if (action == "selectVideo2") {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
+        if (arg >= 0 && arg < static_cast<int>(assets.size())) {
+            reloadVideoAtIndex2(arg, assets);
+            isReloadingVideo = false;
+        }
+
+    } else if (action == "selectVideo3") {
+        if (!canChangeVideo()) return;
+        const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
+        if (arg >= 0 && arg < static_cast<int>(assets.size())) {
+            reloadVideoAtIndex3(arg, assets);
+            isReloadingVideo = false;
+        }
+
+    } else if (action == "sendPreviewToOutput") {
+        commitPreviewToOutput();
+
+    } else if (action == "cyclePostEffect") {
+        visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, 1);
+        controlsDirty = true;
+        std::cout << "[Post-Effect] OSC cycle: " << visualControls.post.postEffectName << std::endl;
+
+    } else if (action == "selectPostEffect") {
+        const auto& names = uiSystem.getPostEffectNames();
+        // arg 0 = none, 1..N = effect index
+        if (arg == 0) {
+            visualControls.post.postEffectName.clear();
+            controlsDirty = true;
+            std::cout << "[Post-Effect] OSC select: (none)" << std::endl;
+        } else if (arg >= 1 && arg <= static_cast<int>(names.size())) {
+            visualControls.post.postEffectName = names[arg - 1];
+            controlsDirty = true;
+            std::cout << "[Post-Effect] OSC select: " << names[arg - 1] << std::endl;
+        }
+
+    } else if (action == "randomizePostFx") {
+        uiSystem.randomizePostFx(visualControls);
+        controlsDirty = true;
+        std::cout << "[OSC] Randomized Post FX (preview)" << std::endl;
+
+    } else if (action == "randomizeVJayBasics") {
+        uiSystem.randomizeVJayBasics(visualControls);
+        controlsDirty = true;
+        std::cout << "[OSC] Randomized VJAY Basics (preview)" << std::endl;
+
+    } else if (action == "playPause") {
+        previewPaused = !previewPaused;
+        std::cout << "[Preview] " << (previewPaused ? "PAUSED" : "RESUMED") << "\n";
+
+    } else if (action == "nudgeVideo1") {
+        if (videoSubsystemInitialized) {
+            double cur = videoPlayer.getCurrentFramePTS();
+            double dur = videoPlayer.durationSeconds();
+            double target = cur + arg;
+            if (dur > 0) target = std::clamp(target, 0.0, dur);
+            videoPlayer.seekSeconds(target);
+        }
+
+    } else if (action == "nudgeVideo2") {
+        if (videoSubsystemInitialized2) {
+            double cur = videoPlayer2.getCurrentFramePTS();
+            double dur = videoPlayer2.durationSeconds();
+            double target = cur + arg;
+            if (dur > 0) target = std::clamp(target, 0.0, dur);
+            videoPlayer2.seekSeconds(target);
+        }
+
+    } else if (action == "nudgeVideo3") {
+        if (videoSubsystemInitialized3) {
+            double cur = videoPlayer3.getCurrentFramePTS();
+            double dur = videoPlayer3.durationSeconds();
+            double target = cur + arg;
+            if (dur > 0) target = std::clamp(target, 0.0, dur);
+            videoPlayer3.seekSeconds(target);
+        }
+
+    } else if (action == "tapTempo") {
+        // Simple tap tempo: set animationTargetSeconds based on time between taps
+        static auto lastTap = std::chrono::steady_clock::now();
+        auto now = std::chrono::steady_clock::now();
+        double elapsed = std::chrono::duration<double>(now - lastTap).count();
+        if (elapsed > 0.1 && elapsed < 3.0) {
+            visualControls.playback.animationTargetSeconds = static_cast<float>(elapsed);
+            controlsDirty = true;
+            std::cout << "[TapTempo] " << elapsed << "s -> " << (60.0 / elapsed) << " BPM\n";
+        }
+        lastTap = now;
+
+    } else if (action == "resetControls") {
+        visualControls = VisualControls{};
+        controlsDirty = true;
+        std::cout << "[Controls] Reset to defaults\n";
+
+    } else if (action == "loadPreset") {
+        // arg is 1-based index into sorted preset list
+        auto presets = listPresets();
+        if (arg >= 1 && arg <= static_cast<int>(presets.size())) {
+            loadPreset(presets[arg - 1]);
+            std::cout << "[Preset] Loaded: " << presets[arg - 1] << "\n";
+        }
+
+    } else if (action == "savePreset") {
+        // arg is used as preset name index (1-based), or save to "osc_preset_N"
+        auto presets = listPresets();
+        if (arg >= 1 && arg <= static_cast<int>(presets.size())) {
+            savePreset(presets[arg - 1]);
+            std::cout << "[Preset] Saved: " << presets[arg - 1] << "\n";
+        } else {
+            std::string name = "osc_preset_" + std::to_string(arg);
+            savePreset(name);
+            std::cout << "[Preset] Saved: " << name << "\n";
+        }
     }
+}
+
+void Application::commitPreviewToOutput() {
+    outputVisualControls = visualControls;
+    std::string oldOutputVideoSourcePath = outputVideoSourcePath;
+    std::string oldOutputVideoSourcePath2 = outputVideoSourcePath2;
+    std::string oldOutputVideoSourcePath3 = outputVideoSourcePath3;
+    outputVideoSourcePath = videoSourcePath;
+    outputVideoSourcePath2 = videoSourcePath2;
+    outputVideoSourcePath3 = videoSourcePath3;
+    outputSelectedVideoAsset = selectedVideoAsset;
+    outputSelectedVideoAsset2 = selectedVideoAsset2;
+    outputSelectedVideoAsset3 = selectedVideoAsset3;
+
+    if (!outputVideoSourcePath.empty() && outputVideoSourcePath != oldOutputVideoSourcePath)
+        reloadOutputVideoSlot(0, outputVideoSourcePath);
+    if (!outputVideoSourcePath2.empty() && outputVideoSourcePath2 != oldOutputVideoSourcePath2)
+        reloadOutputVideoSlot(1, outputVideoSourcePath2);
+    if (!outputVideoSourcePath3.empty() && outputVideoSourcePath3 != oldOutputVideoSourcePath3)
+        reloadOutputVideoSlot(2, outputVideoSourcePath3);
+
+    std::cout << "[Output] Controls + videos committed from preview\n";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2455,29 +2635,7 @@ void Application::mainLoop() {
                         break;
                     }
                     case SDLK_RETURN:
-                        outputVisualControls = visualControls;
-                        // Copy video state from preview to output
-                        // Only reload output players when the path actually changed
-                        // to avoid the big delay of re-initializing the same video.
-                        {
-                            std::string oldOutputVideoSourcePath = outputVideoSourcePath;
-                            std::string oldOutputVideoSourcePath2 = outputVideoSourcePath2;
-                            std::string oldOutputVideoSourcePath3 = outputVideoSourcePath3;
-                            outputVideoSourcePath = videoSourcePath;
-                            outputVideoSourcePath2 = videoSourcePath2;
-                            outputVideoSourcePath3 = videoSourcePath3;
-                            outputSelectedVideoAsset = selectedVideoAsset;
-                            outputSelectedVideoAsset2 = selectedVideoAsset2;
-                            outputSelectedVideoAsset3 = selectedVideoAsset3;
-
-                            if (!outputVideoSourcePath.empty() && outputVideoSourcePath != oldOutputVideoSourcePath)
-                                reloadOutputVideoSlot(0, outputVideoSourcePath);
-                            if (!outputVideoSourcePath2.empty() && outputVideoSourcePath2 != oldOutputVideoSourcePath2)
-                                reloadOutputVideoSlot(1, outputVideoSourcePath2);
-                            if (!outputVideoSourcePath3.empty() && outputVideoSourcePath3 != oldOutputVideoSourcePath3)
-                                reloadOutputVideoSlot(2, outputVideoSourcePath3);
-                        }
-                        std::cout << "[Output] Controls + videos committed from preview\n";
+                        commitPreviewToOutput();
                         break;
                     case SDLK_SPACE:
                         previewPaused = !previewPaused;

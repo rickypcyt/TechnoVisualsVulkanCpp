@@ -24,11 +24,32 @@ namespace {
 static const std::pair<const char*, const char*> DEFAULT_TRIGGER_ACTIONS[] = {
     {"/vjay/randomizeVideo", "randomizeVideo"},
     {"/vjay/randomizeVideo2", "randomizeVideo2"},
+    {"/vjay/randomizeVideo3", "randomizeVideo3"},
+    {"/vjay/randomizeAllVideos", "randomizeAllVideos"},
     {"/vjay/randomizePreviewVideo1", "randomizePreviewVideo1"},
     {"/vjay/randomizePreviewVideo2", "randomizePreviewVideo2"},
+    {"/vjay/randomizePreviewVideo3", "randomizePreviewVideo3"},
     {"/vjay/jumpRandom", "jumpRandom"},
+    {"/vjay/jumpRandom2", "jumpRandom2"},
+    {"/vjay/jumpRandom3", "jumpRandom3"},
     {"/vjay/folderChanged", "folderChanged"},
-    {"/vjay/applyChanges", "applyChanges"}
+    {"/vjay/applyChanges", "applyChanges"},
+    {"/vjay/selectVideo", "selectVideo1"},
+    {"/vjay/selectVideo2", "selectVideo2"},
+    {"/vjay/selectVideo3", "selectVideo3"},
+    {"/vjay/sendPreviewToOutput", "sendPreviewToOutput"},
+    {"/vjay/cyclePostEffect", "cyclePostEffect"},
+    {"/vjay/selectPostEffect", "selectPostEffect"},
+    {"/vjay/randomizePostFx", "randomizePostFx"},
+    {"/vjay/randomizeVJayBasics", "randomizeVJayBasics"},
+    {"/vjay/playPause", "playPause"},
+    {"/vjay/nudgeVideo1", "nudgeVideo1"},
+    {"/vjay/nudgeVideo2", "nudgeVideo2"},
+    {"/vjay/nudgeVideo3", "nudgeVideo3"},
+    {"/vjay/tapTempo", "tapTempo"},
+    {"/vjay/resetControls", "resetControls"},
+    {"/vjay/loadPreset", "loadPreset"},
+    {"/vjay/savePreset", "savePreset"}
 };
 
 } // namespace
@@ -234,7 +255,15 @@ void OscSystem::update() {
         if (msg.type == OscMessageType::TRIGGER && triggerCallback) {
             auto it = triggerMappings.find(msg.address);
             if (it != triggerMappings.end()) {
-                triggerCallback(it->second.actionName);
+                triggerCallback(it->second.actionName, -1);
+            }
+        } else if (msg.type == OscMessageType::INT && triggerCallback) {
+            // Parameterized trigger: check if address matches a trigger mapping
+            auto it = triggerMappings.find(msg.address);
+            if (it != triggerMappings.end()) {
+                triggerCallback(it->second.actionName, msg.intValue);
+            } else if (eventCallback) {
+                eventCallback(msg);
             }
         } else if (eventCallback) {
             eventCallback(msg);
@@ -247,7 +276,7 @@ void OscSystem::setEventCallback(std::function<void(const OscMessage&)> callback
     eventCallback = callback;
 }
 
-void OscSystem::setTriggerCallback(std::function<void(const std::string&)> callback) {
+void OscSystem::setTriggerCallback(std::function<void(const std::string&, int)> callback) {
     triggerCallback = callback;
 }
 
@@ -298,6 +327,56 @@ const std::map<std::string, OscTriggerMapping>& OscSystem::getTriggerMappings() 
     return triggerMappings;
 }
 
+static const struct DefaultMapping { const char* addr; const char* param; float minV; float maxV; } DEFAULT_MAPPINGS[] = {
+    {"/vjay/videoMix",           "videoMix",           0.f, 1.f},
+    {"/vjay/video2Mix",          "video2Mix",          0.f, 1.f},
+    {"/vjay/video3Mix",          "video3Mix",          0.f, 1.f},
+    {"/vjay/blendVideoMix",      "blendVideoMix",      0.f, 1.f},
+    {"/vjay/blendProceduralMix",  "blendProceduralMix", 0.f, 1.f},
+    {"/vjay/blendFeedbackMix",   "blendFeedbackMix",   0.f, 1.f},
+    {"/vjay/animationSpeed",     "animationSpeed",     0.f, 2.f},
+    {"/vjay/videoPlaybackRate",  "videoPlaybackRate",  0.f, 2.f},
+    {"/vjay/video2PlaybackRate", "video2PlaybackRate", 0.f, 2.f},
+    {"/vjay/video3PlaybackRate", "video3PlaybackRate", 0.f, 2.f},
+    {"/vjay/gradeBrightness",    "gradeBrightness",   -1.f, 1.f},
+    {"/vjay/gradeContrast",      "gradeContrast",      0.f, 2.f},
+    {"/vjay/gradeSaturation",    "gradeSaturation",    0.f, 2.f},
+    {"/vjay/gradeHueShift",      "gradeHueShift",      0.f, 1.f},
+    {"/vjay/gradeGamma",         "gradeGamma",         0.f, 2.f},
+    {"/vjay/colorBlend",         "colorBlend",         0.f, 1.f},
+    {"/vjay/rgbOverlayR",        "rgbOverlayR",        0.f, 2.f},
+    {"/vjay/rgbOverlayG",        "rgbOverlayG",        0.f, 2.f},
+    {"/vjay/rgbOverlayB",        "rgbOverlayB",        0.f, 2.f},
+    {"/vjay/enableRgbOverlay",   "enableRgbOverlay",    0.f, 1.f},
+    {"/vjay/thresholdLevel",     "thresholdLevel",     0.f, 1.f},
+    {"/vjay/enableThreshold",    "enableThreshold",    0.f, 1.f},
+    {"/vjay/bloomIntensity",     "bloomIntensity",     0.f, 1.f},
+    {"/vjay/bloomThreshold",     "bloomThreshold",     0.f, 1.f},
+    {"/vjay/glitchAmount",       "glitchAmount",       0.f, 1.f},
+    {"/vjay/enableGlitch",       "enableGlitch",       0.f, 1.f},
+    {"/vjay/gaussianBlur",       "gaussianBlur",       0.f, 1.f},
+    {"/vjay/zoomBlur",           "zoomBlur",           0.f, 1.f},
+    {"/vjay/motionBlur",         "motionBlur",         0.f, 1.f},
+    {"/vjay/feedbackAmount",     "feedbackAmount",     0.f, 1.f},
+    {"/vjay/trailStrength",      "trailStrength",      0.f, 1.f},
+    {"/vjay/enableFeedback",     "enableFeedback",     0.f, 1.f},
+    {"/vjay/cameraZoom",         "cameraZoom",         0.f, 3.f},
+    {"/vjay/cameraPanX",         "cameraPanX",        -1.f, 1.f},
+    {"/vjay/cameraPanY",         "cameraPanY",        -1.f, 1.f},
+    {"/vjay/cameraRotation",     "cameraRotation",     0.f, 6.28f},
+    {"/vjay/activeMode",          "activeMode",         0.f, 5.f},
+    {"/vjay/audioReactiveDrive", "audioReactiveDrive", 0.f, 1.f},
+    {"/vjay/masterBrightness",   "masterBrightness",   0.f, 2.f},
+};
+
+void OscSystem::ensureDefaultMappings() {
+    for (const auto& dm : DEFAULT_MAPPINGS) {
+        if (mappings.find(dm.addr) == mappings.end()) {
+            addMapping(dm.addr, dm.param, dm.minV, dm.maxV, false);
+        }
+    }
+}
+
 void OscSystem::ensureDefaultTriggers() {
     for (const auto& [address, action] : DEFAULT_TRIGGER_ACTIONS) {
         if (triggerMappings.find(address) == triggerMappings.end()) {
@@ -328,6 +407,24 @@ void OscSystem::setEnabled(bool enabled) {
 
 bool OscSystem::isEnabled() const {
     return enabled;
+}
+
+std::vector<OscLogEntry> OscSystem::getLogEntries() const {
+    std::lock_guard<std::mutex> lock(logMutex);
+    return logBuffer;
+}
+
+void OscSystem::clearLog() {
+    std::lock_guard<std::mutex> lock(logMutex);
+    logBuffer.clear();
+}
+
+void OscSystem::setLogEnabled(bool enabled) {
+    logEnabled.store(enabled);
+}
+
+bool OscSystem::isLogEnabled() const {
+    return logEnabled.load();
 }
 
 void OscSystem::setLearnMode(bool enabled) {
@@ -362,15 +459,74 @@ int OscSystem::oscHandler(const char* path, const char* types, lo_arg** argv, in
     try {
         OscMessage oscMsg = oscSystem->parseMessage(path, types, argv, argc);
 
-        // Check if this is a trigger (no arguments)
-        if (oscMsg.type == OscMessageType::TRIGGER && oscSystem->triggerCallback) {
-            // Queue trigger for processing in main thread (thread-safe)
+        // Record to monitor log (thread-safe, lock-free check)
+        if (oscSystem->logEnabled.load()) {
+            OscLogEntry entry;
+            entry.address = path;
+            entry.timestampSec = std::chrono::duration<double>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+
+            if (oscMsg.type == OscMessageType::TRIGGER) {
+                entry.typeTag = "trigger";
+                entry.valueSummary = "(no args)";
+            } else if (oscMsg.type == OscMessageType::FLOAT && !oscMsg.floatValues.empty()) {
+                entry.typeTag = std::string(types, argc);
+                entry.valueSummary.clear();
+                for (size_t i = 0; i < oscMsg.floatValues.size(); ++i) {
+                    if (i > 0) entry.valueSummary += " ";
+                    entry.valueSummary += std::to_string(oscMsg.floatValues[i]);
+                }
+            } else if (oscMsg.type == OscMessageType::FLOAT) {
+                entry.typeTag = "f";
+                entry.valueSummary = std::to_string(oscMsg.floatValue);
+            } else if (oscMsg.type == OscMessageType::INT) {
+                entry.typeTag = "i";
+                entry.valueSummary = std::to_string(oscMsg.intValue);
+            } else if (oscMsg.type == OscMessageType::STRING) {
+                entry.typeTag = "s";
+                entry.valueSummary = oscMsg.stringValue;
+            } else if (oscMsg.type == OscMessageType::BOOL) {
+                entry.typeTag = oscMsg.boolValue ? "T" : "F";
+                entry.valueSummary = oscMsg.boolValue ? "true" : "false";
+            } else {
+                entry.typeTag = types ? std::string(types, argc) : "?";
+                entry.valueSummary = "?";
+            }
+
+            std::lock_guard<std::mutex> lock(oscSystem->logMutex);
+            if (oscSystem->logBuffer.size() >= OSC_LOG_CAPACITY) {
+                oscSystem->logBuffer.erase(oscSystem->logBuffer.begin());
+            }
+            oscSystem->logBuffer.push_back(std::move(entry));
+        }
+
+        // Check if this is a trigger (no arguments), parameterized trigger (int),
+        // float trigger (controllers that send 1.0/0.0), or bool trigger (T/F)
+        if (oscSystem->triggerCallback) {
             auto it = oscSystem->triggerMappings.find(oscMsg.address);
             if (it != oscSystem->triggerMappings.end()) {
-                std::lock_guard<std::mutex> lock(oscSystem->queueMutex);
-                oscSystem->messageQueue.push_back(oscMsg);
+                if (oscMsg.type == OscMessageType::TRIGGER) {
+                    std::lock_guard<std::mutex> lock(oscSystem->queueMutex);
+                    oscSystem->messageQueue.push_back(oscMsg);
+                    return 1;
+                } else if (oscMsg.type == OscMessageType::INT) {
+                    std::lock_guard<std::mutex> lock(oscSystem->queueMutex);
+                    oscSystem->messageQueue.push_back(oscMsg);
+                    return 1;
+                } else if (oscMsg.type == OscMessageType::FLOAT && oscMsg.floatValue > 0.5f) {
+                    // Float trigger: only fire on press (>0.5), ignore release (0.0)
+                    oscMsg.type = OscMessageType::TRIGGER;
+                    std::lock_guard<std::mutex> lock(oscSystem->queueMutex);
+                    oscSystem->messageQueue.push_back(oscMsg);
+                    return 1;
+                } else if (oscMsg.type == OscMessageType::BOOL && oscMsg.boolValue) {
+                    // Bool trigger: only fire on true, ignore false
+                    oscMsg.type = OscMessageType::TRIGGER;
+                    std::lock_guard<std::mutex> lock(oscSystem->queueMutex);
+                    oscSystem->messageQueue.push_back(oscMsg);
+                    return 1;
+                }
             }
-            return 1;
         }
 
         // Learn mode: capture the first message

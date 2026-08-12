@@ -90,9 +90,9 @@ struct VisualControls {
         int colorLUTIndex = 0;
 
         // Split toning
-        float splitToneBalance = 0.5f;
-        glm::vec3 splitToneShadows = glm::vec3(0.85f, 0.4f, 0.3f);
-        glm::vec3 splitToneHighlights = glm::vec3(1.1f, 1.0f, 0.85f);
+        float splitToneBalance = 0.0f;
+        glm::vec3 splitToneShadows = glm::vec3(1.0f);
+        glm::vec3 splitToneHighlights = glm::vec3(1.0f);
 
         // Color balance
         glm::vec3 colorBalance = glm::vec3(1.0f);

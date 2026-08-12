@@ -57,6 +57,7 @@ void main() {
     if (ubo.enableAudioReactive == 1) {
         feedbackMix *= (1.0 + audio * ubo.audioFeedbackResponse);
     }
+    feedbackMix = clamp(feedbackMix, 0.0, 0.95);
 
     if (ubo.enableFeedback == 1 && (trailMix > 0.0001 || feedbackMix > 0.0001)) {
         for (int i = 1; i <= 3; ++i) {
@@ -78,7 +79,7 @@ void main() {
             vec2 sampleUV = clamp(uv - off * texel * 30.0, 0.0, 1.0);
             vec3 s = sampleMeltBlur(sampleUV, texel, temporalMix);
 
-            float w = feedbackMix * decay * (1.0 - t * 0.30) * edge;
+            float w = clamp(feedbackMix * decay * (1.0 - t * 0.30) * edge, 0.0, 0.9);
             accum = mix(accum, s, w);
         }
     }
@@ -87,14 +88,14 @@ void main() {
         // Recursive feedback also drifts downward so it doesn't freeze
         vec2 meltOffset = vec2(0.0, texel.y * (1.0 + temporalMix * 3.0));
         vec3 prev = texture(prevFrameTex, clamp(uv - meltOffset, 0.0, 1.0)).rgb;
-        accum = mix(accum, prev, recursiveMix * decay * edge);
+        accum = mix(accum, prev, clamp(recursiveMix * decay * edge, 0.0, 0.9));
     }
 
     if (ubo.enableTemporal == 1 && frameMix > 0.0001) {
         // Temporal accumulation also slides down slightly
         vec2 meltOffset = vec2(0.0, texel.y * (0.5 + temporalMix * 1.5));
         vec3 prev = texture(prevFrameTex, clamp(uv - meltOffset, 0.0, 1.0)).rgb;
-        float temporalWeight = frameMix * (0.5 + audio * 0.25);
+        float temporalWeight = clamp(frameMix * (0.5 + audio * 0.25), 0.0, 0.9);
         accum = mix(accum, prev, temporalWeight * edge);
     }
 

@@ -460,7 +460,10 @@ private:
 
     void handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job);
 
-    void handleOscTrigger(const std::string& action);
+    void handleOscTrigger(const std::string& action, int arg = -1);
+
+    // Commit preview state (controls + video paths) to the output renderer
+    void commitPreviewToOutput();
 
 
     // --------------------------

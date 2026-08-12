@@ -154,6 +154,7 @@ void ControlState::load(
 {
     std::ifstream file(path);
     if (!file.is_open()) {
+        oscSystem.ensureDefaultMappings();
         oscSystem.ensureDefaultTriggers();
         return;
     }
@@ -163,6 +164,7 @@ void ControlState::load(
     oscSystem.clearMappings();
     oscSystem.clearTriggerMappings();
 
+    oscSystem.ensureDefaultMappings();
     oscSystem.ensureDefaultTriggers();
 
     for (const auto& [key, value] : kv) {

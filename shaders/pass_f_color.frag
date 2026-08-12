@@ -68,10 +68,11 @@ void main() {
         color = mix(color, vec3(gray), clamp(ubo.grayscaleAmount, 0.0, 1.0));
     }
 
-    if (ubo.enableColorGrading == 1) {
-        color += ubo.gradeBrightness;
-        color = (color - 0.5) * ubo.gradeContrast + 0.5;
+    // Brightness & contrast always apply (independent of color grading)
+    color += ubo.gradeBrightness;
+    color = (color - 0.5) * ubo.gradeContrast + 0.5;
 
+    if (ubo.enableColorGrading == 1) {
         float lum = dot(color, vec3(0.299, 0.587, 0.114));
         color = mix(vec3(lum), color, ubo.gradeSaturation);
 

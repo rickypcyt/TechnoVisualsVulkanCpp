@@ -9,6 +9,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <chrono>
 
 #include "app/VisualControls.h"
 #include "app/MidiSystem.h"
@@ -427,9 +428,18 @@ static const ParameterInfo PARAMETER_INFOS[] = {
 constexpr int PARAMETER_COUNT = static_cast<int>(std::size(PARAMETER_INFOS));
 
 static const char* TRIGGER_ACTIONS[] = {
-    "randomizeVideo", "randomizeVideo2",
-    "randomizePreviewVideo1", "randomizePreviewVideo2",
-    "jumpRandom", "folderChanged", "applyChanges"
+    "randomizeVideo", "randomizeVideo2", "randomizeVideo3", "randomizeAllVideos",
+    "randomizePreviewVideo1", "randomizePreviewVideo2", "randomizePreviewVideo3",
+    "jumpRandom", "jumpRandom2", "jumpRandom3",
+    "folderChanged", "applyChanges",
+    "selectVideo1", "selectVideo2", "selectVideo3",
+    "sendPreviewToOutput",
+    "cyclePostEffect", "selectPostEffect",
+    "randomizePostFx", "randomizeVJayBasics",
+    "playPause",
+    "nudgeVideo1", "nudgeVideo2", "nudgeVideo3",
+    "tapTempo", "resetControls",
+    "loadPreset", "savePreset"
 };
 constexpr int TRIGGER_ACTION_COUNT = static_cast<int>(std::size(TRIGGER_ACTIONS));
 
@@ -540,7 +550,7 @@ void randomizePostFxControls(VisualControls& c, std::mt19937& rng) {
     if (c.post.enablePostGrain)        { c.post.grainStrength = rr(0,0.5f); }
     if (c.post.enablePostBend)         { c.fx.bendAmount = randFloat(rng, 0.f, 0.4f); }
     if (c.post.enablePostGlitch)       { c.fx.glitchAmount = u(); }
-    if (c.post.enablePostColorBalance && !c.locks.lockColorBalance) { c.color.colorBalance = {rr(0,2),rr(0,2),rr(0,2)}; }
+    if (c.post.enablePostColorBalance && !c.locks.lockColorBalance) { c.color.colorBalance = {rr(0.5f,1.5f),rr(0.5f,1.5f),rr(0.5f,1.5f)}; }
 }
 
 void randomizeVJayExtraControls(VisualControls& c, std::mt19937& rng) {
@@ -596,9 +606,9 @@ void randomizeVJayBasicsControls(VisualControls& c, std::mt19937& rng) {
         c.color.gradeHueShift        = rr(-90.f, 90.f);
         c.color.gradeGamma           = rr(0.8f, 1.4f);
         c.color.colorLUTIndex        = ri(0, 5);
-        c.color.splitToneBalance     = u01() * 0.5f;
-        c.color.splitToneShadows     = {u01(), u01(), u01()};
-        c.color.splitToneHighlights  = {u01(), u01(), u01()};
+        c.color.splitToneBalance     = u01() * 0.3f;
+        c.color.splitToneShadows     = {rr(0.5f, 1.5f), rr(0.5f, 1.5f), rr(0.5f, 1.5f)};
+        c.color.splitToneHighlights  = {rr(0.5f, 1.5f), rr(0.5f, 1.5f), rr(0.5f, 1.5f)};
     }
     if (c.fx.enableDistortion) {
         c.fx.uvWarpStrength    = rr(0.f, 0.5f);
@@ -1113,7 +1123,10 @@ void UISystem::drawPreviewContent(
     ImGui::Text("🎬 MIX 3: %s", video3Path.empty() ? "(vacío)" : baseName(video3Path).c_str());
     ImGui::PopStyleColor();
 
-    // ── Section 1: Video 1 ──
+    // ── Section 1-3: Video previews in 3 columns ──
+    ImGui::Columns(3, "VideoPreviewColumns", false);
+
+    // ── Column 1: Video 1 ──
     if (ImGui::CollapsingHeader("Video 1", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::TextDisabled(diag.videoReady ? "online" : "offline");
         updateSlotAndDrawImage("V1", previewSlotVideo1,
@@ -1131,7 +1144,9 @@ void UISystem::drawPreviewContent(
                      callbacks.onReloadVideo, 0);
     }
 
-    // ── Section 2: Video 2 ──
+    ImGui::NextColumn();
+
+    // ── Column 2: Video 2 ──
     if (ImGui::CollapsingHeader("Video 2", ImGuiTreeNodeFlags_DefaultOpen)) {
         updateSlotAndDrawImage("V2", previewSlotVideo2,
                                controls.playback.selectedVideo2Folder,
@@ -1150,7 +1165,9 @@ void UISystem::drawPreviewContent(
                      callbacks.onReloadVideo2, 1);
     }
 
-    // ── Section 3: Video 3 ──
+    ImGui::NextColumn();
+
+    // ── Column 3: Video 3 ──
     if (ImGui::CollapsingHeader("Video 3", ImGuiTreeNodeFlags_DefaultOpen)) {
         updateSlotAndDrawImage("V3", previewSlotVideo3,
                                controls.playback.selectedVideo3Folder,
@@ -1166,6 +1183,8 @@ void UISystem::drawPreviewContent(
                      selectedVideoAsset3,
                      callbacks.onReloadVideo3, 2);
     }
+
+    ImGui::Columns(1);
 
     // ── Section 4: Video Preview Mix ──
     if (ImGui::CollapsingHeader("Video Preview Mix", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -1332,6 +1351,10 @@ void UISystem::randomizeVJayBasics(VisualControls& controls) {
 
 void UISystem::randomizeVJayExtra(VisualControls& controls) {
     randomizeVJayExtraControls(controls, previewRng);
+}
+
+void UISystem::randomizePostFx(VisualControls& controls) {
+    randomizePostFxControls(controls, previewRng);
 }
 
 void UISystem::destroyPreviewSlot(VideoPreviewSlot& slot) {
@@ -2075,8 +2098,8 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         setAll(false);
         c.color.gradeBrightness = 0;  c.color.gradeContrast = 1;  c.color.gradeSaturation = 1;
         c.color.gradeHueShift = 0;    c.color.gradeGamma = 1;     c.color.colorLUTIndex = 0;
-        c.color.splitToneBalance = 0.5f;
-        c.color.splitToneShadows = glm::vec3(0);  c.color.splitToneHighlights = glm::vec3(1);
+        c.color.splitToneBalance = 0.0f;
+        c.color.splitToneShadows = glm::vec3(1.f);  c.color.splitToneHighlights = glm::vec3(1.f);
         c.temporal.feedbackAmount = c.temporal.trailStrength = c.temporal.temporalAccumulation =
         c.temporal.feedbackDecay  = c.temporal.recursiveBlend = 0;
         c.fx.uvWarpStrength = c.fx.rippleStrength = 0;  c.fx.rippleFrequency = 1;
@@ -2801,6 +2824,68 @@ void UISystem::drawOscControlsContent(OscSystem& osc) {
     ImGui::Separator();
     ImGui::Text("Examples: /vjay/animationSpeed  /vjay/bloomIntensity");
     ImGui::Text("/vjay/randomize (trigger, no args)  /vjay/rgbOverlay R G B");
+    ImGui::Text("/vjay/selectVideo 3 (int arg = video index)  /vjay/sendPreviewToOutput (trigger)");
+    ImGui::Text("/vjay/cyclePostEffect (trigger)  /vjay/selectPostEffect 2 (int arg, 0=none)");
+    ImGui::Text("/vjay/playPause (trigger)  /vjay/nudgeVideo1 2 (int arg = seconds)");
+    ImGui::Text("/vjay/tapTempo (trigger)  /vjay/loadPreset 1 (int arg = preset index)");
+
+    // ── OSC Monitor ────────────────────────────────────────────────────────
+    ImGui::Separator();
+    ImGui::Text("OSC Monitor");
+
+    bool logEn = osc.isLogEnabled();
+    if (ImGui::Checkbox("Enable Logging", &logEn)) osc.setLogEnabled(logEn);
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Log")) osc.clearLog();
+
+    static bool autoScroll = true;
+    ImGui::SameLine();
+    ImGui::Checkbox("Auto-scroll", &autoScroll);
+
+    const auto entries = osc.getLogEntries();
+
+    ImGuiTableFlags monFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
+                             | ImGuiTableFlags_ScrollY;
+    float monHeight = 200.0f;
+    if (ImGui::BeginTable("OscMonitor", 4, monFlags, ImVec2(0, monHeight))) {
+        ImGui::TableSetupColumn("Time",     ImGuiTableColumnFlags_WidthFixed, 90.0f);
+        ImGui::TableSetupColumn("Address",  ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Type",     ImGuiTableColumnFlags_WidthFixed, 60.0f);
+        ImGui::TableSetupColumn("Value",    ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableHeadersRow();
+
+        int rowIdx = 0;
+        for (const auto& e : entries) {
+            ImGui::TableNextRow();
+            rowIdx++;
+
+            // Time column: show relative seconds (last 60s window)
+            ImGui::TableSetColumnIndex(0);
+            double nowSec = std::chrono::duration<double>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+            float relSec = static_cast<float>(nowSec - e.timestampSec);
+            ImVec4 timeColor = relSec < 1.0f ? ImVec4(0, 1, 0, 1)
+                             : relSec < 5.0f ? ImVec4(1, 1, 0, 1)
+                             :                  ImVec4(0.5f, 0.5f, 0.5f, 1);
+            ImGui::TextColored(timeColor, "%.1fs ago", relSec);
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::TextUnformatted(e.address.c_str());
+
+            ImGui::TableSetColumnIndex(2);
+            ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "%s", e.typeTag.c_str());
+
+            ImGui::TableSetColumnIndex(3);
+            ImGui::TextUnformatted(e.valueSummary.c_str());
+        }
+
+        if (autoScroll && entries.size() > 0) {
+            ImGui::SetScrollHereY(1.0f);
+        }
+
+        ImGui::EndTable();
+    }
+    ImGui::Text("Messages: %zu / %zu", entries.size(), OSC_LOG_CAPACITY);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -3105,8 +3190,43 @@ void UISystem::drawParameterIndexContent() {
         ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("Triggers")) {
-        ImGui::TextColored({0,1,0.5f,1}, "OSC (send without arguments)");
-        for (int i = 0; i < TRIGGER_ACTION_COUNT; ++i) ImGui::BulletText("%s", TRIGGER_ACTIONS[i]);
+        ImGui::TextColored({0,1,0.5f,1}, "OSC Triggers (no arguments)");
+        for (int i = 0; i < TRIGGER_ACTION_COUNT; ++i) {
+            const char* a = TRIGGER_ACTIONS[i];
+            std::string s(a);
+            bool hasArg = s.find("selectVideo") == 0 || s == "selectPostEffect"
+                       || s.find("nudgeVideo") == 0 || s == "loadPreset" || s == "savePreset";
+            if (hasArg)
+                ImGui::BulletText("%s  (int arg)", a);
+            else
+                ImGui::BulletText("%s", a);
+        }
+        ImGui::Separator();
+        ImGui::TextColored({1,1,0,1}, "Video (3 sources)");
+        ImGui::BulletText("/vjay/randomizeVideo  - randomize slot 1 (preview)");
+        ImGui::BulletText("/vjay/randomizeVideo2  - randomize slot 2 (preview)");
+        ImGui::BulletText("/vjay/randomizeVideo3  - randomize slot 3 (preview)");
+        ImGui::BulletText("/vjay/selectVideo 3  - select video index 3 (slot 1)");
+        ImGui::BulletText("/vjay/selectVideo2 1  - select video index 1 (slot 2)");
+        ImGui::BulletText("/vjay/selectVideo3 5  - select video index 5 (slot 3)");
+        ImGui::BulletText("/vjay/jumpRandom  - random seek slot 1");
+        ImGui::BulletText("/vjay/jumpRandom2  - random seek slot 2");
+        ImGui::BulletText("/vjay/jumpRandom3  - random seek slot 3");
+        ImGui::BulletText("/vjay/nudgeVideo1 2  - seek +2 seconds (slot 1)");
+        ImGui::BulletText("/vjay/nudgeVideo2 -1  - seek -1 second (slot 2)");
+        ImGui::BulletText("/vjay/folderChanged  - reload all 3 slots from folders");
+        ImGui::BulletText("/vjay/sendPreviewToOutput  - commit preview to output");
+        ImGui::Separator();
+        ImGui::TextColored({1,1,0,1}, "Post Effects");
+        ImGui::BulletText("/vjay/cyclePostEffect  - cycle to next post effect");
+        ImGui::BulletText("/vjay/selectPostEffect 2  - select post effect (0=none, 1..N)");
+        ImGui::Separator();
+        ImGui::TextColored({1,1,0,1}, "Playback & Presets");
+        ImGui::BulletText("/vjay/playPause  - toggle preview play/pause");
+        ImGui::BulletText("/vjay/tapTempo  - tap tempo for sync");
+        ImGui::BulletText("/vjay/resetControls  - reset all controls to defaults");
+        ImGui::BulletText("/vjay/loadPreset 1  - load preset by index (1-based)");
+        ImGui::BulletText("/vjay/savePreset 1  - save to existing preset or new name");
         ImGui::Separator();
         ImGui::TextColored({0,1,0.5f,1}, "MIDI Notes");
         ImGui::Text("36-48 mode switch | 60 random video | 62 bloom | 64 glitch | 65 bend | 67 feedback");

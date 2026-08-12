@@ -8,6 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 #include "VisualControls.h"
 
 // OSC message types
@@ -46,6 +47,16 @@ struct OscTriggerMapping {
     std::string actionName;  // "randomizeVideo", "jumpRandom", etc.
 };
 
+// OSC log entry for the real-time monitor
+struct OscLogEntry {
+    std::string address;
+    std::string typeTag;      // "f", "i", "s", "T", "F", "trigger", "fff"
+    std::string valueSummary; // human-readable value string
+    double timestampSec = 0.0; // seconds since epoch
+};
+
+static constexpr size_t OSC_LOG_CAPACITY = 128;
+
 class OscSystem {
 public:
     OscSystem();
@@ -73,7 +84,8 @@ public:
     void setEventCallback(std::function<void(const OscMessage&)> callback);
 
     // Set callback for OSC triggers (button presses)
-    void setTriggerCallback(std::function<void(const std::string&)> callback);
+    // The int argument is -1 for no-arg triggers, or the int value for parameterized triggers
+    void setTriggerCallback(std::function<void(const std::string&, int)> callback);
 
     // Callback fired whenever mappings or trigger mappings change
     std::function<void()> onMappingsChanged;
@@ -83,6 +95,7 @@ public:
     void removeMapping(const std::string& address);
     void clearMappings();
     const std::map<std::string, OscMapping>& getMappings() const;
+    void ensureDefaultMappings();
 
     // OSC trigger mapping functions (for buttons)
     void addTriggerMapping(const std::string& address, const std::string& actionName);
@@ -97,6 +110,12 @@ public:
     // Enable/disable OSC processing
     void setEnabled(bool enabled);
     bool isEnabled() const;
+
+    // OSC monitor / logger
+    std::vector<OscLogEntry> getLogEntries() const;
+    void clearLog();
+    void setLogEnabled(bool enabled);
+    bool isLogEnabled() const;
 
     // Learn mode for OSC mapping
     void setLearnMode(bool enabled);
@@ -117,11 +136,16 @@ private:
     bool hasLearned;
     OscMessage lastLearnedMessage;
     std::function<void(const OscMessage&)> eventCallback;
-    std::function<void(const std::string&)> triggerCallback;
+    std::function<void(const std::string&, int)> triggerCallback;
     std::map<std::string, OscMapping> mappings;
     std::map<std::string, OscTriggerMapping> triggerMappings;
     std::vector<OscMessage> messageQueue;
     std::mutex queueMutex;
+
+    // OSC monitor ring buffer
+    std::vector<OscLogEntry> logBuffer;
+    mutable std::mutex logMutex;
+    std::atomic<bool> logEnabled{true};
 
     // Helper functions
     OscMessage parseMessage(const char* path, const char* types, lo_arg** argv, int argc);
