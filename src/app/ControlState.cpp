@@ -9,24 +9,9 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
-#include <deque>
 
 // VideoRandomizerState definition (moved from main.cpp)
 struct VideoRandomizerState {
-    bool autoRandomize = false;
-    bool useVideoDuration = false;
-    float intervalSeconds = 30.0f;
-    float elapsedSeconds = 0.0f;
-    float currentVideoDuration = 0.0f;
-    int historyWindow = 3;
-    std::deque<int> recentHistory;
-    bool useShuffleMode = true;
-    std::vector<int> shuffleQueue;
-    int currentShuffleIndex = 0;
-};
-
-// VideoRandomizerState2 definition
-struct VideoRandomizerState2 {
     bool autoRandomize = false;
     bool useVideoDuration = false;
     float intervalSeconds = 30.0f;
@@ -140,8 +125,8 @@ glm::vec4 readVec4(const KVMap& kv, const std::string& key, const glm::vec4& def
 void ControlState::load(
     const std::string&    path,
     VideoRandomizerState& r,
-    VideoRandomizerState2& r2,
-    VideoRandomizerState2& r3,
+    VideoRandomizerState& r2,
+    VideoRandomizerState& r3,
     bool&                 allowDimensionChangeRecreation,
     OscSystem&            oscSystem,
     int&                  selectedVideoAsset,
@@ -199,13 +184,13 @@ void ControlState::load(
     rLoaded.useVideoDuration = readBool (kv, "useVideoDuration", rLoaded.useVideoDuration);
     rLoaded.useShuffleMode   = readBool (kv, "useShuffleMode",   rLoaded.useShuffleMode);
     
-    VideoRandomizerState2 r2Loaded = r2;
+    VideoRandomizerState r2Loaded = r2;
     r2Loaded.autoRandomize    = readBool (kv, "autoRandomize2",    r2Loaded.autoRandomize);
     r2Loaded.intervalSeconds  = readFloat(kv, "intervalSeconds2",  r2Loaded.intervalSeconds);
     r2Loaded.useVideoDuration = readBool (kv, "useVideoDuration2", r2Loaded.useVideoDuration);
     r2Loaded.useShuffleMode   = readBool (kv, "useShuffleMode2",   r2Loaded.useShuffleMode);
 
-    VideoRandomizerState2 r3Loaded = r3;
+    VideoRandomizerState r3Loaded = r3;
     r3Loaded.autoRandomize    = readBool (kv, "autoRandomize3",    r3Loaded.autoRandomize);
     r3Loaded.intervalSeconds  = readFloat(kv, "intervalSeconds3",  r3Loaded.intervalSeconds);
     r3Loaded.useVideoDuration = readBool (kv, "useVideoDuration3", r3Loaded.useVideoDuration);
@@ -231,7 +216,6 @@ void ControlState::load(
     r2 = r2Loaded;
     r3 = r3Loaded;
     r.currentVideoDuration = 0.0f;
-    r.recentHistory.clear();
     r.elapsedSeconds = 0.0f;
 }
 
@@ -241,8 +225,8 @@ void ControlState::load(
 void ControlState::save(
     const std::string&        path,
     const VideoRandomizerState& r,
-    const VideoRandomizerState2& r2,
-    const VideoRandomizerState2& r3,
+    const VideoRandomizerState& r2,
+    const VideoRandomizerState& r3,
     bool                      allowDimensionChangeRecreation,
     const OscSystem&          oscSystem,
     int                       selectedVideoAsset,

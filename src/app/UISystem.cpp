@@ -135,19 +135,6 @@ static std::string pickAudioFileDialog(const std::string& currentPath) {
 // ── Tipos públicos ────────────────────────────────────────────────────────────
 
 struct VideoRandomizerState {
-    bool  autoRandomize      = false;
-    bool  useVideoDuration   = false;
-    float intervalSeconds    = 30.0f;
-    float elapsedSeconds     = 0.0f;
-    float currentVideoDuration = 0.0f;
-    int   historyWindow      = 3;
-    std::deque<int>    recentHistory;
-    bool               useShuffleMode      = true;
-    std::vector<int>   shuffleQueue;
-    int                currentShuffleIndex = 0;
-};
-
-struct VideoRandomizerState2 {
     bool  autoRandomize        = false;
     bool  useVideoDuration     = false;
     float intervalSeconds      = 30.0f;
@@ -775,8 +762,8 @@ void UISystem::drawPreviewContent(
     int&                  selectedVideoAsset2,
     int&                  selectedVideoAsset3,
     VideoRandomizerState& r1,
-    VideoRandomizerState2& r2,
-    VideoRandomizerState2& r3,
+    VideoRandomizerState& r2,
+    VideoRandomizerState& r3,
     float&                transDur,
     float&                transDur2,
     float&                transDur3,
@@ -1091,7 +1078,300 @@ void UISystem::drawPreviewContent(
     ImGui::Text("PREVIEW");
     ImGui::Separator();
 
-    // ── Quick randomizers (on top) ──
+    // ════════════════════════════════════════════════════════════════════════
+    // VIDEO PREVIEW — 3 columns, row-aligned
+    // Each row type gets its own Columns(3) block for perfect alignment.
+    // ════════════════════════════════════════════════════════════════════════
+
+    auto baseName = [](const std::string& p) {
+        size_t s = p.find_last_of("/\\");
+        return (s == std::string::npos) ? p : p.substr(s + 1);
+    };
+
+    // ── Row: Active MIX labels ──
+    ImGui::Columns(3, "VPMixLabels", false);
+    ImGui::TextColored({0.4f, 1.0f, 0.4f, 1.0f}, "🎬 %s", video1Path.empty() ? "(vacío)" : baseName(video1Path).c_str());
+    ImGui::NextColumn();
+    ImGui::TextColored({0.4f, 0.7f, 1.0f, 1.0f}, "🎬 %s", video2Path.empty() ? "(vacío)" : baseName(video2Path).c_str());
+    ImGui::NextColumn();
+    ImGui::TextColored({1.0f, 0.7f, 0.4f, 1.0f}, "🎬 %s", video3Path.empty() ? "(vacío)" : baseName(video3Path).c_str());
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Headers ──
+    ImGui::Columns(3, "VPHeaders", false);
+    ImGui::TextColored({0.4f, 1.0f, 0.4f, 1.0f}, "Video 1");
+    ImGui::NextColumn();
+    ImGui::TextColored({0.4f, 0.7f, 1.0f, 1.0f}, "Video 2");
+    ImGui::NextColumn();
+    ImGui::TextColored({1.0f, 0.7f, 0.4f, 1.0f}, "Video 3");
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Preview images ──
+    ImGui::Columns(3, "VPImages", false);
+    updateSlotAndDrawImage("V1", previewSlotVideo1,
+                           controls.playback.selectedVideoFolder,
+                           selectedVideoAsset, 0);
+    ImGui::NextColumn();
+    updateSlotAndDrawImage("V2", previewSlotVideo2,
+                           controls.playback.selectedVideo2Folder,
+                           selectedVideoAsset2, 1);
+    ImGui::NextColumn();
+    updateSlotAndDrawImage("V3", previewSlotVideo3,
+                           controls.playback.selectedVideo3Folder,
+                           selectedVideoAsset3, 2);
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Speed sliders ──
+    ImGui::Columns(3, "VPSpeed", false);
+    if (ImGui::SliderFloat("Speed##V1", &controls.playback.videoPlaybackRate, 0.1f, 5.f, "%.2fx")) {
+        if (previewSlotVideo1.player)
+            previewSlotVideo1.player->setPlaybackRate(controls.playback.videoPlaybackRate);
+        if (callbacks.onSetVideoSpeed && !previewSlotVideo1.previewPath.empty())
+            callbacks.onSetVideoSpeed(previewSlotVideo1.previewPath, controls.playback.videoPlaybackRate);
+    }
+    ImGui::NextColumn();
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    if (ImGui::SliderFloat("Speed##V2", &controls.playback.video2PlaybackRate, 0.1f, 5.f, "%.2fx")) {
+        if (previewSlotVideo2.player)
+            previewSlotVideo2.player->setPlaybackRate(controls.playback.video2PlaybackRate);
+        if (callbacks.onSetVideoSpeed && !previewSlotVideo2.previewPath.empty())
+            callbacks.onSetVideoSpeed(previewSlotVideo2.previewPath, controls.playback.video2PlaybackRate);
+    }
+    ImGui::EndDisabled();
+    ImGui::NextColumn();
+    if (ImGui::SliderFloat("Speed##V3", &controls.playback.video3PlaybackRate, 0.1f, 5.f, "%.2fx")) {
+        if (previewSlotVideo3.player)
+            previewSlotVideo3.player->setPlaybackRate(controls.playback.video3PlaybackRate);
+        if (callbacks.onSetVideoSpeed && !previewSlotVideo3.previewPath.empty())
+            callbacks.onSetVideoSpeed(previewSlotVideo3.previewPath, controls.playback.video3PlaybackRate);
+    }
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Folder selectors ──
+    ImGui::Columns(3, "VPFolder", false);
+    {
+        auto& folder = controls.playback.selectedVideoFolder;
+        if (drawFolderCombo("Folder##V1", folder)) {
+            if (callbacks.onFolderChanged) callbacks.onFolderChanged();
+        }
+        ImGui::TextDisabled("%zu videos", registry.getFilteredAssets(folder).size());
+    }
+    ImGui::NextColumn();
+    {
+        auto& folder = controls.playback.selectedVideo2Folder;
+        if (drawFolderCombo("Folder##V2", folder)) {
+            if (callbacks.onFolderChanged2) callbacks.onFolderChanged2();
+        }
+        ImGui::TextDisabled("%zu videos", registry.getFilteredAssets(folder).size());
+    }
+    ImGui::NextColumn();
+    {
+        auto& folder = controls.playback.selectedVideo3Folder;
+        if (drawFolderCombo("Folder##V3", folder)) {
+            if (callbacks.onFolderChanged3) callbacks.onFolderChanged3();
+        }
+        ImGui::TextDisabled("%zu videos", registry.getFilteredAssets(folder).size());
+    }
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Clip selectors ──
+    ImGui::Columns(3, "VPClip", false);
+    {
+        const auto& folder = controls.playback.selectedVideoFolder;
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (!assets.empty()) {
+            selectedVideoAsset = std::clamp(selectedVideoAsset, 0, (int)assets.size() - 1);
+            previewSlotVideo1.previewSelection = std::clamp(previewSlotVideo1.previewSelection, 0, (int)assets.size() - 1);
+            const char* label = assets[previewSlotVideo1.previewSelection].metadata.filename.c_str();
+            if (ImGui::BeginCombo("Clip##V1", label)) {
+                for (int i = 0; i < (int)assets.size(); ++i) {
+                    bool sel = (previewSlotVideo1.previewSelection == i);
+                    if (ImGui::Selectable(assets[i].metadata.filename.c_str(), sel)) {
+                        if (previewSlotVideo1.previewSelection != i) previewSlotVideo1.manualUnload = false;
+                        previewSlotVideo1.previewSelection = i;
+                    }
+                    if (sel) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            const auto& meta = assets[previewSlotVideo1.previewSelection].metadata;
+            ImGui::TextDisabled("%dx%d  %.1fs", meta.width, meta.height, meta.duration);
+        } else {
+            ImGui::TextDisabled("No videos");
+        }
+    }
+    ImGui::NextColumn();
+    {
+        const auto& folder = controls.playback.selectedVideo2Folder;
+        const auto& assets = registry.getFilteredAssets(folder);
+        ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+        if (!assets.empty()) {
+            selectedVideoAsset2 = std::clamp(selectedVideoAsset2, 0, (int)assets.size() - 1);
+            previewSlotVideo2.previewSelection = std::clamp(previewSlotVideo2.previewSelection, 0, (int)assets.size() - 1);
+            const char* label = assets[previewSlotVideo2.previewSelection].metadata.filename.c_str();
+            if (ImGui::BeginCombo("Clip##V2", label)) {
+                for (int i = 0; i < (int)assets.size(); ++i) {
+                    bool sel = (previewSlotVideo2.previewSelection == i);
+                    if (ImGui::Selectable(assets[i].metadata.filename.c_str(), sel)) {
+                        if (previewSlotVideo2.previewSelection != i) previewSlotVideo2.manualUnload = false;
+                        previewSlotVideo2.previewSelection = i;
+                    }
+                    if (sel) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            const auto& meta = assets[previewSlotVideo2.previewSelection].metadata;
+            ImGui::TextDisabled("%dx%d  %.1fs", meta.width, meta.height, meta.duration);
+        } else {
+            ImGui::TextDisabled("No videos");
+        }
+        ImGui::EndDisabled();
+    }
+    ImGui::NextColumn();
+    {
+        const auto& folder = controls.playback.selectedVideo3Folder;
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (!assets.empty()) {
+            selectedVideoAsset3 = std::clamp(selectedVideoAsset3, 0, (int)assets.size() - 1);
+            previewSlotVideo3.previewSelection = std::clamp(previewSlotVideo3.previewSelection, 0, (int)assets.size() - 1);
+            const char* label = assets[previewSlotVideo3.previewSelection].metadata.filename.c_str();
+            if (ImGui::BeginCombo("Clip##V3", label)) {
+                for (int i = 0; i < (int)assets.size(); ++i) {
+                    bool sel = (previewSlotVideo3.previewSelection == i);
+                    if (ImGui::Selectable(assets[i].metadata.filename.c_str(), sel)) {
+                        if (previewSlotVideo3.previewSelection != i) previewSlotVideo3.manualUnload = false;
+                        previewSlotVideo3.previewSelection = i;
+                    }
+                    if (sel) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            const auto& meta = assets[previewSlotVideo3.previewSelection].metadata;
+            ImGui::TextDisabled("%dx%d  %.1fs", meta.width, meta.height, meta.duration);
+        } else {
+            ImGui::TextDisabled("No videos");
+        }
+    }
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Send to scene buttons ──
+    ImGui::Columns(3, "VPSend", false);
+    {
+        const auto& folder = controls.playback.selectedVideoFolder;
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (!assets.empty() && ImGui::Button("Enviar a escena##V1")) {
+            selectedVideoAsset = previewSlotVideo1.previewSelection;
+            if (callbacks.onReloadVideo)
+                callbacks.onReloadVideo(assets[previewSlotVideo1.previewSelection].metadata.path);
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("(Q)");
+    }
+    ImGui::NextColumn();
+    {
+        const auto& folder = controls.playback.selectedVideo2Folder;
+        const auto& assets = registry.getFilteredAssets(folder);
+        ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+        if (!assets.empty() && ImGui::Button("Enviar a escena##V2")) {
+            selectedVideoAsset2 = previewSlotVideo2.previewSelection;
+            if (callbacks.onReloadVideo2)
+                callbacks.onReloadVideo2(assets[previewSlotVideo2.previewSelection].metadata.path);
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("(W)");
+        ImGui::EndDisabled();
+    }
+    ImGui::NextColumn();
+    {
+        const auto& folder = controls.playback.selectedVideo3Folder;
+        const auto& assets = registry.getFilteredAssets(folder);
+        if (!assets.empty() && ImGui::Button("Enviar a escena##V3")) {
+            selectedVideoAsset3 = previewSlotVideo3.previewSelection;
+            if (callbacks.onReloadVideo3)
+                callbacks.onReloadVideo3(assets[previewSlotVideo3.previewSelection].metadata.path);
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("(E)");
+    }
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Shuffle buttons ──
+    ImGui::Columns(3, "VPShuffle", false);
+    if (ImGui::Button("Shuffle##V1")) previewShuffleRequested[0] = true;
+    ImGui::NextColumn();
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    if (ImGui::Button("Shuffle##V2")) previewShuffleRequested[1] = true;
+    ImGui::EndDisabled();
+    ImGui::NextColumn();
+    if (ImGui::Button("Shuffle##V3")) previewShuffleRequested[2] = true;
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Randomizer settings ──
+    ImGui::Columns(3, "VPRandomizer", false);
+    {
+        const auto& folder = controls.playback.selectedVideoFolder;
+        changed |= drawRandomizerBlock("##V1", r1, transDur,
+            registry.getFilteredAssets(folder).size(),
+            callbacks.onRandomizePreviewVideo1, callbacks.onRandomizeVideo);
+    }
+    ImGui::NextColumn();
+    {
+        const auto& folder = controls.playback.selectedVideo2Folder;
+        ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+        changed |= drawRandomizerBlock("##V2", r2, transDur2,
+            registry.getFilteredAssets(folder).size(),
+            callbacks.onRandomizePreviewVideo2, callbacks.onRandomizeVideo2);
+        ImGui::EndDisabled();
+    }
+    ImGui::NextColumn();
+    {
+        const auto& folder = controls.playback.selectedVideo3Folder;
+        changed |= drawRandomizerBlock("##V3", r3, transDur3,
+            registry.getFilteredAssets(folder).size(),
+            callbacks.onRandomizePreviewVideo3, callbacks.onRandomizeVideo3);
+    }
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Row: Mix controls ──
+    ImGui::Columns(3, "VPMix", false);
+    changed |= ImGui::SliderFloat("Mix##V1", &controls.playback.videoMix, 0.f, 1.f);
+    changed |= ImGui::Combo("Blend##V1", &controls.blending.blendModeProcedural, BLEND_ITEMS);
+    changed |= ImGui::SliderFloat("Blend amt##V1", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
+    ImGui::NextColumn();
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    changed |= ImGui::SliderFloat("Mix##V2", &controls.playback.video2Mix, 0.f, 1.f);
+    changed |= ImGui::Combo("Blend##V2", &controls.playback.video2BlendMode,
+                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
+    ImGui::EndDisabled();
+    ImGui::NextColumn();
+    ImGui::BeginDisabled(!controls.playback.enableDualVideo);
+    changed |= ImGui::SliderFloat("Mix##V3", &controls.playback.video3Mix, 0.f, 1.f);
+    changed |= ImGui::Combo("Blend##V3", &controls.playback.video3BlendMode,
+                            "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
+    ImGui::EndDisabled();
+    ImGui::NextColumn();
+    ImGui::Columns(1);
+    ImGui::Separator();
+
+    // ── Quick randomizers ──
     if (ImGui::Button("Randomize Post FX")) {
         randomizePostFxControls(controls, rng);
         changed = controlsDirty = true;
@@ -1108,163 +1388,46 @@ void UISystem::drawPreviewContent(
     }
     ImGui::Separator();
 
-    // ── Active renderer videos (always on top) ──
-    auto baseName = [](const std::string& p) {
-        size_t s = p.find_last_of("/\\");
-        return (s == std::string::npos) ? p : p.substr(s + 1);
-    };
-    ImGui::PushStyleColor(ImGuiCol_Text, {0.4f, 1.0f, 0.4f, 1.0f});
-    ImGui::Text("🎬 MIX 1: %s", video1Path.empty() ? "(vacío)" : baseName(video1Path).c_str());
-    ImGui::PopStyleColor();
-    ImGui::PushStyleColor(ImGuiCol_Text, {0.4f, 0.7f, 1.0f, 1.0f});
-    ImGui::Text("🎬 MIX 2: %s", video2Path.empty() ? "(vacío)" : baseName(video2Path).c_str());
-    ImGui::PopStyleColor();
-    ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 0.7f, 0.4f, 1.0f});
-    ImGui::Text("🎬 MIX 3: %s", video3Path.empty() ? "(vacío)" : baseName(video3Path).c_str());
-    ImGui::PopStyleColor();
+    // ── Extra controls ──
+    changed |= ImGui::SliderFloat("Brightness", &controls.post.masterBrightness, 0.0f, 2.0f, "%.2f");
+    ImGui::SameLine();
+    changed |= ImGui::SliderFloat("Contrast", &controls.color.gradeContrast, 0.0f, 2.0f, "%.2f");
 
-    // ── Section 1-3: Video previews in 3 columns ──
-    ImGui::Columns(3, "VideoPreviewColumns", false);
-
-    // ── Column 1: Video 1 ──
-    if (ImGui::CollapsingHeader("Video 1", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextDisabled(diag.videoReady ? "online" : "offline");
-        updateSlotAndDrawImage("V1", previewSlotVideo1,
-                               controls.playback.selectedVideoFolder,
-                               selectedVideoAsset, 0);
-        if (ImGui::SliderFloat("Speed##V1", &controls.playback.videoPlaybackRate, 0.1f, 5.f, "%.2fx")) {
-            if (previewSlotVideo1.player)
-                previewSlotVideo1.player->setPlaybackRate(controls.playback.videoPlaybackRate);
-            if (callbacks.onSetVideoSpeed && !previewSlotVideo1.previewPath.empty())
-                callbacks.onSetVideoSpeed(previewSlotVideo1.previewPath, controls.playback.videoPlaybackRate);
+    changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##lock_grid", &controls.locks.lockGrid)) changed = true;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock grid during randomize");
+    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockGrid ? "(locked)" : "(unlocked)");
+    if (controls.grid.enabled) {
+        changed |= ImGui::Combo("Grid mode", &controls.grid.mode, "Vertical\0Horizontal\0Matrix\0");
+        if (controls.grid.mode == 2) {
+            changed |= ImGui::SliderInt("Rows",    &controls.grid.rows,    1, 8);
+            changed |= ImGui::SliderInt("Columns", &controls.grid.columns, 1, 8);
+        } else {
+            changed |= ImGui::SliderInt("Grid count", &controls.grid.count, 1, 8);
         }
-        drawControls("V1", previewSlotVideo1,
-                     controls.playback.selectedVideoFolder,
-                     selectedVideoAsset,
-                     callbacks.onReloadVideo, 0);
+        changed |= ImGui::Checkbox("Mirror cells",  &controls.grid.mirrorCells);
+        changed |= ImGui::Checkbox("Show grid lines", &controls.grid.showLines);
     }
 
-    ImGui::NextColumn();
-
-    // ── Column 2: Video 2 ──
-    if (ImGui::CollapsingHeader("Video 2", ImGuiTreeNodeFlags_DefaultOpen)) {
-        updateSlotAndDrawImage("V2", previewSlotVideo2,
-                               controls.playback.selectedVideo2Folder,
-                               selectedVideoAsset2, 1);
-        ImGui::BeginDisabled(!controls.playback.enableDualVideo);
-        if (ImGui::SliderFloat("Speed##V2", &controls.playback.video2PlaybackRate, 0.1f, 5.f, "%.2fx")) {
-            if (previewSlotVideo2.player)
-                previewSlotVideo2.player->setPlaybackRate(controls.playback.video2PlaybackRate);
-            if (callbacks.onSetVideoSpeed && !previewSlotVideo2.previewPath.empty())
-                callbacks.onSetVideoSpeed(previewSlotVideo2.previewPath, controls.playback.video2PlaybackRate);
-        }
-        ImGui::EndDisabled();
-        drawControls("V2", previewSlotVideo2,
-                     controls.playback.selectedVideo2Folder,
-                     selectedVideoAsset2,
-                     callbacks.onReloadVideo2, 1);
+    ImGui::Separator();
+    ImGui::TextColored({1.f,0.85f,0.3f,1.f}, "Locked Parameters");
+    ImGui::Checkbox("Enable RGB Mix", &controls.post.enablePostColorBalance);
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##lock_rgbmix", &controls.locks.lockColorBalance)) changed = true;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock RGB Mix during randomize");
+    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockColorBalance ? "(locked)" : "(unlocked)");
+    if (controls.post.enablePostColorBalance) {
+        changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.color.colorBalance), 0.f, 2.f);
     }
 
-    ImGui::NextColumn();
-
-    // ── Column 3: Video 3 ──
-    if (ImGui::CollapsingHeader("Video 3", ImGuiTreeNodeFlags_DefaultOpen)) {
-        updateSlotAndDrawImage("V3", previewSlotVideo3,
-                               controls.playback.selectedVideo3Folder,
-                               selectedVideoAsset3, 2);
-        if (ImGui::SliderFloat("Speed##V3", &controls.playback.video3PlaybackRate, 0.1f, 5.f, "%.2fx")) {
-            if (previewSlotVideo3.player)
-                previewSlotVideo3.player->setPlaybackRate(controls.playback.video3PlaybackRate);
-            if (callbacks.onSetVideoSpeed && !previewSlotVideo3.previewPath.empty())
-                callbacks.onSetVideoSpeed(previewSlotVideo3.previewPath, controls.playback.video3PlaybackRate);
-        }
-        drawControls("V3", previewSlotVideo3,
-                     controls.playback.selectedVideo3Folder,
-                     selectedVideoAsset3,
-                     callbacks.onReloadVideo3, 2);
-    }
-
-    ImGui::Columns(1);
-
-    // ── Section 4: Video Preview Mix ──
-    if (ImGui::CollapsingHeader("Video Preview Mix", ImGuiTreeNodeFlags_DefaultOpen)) {
-        auto baseName = [](const std::string& p) {
-            size_t s = p.find_last_of("/\\");
-            return (s == std::string::npos) ? p : p.substr(s + 1);
-        };
-
-        ImGui::TextColored({0.4f, 1.0f, 0.4f, 1.0f}, "🎬 MIX 1: %s", video1Path.empty() ? "(vacío)" : baseName(video1Path).c_str());
-        ImGui::TextColored({0.4f, 0.7f, 1.0f, 1.0f}, "🎬 MIX 2: %s", video2Path.empty() ? "(vacío)" : baseName(video2Path).c_str());
-        ImGui::TextColored({1.0f, 0.7f, 0.4f, 1.0f}, "🎬 MIX 3: %s", video3Path.empty() ? "(vacío)" : baseName(video3Path).c_str());
-
-        ImGui::Separator();
-        changed |= ImGui::SliderFloat("Mix V1", &controls.playback.videoMix, 0.f, 1.f);
-        changed |= ImGui::Combo("Blend mode V1", &controls.blending.blendModeProcedural, BLEND_ITEMS);
-        changed |= ImGui::SliderFloat("Blend amount V1", &controls.blending.blendProceduralMix, 0.f, 2.f, "%.2f");
-        ImGui::BeginDisabled(!controls.playback.enableDualVideo);
-        changed |= ImGui::SliderFloat("Mix V2", &controls.playback.video2Mix, 0.f, 1.f);
-        changed |= ImGui::Combo("Blend mode V2", &controls.playback.video2BlendMode,
-                                "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
-        changed |= ImGui::SliderFloat("Mix V3", &controls.playback.video3Mix, 0.f, 1.f);
-        changed |= ImGui::Combo("Blend mode V3", &controls.playback.video3BlendMode,
-                                "Mix\0Add\0Multiply\0Screen\0Difference\0", 5);
-        ImGui::EndDisabled();
-
-        ImGui::Separator();
-        if (ImGui::Button("Randomize Post FX")) {
-            randomizePostFxControls(controls, rng);
-            changed = controlsDirty = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Randomize VJAY Basics")) {
-            randomizeVJayBasicsControls(controls, rng);
-            changed = controlsDirty = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Randomize VJAY Extra")) {
-            randomizeVJayExtraControls(controls, rng);
-            changed = controlsDirty = true;
-        }
-
-        ImGui::Separator();
-        changed |= ImGui::SliderFloat("Brightness", &controls.post.masterBrightness, 0.0f, 2.0f, "%.2f");
-        changed |= ImGui::SliderFloat("Contrast", &controls.color.gradeContrast, 0.0f, 2.0f, "%.2f");
-        changed |= ImGui::Checkbox("Grid overlay", &controls.grid.enabled);
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##lock_grid", &controls.locks.lockGrid)) changed = true;
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock grid during randomize");
-        ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockGrid ? "(locked)" : "(unlocked)");
-        if (controls.grid.enabled) {
-            changed |= ImGui::Combo("Grid mode", &controls.grid.mode, "Vertical\0Horizontal\0Matrix\0");
-            if (controls.grid.mode == 2) {
-                changed |= ImGui::SliderInt("Rows",    &controls.grid.rows,    1, 8);
-                changed |= ImGui::SliderInt("Columns", &controls.grid.columns, 1, 8);
-            } else {
-                changed |= ImGui::SliderInt("Grid count", &controls.grid.count, 1, 8);
-            }
-            changed |= ImGui::Checkbox("Mirror cells",  &controls.grid.mirrorCells);
-            changed |= ImGui::Checkbox("Show grid lines", &controls.grid.showLines);
-        }
-
-        ImGui::Separator();
-        ImGui::TextColored({1.f,0.85f,0.3f,1.f}, "Locked Parameters");
-        ImGui::Checkbox("Enable RGB Mix", &controls.post.enablePostColorBalance);
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##lock_rgbmix", &controls.locks.lockColorBalance)) changed = true;
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock RGB Mix during randomize");
-        ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockColorBalance ? "(locked)" : "(unlocked)");
-        if (controls.post.enablePostColorBalance) {
-            changed |= ImGui::SliderFloat3("RGB Mix", glm::value_ptr(controls.color.colorBalance), 0.f, 2.f);
-        }
-
-        ImGui::Checkbox("Enable Threshold", &controls.fx.enableThreshold);
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##lock_threshold", &controls.locks.lockThreshold)) changed = true;
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock Threshold during randomize");
-        ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockThreshold ? "(locked)" : "(unlocked)");
-        if (controls.fx.enableThreshold) {
-            changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
-        }
+    ImGui::Checkbox("Enable Threshold", &controls.fx.enableThreshold);
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##lock_threshold", &controls.locks.lockThreshold)) changed = true;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lock Threshold during randomize");
+    ImGui::SameLine(); ImGui::TextDisabled(controls.locks.lockThreshold ? "(locked)" : "(unlocked)");
+    if (controls.fx.enableThreshold) {
+        changed |= ImGui::SliderFloat("Threshold level", &controls.fx.thresholdLevel, 0.0f, 1.0f, "%.2f");
     }
 
     // ── Global keyboard shortcuts ──
@@ -1540,7 +1703,7 @@ bool UISystem::processEvent(const SDL_Event& ev) {
 
 void UISystem::render(
     VisualControls& controls, VideoRandomizerState& randomizer,
-    VideoRandomizerState2& randomizer2, VideoRandomizerState2& randomizer3,
+    VideoRandomizerState& randomizer2, VideoRandomizerState& randomizer3,
     VideoPlayer& player, VideoPlayer& player2, VideoPlayer& player3,
     VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
     float& transDur, float& transDur2, float& transDur3,
@@ -1621,13 +1784,27 @@ void UISystem::drawPresetsContent(VisualControls& controls, bool& controlsDirty,
 
     ImGui::InputText("Name", presetNameBuffer, sizeof(presetNameBuffer));
     ImGui::SameLine();
-    if (ImGui::Button("Save")) {
+    if (ImGui::Button("Save Preview")) {
         std::string name(presetNameBuffer);
         if (!name.empty()) {
-            if (callbacks.onSavePreset(name)) {
-                // clear name after save
-                presetNameBuffer[0] = '\0';
-            }
+            bool ok = false;
+            if (callbacks.onSavePresetFromPreview)
+                ok = callbacks.onSavePresetFromPreview(name);
+            else if (callbacks.onSavePreset)
+                ok = callbacks.onSavePreset(name);
+            if (ok) presetNameBuffer[0] = '\0';
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Save Output")) {
+        std::string name(presetNameBuffer);
+        if (!name.empty()) {
+            bool ok = false;
+            if (callbacks.onSavePresetFromOutput)
+                ok = callbacks.onSavePresetFromOutput(name);
+            else if (callbacks.onSavePreset)
+                ok = callbacks.onSavePreset(name);
+            if (ok) presetNameBuffer[0] = '\0';
         }
     }
 
@@ -1689,7 +1866,7 @@ void UISystem::drawPresetsContent(VisualControls& controls, bool& controlsDirty,
 
 void UISystem::drawMainNavbar(
     VisualControls& controls, VideoRandomizerState& randomizer,
-    VideoRandomizerState2& randomizer2, VideoRandomizerState2& randomizer3,
+    VideoRandomizerState& randomizer2, VideoRandomizerState& randomizer3,
     VideoPlayer& player, VideoPlayer& player2, VideoPlayer& player3,
     VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
     float& transDur, float& transDur2, float& transDur3,
@@ -1845,7 +2022,7 @@ void UISystem::drawProceduralControlsContent(
 // ═════════════════════════════════════════════════════════════════════════════
 
 void UISystem::drawVideoContent(
-    VisualControls& c, VideoRandomizerState& r1, VideoRandomizerState2& r2, VideoRandomizerState2& r3,
+    VisualControls& c, VideoRandomizerState& r1, VideoRandomizerState& r2, VideoRandomizerState& r3,
     VideoRegistry& registry, int& selAsset, int& selAsset2, int& selAsset3,
     float& transDur, float& transDur2, float& transDur3,
     bool& allowDimChange, bool& controlsDirty,

@@ -55,22 +55,6 @@ struct VideoRandomizerState {
     float intervalSeconds = 30.0f;
     float elapsedSeconds = 0.0f;
     float currentVideoDuration = 0.0f;
-
-    bool useShuffleMode = true;
-
-    std::deque<int> recentHistory;
-    int historyWindow = 3;
-
-    std::vector<int> shuffleQueue;
-    int currentShuffleIndex = 0;
-};
-
-struct VideoRandomizerState2 {
-    bool autoRandomize = false;
-    bool useVideoDuration = false;
-    float intervalSeconds = 30.0f;
-    float elapsedSeconds = 0.0f;
-    float currentVideoDuration = 0.0f;
     bool useShuffleMode = true;
     std::vector<int> shuffleQueue;
     int currentShuffleIndex = 0;
@@ -81,17 +65,22 @@ struct VideoRandomizerState2 {
 // Slot genérico de video (CRÍTICO)
 // ------------------------------
 struct VideoSlot {
-    VideoTexture* texture = nullptr;
-    VideoPlayer* player = nullptr;
-    CpuFramePool* framePool = nullptr;
-    std::unique_ptr<VideoRenderer>* renderer = nullptr;
+    VideoTexture texture;
+    VideoPlayer player;
+    CpuFramePool framePool;
+    std::unique_ptr<VideoRenderer> renderer;
 
-    std::string* sourcePath = nullptr;
-    VideoRandomizerState* randomizer = nullptr;
+    std::string sourcePath = "media/sample.mp4";
+    VideoRandomizerState randomizer;
 
-    bool* initialized = nullptr;
-    bool* isReloading = nullptr;
-    std::chrono::steady_clock::time_point* lastChangeTime = nullptr;
+    int selectedVideoAsset = -1;
+    bool initialized = false;
+    bool isReloading = false;
+    std::chrono::steady_clock::time_point lastChangeTime =
+        std::chrono::steady_clock::now();
+
+    float transitionDuration = 1.0f;
+    float lastPlaybackRate = 1.0f;
 };
 
 
@@ -101,8 +90,6 @@ struct VideoSlot {
 class Application {
 public:
     static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
-    static constexpr int WIDTH = 800;
-    static constexpr int HEIGHT = 600;
 
     Application();
     ~Application();
@@ -112,6 +99,8 @@ public:
     // Presets
     std::vector<std::string> listPresets() const;
     bool savePreset(const std::string& name);
+    bool savePresetFromPreview(const std::string& name);
+    bool savePresetFromOutput(const std::string& name);
     bool loadPreset(const std::string& name);
     bool deletePreset(const std::string& name);
     bool renamePreset(const std::string& oldName, const std::string& newName);
@@ -132,107 +121,16 @@ private:
 
 
     // --------------------------
-    // Video slot 1
+    // Video slots (preview + output)
     // --------------------------
-    VideoTexture videoTexture;
-    VideoPlayer videoPlayer;
     VideoRegistry videoRegistry;
-    CpuFramePool cpuFramePool;
-    std::unique_ptr<VideoRenderer> videoRenderer;
-
-    std::string videoSourcePath = "media/sample.mp4";
-    int selectedVideoAsset = -1;
-    bool videoSubsystemInitialized = false;
-    bool isReloadingVideo = false;
-    std::chrono::steady_clock::time_point lastVideoChangeTime =
-        std::chrono::steady_clock::now();
-
-
-    // --------------------------
-    // Video slot 2 (SIMPLIFICADO)
-    // --------------------------
-    VideoTexture videoTexture2;
-    VideoPlayer videoPlayer2;
-    CpuFramePool cpuFramePool2;
-    std::unique_ptr<VideoRenderer> videoRenderer2;
-
-    std::string videoSourcePath2 = "media/sample.mp4";
-    int selectedVideoAsset2 = -1;
-    bool videoSubsystemInitialized2 = false;
-    bool isReloadingVideo2 = false;
-    std::chrono::steady_clock::time_point lastVideoChangeTime2 =
-        std::chrono::steady_clock::now();
-
-    // --------------------------
-    // Video slot 3
-    // --------------------------
-    VideoTexture videoTexture3;
-    VideoPlayer videoPlayer3;
-    CpuFramePool cpuFramePool3;
-    std::unique_ptr<VideoRenderer> videoRenderer3;
-
-    std::string videoSourcePath3 = "media/sample.mp4";
-    int selectedVideoAsset3 = -1;
-    bool videoSubsystemInitialized3 = false;
-    bool isReloadingVideo3 = false;
-    std::chrono::steady_clock::time_point lastVideoChangeTime3 =
-        std::chrono::steady_clock::now();
-
-    // --------------------------
-    // Output Video slot 1
-    // --------------------------
-    VideoTexture outputVideoTexture;
-    VideoPlayer outputVideoPlayer;
-    CpuFramePool outputCpuFramePool;
-    std::unique_ptr<VideoRenderer> outputVideoRenderer;
-
-    std::string outputVideoSourcePath = "media/sample.mp4";
-    int outputSelectedVideoAsset = -1;
-    bool outputVideoSubsystemInitialized = false;
-    bool outputIsReloadingVideo = false;
-    std::chrono::steady_clock::time_point outputLastVideoChangeTime =
-        std::chrono::steady_clock::now();
-
-    // --------------------------
-    // Output Video slot 2
-    // --------------------------
-    VideoTexture outputVideoTexture2;
-    VideoPlayer outputVideoPlayer2;
-    CpuFramePool outputCpuFramePool2;
-    std::unique_ptr<VideoRenderer> outputVideoRenderer2;
-
-    std::string outputVideoSourcePath2 = "media/sample.mp4";
-    int outputSelectedVideoAsset2 = -1;
-    bool outputVideoSubsystemInitialized2 = false;
-    bool outputIsReloadingVideo2 = false;
-    std::chrono::steady_clock::time_point outputLastVideoChangeTime2 =
-        std::chrono::steady_clock::now();
-
-    // --------------------------
-    // Output Video slot 3
-    // --------------------------
-    VideoTexture outputVideoTexture3;
-    VideoPlayer outputVideoPlayer3;
-    CpuFramePool outputCpuFramePool3;
-    std::unique_ptr<VideoRenderer> outputVideoRenderer3;
-
-    std::string outputVideoSourcePath3 = "media/sample.mp4";
-    int outputSelectedVideoAsset3 = -1;
-    bool outputVideoSubsystemInitialized3 = false;
-    bool outputIsReloadingVideo3 = false;
-    std::chrono::steady_clock::time_point outputLastVideoChangeTime3 =
-        std::chrono::steady_clock::now();
-
-    VideoRandomizerState outputVideoRandomizer;
-    VideoRandomizerState2 outputVideoRandomizer2;
-    VideoRandomizerState2 outputVideoRandomizer3;
+    std::array<VideoSlot, 3> previewSlots;
+    std::array<VideoSlot, 3> outputSlots;
 
     // Per-video playback speed cache (path → rate)
     mutable std::unordered_map<std::string, float> videoSpeedCache;
     std::string videoSpeedCachePath = "video_speeds.json";
-    float lastPlaybackRate  = 1.0f;
-    float lastPlaybackRate2 = 1.0f;
-    float lastPlaybackRate3 = 1.0f;
+
     void loadVideoSpeeds();
     void saveVideoSpeeds() const;
 
@@ -293,16 +191,14 @@ private:
     AudioSmoothState prevAudioSmooth;      // for preview
     AudioSmoothState outputPrevAudioSmooth; // for output
 
+    float autoColorHue = 0.0f; // hue rotation state for tickAutoColors (was buggy static)
+
 
     // --------------------------
     // UI / Control
     // --------------------------
     UISystem uiSystem;
     VisualControls visualControls;
-
-    VideoRandomizerState videoRandomizer;
-    VideoRandomizerState2 videoRandomizer2;
-    VideoRandomizerState2 videoRandomizer3;
 
     MidiSystem midiSystem;
     OscSystem oscSystem;
@@ -380,10 +276,6 @@ private:
     // video assets
     std::string videoAssetsRoot;
 
-    // transition durations
-    float transitionDuration = 1.0f;
-    float transitionDuration2 = 0.5f;
-    float transitionDuration3 = 0.5f;
     float transitionProgress = 1.0f;  // 0.0 = old video, 1.0 = new video
 
     // command buffers (separate per window for independent rendering)
@@ -443,7 +335,9 @@ private:
     void initPresenters();
     void initRenderPass();
     void initPipelines();
-    void initFramebuffers();
+    void createFullscreenDescriptorSets();
+    void createFullscreenPipeline();
+    void createSwapchainSampler();
     void initCommandBuffers();
 
     void initVideo();
@@ -508,18 +402,25 @@ private:
                            const std::chrono::steady_clock::time_point& now);
 
     UICallbacks buildUICallbacks();
+    UICallbacks cachedCallbacks;
 
 
     // --------------------------
     // Main loop
     // --------------------------
     void mainLoop();
+    void processSDLEvents();
+    void frameLimit();
 #ifdef _WIN32
     static void CALLBACK modalTimerProc(HWND hwnd, UINT message, UINT_PTR timerId, DWORD timestamp);
 #endif
     void renderOneFrame();
     bool tryRenderPreview();
     bool tryRenderOutput();
+    bool submitAndPresent(FrameSystem& frameSystem, VulkanPresenter& presenter,
+                          FrameContext* frame, uint32_t imageIndex,
+                          VkCommandBuffer cmdBuffer,
+                          std::function<void()> onResizeNeeded);
     void updateUniformBuffer(uint32_t frameIndex, VisualControls& controls,
                             UniformBufferManager& uboManager,
                             const VulkanPresenter& presenter,

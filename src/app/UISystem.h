@@ -12,7 +12,6 @@
 struct ImGuiContext;
 struct VisualControls;
 struct VideoRandomizerState;
-struct VideoRandomizerState2;
 class VideoPlayer;
 class VideoRegistry;
 class MidiSystem;
@@ -107,6 +106,8 @@ struct UICallbacks {
     // Presets
     std::function<std::vector<std::string>()> onListPresets;
     std::function<bool(const std::string&)> onSavePreset;
+    std::function<bool(const std::string&)> onSavePresetFromPreview;
+    std::function<bool(const std::string&)> onSavePresetFromOutput;
     std::function<bool(const std::string&)> onLoadPreset;
     std::function<bool(const std::string&)> onDeletePreset;
     std::function<bool(const std::string&, const std::string&)> onRenamePreset;
@@ -142,8 +143,8 @@ public:
     void render(
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
-        VideoRandomizerState2& randomizer2,
-        VideoRandomizerState2& randomizer3,
+        VideoRandomizerState& randomizer2,
+        VideoRandomizerState& randomizer3,
         VideoPlayer&          player,
         VideoPlayer&          player2,
         VideoPlayer&          player3,
@@ -280,8 +281,8 @@ private:
     void drawMainNavbar(
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
-        VideoRandomizerState2& randomizer2,
-        VideoRandomizerState2& randomizer3,
+        VideoRandomizerState& randomizer2,
+        VideoRandomizerState& randomizer3,
         VideoPlayer&          player,
         VideoPlayer&          player2,
         VideoPlayer&          player3,
@@ -338,8 +339,8 @@ private:
     void drawVideoContent(
         VisualControls&       controls,
         VideoRandomizerState& randomizer,
-        VideoRandomizerState2& randomizer2,
-        VideoRandomizerState2& randomizer3,
+        VideoRandomizerState& randomizer2,
+        VideoRandomizerState& randomizer3,
         VideoRegistry&        registry,
         int&                  selectedVideoAsset,
         int&                  selectedVideoAsset2,
@@ -386,8 +387,8 @@ private:
         int&                  selectedVideoAsset2,
         int&                  selectedVideoAsset3,
         VideoRandomizerState& randomizer,
-        VideoRandomizerState2& randomizer2,
-        VideoRandomizerState2& randomizer3,
+        VideoRandomizerState& randomizer2,
+        VideoRandomizerState& randomizer3,
         float&                transitionDuration,
         float&                transitionDuration2,
         float&                transitionDuration3,

@@ -4,7 +4,6 @@
 #include <map>
 
 struct VideoRandomizerState;
-struct VideoRandomizerState2;
 class OscSystem;
 
 // Lee y escribe controls_state.cfg.
@@ -18,8 +17,8 @@ namespace ControlState {
 void load(
     const std::string&  path,
     VideoRandomizerState& randomizer,
-    VideoRandomizerState2& randomizer2,
-    VideoRandomizerState2& randomizer3,
+    VideoRandomizerState& randomizer2,
+    VideoRandomizerState& randomizer3,
     bool&               allowDimensionChangeRecreation,
     OscSystem&          oscSystem,
     int&                selectedVideoAsset,
@@ -34,8 +33,8 @@ void load(
 void save(
     const std::string&        path,
     const VideoRandomizerState& randomizer,
-    const VideoRandomizerState2& randomizer2,
-    const VideoRandomizerState2& randomizer3,
+    const VideoRandomizerState& randomizer2,
+    const VideoRandomizerState& randomizer3,
     bool                      allowDimensionChangeRecreation,
     const OscSystem&          oscSystem,
     int                       selectedVideoAsset,

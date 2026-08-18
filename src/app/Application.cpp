@@ -41,16 +41,16 @@ glm::ivec2 Application::getScreenSize() const {
 
 // Sincroniza todos los descriptor sets con el estado actual de las texturas.
 void Application::updateAllDescriptorSets() {
-    const bool vid1Ready = videoTexture.isReady();
-    const bool outVid1Ready = outputVideoTexture.isReady();
+    const bool vid1Ready = previewSlots[0].texture.isReady();
+    const bool outVid1Ready = outputSlots[0].texture.isReady();
 
     // Descriptor sets principales (multipass) — only bind image if texture is ready
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         descriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             uniformBufferManager.getBuffers()[i],
-            vid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()) : nullptr,
-            vid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()) : nullptr
+            vid1Ready ? const_cast<VkDescriptorImageInfo*>(&previewSlots[0].texture.getDescriptorInfo()) : nullptr,
+            vid1Ready ? const_cast<VkDescriptorImageInfo*>(&previewSlots[0].texture.getPrevDescriptorInfo()) : nullptr
         );
     }
     // Output descriptor sets
@@ -58,41 +58,41 @@ void Application::updateAllDescriptorSets() {
         outputDescriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             outputUniformBufferManager.getBuffers()[i],
-            outVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()) : nullptr,
-            outVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo()) : nullptr
+            outVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputSlots[0].texture.getDescriptorInfo()) : nullptr,
+            outVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputSlots[0].texture.getPrevDescriptorInfo()) : nullptr
         );
     }
     updateFullscreenDescriptorSets();
 
     // Multipass pipeline — skip if texture not ready OR pipeline not yet initialized
     if (vid1Ready && multiPassPipeline.isInitialized()) {
-        const bool has2 = videoTexture2.isReady();
-        const bool has3 = videoTexture3.isReady();
+        const bool has2 = previewSlots[1].texture.isReady();
+        const bool has3 = previewSlots[2].texture.isReady();
         multiPassPipeline.updateDescriptorSets(
             uniformBufferManager.getBuffers(),
-            videoTexture.getImageView(),
-            videoTexture.getPrevImageView(),
-            videoTexture.getSampler(),
-            videoTexture.getSampler(),
-            has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-            has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
-            has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
-            has3 ? videoTexture3.getSampler()   : videoTexture.getSampler()
+            previewSlots[0].texture.getImageView(),
+            previewSlots[0].texture.getPrevImageView(),
+            previewSlots[0].texture.getSampler(),
+            previewSlots[0].texture.getSampler(),
+            has2 ? previewSlots[1].texture.getImageView() : previewSlots[0].texture.getImageView(),
+            has2 ? previewSlots[1].texture.getSampler()   : previewSlots[0].texture.getSampler(),
+            has3 ? previewSlots[2].texture.getImageView() : previewSlots[0].texture.getImageView(),
+            has3 ? previewSlots[2].texture.getSampler()   : previewSlots[0].texture.getSampler()
         );
     }
     if (outVid1Ready && outputMultiPassPipeline.isInitialized()) {
-        const bool outputHas2 = outputVideoTexture2.isReady();
-        const bool outputHas3 = outputVideoTexture3.isReady();
+        const bool outputHas2 = outputSlots[1].texture.isReady();
+        const bool outputHas3 = outputSlots[2].texture.isReady();
         outputMultiPassPipeline.updateDescriptorSets(
             outputUniformBufferManager.getBuffers(),
-            outputVideoTexture.getImageView(),
-            outputVideoTexture.getPrevImageView(),
-            outputVideoTexture.getSampler(),
-            outputVideoTexture.getSampler(),
-            outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
-            outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
-            outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
-            outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler()
+            outputSlots[0].texture.getImageView(),
+            outputSlots[0].texture.getPrevImageView(),
+            outputSlots[0].texture.getSampler(),
+            outputSlots[0].texture.getSampler(),
+            outputHas2 ? outputSlots[1].texture.getImageView() : outputSlots[0].texture.getImageView(),
+            outputHas2 ? outputSlots[1].texture.getSampler()   : outputSlots[0].texture.getSampler(),
+            outputHas3 ? outputSlots[2].texture.getImageView() : outputSlots[0].texture.getImageView(),
+            outputHas3 ? outputSlots[2].texture.getSampler()   : outputSlots[0].texture.getSampler()
         );
     }
 }
@@ -101,50 +101,50 @@ void Application::updateAllDescriptorSets() {
 void Application::rebuildVideoTexture(int slot) {
     vkDeviceWaitIdle(vulkanContext.getDevice());
     if (slot == 0) {
-        videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-        videoTexture.cleanup(resourceSystem);
-        videoTexture.createResources(
+        previewSlots[0].texture.destroy(resourceSystem, vulkanContext.getDevice());
+        previewSlots[0].texture.cleanup(resourceSystem);
+        previewSlots[0].texture.createResources(
             resourceSystem, vulkanContext.getDevice(),
             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-            static_cast<uint32_t>(videoPlayer.width()),
-            static_cast<uint32_t>(videoPlayer.height())
+            static_cast<uint32_t>(previewSlots[0].player.width()),
+            static_cast<uint32_t>(previewSlots[0].player.height())
         );
-        cpuFramePool.resize(
-            static_cast<uint32_t>(videoPlayer.width()),
-            static_cast<uint32_t>(videoPlayer.height()),
-            static_cast<uint32_t>(videoPlayer.width()) * 4
+        previewSlots[0].framePool.resize(
+            static_cast<uint32_t>(previewSlots[0].player.width()),
+            static_cast<uint32_t>(previewSlots[0].player.height()),
+            static_cast<uint32_t>(previewSlots[0].player.width()) * 4
         );
-        if (videoRenderer) videoRenderer->reset();
+        if (previewSlots[0].renderer) previewSlots[0].renderer->reset();
     } else if (slot == 1) {
-        videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-        videoTexture2.cleanup(resourceSystem);
-        videoTexture2.createResources(
+        previewSlots[1].texture.destroy(resourceSystem, vulkanContext.getDevice());
+        previewSlots[1].texture.cleanup(resourceSystem);
+        previewSlots[1].texture.createResources(
             resourceSystem, vulkanContext.getDevice(),
             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-            static_cast<uint32_t>(videoPlayer2.width()),
-            static_cast<uint32_t>(videoPlayer2.height())
+            static_cast<uint32_t>(previewSlots[1].player.width()),
+            static_cast<uint32_t>(previewSlots[1].player.height())
         );
-        cpuFramePool2.resize(
-            static_cast<uint32_t>(videoPlayer2.width()),
-            static_cast<uint32_t>(videoPlayer2.height()),
-            static_cast<uint32_t>(videoPlayer2.width()) * 4
+        previewSlots[1].framePool.resize(
+            static_cast<uint32_t>(previewSlots[1].player.width()),
+            static_cast<uint32_t>(previewSlots[1].player.height()),
+            static_cast<uint32_t>(previewSlots[1].player.width()) * 4
         );
-        if (videoRenderer2) videoRenderer2->reset();
+        if (previewSlots[1].renderer) previewSlots[1].renderer->reset();
     } else {
-        videoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
-        videoTexture3.cleanup(resourceSystem);
-        videoTexture3.createResources(
+        previewSlots[2].texture.destroy(resourceSystem, vulkanContext.getDevice());
+        previewSlots[2].texture.cleanup(resourceSystem);
+        previewSlots[2].texture.createResources(
             resourceSystem, vulkanContext.getDevice(),
             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-            static_cast<uint32_t>(videoPlayer3.width()),
-            static_cast<uint32_t>(videoPlayer3.height())
+            static_cast<uint32_t>(previewSlots[2].player.width()),
+            static_cast<uint32_t>(previewSlots[2].player.height())
         );
-        cpuFramePool3.resize(
-            static_cast<uint32_t>(videoPlayer3.width()),
-            static_cast<uint32_t>(videoPlayer3.height()),
-            static_cast<uint32_t>(videoPlayer3.width()) * 4
+        previewSlots[2].framePool.resize(
+            static_cast<uint32_t>(previewSlots[2].player.width()),
+            static_cast<uint32_t>(previewSlots[2].player.height()),
+            static_cast<uint32_t>(previewSlots[2].player.width()) * 4
         );
-        if (videoRenderer3) videoRenderer3->reset();
+        if (previewSlots[2].renderer) previewSlots[2].renderer->reset();
     }
 }
 
@@ -158,101 +158,102 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         float speed = (it != videoSpeedCache.end()) ? it->second : 1.0f;
         if (targetSlot == 0) {
             visualControls.playback.videoPlaybackRate = speed;
-            lastPlaybackRate = speed;
+            previewSlots[0].lastPlaybackRate = speed;
         } else if (targetSlot == 1) {
             visualControls.playback.video2PlaybackRate = speed;
-            lastPlaybackRate2 = speed;
+            previewSlots[1].lastPlaybackRate = speed;
         } else {
             visualControls.playback.video3PlaybackRate = speed;
-            lastPlaybackRate3 = speed;
+            previewSlots[2].lastPlaybackRate = speed;
         }
     };
 
     // Start crossfade transition only if a previous video was loaded
     // (avoids sampling an uninitialized prev texture on first load)
-    if (slot == 0 && videoTexture.isReady()) {
+    if (slot == 0 && previewSlots[0].texture.isReady()) {
         transitionActive = true;
         transitionProgress = 0.0f;
-        videoTexture.setFreezePrev(true);
-    } else if (slot == 1 && videoTexture2.isReady()) {
+        previewSlots[0].texture.setFreezePrev(true);
+    } else if (slot == 1 && previewSlots[1].texture.isReady()) {
         transitionActive = true;
         transitionProgress = 0.0f;
-        videoTexture2.setFreezePrev(true);
-    } else if (slot == 2 && videoTexture3.isReady()) {
+        previewSlots[1].texture.setFreezePrev(true);
+    } else if (slot == 2 && previewSlots[2].texture.isReady()) {
         transitionActive = true;
         transitionProgress = 0.0f;
-        videoTexture3.setFreezePrev(true);
+        previewSlots[2].texture.setFreezePrev(true);
     }
 
     if (slot == 0) {
-        videoSourcePath = path;
-        videoRenderer.reset();
-        videoPlayer.shutdown();
+        previewSlots[0].sourcePath = path;
+        previewSlots[0].renderer.reset();
+        previewSlots[0].player.shutdown();
 
         glm::ivec2 screenSize = getScreenSize();
-        if (!videoPlayer.initialize(path, screenSize.x, screenSize.y)) {
+        if (!previewSlots[0].player.initialize(path, screenSize.x, screenSize.y)) {
             std::cerr << "[Application] reloadVideoSlot(0) failed: " << path << '\n';
-            isReloadingVideo = false;
+            previewSlots[0].isReloading = false;
             return false;
         }
 
-        videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
-        videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
+        previewSlots[0].player.setAutoScale(visualControls.playback.autoScaleVideo);
+        previewSlots[0].player.setPlaybackRate(visualControls.playback.videoPlaybackRate);
         rebuildVideoTexture(0);
         updateAllDescriptorSets();
 
-        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
-        videoRandomizer.elapsedSeconds = 0.0f;
-        videoRandomizer.currentVideoDuration = videoPlayer.durationSeconds();
-        videoSubsystemInitialized = videoTexture.isReady();
+        previewSlots[0].renderer = std::make_unique<VideoRenderer>(previewSlots[0].player, previewSlots[0].texture, previewSlots[0].framePool);
+        previewSlots[0].randomizer.elapsedSeconds = 0.0f;
+        previewSlots[0].randomizer.currentVideoDuration = previewSlots[0].player.durationSeconds();
+        previewSlots[0].initialized = previewSlots[0].texture.isReady();
     } else if (slot == 1) {
-        videoSourcePath2 = path;
-        videoRenderer2.reset();
-        videoPlayer2.shutdown();
+        previewSlots[1].sourcePath = path;
+        previewSlots[1].renderer.reset();
+        previewSlots[1].player.shutdown();
 
         glm::ivec2 screenSize = getScreenSize();
-        if (!videoPlayer2.initialize(path, screenSize.x, screenSize.y)) {
+        if (!previewSlots[1].player.initialize(path, screenSize.x, screenSize.y)) {
             std::cerr << "[Application] reloadVideoSlot(1) failed: " << path << '\n';
-            isReloadingVideo = false;
+            previewSlots[1].isReloading = false;
             return false;
         }
 
-        videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-        videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
+        previewSlots[1].player.setAutoScale(visualControls.playback.autoScaleVideo);
+        previewSlots[1].player.setPlaybackRate(visualControls.playback.video2PlaybackRate);
         rebuildVideoTexture(1);
         updateAllDescriptorSets();
 
-        videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
-        videoRandomizer2.elapsedSeconds = 0.0f;
-        videoRandomizer2.currentVideoDuration = videoPlayer2.durationSeconds();
-        videoSubsystemInitialized2 = videoTexture2.isReady();
+        previewSlots[1].renderer = std::make_unique<VideoRenderer>(previewSlots[1].player, previewSlots[1].texture, previewSlots[1].framePool);
+        previewSlots[1].randomizer.elapsedSeconds = 0.0f;
+        previewSlots[1].randomizer.currentVideoDuration = previewSlots[1].player.durationSeconds();
+        previewSlots[1].initialized = previewSlots[1].texture.isReady();
     } else {
-        videoSourcePath3 = path;
-        videoRenderer3.reset();
-        videoPlayer3.shutdown();
+        previewSlots[2].sourcePath = path;
+        previewSlots[2].renderer.reset();
+        previewSlots[2].player.shutdown();
 
         glm::ivec2 screenSize = getScreenSize();
-        if (!videoPlayer3.initialize(path, screenSize.x, screenSize.y)) {
+        if (!previewSlots[2].player.initialize(path, screenSize.x, screenSize.y)) {
             std::cerr << "[Application] reloadVideoSlot(2) failed: " << path << '\n';
-            isReloadingVideo3 = false;
+            previewSlots[2].isReloading = false;
             return false;
         }
 
-        videoPlayer3.setAutoScale(visualControls.playback.autoScaleVideo);
-        videoPlayer3.setPlaybackRate(visualControls.playback.video3PlaybackRate);
+        previewSlots[2].player.setAutoScale(visualControls.playback.autoScaleVideo);
+        previewSlots[2].player.setPlaybackRate(visualControls.playback.video3PlaybackRate);
         rebuildVideoTexture(2);
         updateAllDescriptorSets();
 
-        videoRenderer3 = std::make_unique<VideoRenderer>(videoPlayer3, videoTexture3, cpuFramePool3);
-        videoRandomizer3.elapsedSeconds = 0.0f;
-        videoRandomizer3.currentVideoDuration = videoPlayer3.durationSeconds();
-        videoSubsystemInitialized3 = videoTexture3.isReady();
+        previewSlots[2].renderer = std::make_unique<VideoRenderer>(previewSlots[2].player, previewSlots[2].texture, previewSlots[2].framePool);
+        previewSlots[2].randomizer.elapsedSeconds = 0.0f;
+        previewSlots[2].randomizer.currentVideoDuration = previewSlots[2].player.durationSeconds();
+        previewSlots[2].initialized = previewSlots[2].texture.isReady();
     }
 
     restoreSpeed(slot, path);
 
-    if (slot == 2) isReloadingVideo3 = false;
-    else isReloadingVideo = false;
+    if (slot == 0) previewSlots[0].isReloading = false;
+    else if (slot == 1) previewSlots[1].isReloading = false;
+    else previewSlots[2].isReloading = false;
     return true;
 }
 
@@ -261,116 +262,84 @@ bool Application::reloadOutputVideoSlot(int slot, const std::string& path) {
     std::cout << "[reloadOutputVideoSlot] Reloading output slot " << slot << " with: " << path << "\n";
 
     if (slot == 0) {
-        outputVideoSourcePath = path;
-        outputVideoRenderer.reset();
-        outputVideoPlayer.shutdown();
+        outputSlots[0].sourcePath = path;
+        outputSlots[0].renderer.reset();
+        outputSlots[0].player.shutdown();
 
         glm::ivec2 screenSize = getScreenSize();
-        if (!outputVideoPlayer.initialize(path, screenSize.x, screenSize.y)) {
+        if (!outputSlots[0].player.initialize(path, screenSize.x, screenSize.y)) {
             std::cerr << "[Application] reloadOutputVideoSlot(0) failed: " << path << '\n';
-            outputIsReloadingVideo = false;
+            outputSlots[0].isReloading = false;
             return false;
         }
 
-        outputVideoPlayer.setAutoScale(outputVisualControls.playback.autoScaleVideo);
-        outputVideoPlayer.setPlaybackRate(outputVisualControls.playback.videoPlaybackRate);
+        outputSlots[0].player.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        outputSlots[0].player.setPlaybackRate(outputVisualControls.playback.videoPlaybackRate);
 
         // Rebuild texture
         vkDeviceWaitIdle(vulkanContext.getDevice());
-        outputVideoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-        outputVideoTexture.cleanup(resourceSystem);
-        outputVideoTexture.createResources(
+        outputSlots[0].texture.destroy(resourceSystem, vulkanContext.getDevice());
+        outputSlots[0].texture.cleanup(resourceSystem);
+        outputSlots[0].texture.createResources(
             resourceSystem, vulkanContext.getDevice(),
             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-            static_cast<uint32_t>(outputVideoPlayer.width()),
-            static_cast<uint32_t>(outputVideoPlayer.height()));
-        outputCpuFramePool.resize(
-            static_cast<uint32_t>(outputVideoPlayer.width()),
-            static_cast<uint32_t>(outputVideoPlayer.height()),
-            static_cast<uint32_t>(outputVideoPlayer.width()) * 4);
-        if (outputVideoRenderer) outputVideoRenderer->reset();
+            static_cast<uint32_t>(outputSlots[0].player.width()),
+            static_cast<uint32_t>(outputSlots[0].player.height()));
+        outputSlots[0].framePool.resize(
+            static_cast<uint32_t>(outputSlots[0].player.width()),
+            static_cast<uint32_t>(outputSlots[0].player.height()),
+            static_cast<uint32_t>(outputSlots[0].player.width()) * 4);
+        if (outputSlots[0].renderer) outputSlots[0].renderer->reset();
 
         updateAllDescriptorSets();
 
-        outputVideoRenderer = std::make_unique<VideoRenderer>(outputVideoPlayer, outputVideoTexture, outputCpuFramePool);
-        outputVideoRandomizer.elapsedSeconds = 0.0f;
-        outputVideoRandomizer.currentVideoDuration = outputVideoPlayer.durationSeconds();
-        outputVideoSubsystemInitialized = outputVideoTexture.isReady();
-    } else if (slot == 1) {
-        outputVideoSourcePath2 = path;
-        outputVideoRenderer2.reset();
-        outputVideoPlayer2.shutdown();
-
-        glm::ivec2 screenSize = getScreenSize();
-        if (!outputVideoPlayer2.initialize(path, screenSize.x, screenSize.y)) {
-            std::cerr << "[Application] reloadOutputVideoSlot(1) failed: " << path << '\n';
-            outputIsReloadingVideo2 = false;
-            return false;
-        }
-
-        outputVideoPlayer2.setAutoScale(outputVisualControls.playback.autoScaleVideo);
-        outputVideoPlayer2.setPlaybackRate(outputVisualControls.playback.video2PlaybackRate);
-
-        vkDeviceWaitIdle(vulkanContext.getDevice());
-        outputVideoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-        outputVideoTexture2.cleanup(resourceSystem);
-        outputVideoTexture2.createResources(
-            resourceSystem, vulkanContext.getDevice(),
-            vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-            static_cast<uint32_t>(outputVideoPlayer2.width()),
-            static_cast<uint32_t>(outputVideoPlayer2.height()));
-        outputCpuFramePool2.resize(
-            static_cast<uint32_t>(outputVideoPlayer2.width()),
-            static_cast<uint32_t>(outputVideoPlayer2.height()),
-            static_cast<uint32_t>(outputVideoPlayer2.width()) * 4);
-        if (outputVideoRenderer2) outputVideoRenderer2->reset();
-
-        updateAllDescriptorSets();
-
-        outputVideoRenderer2 = std::make_unique<VideoRenderer>(outputVideoPlayer2, outputVideoTexture2, outputCpuFramePool2);
-        outputVideoRandomizer2.elapsedSeconds = 0.0f;
-        outputVideoRandomizer2.currentVideoDuration = outputVideoPlayer2.durationSeconds();
-        outputVideoSubsystemInitialized2 = outputVideoTexture2.isReady();
+        outputSlots[0].renderer = std::make_unique<VideoRenderer>(outputSlots[0].player, outputSlots[0].texture, outputSlots[0].framePool);
+        outputSlots[0].randomizer.elapsedSeconds = 0.0f;
+        outputSlots[0].randomizer.currentVideoDuration = outputSlots[0].player.durationSeconds();
+        outputSlots[0].initialized = outputSlots[0].texture.isReady();
     } else {
-        outputVideoSourcePath3 = path;
-        outputVideoRenderer3.reset();
-        outputVideoPlayer3.shutdown();
+        auto& s = outputSlots[slot];
+        s.sourcePath = path;
+        s.renderer.reset();
+        s.player.shutdown();
 
         glm::ivec2 screenSize = getScreenSize();
-        if (!outputVideoPlayer3.initialize(path, screenSize.x, screenSize.y)) {
-            std::cerr << "[Application] reloadOutputVideoSlot(2) failed: " << path << '\n';
-            outputIsReloadingVideo3 = false;
+        if (!s.player.initialize(path, screenSize.x, screenSize.y)) {
+            std::cerr << "[Application] reloadOutputVideoSlot(" << slot << ") failed: " << path << '\n';
+            s.isReloading = false;
             return false;
         }
 
-        outputVideoPlayer3.setAutoScale(outputVisualControls.playback.autoScaleVideo);
-        outputVideoPlayer3.setPlaybackRate(outputVisualControls.playback.video3PlaybackRate);
+        float rate = (slot == 1) ? outputVisualControls.playback.video2PlaybackRate
+                                 : outputVisualControls.playback.video3PlaybackRate;
+        s.player.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        s.player.setPlaybackRate(rate);
 
         vkDeviceWaitIdle(vulkanContext.getDevice());
-        outputVideoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
-        outputVideoTexture3.cleanup(resourceSystem);
-        outputVideoTexture3.createResources(
+        s.texture.destroy(resourceSystem, vulkanContext.getDevice());
+        s.texture.cleanup(resourceSystem);
+        s.texture.createResources(
             resourceSystem, vulkanContext.getDevice(),
             vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-            static_cast<uint32_t>(outputVideoPlayer3.width()),
-            static_cast<uint32_t>(outputVideoPlayer3.height()));
-        outputCpuFramePool3.resize(
-            static_cast<uint32_t>(outputVideoPlayer3.width()),
-            static_cast<uint32_t>(outputVideoPlayer3.height()),
-            static_cast<uint32_t>(outputVideoPlayer3.width()) * 4);
-        if (outputVideoRenderer3) outputVideoRenderer3->reset();
+            static_cast<uint32_t>(s.player.width()),
+            static_cast<uint32_t>(s.player.height()));
+        s.framePool.resize(
+            static_cast<uint32_t>(s.player.width()),
+            static_cast<uint32_t>(s.player.height()),
+            static_cast<uint32_t>(s.player.width()) * 4);
+        if (s.renderer) s.renderer->reset();
 
         updateAllDescriptorSets();
 
-        outputVideoRenderer3 = std::make_unique<VideoRenderer>(outputVideoPlayer3, outputVideoTexture3, outputCpuFramePool3);
-        outputVideoRandomizer3.elapsedSeconds = 0.0f;
-        outputVideoRandomizer3.currentVideoDuration = outputVideoPlayer3.durationSeconds();
-        outputVideoSubsystemInitialized3 = outputVideoTexture3.isReady();
+        s.renderer = std::make_unique<VideoRenderer>(s.player, s.texture, s.framePool);
+        s.randomizer.elapsedSeconds = 0.0f;
+        s.randomizer.currentVideoDuration = s.player.durationSeconds();
+        s.initialized = s.texture.isReady();
     }
 
-    if (slot == 0) outputIsReloadingVideo = false;
-    else if (slot == 1) outputIsReloadingVideo2 = false;
-    else outputIsReloadingVideo3 = false;
+    if (slot == 0) outputSlots[0].isReloading = false;
+    else if (slot == 1) outputSlots[1].isReloading = false;
+    else outputSlots[2].isReloading = false;
     return true;
 }
 
@@ -397,17 +366,17 @@ void Application::saveState() const {
     JsonSerializer::save(visualControlsPath, parameterRegistry);
     ControlState::save(
         controlStatePath,
-        static_cast<const VideoRandomizerState&>(videoRandomizer),
-        static_cast<const VideoRandomizerState2&>(videoRandomizer2),
-        static_cast<const VideoRandomizerState2&>(videoRandomizer3),
+        static_cast<const VideoRandomizerState&>(previewSlots[0].randomizer),
+        static_cast<const VideoRandomizerState&>(previewSlots[1].randomizer),
+        static_cast<const VideoRandomizerState&>(previewSlots[2].randomizer),
         allowDimensionChangeRecreation,
         oscSystem,
-        selectedVideoAsset,
-        selectedVideoAsset2,
-        selectedVideoAsset3,
-        videoSourcePath,
-        videoSourcePath2,
-        videoSourcePath3,
+        previewSlots[0].selectedVideoAsset,
+        previewSlots[1].selectedVideoAsset,
+        previewSlots[2].selectedVideoAsset,
+        previewSlots[0].sourcePath,
+        previewSlots[1].sourcePath,
+        previewSlots[2].sourcePath,
         videoAssetsRoot
     );
     saveVideoSpeeds();
@@ -426,11 +395,14 @@ std::vector<std::string> Application::listPresets() const {
 }
 
 bool Application::savePreset(const std::string& name) {
+    return savePresetFromOutput(name);
+}
+
+bool Application::savePresetFromOutput(const std::string& name) {
     std::filesystem::create_directories(presetsDir);
     std::string path = presetsDir + "/" + name + ".json";
 
-    // Build a temporary registry pointing to the OUTPUT controls so the preset
-    // captures exactly what is on the final output window.
+    // Save OUTPUT controls so the preset captures exactly what is on the final output window.
     ParameterRegistry outputRegistry;
     VisualControlsRegistry::build(outputRegistry, outputVisualControls);
 
@@ -440,33 +412,84 @@ bool Application::savePreset(const std::string& name) {
 
     // Save OUTPUT video state so the preset restores the exact output sources
     nlohmann::json video;
-    video["videoSourcePath"] = outputVideoSourcePath;
-    video["videoSourcePath2"] = outputVideoSourcePath2;
-    video["videoSourcePath3"] = outputVideoSourcePath3;
-    video["selectedVideoAsset"] = outputSelectedVideoAsset;
-    video["selectedVideoAsset2"] = outputSelectedVideoAsset2;
-    video["selectedVideoAsset3"] = outputSelectedVideoAsset3;
+    video["videoSourcePath"] = outputSlots[0].sourcePath;
+    video["videoSourcePath2"] = outputSlots[1].sourcePath;
+    video["videoSourcePath3"] = outputSlots[2].sourcePath;
+    video["selectedVideoAsset"] = outputSlots[0].selectedVideoAsset;
+    video["selectedVideoAsset2"] = outputSlots[1].selectedVideoAsset;
+    video["selectedVideoAsset3"] = outputSlots[2].selectedVideoAsset;
     video["allowDimensionChangeRecreation"] = allowDimensionChangeRecreation;
 
     nlohmann::json r1;
-    r1["autoRandomize"] = videoRandomizer.autoRandomize;
-    r1["useVideoDuration"] = videoRandomizer.useVideoDuration;
-    r1["intervalSeconds"] = videoRandomizer.intervalSeconds;
-    r1["useShuffleMode"] = videoRandomizer.useShuffleMode;
+    r1["autoRandomize"] = previewSlots[0].randomizer.autoRandomize;
+    r1["useVideoDuration"] = previewSlots[0].randomizer.useVideoDuration;
+    r1["intervalSeconds"] = previewSlots[0].randomizer.intervalSeconds;
+    r1["useShuffleMode"] = previewSlots[0].randomizer.useShuffleMode;
     video["randomizer1"] = r1;
 
     nlohmann::json r2;
-    r2["autoRandomize"] = videoRandomizer2.autoRandomize;
-    r2["useVideoDuration"] = videoRandomizer2.useVideoDuration;
-    r2["intervalSeconds"] = videoRandomizer2.intervalSeconds;
-    r2["useShuffleMode"] = videoRandomizer2.useShuffleMode;
+    r2["autoRandomize"] = previewSlots[1].randomizer.autoRandomize;
+    r2["useVideoDuration"] = previewSlots[1].randomizer.useVideoDuration;
+    r2["intervalSeconds"] = previewSlots[1].randomizer.intervalSeconds;
+    r2["useShuffleMode"] = previewSlots[1].randomizer.useShuffleMode;
     video["randomizer2"] = r2;
 
     nlohmann::json r3;
-    r3["autoRandomize"] = videoRandomizer3.autoRandomize;
-    r3["useVideoDuration"] = videoRandomizer3.useVideoDuration;
-    r3["intervalSeconds"] = videoRandomizer3.intervalSeconds;
-    r3["useShuffleMode"] = videoRandomizer3.useShuffleMode;
+    r3["autoRandomize"] = previewSlots[2].randomizer.autoRandomize;
+    r3["useVideoDuration"] = previewSlots[2].randomizer.useVideoDuration;
+    r3["intervalSeconds"] = previewSlots[2].randomizer.intervalSeconds;
+    r3["useShuffleMode"] = previewSlots[2].randomizer.useShuffleMode;
+    video["randomizer3"] = r3;
+
+    j["video"] = video;
+
+    std::ofstream file(path);
+    if (!file.is_open()) return false;
+    file << j.dump(4);
+    return true;
+}
+
+bool Application::savePresetFromPreview(const std::string& name) {
+    std::filesystem::create_directories(presetsDir);
+    std::string path = presetsDir + "/" + name + ".json";
+
+    // Save PREVIEW controls so the preset captures what is on the preview window.
+    ParameterRegistry previewRegistry;
+    VisualControlsRegistry::build(previewRegistry, visualControls);
+
+    nlohmann::json j;
+    j["version"] = 3;
+    j["visualControls"] = JsonSerializer::toJson(previewRegistry);
+
+    // Save PREVIEW video state
+    nlohmann::json video;
+    video["videoSourcePath"] = previewSlots[0].sourcePath;
+    video["videoSourcePath2"] = previewSlots[1].sourcePath;
+    video["videoSourcePath3"] = previewSlots[2].sourcePath;
+    video["selectedVideoAsset"] = previewSlots[0].selectedVideoAsset;
+    video["selectedVideoAsset2"] = previewSlots[1].selectedVideoAsset;
+    video["selectedVideoAsset3"] = previewSlots[2].selectedVideoAsset;
+    video["allowDimensionChangeRecreation"] = allowDimensionChangeRecreation;
+
+    nlohmann::json r1;
+    r1["autoRandomize"] = previewSlots[0].randomizer.autoRandomize;
+    r1["useVideoDuration"] = previewSlots[0].randomizer.useVideoDuration;
+    r1["intervalSeconds"] = previewSlots[0].randomizer.intervalSeconds;
+    r1["useShuffleMode"] = previewSlots[0].randomizer.useShuffleMode;
+    video["randomizer1"] = r1;
+
+    nlohmann::json r2;
+    r2["autoRandomize"] = previewSlots[1].randomizer.autoRandomize;
+    r2["useVideoDuration"] = previewSlots[1].randomizer.useVideoDuration;
+    r2["intervalSeconds"] = previewSlots[1].randomizer.intervalSeconds;
+    r2["useShuffleMode"] = previewSlots[1].randomizer.useShuffleMode;
+    video["randomizer2"] = r2;
+
+    nlohmann::json r3;
+    r3["autoRandomize"] = previewSlots[2].randomizer.autoRandomize;
+    r3["useVideoDuration"] = previewSlots[2].randomizer.useVideoDuration;
+    r3["intervalSeconds"] = previewSlots[2].randomizer.intervalSeconds;
+    r3["useShuffleMode"] = previewSlots[2].randomizer.useShuffleMode;
     video["randomizer3"] = r3;
 
     j["video"] = video;
@@ -503,56 +526,68 @@ bool Application::loadPreset(const std::string& name) {
     // Load video state
     if (j.contains("video")) {
         auto& v = j["video"];
-        if (v.contains("videoSourcePath")) videoSourcePath = v["videoSourcePath"];
-        if (v.contains("videoSourcePath2")) videoSourcePath2 = v["videoSourcePath2"];
-        if (v.contains("videoSourcePath3")) videoSourcePath3 = v["videoSourcePath3"];
-        if (v.contains("selectedVideoAsset")) selectedVideoAsset = v["selectedVideoAsset"];
-        if (v.contains("selectedVideoAsset2")) selectedVideoAsset2 = v["selectedVideoAsset2"];
-        if (v.contains("selectedVideoAsset3")) selectedVideoAsset3 = v["selectedVideoAsset3"];
+        // Reset paths to empty before loading — ensures missing keys = no video
+        previewSlots[0].sourcePath.clear();
+        previewSlots[1].sourcePath.clear();
+        previewSlots[2].sourcePath.clear();
+        if (v.contains("videoSourcePath")) previewSlots[0].sourcePath = v["videoSourcePath"];
+        if (v.contains("videoSourcePath2")) previewSlots[1].sourcePath = v["videoSourcePath2"];
+        if (v.contains("videoSourcePath3")) previewSlots[2].sourcePath = v["videoSourcePath3"];
+        if (v.contains("selectedVideoAsset")) previewSlots[0].selectedVideoAsset = v["selectedVideoAsset"];
+        if (v.contains("selectedVideoAsset2")) previewSlots[1].selectedVideoAsset = v["selectedVideoAsset2"];
+        if (v.contains("selectedVideoAsset3")) previewSlots[2].selectedVideoAsset = v["selectedVideoAsset3"];
         if (v.contains("allowDimensionChangeRecreation")) allowDimensionChangeRecreation = v["allowDimensionChangeRecreation"];
 
         if (v.contains("randomizer1")) {
             auto& r1 = v["randomizer1"];
-            if (r1.contains("autoRandomize")) videoRandomizer.autoRandomize = r1["autoRandomize"];
-            if (r1.contains("useVideoDuration")) videoRandomizer.useVideoDuration = r1["useVideoDuration"];
-            if (r1.contains("intervalSeconds")) videoRandomizer.intervalSeconds = r1["intervalSeconds"];
-            if (r1.contains("useShuffleMode")) videoRandomizer.useShuffleMode = r1["useShuffleMode"];
+            if (r1.contains("autoRandomize")) previewSlots[0].randomizer.autoRandomize = r1["autoRandomize"];
+            if (r1.contains("useVideoDuration")) previewSlots[0].randomizer.useVideoDuration = r1["useVideoDuration"];
+            if (r1.contains("intervalSeconds")) previewSlots[0].randomizer.intervalSeconds = r1["intervalSeconds"];
+            if (r1.contains("useShuffleMode")) previewSlots[0].randomizer.useShuffleMode = r1["useShuffleMode"];
         }
         if (v.contains("randomizer2")) {
             auto& r2 = v["randomizer2"];
-            if (r2.contains("autoRandomize")) videoRandomizer2.autoRandomize = r2["autoRandomize"];
-            if (r2.contains("useVideoDuration")) videoRandomizer2.useVideoDuration = r2["useVideoDuration"];
-            if (r2.contains("intervalSeconds")) videoRandomizer2.intervalSeconds = r2["intervalSeconds"];
-            if (r2.contains("useShuffleMode")) videoRandomizer2.useShuffleMode = r2["useShuffleMode"];
+            if (r2.contains("autoRandomize")) previewSlots[1].randomizer.autoRandomize = r2["autoRandomize"];
+            if (r2.contains("useVideoDuration")) previewSlots[1].randomizer.useVideoDuration = r2["useVideoDuration"];
+            if (r2.contains("intervalSeconds")) previewSlots[1].randomizer.intervalSeconds = r2["intervalSeconds"];
+            if (r2.contains("useShuffleMode")) previewSlots[1].randomizer.useShuffleMode = r2["useShuffleMode"];
         }
         if (v.contains("randomizer3")) {
             auto& r3 = v["randomizer3"];
-            if (r3.contains("autoRandomize")) videoRandomizer3.autoRandomize = r3["autoRandomize"];
-            if (r3.contains("useVideoDuration")) videoRandomizer3.useVideoDuration = r3["useVideoDuration"];
-            if (r3.contains("intervalSeconds")) videoRandomizer3.intervalSeconds = r3["intervalSeconds"];
-            if (r3.contains("useShuffleMode")) videoRandomizer3.useShuffleMode = r3["useShuffleMode"];
+            if (r3.contains("autoRandomize")) previewSlots[2].randomizer.autoRandomize = r3["autoRandomize"];
+            if (r3.contains("useVideoDuration")) previewSlots[2].randomizer.useVideoDuration = r3["useVideoDuration"];
+            if (r3.contains("intervalSeconds")) previewSlots[2].randomizer.intervalSeconds = r3["intervalSeconds"];
+            if (r3.contains("useShuffleMode")) previewSlots[2].randomizer.useShuffleMode = r3["useShuffleMode"];
         }
     }
 
     // Reload videos to match preset state
     if (canChangeVideo()) {
-        if (!videoSourcePath.empty()) reloadVideoSlot(0, videoSourcePath);
-        if (!videoSourcePath2.empty()) reloadVideoSlot(1, videoSourcePath2);
-        if (!videoSourcePath3.empty()) reloadVideoSlot(2, videoSourcePath3);
+        if (!previewSlots[0].sourcePath.empty()) reloadVideoSlot(0, previewSlots[0].sourcePath);
+        if (!previewSlots[1].sourcePath.empty()) reloadVideoSlot(1, previewSlots[1].sourcePath);
+        if (!previewSlots[2].sourcePath.empty()) reloadVideoSlot(2, previewSlots[2].sourcePath);
     }
+
+    // Reset animation state so time-based effects start fresh
+    previewAnim = AnimState{};
+    prevAudioSmooth = AudioSmoothState{};
 
     // Sync output to match the loaded preset so preview == output
     outputVisualControls = visualControls;
-    outputVideoSourcePath = videoSourcePath;
-    outputVideoSourcePath2 = videoSourcePath2;
-    outputVideoSourcePath3 = videoSourcePath3;
-    outputSelectedVideoAsset = selectedVideoAsset;
-    outputSelectedVideoAsset2 = selectedVideoAsset2;
-    outputSelectedVideoAsset3 = selectedVideoAsset3;
+    outputSlots[0].sourcePath = previewSlots[0].sourcePath;
+    outputSlots[1].sourcePath = previewSlots[1].sourcePath;
+    outputSlots[2].sourcePath = previewSlots[2].sourcePath;
+    outputSlots[0].selectedVideoAsset = previewSlots[0].selectedVideoAsset;
+    outputSlots[1].selectedVideoAsset = previewSlots[1].selectedVideoAsset;
+    outputSlots[2].selectedVideoAsset = previewSlots[2].selectedVideoAsset;
+    // Reset animation and audio smoothing so both start from the same base
+    outputAnim = previewAnim;
+    outputPrevAudioSmooth = prevAudioSmooth;
     if (canChangeVideo()) {
-        if (!outputVideoSourcePath.empty()) reloadOutputVideoSlot(0, outputVideoSourcePath);
-        if (!outputVideoSourcePath2.empty()) reloadOutputVideoSlot(1, outputVideoSourcePath2);
-        if (!outputVideoSourcePath3.empty()) reloadOutputVideoSlot(2, outputVideoSourcePath3);
+        if (!outputSlots[0].sourcePath.empty()) reloadOutputVideoSlot(0, outputSlots[0].sourcePath);
+        if (!outputSlots[1].sourcePath.empty()) reloadOutputVideoSlot(1, outputSlots[1].sourcePath);
+        if (!outputSlots[2].sourcePath.empty()) reloadOutputVideoSlot(2, outputSlots[2].sourcePath);
+        updateAllDescriptorSets();
     }
 
     controlsDirty = true;
@@ -615,49 +650,49 @@ void Application::run() {
     JsonSerializer::load(visualControlsPath, parameterRegistry);
     ControlState::load(
         controlStatePath,
-        videoRandomizer,
-        videoRandomizer2,
-        videoRandomizer3,
+        previewSlots[0].randomizer,
+        previewSlots[1].randomizer,
+        previewSlots[2].randomizer,
         allowDimensionChangeRecreation,
         oscSystem,
-        selectedVideoAsset,
-        selectedVideoAsset2,
-        selectedVideoAsset3,
-        videoSourcePath,
-        videoSourcePath2,
-        videoSourcePath3,
+        previewSlots[0].selectedVideoAsset,
+        previewSlots[1].selectedVideoAsset,
+        previewSlots[2].selectedVideoAsset,
+        previewSlots[0].sourcePath,
+        previewSlots[1].sourcePath,
+        previewSlots[2].sourcePath,
         videoAssetsRoot
     );
 
     // Sync loaded preview state to output so the final renderer starts
     // with the same configuration as the saved session.
     outputVisualControls = visualControls;
-    outputVideoSourcePath = videoSourcePath;
-    outputVideoSourcePath2 = videoSourcePath2;
-    outputVideoSourcePath3 = videoSourcePath3;
-    outputSelectedVideoAsset = selectedVideoAsset;
-    outputSelectedVideoAsset2 = selectedVideoAsset2;
-    outputSelectedVideoAsset3 = selectedVideoAsset3;
+    outputSlots[0].sourcePath = previewSlots[0].sourcePath;
+    outputSlots[1].sourcePath = previewSlots[1].sourcePath;
+    outputSlots[2].sourcePath = previewSlots[2].sourcePath;
+    outputSlots[0].selectedVideoAsset = previewSlots[0].selectedVideoAsset;
+    outputSlots[1].selectedVideoAsset = previewSlots[1].selectedVideoAsset;
+    outputSlots[2].selectedVideoAsset = previewSlots[2].selectedVideoAsset;
 
     initVideo();
     initOutputVideo();
 
     descriptorSetManager.createSets(vulkanContext.getDevice());
     outputDescriptorSetManager.createSets(vulkanContext.getDevice());
-    const bool initVid1Ready = videoTexture.isReady();
-    const bool initOutVid1Ready = outputVideoTexture.isReady();
+    const bool initVid1Ready = previewSlots[0].texture.isReady();
+    const bool initOutVid1Ready = outputSlots[0].texture.isReady();
     for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         descriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             uniformBufferManager.getBuffers()[i],
-            initVid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getDescriptorInfo()) : nullptr,
-            initVid1Ready ? const_cast<VkDescriptorImageInfo*>(&videoTexture.getPrevDescriptorInfo()) : nullptr
+            initVid1Ready ? const_cast<VkDescriptorImageInfo*>(&previewSlots[0].texture.getDescriptorInfo()) : nullptr,
+            initVid1Ready ? const_cast<VkDescriptorImageInfo*>(&previewSlots[0].texture.getPrevDescriptorInfo()) : nullptr
         );
         outputDescriptorSetManager.updateSet(
             vulkanContext.getDevice(), i,
             outputUniformBufferManager.getBuffers()[i],
-            initOutVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getDescriptorInfo()) : nullptr,
-            initOutVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputVideoTexture.getPrevDescriptorInfo()) : nullptr
+            initOutVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputSlots[0].texture.getDescriptorInfo()) : nullptr,
+            initOutVid1Ready ? const_cast<VkDescriptorImageInfo*>(&outputSlots[0].texture.getPrevDescriptorInfo()) : nullptr
         );
     }
 
@@ -746,11 +781,13 @@ void Application::initRenderPass() {
         throw std::runtime_error("failed to create render pass");
 }
 
-void Application::initFramebuffers() {
-    // Framebuffers now live inside VulkanPresenter instances
+void Application::initPipelines() {
+    createFullscreenDescriptorSets();
+    createFullscreenPipeline();
+    createSwapchainSampler();
 }
 
-void Application::initPipelines() {
+void Application::createFullscreenDescriptorSets() {
     // Create fullscreen descriptor set layout (only 2 bindings: UBO + 1 sampler)
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
@@ -828,7 +865,9 @@ void Application::initPipelines() {
     if (vkAllocateDescriptorSets(vulkanContext.getDevice(), &outputAllocInfo, outputFullscreenDescriptorSets.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate output fullscreen descriptor sets");
     }
+}
 
+void Application::createFullscreenPipeline() {
     // Create pipeline layout for fullscreen using the fullscreen descriptor set layout
     VkPushConstantRange pushRange{};
     pushRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -949,8 +988,9 @@ void Application::initPipelines() {
 
     vkDestroyShaderModule(vulkanContext.getDevice(), fragShaderModule, nullptr);
     vkDestroyShaderModule(vulkanContext.getDevice(), vertShaderModule, nullptr);
+}
 
-    // Create swapchain sampler
+void Application::createSwapchainSampler() {
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -1151,29 +1191,29 @@ void Application::initVideo() {
         }
     };
 
-    std::cout << "[initVideo] Before resolve: V1 path=" << videoSourcePath
-              << " idx=" << selectedVideoAsset << " folder="
+    std::cout << "[initVideo] Before resolve: V1 path=" << previewSlots[0].sourcePath
+              << " idx=" << previewSlots[0].selectedVideoAsset << " folder="
               << visualControls.playback.selectedVideoFolder << "\n";
-    std::cout << "[initVideo] Before resolve: V2 path=" << videoSourcePath2
-              << " idx=" << selectedVideoAsset2 << " folder="
+    std::cout << "[initVideo] Before resolve: V2 path=" << previewSlots[1].sourcePath
+              << " idx=" << previewSlots[1].selectedVideoAsset << " folder="
               << visualControls.playback.selectedVideo2Folder << "\n";
-    std::cout << "[initVideo] Before resolve: V3 path=" << videoSourcePath3
-              << " idx=" << selectedVideoAsset3 << " folder="
+    std::cout << "[initVideo] Before resolve: V3 path=" << previewSlots[2].sourcePath
+              << " idx=" << previewSlots[2].selectedVideoAsset << " folder="
               << visualControls.playback.selectedVideo3Folder << "\n";
 
     resolvePath(visualControls.playback.selectedVideoFolder,
-                selectedVideoAsset, videoSourcePath, "V1");
+                previewSlots[0].selectedVideoAsset, previewSlots[0].sourcePath, "V1");
     resolvePath(visualControls.playback.selectedVideo2Folder,
-                selectedVideoAsset2, videoSourcePath2, "V2");
+                previewSlots[1].selectedVideoAsset, previewSlots[1].sourcePath, "V2");
     resolvePath(visualControls.playback.selectedVideo3Folder,
-                selectedVideoAsset3, videoSourcePath3, "V3");
+                previewSlots[2].selectedVideoAsset, previewSlots[2].sourcePath, "V3");
 
-    std::cout << "[initVideo] After resolve:  V1 path=" << videoSourcePath
-              << " idx=" << selectedVideoAsset << "\n";
-    std::cout << "[initVideo] After resolve:  V2 path=" << videoSourcePath2
-              << " idx=" << selectedVideoAsset2 << "\n";
-    std::cout << "[initVideo] After resolve:  V3 path=" << videoSourcePath3
-              << " idx=" << selectedVideoAsset3 << "\n";
+    std::cout << "[initVideo] After resolve:  V1 path=" << previewSlots[0].sourcePath
+              << " idx=" << previewSlots[0].selectedVideoAsset << "\n";
+    std::cout << "[initVideo] After resolve:  V2 path=" << previewSlots[1].sourcePath
+              << " idx=" << previewSlots[1].selectedVideoAsset << "\n";
+    std::cout << "[initVideo] After resolve:  V3 path=" << previewSlots[2].sourcePath
+              << " idx=" << previewSlots[2].selectedVideoAsset << "\n";
     // ── Lazy init: only init slots 1 and 2 when dual video is enabled ────────────
     bool initExtraSlots = visualControls.playback.enableDualVideo;
 
@@ -1190,20 +1230,20 @@ void Application::initVideo() {
 
     std::cout << "[initVideo] Launching player init futures...\n";
     auto future0 = std::async(std::launch::async, [&]() {
-        std::cout << "[initVideo] V1 initializing: '" << videoSourcePath << "'\n";
-        return videoPlayer.initialize(videoSourcePath, previewSize.x, previewSize.y);
+        std::cout << "[initVideo] V1 initializing: '" << previewSlots[0].sourcePath << "'\n";
+        return previewSlots[0].player.initialize(previewSlots[0].sourcePath, previewSize.x, previewSize.y);
     });
 
     std::future<bool> future1;
     std::future<bool> future2;
     if (initExtraSlots) {
         future1 = std::async(std::launch::async, [&]() {
-            std::cout << "[initVideo] V2 initializing: '" << videoSourcePath2 << "'\n";
-            return videoPlayer2.initialize(videoSourcePath2, previewSize.x, previewSize.y);
+            std::cout << "[initVideo] V2 initializing: '" << previewSlots[1].sourcePath << "'\n";
+            return previewSlots[1].player.initialize(previewSlots[1].sourcePath, previewSize.x, previewSize.y);
         });
         future2 = std::async(std::launch::async, [&]() {
-            std::cout << "[initVideo] V3 initializing: '" << videoSourcePath3 << "'\n";
-            return videoPlayer3.initialize(videoSourcePath3, previewSize.x, previewSize.y);
+            std::cout << "[initVideo] V3 initializing: '" << previewSlots[2].sourcePath << "'\n";
+            return previewSlots[2].player.initialize(previewSlots[2].sourcePath, previewSize.x, previewSize.y);
         });
     }
 
@@ -1227,25 +1267,25 @@ void Application::initVideo() {
               << std::chrono::duration<double>(tPlayerDone - tPlayer).count()
               << "s (slot0=" << ok0 << " slot1=" << ok1 << " slot2=" << ok2 << ")\n";
     if (ok0) {
-        std::cout << "[initVideo] Slot0 loaded: " << videoSourcePath
-                  << " | decode=" << videoPlayer.width() << "x" << videoPlayer.height()
-                  << " | duration=" << videoPlayer.durationSeconds() << "s\n";
+        std::cout << "[initVideo] Slot0 loaded: " << previewSlots[0].sourcePath
+                  << " | decode=" << previewSlots[0].player.width() << "x" << previewSlots[0].player.height()
+                  << " | duration=" << previewSlots[0].player.durationSeconds() << "s\n";
     } else {
-        std::cerr << "[initVideo] Slot0 FAILED: " << videoSourcePath << "\n";
+        std::cerr << "[initVideo] Slot0 FAILED: " << previewSlots[0].sourcePath << "\n";
     }
     if (ok1) {
-        std::cout << "[initVideo] Slot1 loaded: " << videoSourcePath2
-                  << " | decode=" << videoPlayer2.width() << "x" << videoPlayer2.height()
-                  << " | duration=" << videoPlayer2.durationSeconds() << "s\n";
+        std::cout << "[initVideo] Slot1 loaded: " << previewSlots[1].sourcePath
+                  << " | decode=" << previewSlots[1].player.width() << "x" << previewSlots[1].player.height()
+                  << " | duration=" << previewSlots[1].player.durationSeconds() << "s\n";
     } else if (initExtraSlots) {
-        std::cerr << "[initVideo] Slot1 FAILED: " << videoSourcePath2 << "\n";
+        std::cerr << "[initVideo] Slot1 FAILED: " << previewSlots[1].sourcePath << "\n";
     }
     if (ok2) {
-        std::cout << "[initVideo] Slot2 loaded: " << videoSourcePath3
-                  << " | decode=" << videoPlayer3.width() << "x" << videoPlayer3.height()
-                  << " | duration=" << videoPlayer3.durationSeconds() << "s\n";
+        std::cout << "[initVideo] Slot2 loaded: " << previewSlots[2].sourcePath
+                  << " | decode=" << previewSlots[2].player.width() << "x" << previewSlots[2].player.height()
+                  << " | duration=" << previewSlots[2].player.durationSeconds() << "s\n";
     } else if (initExtraSlots) {
-        std::cerr << "[initVideo] Slot2 FAILED: " << videoSourcePath3 << "\n";
+        std::cerr << "[initVideo] Slot2 FAILED: " << previewSlots[2].sourcePath << "\n";
     }
 
     if (!ok0) {
@@ -1253,45 +1293,45 @@ void Application::initVideo() {
         return;
     }
     std::cout << "[initVideo] V1 ok, configuring autoScale=" << visualControls.playback.autoScaleVideo << "\n";
-    videoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
+    previewSlots[0].player.setAutoScale(visualControls.playback.autoScaleVideo);
 
     // ── Vulkan resources (must be on main thread, but faster) ───────────────
     auto tVk = Clock::now();
 
-    cpuFramePool.resize(videoPlayer.width(), videoPlayer.height(), videoPlayer.width() * 4);
-    videoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+    previewSlots[0].framePool.resize(previewSlots[0].player.width(), previewSlots[0].player.height(), previewSlots[0].player.width() * 4);
+    previewSlots[0].texture.createResources(resourceSystem, vulkanContext.getDevice(),
                                  vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                 videoPlayer.width(), videoPlayer.height());
-    videoSubsystemInitialized = videoTexture.isReady();
-    if (videoSubsystemInitialized)
-        videoRenderer = std::make_unique<VideoRenderer>(videoPlayer, videoTexture, cpuFramePool);
+                                 previewSlots[0].player.width(), previewSlots[0].player.height());
+    previewSlots[0].initialized = previewSlots[0].texture.isReady();
+    if (previewSlots[0].initialized)
+        previewSlots[0].renderer = std::make_unique<VideoRenderer>(previewSlots[0].player, previewSlots[0].texture, previewSlots[0].framePool);
 
     if (initExtraSlots && ok1) {
-        std::cout << "[initVideo] Setting up V2 Vulkan resources (" << videoPlayer2.width() << "x" << videoPlayer2.height() << ")\n";
-        videoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-        cpuFramePool2.resize(videoPlayer2.width(), videoPlayer2.height(), videoPlayer2.width() * 4);
-        videoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+        std::cout << "[initVideo] Setting up V2 Vulkan resources (" << previewSlots[1].player.width() << "x" << previewSlots[1].player.height() << ")\n";
+        previewSlots[1].player.setAutoScale(visualControls.playback.autoScaleVideo);
+        previewSlots[1].framePool.resize(previewSlots[1].player.width(), previewSlots[1].player.height(), previewSlots[1].player.width() * 4);
+        previewSlots[1].texture.createResources(resourceSystem, vulkanContext.getDevice(),
                                       vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                      videoPlayer2.width(), videoPlayer2.height());
-        videoSubsystemInitialized2 = videoTexture2.isReady();
-        std::cout << "[initVideo] V2 texture ready=" << videoSubsystemInitialized2 << "\n";
-        if (videoSubsystemInitialized2)
-            videoRenderer2 = std::make_unique<VideoRenderer>(videoPlayer2, videoTexture2, cpuFramePool2);
+                                      previewSlots[1].player.width(), previewSlots[1].player.height());
+        previewSlots[1].initialized = previewSlots[1].texture.isReady();
+        std::cout << "[initVideo] V2 texture ready=" << previewSlots[1].initialized << "\n";
+        if (previewSlots[1].initialized)
+            previewSlots[1].renderer = std::make_unique<VideoRenderer>(previewSlots[1].player, previewSlots[1].texture, previewSlots[1].framePool);
     } else {
         std::cout << "[initVideo] V2 skipped: initExtraSlots=" << initExtraSlots << " ok1=" << ok1 << "\n";
     }
 
     if (initExtraSlots && ok2) {
-        std::cout << "[initVideo] Setting up V3 Vulkan resources (" << videoPlayer3.width() << "x" << videoPlayer3.height() << ")\n";
-        videoPlayer3.setAutoScale(visualControls.playback.autoScaleVideo);
-        cpuFramePool3.resize(videoPlayer3.width(), videoPlayer3.height(), videoPlayer3.width() * 4);
-        videoTexture3.createResources(resourceSystem, vulkanContext.getDevice(),
+        std::cout << "[initVideo] Setting up V3 Vulkan resources (" << previewSlots[2].player.width() << "x" << previewSlots[2].player.height() << ")\n";
+        previewSlots[2].player.setAutoScale(visualControls.playback.autoScaleVideo);
+        previewSlots[2].framePool.resize(previewSlots[2].player.width(), previewSlots[2].player.height(), previewSlots[2].player.width() * 4);
+        previewSlots[2].texture.createResources(resourceSystem, vulkanContext.getDevice(),
                                       vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                      videoPlayer3.width(), videoPlayer3.height());
-        videoSubsystemInitialized3 = videoTexture3.isReady();
-        std::cout << "[initVideo] V3 texture ready=" << videoSubsystemInitialized3 << "\n";
-        if (videoSubsystemInitialized3)
-            videoRenderer3 = std::make_unique<VideoRenderer>(videoPlayer3, videoTexture3, cpuFramePool3);
+                                      previewSlots[2].player.width(), previewSlots[2].player.height());
+        previewSlots[2].initialized = previewSlots[2].texture.isReady();
+        std::cout << "[initVideo] V3 texture ready=" << previewSlots[2].initialized << "\n";
+        if (previewSlots[2].initialized)
+            previewSlots[2].renderer = std::make_unique<VideoRenderer>(previewSlots[2].player, previewSlots[2].texture, previewSlots[2].framePool);
     } else {
         std::cout << "[initVideo] V3 skipped: initExtraSlots=" << initExtraSlots << " ok2=" << ok2 << "\n";
     }
@@ -1299,16 +1339,16 @@ void Application::initVideo() {
     auto tVkDone = Clock::now();
     std::cout << "[Application] Vulkan resources: "
               << std::chrono::duration<double>(tVkDone - tVk).count() << "s\n";
-    std::cout << "[initVideo] Textures ready: v1=" << videoSubsystemInitialized
-              << " v2=" << videoSubsystemInitialized2
-              << " v3=" << videoSubsystemInitialized3 << "\n";
+    std::cout << "[initVideo] Textures ready: v1=" << previewSlots[0].initialized
+              << " v2=" << previewSlots[1].initialized
+              << " v3=" << previewSlots[2].initialized << "\n";
 
     auto t1 = Clock::now();
     std::cout << "[Application] initVideo() DONE — total="
               << std::chrono::duration<double>(t1 - t0).count()
-              << "s v1=" << videoSubsystemInitialized
-              << " v2=" << videoSubsystemInitialized2
-              << " v3=" << videoSubsystemInitialized3 << '\n';
+              << "s v1=" << previewSlots[0].initialized
+              << " v2=" << previewSlots[1].initialized
+              << " v3=" << previewSlots[2].initialized << '\n';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1323,27 +1363,27 @@ void Application::initOutputVideo() {
     glm::ivec2 screenSize = getScreenSize();
 
     // Copy paths from preview initially
-    outputVideoSourcePath = videoSourcePath;
-    outputVideoSourcePath2 = videoSourcePath2;
-    outputVideoSourcePath3 = videoSourcePath3;
-    outputSelectedVideoAsset = selectedVideoAsset;
-    outputSelectedVideoAsset2 = selectedVideoAsset2;
-    outputSelectedVideoAsset3 = selectedVideoAsset3;
+    outputSlots[0].sourcePath = previewSlots[0].sourcePath;
+    outputSlots[1].sourcePath = previewSlots[1].sourcePath;
+    outputSlots[2].sourcePath = previewSlots[2].sourcePath;
+    outputSlots[0].selectedVideoAsset = previewSlots[0].selectedVideoAsset;
+    outputSlots[1].selectedVideoAsset = previewSlots[1].selectedVideoAsset;
+    outputSlots[2].selectedVideoAsset = previewSlots[2].selectedVideoAsset;
 
     bool initExtraSlots = visualControls.playback.enableDualVideo;
 
     auto future0 = std::async(std::launch::async, [&]() {
-        return outputVideoPlayer.initialize(outputVideoSourcePath, screenSize.x, screenSize.y);
+        return outputSlots[0].player.initialize(outputSlots[0].sourcePath, screenSize.x, screenSize.y);
     });
 
     std::future<bool> future1;
     std::future<bool> future2;
     if (initExtraSlots) {
         future1 = std::async(std::launch::async, [&]() {
-            return outputVideoPlayer2.initialize(outputVideoSourcePath2, screenSize.x, screenSize.y);
+            return outputSlots[1].player.initialize(outputSlots[1].sourcePath, screenSize.x, screenSize.y);
         });
         future2 = std::async(std::launch::async, [&]() {
-            return outputVideoPlayer3.initialize(outputVideoSourcePath3, screenSize.x, screenSize.y);
+            return outputSlots[2].player.initialize(outputSlots[2].sourcePath, screenSize.x, screenSize.y);
         });
     }
 
@@ -1355,44 +1395,44 @@ void Application::initOutputVideo() {
         std::cerr << "[Application] Failed to initialize output video player 1\n";
         return;
     }
-    outputVideoPlayer.setAutoScale(visualControls.playback.autoScaleVideo);
+    outputSlots[0].player.setAutoScale(visualControls.playback.autoScaleVideo);
 
-    outputCpuFramePool.resize(outputVideoPlayer.width(), outputVideoPlayer.height(), outputVideoPlayer.width() * 4);
-    outputVideoTexture.createResources(resourceSystem, vulkanContext.getDevice(),
+    outputSlots[0].framePool.resize(outputSlots[0].player.width(), outputSlots[0].player.height(), outputSlots[0].player.width() * 4);
+    outputSlots[0].texture.createResources(resourceSystem, vulkanContext.getDevice(),
                                        vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                       outputVideoPlayer.width(), outputVideoPlayer.height());
-    outputVideoSubsystemInitialized = outputVideoTexture.isReady();
-    if (outputVideoSubsystemInitialized)
-        outputVideoRenderer = std::make_unique<VideoRenderer>(outputVideoPlayer, outputVideoTexture, outputCpuFramePool);
+                                       outputSlots[0].player.width(), outputSlots[0].player.height());
+    outputSlots[0].initialized = outputSlots[0].texture.isReady();
+    if (outputSlots[0].initialized)
+        outputSlots[0].renderer = std::make_unique<VideoRenderer>(outputSlots[0].player, outputSlots[0].texture, outputSlots[0].framePool);
 
     if (initExtraSlots && ok1) {
-        outputVideoPlayer2.setAutoScale(visualControls.playback.autoScaleVideo);
-        outputCpuFramePool2.resize(outputVideoPlayer2.width(), outputVideoPlayer2.height(), outputVideoPlayer2.width() * 4);
-        outputVideoTexture2.createResources(resourceSystem, vulkanContext.getDevice(),
+        outputSlots[1].player.setAutoScale(visualControls.playback.autoScaleVideo);
+        outputSlots[1].framePool.resize(outputSlots[1].player.width(), outputSlots[1].player.height(), outputSlots[1].player.width() * 4);
+        outputSlots[1].texture.createResources(resourceSystem, vulkanContext.getDevice(),
                                              vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                             outputVideoPlayer2.width(), outputVideoPlayer2.height());
-        outputVideoSubsystemInitialized2 = outputVideoTexture2.isReady();
-        if (outputVideoSubsystemInitialized2)
-            outputVideoRenderer2 = std::make_unique<VideoRenderer>(outputVideoPlayer2, outputVideoTexture2, outputCpuFramePool2);
+                                             outputSlots[1].player.width(), outputSlots[1].player.height());
+        outputSlots[1].initialized = outputSlots[1].texture.isReady();
+        if (outputSlots[1].initialized)
+            outputSlots[1].renderer = std::make_unique<VideoRenderer>(outputSlots[1].player, outputSlots[1].texture, outputSlots[1].framePool);
     }
 
     if (initExtraSlots && ok2) {
-        outputVideoPlayer3.setAutoScale(outputVisualControls.playback.autoScaleVideo);
-        outputCpuFramePool3.resize(outputVideoPlayer3.width(), outputVideoPlayer3.height(), outputVideoPlayer3.width() * 4);
-        outputVideoTexture3.createResources(resourceSystem, vulkanContext.getDevice(),
+        outputSlots[2].player.setAutoScale(outputVisualControls.playback.autoScaleVideo);
+        outputSlots[2].framePool.resize(outputSlots[2].player.width(), outputSlots[2].player.height(), outputSlots[2].player.width() * 4);
+        outputSlots[2].texture.createResources(resourceSystem, vulkanContext.getDevice(),
                                              vulkanContext.getCommandPool(), vulkanContext.getGraphicsQueue(),
-                                             outputVideoPlayer3.width(), outputVideoPlayer3.height());
-        outputVideoSubsystemInitialized3 = outputVideoTexture3.isReady();
-        if (outputVideoSubsystemInitialized3)
-            outputVideoRenderer3 = std::make_unique<VideoRenderer>(outputVideoPlayer3, outputVideoTexture3, outputCpuFramePool3);
+                                             outputSlots[2].player.width(), outputSlots[2].player.height());
+        outputSlots[2].initialized = outputSlots[2].texture.isReady();
+        if (outputSlots[2].initialized)
+            outputSlots[2].renderer = std::make_unique<VideoRenderer>(outputSlots[2].player, outputSlots[2].texture, outputSlots[2].framePool);
     }
 
     auto t1 = Clock::now();
     std::cout << "[Application] initOutputVideo() done — total="
               << std::chrono::duration<double>(t1 - t0).count()
-              << "s v1=" << outputVideoSubsystemInitialized
-              << " v2=" << outputVideoSubsystemInitialized2
-              << " v3=" << outputVideoSubsystemInitialized3 << '\n';
+              << "s v1=" << outputSlots[0].initialized
+              << " v2=" << outputSlots[1].initialized
+              << " v3=" << outputSlots[2].initialized << '\n';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1402,10 +1442,11 @@ void Application::initOutputVideo() {
 void Application::initUI() {
     if (!uiSystem.initialize(window.getUiWindow(), window.getUiRenderer(), window.getDpiScale()))
         throw std::runtime_error("failed to initialize UI system");
+    cachedCallbacks = buildUICallbacks();
 }
 
 void Application::initNLE() {
-    g_project_state.active_file = videoSourcePath;
+    g_project_state.active_file = previewSlots[0].sourcePath;
     renderWorker = std::make_unique<RenderWorker>();
     renderWorker->on_render_complete = [this](std::shared_ptr<RenderJob> job) {
         std::cout << "[Render] Completed: " << job->output_file << '\n';
@@ -1424,7 +1465,6 @@ void Application::initMidi() {
     }
     midiSystem.setEventCallback([this](const MidiMessage& msg) {
         midiSystem.applyToVisualControls(msg, visualControls);
-        midiSystem.applyToVisualControls(msg, outputVisualControls);
     });
     midiSystem.setTriggerCallback([this](const std::string& action) {
         handleOscTrigger(action, -1);
@@ -1445,8 +1485,6 @@ void Application::initOsc() {
     }
     oscSystem.setEventCallback([this](const OscMessage& msg) {
         oscSystem.applyToVisualControls(msg, visualControls);
-        // Also apply to output for live mixing (videoMix, blend, etc.)
-        oscSystem.applyToVisualControls(msg, outputVisualControls);
     });
     oscSystem.setTriggerCallback([this](const std::string& action, int arg) {
         handleOscTrigger(action, arg);
@@ -1474,31 +1512,31 @@ void Application::initMultiPassPipeline() {
     uint32_t queueFamily = 0; // TODO: obtener de VulkanContext
 
     // ── Preview pipeline ────────────────────────────────────────────────────
-    if (videoSubsystemInitialized) {
-        const bool has2 = videoTexture2.isReady();
-        const bool has3 = videoTexture3.isReady();
+    if (previewSlots[0].initialized) {
+        const bool has2 = previewSlots[1].texture.isReady();
+        const bool has3 = previewSlots[2].texture.isReady();
         if (!multiPassPipeline.initialize(
                 vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
                 vulkanContext.getGraphicsQueue(), queueFamily,
                 previewPresenter.getExtent(), previewPresenter.getFormat(),
-                videoTexture.getSampler(), videoTexture.getSampler(),
-                videoTexture.getImageView(), videoTexture.getImageView(),
-                has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
-                has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                has3 ? videoTexture3.getSampler()   : videoTexture.getSampler(),
-                has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
+                previewSlots[0].texture.getSampler(), previewSlots[0].texture.getSampler(),
+                previewSlots[0].texture.getImageView(), previewSlots[0].texture.getImageView(),
+                has2 ? previewSlots[1].texture.getSampler()   : previewSlots[0].texture.getSampler(),
+                has2 ? previewSlots[1].texture.getImageView() : previewSlots[0].texture.getImageView(),
+                has3 ? previewSlots[2].texture.getSampler()   : previewSlots[0].texture.getSampler(),
+                has3 ? previewSlots[2].texture.getImageView() : previewSlots[0].texture.getImageView(),
                 uniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
         {
             std::cerr << "[Application] Failed to initialize MultiPassPipeline\n";
         } else {
             multiPassPipeline.updateDescriptorSets(
                 uniformBufferManager.getBuffers(),
-                videoTexture.getImageView(), videoTexture.getPrevImageView(),
-                videoTexture.getSampler(),   videoTexture.getSampler(),
-                has2 ? videoTexture2.getImageView() : videoTexture.getImageView(),
-                has2 ? videoTexture2.getSampler()   : videoTexture.getSampler(),
-                has3 ? videoTexture3.getImageView() : videoTexture.getImageView(),
-                has3 ? videoTexture3.getSampler()   : videoTexture.getSampler()
+                previewSlots[0].texture.getImageView(), previewSlots[0].texture.getPrevImageView(),
+                previewSlots[0].texture.getSampler(),   previewSlots[0].texture.getSampler(),
+                has2 ? previewSlots[1].texture.getImageView() : previewSlots[0].texture.getImageView(),
+                has2 ? previewSlots[1].texture.getSampler()   : previewSlots[0].texture.getSampler(),
+                has3 ? previewSlots[2].texture.getImageView() : previewSlots[0].texture.getImageView(),
+                has3 ? previewSlots[2].texture.getSampler()   : previewSlots[0].texture.getSampler()
             );
             std::cout << "[Application] Preview MultiPassPipeline initialized\n";
         }
@@ -1507,31 +1545,31 @@ void Application::initMultiPassPipeline() {
     }
 
     // ── Output pipeline (independent) ───────────────────────────────────────
-    if (outputVideoSubsystemInitialized) {
-        const bool outputHas2 = outputVideoTexture2.isReady();
-        const bool outputHas3 = outputVideoTexture3.isReady();
+    if (outputSlots[0].initialized) {
+        const bool outputHas2 = outputSlots[1].texture.isReady();
+        const bool outputHas3 = outputSlots[2].texture.isReady();
         if (!outputMultiPassPipeline.initialize(
                 vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
                 vulkanContext.getGraphicsQueue(), queueFamily,
                 outputPresenter.getExtent(), outputPresenter.getFormat(),
-                outputVideoTexture.getSampler(), outputVideoTexture.getSampler(),
-                outputVideoTexture.getImageView(), outputVideoTexture.getImageView(),
-                outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
-                outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
-                outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler(),
-                outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
+                outputSlots[0].texture.getSampler(), outputSlots[0].texture.getSampler(),
+                outputSlots[0].texture.getImageView(), outputSlots[0].texture.getImageView(),
+                outputHas2 ? outputSlots[1].texture.getSampler()   : outputSlots[0].texture.getSampler(),
+                outputHas2 ? outputSlots[1].texture.getImageView() : outputSlots[0].texture.getImageView(),
+                outputHas3 ? outputSlots[2].texture.getSampler()   : outputSlots[0].texture.getSampler(),
+                outputHas3 ? outputSlots[2].texture.getImageView() : outputSlots[0].texture.getImageView(),
                 outputUniformBufferManager.getBuffers(), UniformBufferManager::getBufferSize()))
         {
             std::cerr << "[Application] Failed to initialize output MultiPassPipeline\n";
         } else {
             outputMultiPassPipeline.updateDescriptorSets(
                 outputUniformBufferManager.getBuffers(),
-                outputVideoTexture.getImageView(), outputVideoTexture.getPrevImageView(),
-                outputVideoTexture.getSampler(),   outputVideoTexture.getSampler(),
-                outputHas2 ? outputVideoTexture2.getImageView() : outputVideoTexture.getImageView(),
-                outputHas2 ? outputVideoTexture2.getSampler()   : outputVideoTexture.getSampler(),
-                outputHas3 ? outputVideoTexture3.getImageView() : outputVideoTexture.getImageView(),
-                outputHas3 ? outputVideoTexture3.getSampler()   : outputVideoTexture.getSampler()
+                outputSlots[0].texture.getImageView(), outputSlots[0].texture.getPrevImageView(),
+                outputSlots[0].texture.getSampler(),   outputSlots[0].texture.getSampler(),
+                outputHas2 ? outputSlots[1].texture.getImageView() : outputSlots[0].texture.getImageView(),
+                outputHas2 ? outputSlots[1].texture.getSampler()   : outputSlots[0].texture.getSampler(),
+                outputHas3 ? outputSlots[2].texture.getImageView() : outputSlots[0].texture.getImageView(),
+                outputHas3 ? outputSlots[2].texture.getSampler()   : outputSlots[0].texture.getSampler()
             );
             std::cout << "[Application] Output MultiPassPipeline initialized\n";
         }
@@ -1548,31 +1586,31 @@ void Application::initMultiPassPipeline() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 int Application::pickNextVideoIndex(const std::vector<VideoAsset>& assets) {
-    return pickNextIndex(assets, videoRandomizer, selectedVideoAsset);
+    return pickNextIndex(assets, previewSlots[0].randomizer, previewSlots[0].selectedVideoAsset);
 }
 
 int Application::pickNextVideoIndex2(const std::vector<VideoAsset>& assets) {
-    return pickNextIndex(assets, videoRandomizer2, selectedVideoAsset2);
+    return pickNextIndex(assets, previewSlots[1].randomizer, previewSlots[1].selectedVideoAsset);
 }
 
 int Application::pickNextVideoIndex3(const std::vector<VideoAsset>& assets) {
-    return pickNextIndex(assets, videoRandomizer3, selectedVideoAsset3);
+    return pickNextIndex(assets, previewSlots[2].randomizer, previewSlots[2].selectedVideoAsset);
 }
 
 bool Application::reloadVideoAtIndex(int newIndex, const std::vector<VideoAsset>& assets) {
-    selectedVideoAsset = newIndex;
+    previewSlots[0].selectedVideoAsset = newIndex;
     transitionActive   = false;
     return reloadVideoSlot(0, assets[newIndex].metadata.path);
 }
 
 bool Application::reloadVideoAtIndex2(int newIndex, const std::vector<VideoAsset>& assets) {
-    selectedVideoAsset2 = newIndex;
+    previewSlots[1].selectedVideoAsset = newIndex;
     transitionActive    = false;
     return reloadVideoSlot(1, assets[newIndex].metadata.path);
 }
 
 bool Application::reloadVideoAtIndex3(int newIndex, const std::vector<VideoAsset>& assets) {
-    selectedVideoAsset3 = newIndex;
+    previewSlots[2].selectedVideoAsset = newIndex;
     transitionActive    = false;
     return reloadVideoSlot(2, assets[newIndex].metadata.path);
 }
@@ -1589,23 +1627,23 @@ void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job
     else if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_3) slot = 2;
 
     if (slot == 0) {
-        videoRenderer.reset();
-        videoPlayer.shutdown();
+        previewSlots[0].renderer.reset();
+        previewSlots[0].player.shutdown();
         renderWorker->perform_atomic_swap(job);
-        reloadVideoSlot(0, videoSourcePath);
-        std::cout << "[Render] Auto-reloaded video 1: " << videoSourcePath << '\n';
+        reloadVideoSlot(0, previewSlots[0].sourcePath);
+        std::cout << "[Render] Auto-reloaded video 1: " << previewSlots[0].sourcePath << '\n';
     } else if (slot == 1) {
-        videoRenderer2.reset();
-        videoPlayer2.shutdown();
+        previewSlots[1].renderer.reset();
+        previewSlots[1].player.shutdown();
         renderWorker->perform_atomic_swap(job);
-        reloadVideoSlot(1, videoSourcePath2);
-        std::cout << "[Render] Auto-reloaded video 2: " << videoSourcePath2 << '\n';
+        reloadVideoSlot(1, previewSlots[1].sourcePath);
+        std::cout << "[Render] Auto-reloaded video 2: " << previewSlots[1].sourcePath << '\n';
     } else {
-        videoRenderer3.reset();
-        videoPlayer3.shutdown();
+        previewSlots[2].renderer.reset();
+        previewSlots[2].player.shutdown();
         renderWorker->perform_atomic_swap(job);
-        reloadVideoSlot(2, videoSourcePath3);
-        std::cout << "[Render] Auto-reloaded video 3: " << videoSourcePath3 << '\n';
+        reloadVideoSlot(2, previewSlots[2].sourcePath);
+        std::cout << "[Render] Auto-reloaded video 3: " << previewSlots[2].sourcePath << '\n';
     }
 }
 
@@ -1614,7 +1652,7 @@ void Application::handleCompletedRenderJob(const std::shared_ptr<RenderJob>& job
 // ─────────────────────────────────────────────────────────────────────────────
 
 bool Application::canChangeVideo() const {
-    return !isReloadingVideo && !isReloadingVideo2 && !isReloadingVideo3 && !transitionActive;
+    return !previewSlots[0].isReloading && !previewSlots[1].isReloading && !previewSlots[2].isReloading && !transitionActive;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1623,22 +1661,55 @@ bool Application::canChangeVideo() const {
 
 void Application::handleOscTrigger(const std::string& action, int arg) {
     if (action == "randomizeVideo") {
-        if (!canChangeVideo()) return;
+        std::cout << "[OSC] randomizeVideo triggered\n";
+        if (!canChangeVideo()) {
+            std::cout << "[OSC] randomizeVideo blocked: canChangeVideo() == false\n";
+            return;
+        }
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
-        if (assets.size() > 1) reloadVideoAtIndex(pickNextVideoIndex(assets), assets);
-        isReloadingVideo = false;
+        std::cout << "[OSC] randomizeVideo: folder=" << visualControls.playback.selectedVideoFolder << " assets=" << assets.size() << "\n";
+        if (assets.size() > 1) {
+            int idx = pickNextVideoIndex(assets);
+            std::cout << "[OSC] randomizeVideo: picked index " << idx << " -> " << assets[idx].metadata.filename << "\n";
+            reloadVideoAtIndex(idx, assets);
+        } else {
+            std::cout << "[OSC] randomizeVideo: not enough assets (need >1)\n";
+        }
+        previewSlots[0].isReloading = false;
 
     } else if (action == "randomizeVideo2") {
-        if (!canChangeVideo()) return;
+        std::cout << "[OSC] randomizeVideo2 triggered\n";
+        if (!canChangeVideo()) {
+            std::cout << "[OSC] randomizeVideo2 blocked: canChangeVideo() == false\n";
+            return;
+        }
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
-        if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
-        isReloadingVideo = false;
+        std::cout << "[OSC] randomizeVideo2: folder=" << visualControls.playback.selectedVideo2Folder << " assets=" << assets.size() << "\n";
+        if (assets.size() > 1) {
+            int idx = pickNextVideoIndex2(assets);
+            std::cout << "[OSC] randomizeVideo2: picked index " << idx << " -> " << assets[idx].metadata.filename << "\n";
+            reloadVideoAtIndex2(idx, assets);
+        } else {
+            std::cout << "[OSC] randomizeVideo2: not enough assets (need >1)\n";
+        }
+        previewSlots[0].isReloading = false;
 
     } else if (action == "randomizeVideo3") {
-        if (!canChangeVideo()) return;
+        std::cout << "[OSC] randomizeVideo3 triggered\n";
+        if (!canChangeVideo()) {
+            std::cout << "[OSC] randomizeVideo3 blocked: canChangeVideo() == false\n";
+            return;
+        }
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
-        if (assets.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets), assets);
-        isReloadingVideo = false;
+        std::cout << "[OSC] randomizeVideo3: folder=" << visualControls.playback.selectedVideo3Folder << " assets=" << assets.size() << "\n";
+        if (assets.size() > 1) {
+            int idx = pickNextVideoIndex3(assets);
+            std::cout << "[OSC] randomizeVideo3: picked index " << idx << " -> " << assets[idx].metadata.filename << "\n";
+            reloadVideoAtIndex3(idx, assets);
+        } else {
+            std::cout << "[OSC] randomizeVideo3: not enough assets (need >1)\n";
+        }
+        previewSlots[0].isReloading = false;
 
     } else if (action == "randomizeAllVideos") {
         if (!canChangeVideo()) return;
@@ -1648,7 +1719,7 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
         if (assets1.size() > 1) reloadVideoAtIndex(pickNextVideoIndex(assets1), assets1);
         if (assets2.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets2), assets2);
         if (assets3.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets3), assets3);
-        isReloadingVideo = false;
+        previewSlots[0].isReloading = false;
 
     } else if (action == "randomizePreviewVideo1") {
         uiSystem.forcePreviewShuffle(0);
@@ -1660,42 +1731,42 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
         uiSystem.forcePreviewShuffle(2);
 
     } else if (action == "jumpRandom") {
-        if (!videoSubsystemInitialized) return;
-        const double dur = videoPlayer.durationSeconds();
-        if (dur > 0) videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+        if (!previewSlots[0].initialized) return;
+        const double dur = previewSlots[0].player.durationSeconds();
+        if (dur > 0) previewSlots[0].player.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
 
     } else if (action == "jumpRandom2") {
-        if (!videoSubsystemInitialized2) return;
-        const double dur = videoPlayer2.durationSeconds();
-        if (dur > 0) videoPlayer2.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+        if (!previewSlots[1].initialized) return;
+        const double dur = previewSlots[1].player.durationSeconds();
+        if (dur > 0) previewSlots[1].player.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
 
     } else if (action == "jumpRandom3") {
-        if (!videoSubsystemInitialized3) return;
-        const double dur = videoPlayer3.durationSeconds();
-        if (dur > 0) videoPlayer3.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+        if (!previewSlots[2].initialized) return;
+        const double dur = previewSlots[2].player.durationSeconds();
+        if (dur > 0) previewSlots[2].player.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
 
     } else if (action == "folderChanged") {
         if (!canChangeVideo()) return;
-        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
-        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
-        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
+        previewSlots[0].randomizer.shuffleQueue.clear();  previewSlots[0].randomizer.currentShuffleIndex  = 0;
+        previewSlots[1].randomizer.shuffleQueue.clear(); previewSlots[1].randomizer.currentShuffleIndex = 0;
+        previewSlots[2].randomizer.shuffleQueue.clear(); previewSlots[2].randomizer.currentShuffleIndex = 0;
         // Reload all 3 preview slots from their respective folders
         const auto& assets1 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         const auto& assets2 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
         const auto& assets3 = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
         if (!assets1.empty()) {
-            selectedVideoAsset = 0;
+            previewSlots[0].selectedVideoAsset = 0;
             reloadVideoSlot(0, assets1[0].metadata.path);
         }
         if (!assets2.empty()) {
-            selectedVideoAsset2 = 0;
+            previewSlots[1].selectedVideoAsset = 0;
             reloadVideoSlot(1, assets2[0].metadata.path);
         }
         if (!assets3.empty()) {
-            selectedVideoAsset3 = 0;
+            previewSlots[2].selectedVideoAsset = 0;
             reloadVideoSlot(2, assets3[0].metadata.path);
         }
-        isReloadingVideo = false;
+        previewSlots[0].isReloading = false;
 
     } else if (action == "applyChanges") {
         controlsDirty = true;
@@ -1705,7 +1776,7 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         if (arg >= 0 && arg < static_cast<int>(assets.size())) {
             reloadVideoAtIndex(arg, assets);
-            isReloadingVideo = false;
+            previewSlots[0].isReloading = false;
         }
 
     } else if (action == "selectVideo2") {
@@ -1713,7 +1784,7 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
         if (arg >= 0 && arg < static_cast<int>(assets.size())) {
             reloadVideoAtIndex2(arg, assets);
-            isReloadingVideo = false;
+            previewSlots[0].isReloading = false;
         }
 
     } else if (action == "selectVideo3") {
@@ -1721,7 +1792,7 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
         if (arg >= 0 && arg < static_cast<int>(assets.size())) {
             reloadVideoAtIndex3(arg, assets);
-            isReloadingVideo = false;
+            previewSlots[0].isReloading = false;
         }
 
     } else if (action == "sendPreviewToOutput") {
@@ -1760,30 +1831,30 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
         std::cout << "[Preview] " << (previewPaused ? "PAUSED" : "RESUMED") << "\n";
 
     } else if (action == "nudgeVideo1") {
-        if (videoSubsystemInitialized) {
-            double cur = videoPlayer.getCurrentFramePTS();
-            double dur = videoPlayer.durationSeconds();
+        if (previewSlots[0].initialized) {
+            double cur = previewSlots[0].player.getCurrentFramePTS();
+            double dur = previewSlots[0].player.durationSeconds();
             double target = cur + arg;
             if (dur > 0) target = std::clamp(target, 0.0, dur);
-            videoPlayer.seekSeconds(target);
+            previewSlots[0].player.seekSeconds(target);
         }
 
     } else if (action == "nudgeVideo2") {
-        if (videoSubsystemInitialized2) {
-            double cur = videoPlayer2.getCurrentFramePTS();
-            double dur = videoPlayer2.durationSeconds();
+        if (previewSlots[1].initialized) {
+            double cur = previewSlots[1].player.getCurrentFramePTS();
+            double dur = previewSlots[1].player.durationSeconds();
             double target = cur + arg;
             if (dur > 0) target = std::clamp(target, 0.0, dur);
-            videoPlayer2.seekSeconds(target);
+            previewSlots[1].player.seekSeconds(target);
         }
 
     } else if (action == "nudgeVideo3") {
-        if (videoSubsystemInitialized3) {
-            double cur = videoPlayer3.getCurrentFramePTS();
-            double dur = videoPlayer3.durationSeconds();
+        if (previewSlots[2].initialized) {
+            double cur = previewSlots[2].player.getCurrentFramePTS();
+            double dur = previewSlots[2].player.durationSeconds();
             double target = cur + arg;
             if (dur > 0) target = std::clamp(target, 0.0, dur);
-            videoPlayer3.seekSeconds(target);
+            previewSlots[2].player.seekSeconds(target);
         }
 
     } else if (action == "tapTempo") {
@@ -1827,23 +1898,30 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
 
 void Application::commitPreviewToOutput() {
     outputVisualControls = visualControls;
-    std::string oldOutputVideoSourcePath = outputVideoSourcePath;
-    std::string oldOutputVideoSourcePath2 = outputVideoSourcePath2;
-    std::string oldOutputVideoSourcePath3 = outputVideoSourcePath3;
-    outputVideoSourcePath = videoSourcePath;
-    outputVideoSourcePath2 = videoSourcePath2;
-    outputVideoSourcePath3 = videoSourcePath3;
-    outputSelectedVideoAsset = selectedVideoAsset;
-    outputSelectedVideoAsset2 = selectedVideoAsset2;
-    outputSelectedVideoAsset3 = selectedVideoAsset3;
+    std::string oldOutputVideoSourcePath = outputSlots[0].sourcePath;
+    std::string oldOutputVideoSourcePath2 = outputSlots[1].sourcePath;
+    std::string oldOutputVideoSourcePath3 = outputSlots[2].sourcePath;
+    outputSlots[0].sourcePath = previewSlots[0].sourcePath;
+    outputSlots[1].sourcePath = previewSlots[1].sourcePath;
+    outputSlots[2].sourcePath = previewSlots[2].sourcePath;
+    outputSlots[0].selectedVideoAsset = previewSlots[0].selectedVideoAsset;
+    outputSlots[1].selectedVideoAsset = previewSlots[1].selectedVideoAsset;
+    outputSlots[2].selectedVideoAsset = previewSlots[2].selectedVideoAsset;
 
-    if (!outputVideoSourcePath.empty() && outputVideoSourcePath != oldOutputVideoSourcePath)
-        reloadOutputVideoSlot(0, outputVideoSourcePath);
-    if (!outputVideoSourcePath2.empty() && outputVideoSourcePath2 != oldOutputVideoSourcePath2)
-        reloadOutputVideoSlot(1, outputVideoSourcePath2);
-    if (!outputVideoSourcePath3.empty() && outputVideoSourcePath3 != oldOutputVideoSourcePath3)
-        reloadOutputVideoSlot(2, outputVideoSourcePath3);
+    // Sync animation state so time-based effects (LFO, wobble, etc.) match
+    outputAnim = previewAnim;
 
+    // Sync audio smoothing state so audio-reactive values match
+    outputPrevAudioSmooth = prevAudioSmooth;
+
+    if (!outputSlots[0].sourcePath.empty() && outputSlots[0].sourcePath != oldOutputVideoSourcePath)
+        reloadOutputVideoSlot(0, outputSlots[0].sourcePath);
+    if (!outputSlots[1].sourcePath.empty() && outputSlots[1].sourcePath != oldOutputVideoSourcePath2)
+        reloadOutputVideoSlot(1, outputSlots[1].sourcePath);
+    if (!outputSlots[2].sourcePath.empty() && outputSlots[2].sourcePath != oldOutputVideoSourcePath3)
+        reloadOutputVideoSlot(2, outputSlots[2].sourcePath);
+
+    updateAllDescriptorSets();
     std::cout << "[Output] Controls + videos committed from preview\n";
 }
 
@@ -1868,7 +1946,7 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
     // Recreate preview swapchain with actual window size
     previewPresenter.recreate(width, height, renderPass);
 
-    if (videoSubsystemInitialized && multiPassPipeline.isInitialized()) {
+    if (previewSlots[0].initialized && multiPassPipeline.isInitialized()) {
         multiPassPipeline.recreate(previewPresenter.getExtent());
     }
 
@@ -1898,12 +1976,12 @@ void Application::handleOutputWindowResize(uint32_t width, uint32_t height) {
     std::cout << "[Resize] Output swapchain extent: " << outputPresenter.getExtent().width
               << "x" << outputPresenter.getExtent().height << "\n";
 
-    if (outputVideoSubsystemInitialized && outputMultiPassPipeline.isInitialized()) {
+    if (outputSlots[0].initialized && outputMultiPassPipeline.isInitialized()) {
         outputMultiPassPipeline.recreate(outputPresenter.getExtent());
         std::cout << "[Resize] Output multipass pipeline recreated\n";
     } else {
         std::cout << "[Resize] Output multipass pipeline NOT recreated (vidInit="
-                  << outputVideoSubsystemInitialized << " pipelineInit="
+                  << outputSlots[0].initialized << " pipelineInit="
                   << outputMultiPassPipeline.isInitialized() << ")\n";
     }
 
@@ -2084,13 +2162,13 @@ void Application::renderOneFrame() {
 
     // ── Video transition animation ───────────────────────────────────────
     if (transitionActive) {
-        float step = deltaTime / transitionDuration;
+        float step = deltaTime / previewSlots[0].transitionDuration;
         transitionProgress += step;
         if (transitionProgress >= 1.0f) {
             transitionProgress = 1.0f;
             transitionActive = false;
-            videoTexture.setFreezePrev(false);
-            videoTexture2.setFreezePrev(false);
+            previewSlots[0].texture.setFreezePrev(false);
+            previewSlots[1].texture.setFreezePrev(false);
         }
     }
 
@@ -2103,13 +2181,13 @@ void Application::renderOneFrame() {
 
     // ── Auto random jump ─────────────────────────────────────────────────
     if (visualControls.playback.enableRandomJumpInterval &&
-        visualControls.playback.randomVideoStart && videoSubsystemInitialized)
+        visualControls.playback.randomVideoStart && previewSlots[0].initialized)
     {
         float elapsed = std::chrono::duration<float>(now - lastRandomJumpTime).count();
         if (elapsed >= visualControls.playback.randomJumpInterval) {
-            const double dur = videoPlayer.durationSeconds();
+            const double dur = previewSlots[0].player.durationSeconds();
             if (dur > 0) {
-                videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+                previewSlots[0].player.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
                 lastRandomJumpTime = now;
             }
         }
@@ -2124,21 +2202,24 @@ void Application::renderOneFrame() {
     outputMultiPassPipeline.setPostEffect(outputVisualControls.post.postEffectName);
 
     // ── Playback rates ───────────────────────────────────────────────────
-    if (videoSubsystemInitialized)  videoPlayer.setPlaybackRate(visualControls.playback.videoPlaybackRate);
-    if (videoSubsystemInitialized2) videoPlayer2.setPlaybackRate(visualControls.playback.video2PlaybackRate);
-    if (videoSubsystemInitialized3) videoPlayer3.setPlaybackRate(visualControls.playback.video3PlaybackRate);
+    if (previewSlots[0].initialized)  previewSlots[0].player.setPlaybackRate(visualControls.playback.videoPlaybackRate);
+    if (previewSlots[1].initialized) previewSlots[1].player.setPlaybackRate(visualControls.playback.video2PlaybackRate);
+    if (previewSlots[2].initialized) previewSlots[2].player.setPlaybackRate(visualControls.playback.video3PlaybackRate);
+    if (outputSlots[0].initialized)  outputSlots[0].player.setPlaybackRate(outputVisualControls.playback.videoPlaybackRate);
+    if (outputSlots[1].initialized) outputSlots[1].player.setPlaybackRate(outputVisualControls.playback.video2PlaybackRate);
+    if (outputSlots[2].initialized) outputSlots[2].player.setPlaybackRate(outputVisualControls.playback.video3PlaybackRate);
 
-    if (visualControls.playback.videoPlaybackRate != lastPlaybackRate) {
-        lastPlaybackRate = visualControls.playback.videoPlaybackRate;
-        videoSpeedCache[videoSourcePath] = lastPlaybackRate;
+    if (visualControls.playback.videoPlaybackRate != previewSlots[0].lastPlaybackRate) {
+        previewSlots[0].lastPlaybackRate = visualControls.playback.videoPlaybackRate;
+        videoSpeedCache[previewSlots[0].sourcePath] = previewSlots[0].lastPlaybackRate;
     }
-    if (visualControls.playback.video2PlaybackRate != lastPlaybackRate2) {
-        lastPlaybackRate2 = visualControls.playback.video2PlaybackRate;
-        videoSpeedCache[videoSourcePath2] = lastPlaybackRate2;
+    if (visualControls.playback.video2PlaybackRate != previewSlots[1].lastPlaybackRate) {
+        previewSlots[1].lastPlaybackRate = visualControls.playback.video2PlaybackRate;
+        videoSpeedCache[previewSlots[1].sourcePath] = previewSlots[1].lastPlaybackRate;
     }
-    if (visualControls.playback.video3PlaybackRate != lastPlaybackRate3) {
-        lastPlaybackRate3 = visualControls.playback.video3PlaybackRate;
-        videoSpeedCache[videoSourcePath3] = lastPlaybackRate3;
+    if (visualControls.playback.video3PlaybackRate != previewSlots[2].lastPlaybackRate) {
+        previewSlots[2].lastPlaybackRate = visualControls.playback.video3PlaybackRate;
+        videoSpeedCache[previewSlots[2].sourcePath] = previewSlots[2].lastPlaybackRate;
     }
 
     // ── UI ───────────────────────────────────────────────────────────────
@@ -2148,9 +2229,9 @@ void Application::renderOneFrame() {
     diag.swapchainWidth            = previewPresenter.getExtent().width;
     diag.swapchainHeight           = previewPresenter.getExtent().height;
     diag.currentMode               = visualControls.playback.activeMode;
-    diag.videoReady                = videoSubsystemInitialized && videoTexture.isReady();
-    diag.videoWidth                = videoTexture.getWidth();
-    diag.videoHeight               = videoTexture.getHeight();
+    diag.videoReady                = previewSlots[0].initialized && previewSlots[0].texture.isReady();
+    diag.videoWidth                = previewSlots[0].texture.getWidth();
+    diag.videoHeight               = previewSlots[0].texture.getHeight();
     diag.animationTime             = debugAnimationTime;
     diag.animationDelta            = debugAnimationDelta;
     diag.animationElapsedSeconds   = debugAnimationElapsedSeconds;
@@ -2158,14 +2239,13 @@ void Application::renderOneFrame() {
     diag.gpuTotalTime              = multiPassPipeline.lastGpuTotalTime;
     diag.appFps                    = currentFps;
 
-    UICallbacks callbacks = buildUICallbacks();
-    uiSystem.render(visualControls, videoRandomizer, videoRandomizer2, videoRandomizer3,
-                    videoPlayer, videoPlayer2, videoPlayer3, videoRegistry,
-                    selectedVideoAsset, selectedVideoAsset2, selectedVideoAsset3,
-                    transitionDuration, transitionDuration2, transitionDuration3,
+    uiSystem.render(visualControls, previewSlots[0].randomizer, previewSlots[1].randomizer, previewSlots[2].randomizer,
+                    previewSlots[0].player, previewSlots[1].player, previewSlots[2].player, videoRegistry,
+                    previewSlots[0].selectedVideoAsset, previewSlots[1].selectedVideoAsset, previewSlots[2].selectedVideoAsset,
+                    previewSlots[0].transitionDuration, previewSlots[1].transitionDuration, previewSlots[2].transitionDuration,
                     allowDimensionChangeRecreation, controlsDirty,
-                    rng, diag, callbacks, midiSystem, oscSystem, audioSystem,
-                    videoSourcePath, videoSourcePath2, videoSourcePath3,
+                    rng, diag, cachedCallbacks, midiSystem, oscSystem, audioSystem,
+                    previewSlots[0].sourcePath, previewSlots[1].sourcePath, previewSlots[2].sourcePath,
                     videoAssetsRoot);
 
     // ── Render preview and output independently ──────────────────────────
@@ -2173,6 +2253,56 @@ void Application::renderOneFrame() {
     // not every frame — they are independent windows.
     tryRenderPreview();
     tryRenderOutput();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// submitAndPresent — shared submit+present logic for both windows
+// ─────────────────────────────────────────────────────────────────────────────
+
+bool Application::submitAndPresent(FrameSystem& frameSystem, VulkanPresenter& presenter,
+                                    FrameContext* frame, uint32_t imageIndex,
+                                    VkCommandBuffer cmdBuffer,
+                                    std::function<void()> onResizeNeeded) {
+    auto renderFinished = frameSystem.getRenderFinishedSemaphore(imageIndex).value_or(VK_NULL_HANDLE);
+    if (renderFinished == VK_NULL_HANDLE)
+        throw std::runtime_error("invalid renderFinished semaphore");
+
+    VkSubmitInfo submit{};
+    submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.waitSemaphoreCount   = 1;
+    submit.pWaitSemaphores      = &frame->imageAvailableSemaphore;
+    VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    submit.pWaitDstStageMask    = &waitStage;
+    submit.commandBufferCount   = 1;
+    submit.pCommandBuffers      = &cmdBuffer;
+    submit.signalSemaphoreCount = 1;
+    submit.pSignalSemaphores    = &renderFinished;
+
+    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, frame->inFlightFence) != VK_SUCCESS) {
+        std::cerr << "[submitAndPresent] vkQueueSubmit failed — device may be lost\n";
+        VkSubmitInfo emptySubmit{};
+        emptySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &emptySubmit, frame->inFlightFence);
+        frameSystem.endFrame();
+        return false;
+    }
+
+    VkSwapchainKHR sc = presenter.getSwapchain();
+    VkPresentInfoKHR present{};
+    present.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present.waitSemaphoreCount = 1;
+    present.pWaitSemaphores    = &renderFinished;
+    present.swapchainCount     = 1;
+    present.pSwapchains        = &sc;
+    present.pImageIndices      = &imageIndex;
+
+    VkResult presentResult = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &present);
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
+        onResizeNeeded();
+    }
+
+    frameSystem.endFrame();
+    return true;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2216,61 +2346,22 @@ bool Application::tryRenderPreview() {
     if (updatePreview) {
         updateUniformBuffer(previewFrame->frameIndex, visualControls,
                             uniformBufferManager, previewPresenter, previewAnim,
-                            videoTexture, videoTexture2, videoTexture3,
-                            videoSubsystemInitialized, videoSubsystemInitialized2, videoSubsystemInitialized3);
+                            previewSlots[0].texture, previewSlots[1].texture, previewSlots[2].texture,
+                            previewSlots[0].initialized, previewSlots[1].initialized, previewSlots[2].initialized);
     }
 
     // Update preview video renderers
     if (!uiSystem.isRendererPaused() && !previewPaused) {
-        if (videoRenderer)  videoRenderer->update(currentDeltaTime, previewFrame->frameIndex);
-        if (videoRenderer2) videoRenderer2->update(currentDeltaTime, previewFrame->frameIndex);
-        if (videoRenderer3) videoRenderer3->update(currentDeltaTime, previewFrame->frameIndex);
+        if (previewSlots[0].renderer)  previewSlots[0].renderer->update(currentDeltaTime, previewFrame->frameIndex);
+        if (previewSlots[1].renderer) previewSlots[1].renderer->update(currentDeltaTime, previewFrame->frameIndex);
+        if (previewSlots[2].renderer) previewSlots[2].renderer->update(currentDeltaTime, previewFrame->frameIndex);
     }
 
     // Record command buffer
     recordPreviewCommandBuffer(previewCommandBuffers[previewFrame->frameIndex],
                                *previewFrame, previewImageIndex);
 
-    // Submit
-    auto previewRenderFinished = previewFrameSystem.getRenderFinishedSemaphore(previewImageIndex).value_or(VK_NULL_HANDLE);
-    if (previewRenderFinished == VK_NULL_HANDLE)
-        throw std::runtime_error("invalid preview renderFinished semaphore");
-
-    VkSubmitInfo submit{};
-    submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit.waitSemaphoreCount   = 1;
-    submit.pWaitSemaphores      = &previewFrame->imageAvailableSemaphore;
-    VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    submit.pWaitDstStageMask    = &waitStage;
-    submit.commandBufferCount   = 1;
-    submit.pCommandBuffers      = &previewCommandBuffers[previewFrame->frameIndex];
-    submit.signalSemaphoreCount = 1;
-    submit.pSignalSemaphores    = &previewRenderFinished;
-
-    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, previewFrame->inFlightFence) != VK_SUCCESS) {
-        std::cerr << "[tryRenderPreview] vkQueueSubmit failed — device may be lost\n";
-        // Fence was reset in beginFrame but never signaled because submit failed.
-        // Submit an empty queue operation to signal the fence so the next
-        // beginFrame's vkWaitForFences doesn't block forever.
-        VkSubmitInfo emptySubmit{};
-        emptySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &emptySubmit, previewFrame->inFlightFence);
-        previewFrameSystem.endFrame();
-        return false;
-    }
-
-    // Present
-    VkSwapchainKHR previewSc = previewPresenter.getSwapchain();
-    VkPresentInfoKHR previewPresent{};
-    previewPresent.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    previewPresent.waitSemaphoreCount = 1;
-    previewPresent.pWaitSemaphores    = &previewRenderFinished;
-    previewPresent.swapchainCount     = 1;
-    previewPresent.pSwapchains        = &previewSc;
-    previewPresent.pImageIndices      = &previewImageIndex;
-
-    VkResult previewPresentResult = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &previewPresent);
-    if (previewPresentResult == VK_ERROR_OUT_OF_DATE_KHR || previewPresentResult == VK_SUBOPTIMAL_KHR) {
+    auto onResize = [&] {
         uint32_t w, h;
         window.getDrawableSize(w, h);
         if (w > 0 && h > 0) {
@@ -2280,10 +2371,12 @@ bool Application::tryRenderPreview() {
             auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
             resizeDebounceTime = std::max(resizeDebounceTime, newDebounce);
         }
-    }
+    };
 
-    previewFrameSystem.endFrame();
-    return true;
+    return submitAndPresent(previewFrameSystem, previewPresenter,
+                            previewFrame, previewImageIndex,
+                            previewCommandBuffers[previewFrame->frameIndex],
+                            onResize);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2323,59 +2416,20 @@ bool Application::tryRenderOutput() {
     // Output always renders at 60fps with its own controls and its own frame index
     updateUniformBuffer(outputFrame->frameIndex, outputVisualControls,
                         outputUniformBufferManager, outputPresenter, outputAnim,
-                        outputVideoTexture, outputVideoTexture2, outputVideoTexture3,
-                        outputVideoSubsystemInitialized, outputVideoSubsystemInitialized2, outputVideoSubsystemInitialized3,
+                        outputSlots[0].texture, outputSlots[1].texture, outputSlots[2].texture,
+                        outputSlots[0].initialized, outputSlots[1].initialized, outputSlots[2].initialized,
                         true);
 
     // Update output video renderers with output frame index
-    if (outputVideoRenderer)  outputVideoRenderer->update(currentDeltaTime, outputFrame->frameIndex);
-    if (outputVideoRenderer2) outputVideoRenderer2->update(currentDeltaTime, outputFrame->frameIndex);
-    if (outputVideoRenderer3) outputVideoRenderer3->update(currentDeltaTime, outputFrame->frameIndex);
+    if (outputSlots[0].renderer)  outputSlots[0].renderer->update(currentDeltaTime, outputFrame->frameIndex);
+    if (outputSlots[1].renderer) outputSlots[1].renderer->update(currentDeltaTime, outputFrame->frameIndex);
+    if (outputSlots[2].renderer) outputSlots[2].renderer->update(currentDeltaTime, outputFrame->frameIndex);
 
     // Record command buffer
     recordOutputCommandBuffer(outputCommandBuffers[outputFrame->frameIndex],
                               *outputFrame, outputImageIndex);
 
-    // Submit
-    auto outputRenderFinished = outputFrameSystem.getRenderFinishedSemaphore(outputImageIndex).value_or(VK_NULL_HANDLE);
-    if (outputRenderFinished == VK_NULL_HANDLE)
-        throw std::runtime_error("invalid output renderFinished semaphore");
-
-    VkSubmitInfo submit{};
-    submit.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit.waitSemaphoreCount   = 1;
-    submit.pWaitSemaphores      = &outputFrame->imageAvailableSemaphore;
-    VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    submit.pWaitDstStageMask    = &waitStage;
-    submit.commandBufferCount   = 1;
-    submit.pCommandBuffers      = &outputCommandBuffers[outputFrame->frameIndex];
-    submit.signalSemaphoreCount = 1;
-    submit.pSignalSemaphores    = &outputRenderFinished;
-
-    if (vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &submit, outputFrame->inFlightFence) != VK_SUCCESS) {
-        std::cerr << "[tryRenderOutput] vkQueueSubmit failed — device may be lost\n";
-        // Fence was reset in beginFrame but never signaled because submit failed.
-        // Submit an empty queue operation to signal the fence so the next
-        // beginFrame's vkWaitForFences doesn't block forever.
-        VkSubmitInfo emptySubmit{};
-        emptySubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        vkQueueSubmit(vulkanContext.getGraphicsQueue(), 1, &emptySubmit, outputFrame->inFlightFence);
-        outputFrameSystem.endFrame();
-        return false;
-    }
-
-    // Present
-    VkSwapchainKHR outputSc = outputPresenter.getSwapchain();
-    VkPresentInfoKHR outputPresent{};
-    outputPresent.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    outputPresent.waitSemaphoreCount = 1;
-    outputPresent.pWaitSemaphores    = &outputRenderFinished;
-    outputPresent.swapchainCount     = 1;
-    outputPresent.pSwapchains        = &outputSc;
-    outputPresent.pImageIndices      = &outputImageIndex;
-
-    VkResult outputPresentResult = vkQueuePresentKHR(vulkanContext.getPresentQueue(), &outputPresent);
-    if (outputPresentResult == VK_ERROR_OUT_OF_DATE_KHR || outputPresentResult == VK_SUBOPTIMAL_KHR) {
+    auto onResize = [&] {
         int ow = 0, oh = 0;
         SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
         if (ow > 0 && oh > 0) {
@@ -2385,10 +2439,12 @@ bool Application::tryRenderOutput() {
             auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
             resizeDebounceTime = std::max(resizeDebounceTime, newDebounce);
         }
-    }
+    };
 
-    outputFrameSystem.endFrame();
-    return true;
+    return submitAndPresent(outputFrameSystem, outputPresenter,
+                            outputFrame, outputImageIndex,
+                            outputCommandBuffers[outputFrame->frameIndex],
+                            onResize);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2468,251 +2524,7 @@ void Application::mainLoop() {
 #endif
 
     while (running) {
-
-        // ── Eventos SDL ─────────────────────────────────────────────────────
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            // Global hotkeys that must work even when ImGui has focus
-            if (event.type == SDL_KEYDOWN && !event.key.repeat) {
-                if (event.key.keysym.sym == SDLK_p) {
-                    uiSystem.toggleRendererPause();
-                    std::cout << "[UI] Renderer " << (uiSystem.isRendererPaused() ? "PAUSED" : "RESUMED") << "\n";
-                    continue;
-                }
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    // Remove window focus so keyboard hotkeys are not captured by ImGui widgets
-                    ImGui::SetWindowFocus(nullptr);
-                    continue;
-                }
-                if (event.key.keysym.sym == SDLK_F11) {
-                    int postW = 0, postH = 0;
-                    if (!outputWindowVisible) {
-                        SDL_ShowWindow(window.getOutputWindow());
-                        outputWindowVisible = true;
-                        outputWindowMinimized = false;
-                        std::cout << "[Output] Window restored\n";
-                    } else {
-                        uint32_t flags = SDL_GetWindowFlags(window.getOutputWindow());
-                        bool isFs = (flags & SDL_WINDOW_FULLSCREEN);
-                        int preW = 0, preH = 0;
-                        SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &preW, &preH);
-                        std::cout << "[F11] Pre-toggle drawable: " << preW << "x" << preH
-                                  << " flags=0x" << std::hex << flags << std::dec
-                                  << " isFs=" << isFs << "\n";
-                        if (!isFs) {
-                            SDL_SetWindowBordered(window.getOutputWindow(), SDL_FALSE);
-                            SDL_SetWindowFullscreen(window.getOutputWindow(), SDL_WINDOW_FULLSCREEN_DESKTOP);
-                        } else {
-                            SDL_SetWindowFullscreen(window.getOutputWindow(), 0);
-                            SDL_SetWindowBordered(window.getOutputWindow(), SDL_TRUE);
-                        }
-                        SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &postW, &postH);
-                        std::cout << "[F11] Post-toggle drawable: " << postW << "x" << postH
-                                  << " Fullscreen: " << (!isFs ? "ON" : "OFF") << "\n";
-                    }
-                    // Use the drawable size we just queried (post-toggle) as the
-                    // pending resize dims.  The SIZE_CHANGED event may still fire
-                    // and update them, but this way we have a valid size even if
-                    // the user presses F11 again quickly.
-                    outputResizePending = true;
-                    // The immediate query can still return the pre-toggle size.
-                    // Force processPendingResizes() to query the final size later.
-                    pendingOutputResizeW = 0;
-                    pendingOutputResizeH = 0;
-                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
-                    continue;
-                }
-                if (event.key.keysym.sym == SDLK_F12) {
-                    uint32_t flags = SDL_GetWindowFlags(window.getMainWindow());
-                    bool isFs = (flags & SDL_WINDOW_FULLSCREEN);
-                    if (!isFs) {
-                        SDL_SetWindowBordered(window.getMainWindow(), SDL_FALSE);
-                        SDL_SetWindowFullscreen(window.getMainWindow(), SDL_WINDOW_FULLSCREEN_DESKTOP);
-                    } else {
-                        SDL_SetWindowFullscreen(window.getMainWindow(), 0);
-                        SDL_SetWindowBordered(window.getMainWindow(), SDL_TRUE);
-                    }
-                    std::cout << "[Preview] Fullscreen: " << (!isFs ? "ON" : "OFF") << std::endl;
-                    int preW2 = 0, preH2 = 0;
-                    SDL_Vulkan_GetDrawableSize(window.getMainWindow(), &preW2, &preH2);
-                    resizePending = true;
-                    // The immediate query can still return the pre-toggle size.
-                    // Force processPendingResizes() to query the final size later.
-                    pendingResizeW = 0;
-                    pendingResizeH = 0;
-                    resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
-                    continue;
-                }
-                if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_KP_1) {
-                    handleOscTrigger("randomizePreviewVideo1");
-                    continue;
-                }
-                if (event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_KP_2) {
-                    handleOscTrigger("randomizePreviewVideo2");
-                    continue;
-                }
-                if (event.key.keysym.sym == SDLK_3 || event.key.keysym.sym == SDLK_KP_3) {
-                    handleOscTrigger("randomizePreviewVideo3");
-                    continue;
-                }
-            }
-
-            bool consumed = uiSystem.processEvent(event);
-
-            if (event.type == SDL_QUIT) { running = false; break; }
-
-            // Mouse wheel zoom for procedural camera (when not interacting with UI)
-            if (event.type == SDL_MOUSEWHEEL) {
-                ImGuiIO& io = ImGui::GetIO();
-                if (!io.WantCaptureMouse) {
-                    float zoomSpeed = 0.1f;
-                    float delta = event.wheel.y > 0 ? -zoomSpeed : (event.wheel.y < 0 ? zoomSpeed : 0.0f);
-                    visualControls.camera.zoom = std::clamp(
-                        visualControls.camera.zoom + delta,
-                        0.01f, 5.0f);
-                    controlsDirty = true;
-                }
-            }
-
-            if (event.type == SDL_KEYDOWN && !event.key.repeat && !consumed) {
-                switch (event.key.keysym.sym) {
-                    case SDLK_r: {
-                        static std::random_device rd;
-                        static std::mt19937 gen(rd());
-                        std::uniform_int_distribution<> dis(0, 1);
-                        auto& p = visualControls.post;
-                        auto& f = visualControls.fx;
-                        // Randomize post FX toggles
-                        p.enablePostCrtCurvature    = dis(gen) == 1;
-                        p.enablePostScanMask        = dis(gen) == 1;
-                        p.enablePostVignette        = dis(gen) == 1;
-                        p.enablePostFishEye         = dis(gen) == 1;
-                        p.enablePostBloom           = dis(gen) == 1;
-                        p.enablePostAberration      = dis(gen) == 1;
-                        p.enablePostGrain           = dis(gen) == 1;
-                        p.enablePostBend            = dis(gen) == 1;
-                        p.enablePostGlitch          = dis(gen) == 1;
-                        p.enablePostColorBalance    = dis(gen) == 1;
-                        p.enableAnalog              = dis(gen) == 1;
-                        f.enableMirror              = dis(gen) == 1;
-                        f.enableInvert              = dis(gen) == 1;
-                        f.enablePosterize           = dis(gen) == 1;
-                        f.enableInfrared            = dis(gen) == 1;
-                        f.enableRGBShift            = dis(gen) == 1;
-                        f.enableDistortion          = dis(gen) == 1;
-                        f.enableBlurMotion          = dis(gen) == 1;
-                        f.enableSharpen             = dis(gen) == 1;
-                        break;
-                    }
-                    case SDLK_t:
-                        uiSystem.randomizeVJayBasics(visualControls);
-                        break;
-                    case SDLK_y:
-                        uiSystem.randomizeVJayExtra(visualControls);
-                        break;
-                    case SDLK_LEFT: {
-                        visualControls.playback.activeMode = uiSystem.cycleLayerMode(visualControls.playback.activeMode, -1);
-                        controlsDirty = true;
-                        std::cout << "[Mode] Previous: " << visualControls.playback.activeMode << std::endl;
-                        break;
-                    }
-                    case SDLK_RIGHT: {
-                        visualControls.playback.activeMode = uiSystem.cycleLayerMode(visualControls.playback.activeMode, 1);
-                        controlsDirty = true;
-                        std::cout << "[Mode] Next: " << visualControls.playback.activeMode << std::endl;
-                        break;
-                    }
-                    case SDLK_UP: {
-                        visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, 1);
-                        controlsDirty = true;
-                        std::cout << "[Post-Effect] Up: " << visualControls.post.postEffectName << std::endl;
-                        break;
-                    }
-                    case SDLK_DOWN: {
-                        visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, -1);
-                        controlsDirty = true;
-                        std::cout << "[Post-Effect] Down: " << visualControls.post.postEffectName << std::endl;
-                        break;
-                    }
-                    case SDLK_RETURN:
-                        commitPreviewToOutput();
-                        break;
-                    case SDLK_SPACE:
-                        previewPaused = !previewPaused;
-                        std::cout << "[Preview] " << (previewPaused ? "PAUSED" : "RESUMED") << "\n";
-                        break;
-                }
-            }
-
-            if (event.type == SDL_WINDOWEVENT) {
-                SDL_Window* src = SDL_GetWindowFromID(event.window.windowID);
-                const auto  ev  = event.window.event;
-
-                if (ev == SDL_WINDOWEVENT_CLOSE) {
-                    if (src == window.getMainWindow()) {
-                        running = false; break;
-                    } else if (src == window.getOutputWindow()) {
-                        SDL_HideWindow(window.getOutputWindow());
-                        outputWindowVisible = false;
-                        std::cout << "[Output] Window hidden (use F11 to restore)\n";
-                    } else if (src == window.getUiWindow()) {
-                        SDL_HideWindow(window.getUiWindow());
-                        std::cout << "[UI] Window hidden\n";
-                    }
-                }
-
-                if (ev == SDL_WINDOWEVENT_MINIMIZED || ev == SDL_WINDOWEVENT_HIDDEN) {
-                    if (src == window.getMainWindow()) {
-                        previewWindowMinimized = true;
-                    } else if (src == window.getOutputWindow()) {
-                        outputWindowMinimized = true;
-                    }
-                }
-
-                if (ev == SDL_WINDOWEVENT_RESTORED || ev == SDL_WINDOWEVENT_SHOWN) {
-                    if (src == window.getMainWindow()) {
-                        previewWindowMinimized = false;
-                    } else if (src == window.getOutputWindow()) {
-                        outputWindowMinimized = false;
-                        outputWindowVisible = true;
-                    }
-                }
-
-                if (src == window.getMainWindow() && initializationComplete &&
-                    (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
-                {
-                    window.resetResizeFlag();
-                    // Always query fresh drawable size so we get the FINAL
-                    // dimensions after async Win32 fullscreen transitions.
-                    // (Previously we skipped this when pendingResizeW was 0,
-                    //  which meant F12's 0-values got stuck at the old size.)
-                    uint32_t w, h;
-                    window.getDrawableSize(w, h);
-                    pendingResizeW = w;
-                    pendingResizeH = h;
-                    resizePending = true;
-                    // Don't reduce a longer debounce set by fullscreen toggle (F12)
-                    auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
-                    resizeDebounceTime = std::max(resizeDebounceTime, newDebounce);
-                }
-
-                if (src == window.getOutputWindow() && initializationComplete &&
-                    (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
-                {
-                    // Always query fresh drawable size so we get the FINAL
-                    // dimensions after async Win32 fullscreen transitions.
-                    int ow = 0, oh = 0;
-                    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
-                    std::cout << "[Event] Output SIZE_CHANGED: " << ow << "x" << oh << "\n";
-                    pendingOutputResizeW = static_cast<uint32_t>(ow > 0 ? ow : 0);
-                    pendingOutputResizeH = static_cast<uint32_t>(oh > 0 ? oh : 0);
-                    outputResizePending = true;
-                    // Don't reduce a longer debounce set by fullscreen toggle (F11)
-                    auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
-                    resizeDebounceTime = std::max(resizeDebounceTime, newDebounce);
-                }
-            }
-        }
+        processSDLEvents();
         if (!running) break;
 
         // ── Process debounced resize ──────────────────────────────────────────
@@ -2743,23 +2555,273 @@ void Application::mainLoop() {
             }
         }
 
-        // ── Frame rate limiter (high-precision) ────────────────────────────
-        // std::this_thread::sleep_for has ~15ms resolution on Windows which
-        // makes 60fps impossible. Use a hybrid: sleep for most of the wait,
-        // then spin-wait the last ~2ms for precision.
-        constexpr float targetFrameTime = 1.0f / 60.0f;
-        const auto frameEnd = std::chrono::steady_clock::now();
-        const float elapsed = std::chrono::duration<float>(frameEnd - lastFrameTimestamp).count();
-        if (elapsed < targetFrameTime) {
-            const auto targetTime = lastFrameTimestamp + std::chrono::microseconds(
-                static_cast<int64_t>(targetFrameTime * 1e6f));
-            const auto sleepUntil = targetTime - std::chrono::milliseconds(2);
-            if (sleepUntil > frameEnd)
-                std::this_thread::sleep_until(sleepUntil);
-            // Spin-wait the remaining time for precision
-            while (std::chrono::steady_clock::now() < targetTime) {
-                std::this_thread::yield();
+        frameLimit();
+    }
+}
+
+void Application::processSDLEvents() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        // Global hotkeys that must work even when ImGui has focus
+        if (event.type == SDL_KEYDOWN && !event.key.repeat) {
+            if (event.key.keysym.sym == SDLK_p) {
+                uiSystem.toggleRendererPause();
+                std::cout << "[UI] Renderer " << (uiSystem.isRendererPaused() ? "PAUSED" : "RESUMED") << "\n";
+                continue;
             }
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
+                // Remove window focus so keyboard hotkeys are not captured by ImGui widgets
+                ImGui::SetWindowFocus(nullptr);
+                continue;
+            }
+            if (event.key.keysym.sym == SDLK_F11) {
+                int postW = 0, postH = 0;
+                if (!outputWindowVisible) {
+                    SDL_ShowWindow(window.getOutputWindow());
+                    outputWindowVisible = true;
+                    outputWindowMinimized = false;
+                    std::cout << "[Output] Window restored\n";
+                } else {
+                    uint32_t flags = SDL_GetWindowFlags(window.getOutputWindow());
+                    bool isFs = (flags & SDL_WINDOW_FULLSCREEN);
+                    int preW = 0, preH = 0;
+                    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &preW, &preH);
+                    std::cout << "[F11] Pre-toggle drawable: " << preW << "x" << preH
+                              << " flags=0x" << std::hex << flags << std::dec
+                              << " isFs=" << isFs << "\n";
+                    if (!isFs) {
+                        SDL_SetWindowBordered(window.getOutputWindow(), SDL_FALSE);
+                        SDL_SetWindowFullscreen(window.getOutputWindow(), SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    } else {
+                        SDL_SetWindowFullscreen(window.getOutputWindow(), 0);
+                        SDL_SetWindowBordered(window.getOutputWindow(), SDL_TRUE);
+                    }
+                    SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &postW, &postH);
+                    std::cout << "[F11] Post-toggle drawable: " << postW << "x" << postH
+                              << " Fullscreen: " << (!isFs ? "ON" : "OFF") << "\n";
+                }
+                // Use the drawable size we just queried (post-toggle) as the
+                // pending resize dims.  The SIZE_CHANGED event may still fire
+                // and update them, but this way we have a valid size even if
+                // the user presses F11 again quickly.
+                outputResizePending = true;
+                // The immediate query can still return the pre-toggle size.
+                // Force processPendingResizes() to query the final size later.
+                pendingOutputResizeW = 0;
+                pendingOutputResizeH = 0;
+                resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                continue;
+            }
+            if (event.key.keysym.sym == SDLK_F12) {
+                uint32_t flags = SDL_GetWindowFlags(window.getMainWindow());
+                bool isFs = (flags & SDL_WINDOW_FULLSCREEN);
+                if (!isFs) {
+                    SDL_SetWindowBordered(window.getMainWindow(), SDL_FALSE);
+                    SDL_SetWindowFullscreen(window.getMainWindow(), SDL_WINDOW_FULLSCREEN_DESKTOP);
+                } else {
+                    SDL_SetWindowFullscreen(window.getMainWindow(), 0);
+                    SDL_SetWindowBordered(window.getMainWindow(), SDL_TRUE);
+                }
+                std::cout << "[Preview] Fullscreen: " << (!isFs ? "ON" : "OFF") << std::endl;
+                int preW2 = 0, preH2 = 0;
+                SDL_Vulkan_GetDrawableSize(window.getMainWindow(), &preW2, &preH2);
+                resizePending = true;
+                // The immediate query can still return the pre-toggle size.
+                // Force processPendingResizes() to query the final size later.
+                pendingResizeW = 0;
+                pendingResizeH = 0;
+                resizeDebounceTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                continue;
+            }
+            if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_KP_1) {
+                handleOscTrigger("randomizePreviewVideo1");
+                continue;
+            }
+            if (event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_KP_2) {
+                handleOscTrigger("randomizePreviewVideo2");
+                continue;
+            }
+            if (event.key.keysym.sym == SDLK_3 || event.key.keysym.sym == SDLK_KP_3) {
+                handleOscTrigger("randomizePreviewVideo3");
+                continue;
+            }
+        }
+
+        bool consumed = uiSystem.processEvent(event);
+
+        if (event.type == SDL_QUIT) { running = false; break; }
+
+        // Mouse wheel zoom for procedural camera (when not interacting with UI)
+        if (event.type == SDL_MOUSEWHEEL) {
+            ImGuiIO& io = ImGui::GetIO();
+            if (!io.WantCaptureMouse) {
+                float zoomSpeed = 0.1f;
+                float delta = event.wheel.y > 0 ? -zoomSpeed : (event.wheel.y < 0 ? zoomSpeed : 0.0f);
+                visualControls.camera.zoom = std::clamp(
+                    visualControls.camera.zoom + delta,
+                    0.01f, 5.0f);
+                controlsDirty = true;
+            }
+        }
+
+        if (event.type == SDL_KEYDOWN && !event.key.repeat && !consumed) {
+            switch (event.key.keysym.sym) {
+                case SDLK_r: {
+                    static std::random_device rd;
+                    static std::mt19937 gen(rd());
+                    std::uniform_int_distribution<> dis(0, 1);
+                    auto& p = visualControls.post;
+                    auto& f = visualControls.fx;
+                    // Randomize post FX toggles
+                    p.enablePostCrtCurvature    = dis(gen) == 1;
+                    p.enablePostScanMask        = dis(gen) == 1;
+                    p.enablePostVignette        = dis(gen) == 1;
+                    p.enablePostFishEye         = dis(gen) == 1;
+                    p.enablePostBloom           = dis(gen) == 1;
+                    p.enablePostAberration      = dis(gen) == 1;
+                    p.enablePostGrain           = dis(gen) == 1;
+                    p.enablePostBend            = dis(gen) == 1;
+                    p.enablePostGlitch          = dis(gen) == 1;
+                    p.enablePostColorBalance    = dis(gen) == 1;
+                    p.enableAnalog              = dis(gen) == 1;
+                    f.enableMirror              = dis(gen) == 1;
+                    f.enableInvert              = dis(gen) == 1;
+                    f.enablePosterize           = dis(gen) == 1;
+                    f.enableInfrared            = dis(gen) == 1;
+                    f.enableRGBShift            = dis(gen) == 1;
+                    f.enableDistortion          = dis(gen) == 1;
+                    f.enableBlurMotion          = dis(gen) == 1;
+                    f.enableSharpen             = dis(gen) == 1;
+                    break;
+                }
+                case SDLK_t:
+                    uiSystem.randomizeVJayBasics(visualControls);
+                    break;
+                case SDLK_y:
+                    uiSystem.randomizeVJayExtra(visualControls);
+                    break;
+                case SDLK_LEFT: {
+                    visualControls.playback.activeMode = uiSystem.cycleLayerMode(visualControls.playback.activeMode, -1);
+                    controlsDirty = true;
+                    std::cout << "[Mode] Previous: " << visualControls.playback.activeMode << std::endl;
+                    break;
+                }
+                case SDLK_RIGHT: {
+                    visualControls.playback.activeMode = uiSystem.cycleLayerMode(visualControls.playback.activeMode, 1);
+                    controlsDirty = true;
+                    std::cout << "[Mode] Next: " << visualControls.playback.activeMode << std::endl;
+                    break;
+                }
+                case SDLK_UP: {
+                    visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, 1);
+                    controlsDirty = true;
+                    std::cout << "[Post-Effect] Up: " << visualControls.post.postEffectName << std::endl;
+                    break;
+                }
+                case SDLK_DOWN: {
+                    visualControls.post.postEffectName = uiSystem.cyclePostEffect(visualControls.post.postEffectName, -1);
+                    controlsDirty = true;
+                    std::cout << "[Post-Effect] Down: " << visualControls.post.postEffectName << std::endl;
+                    break;
+                }
+                case SDLK_RETURN:
+                    commitPreviewToOutput();
+                    break;
+                case SDLK_SPACE:
+                    previewPaused = !previewPaused;
+                    std::cout << "[Preview] " << (previewPaused ? "PAUSED" : "RESUMED") << "\n";
+                    break;
+            }
+        }
+
+        if (event.type == SDL_WINDOWEVENT) {
+            SDL_Window* src = SDL_GetWindowFromID(event.window.windowID);
+            const auto  ev  = event.window.event;
+
+            if (ev == SDL_WINDOWEVENT_CLOSE) {
+                if (src == window.getMainWindow()) {
+                    running = false; break;
+                } else if (src == window.getOutputWindow()) {
+                    SDL_HideWindow(window.getOutputWindow());
+                    outputWindowVisible = false;
+                    std::cout << "[Output] Window hidden (use F11 to restore)\n";
+                } else if (src == window.getUiWindow()) {
+                    SDL_HideWindow(window.getUiWindow());
+                    std::cout << "[UI] Window hidden\n";
+                }
+            }
+
+            if (ev == SDL_WINDOWEVENT_MINIMIZED || ev == SDL_WINDOWEVENT_HIDDEN) {
+                if (src == window.getMainWindow()) {
+                    previewWindowMinimized = true;
+                } else if (src == window.getOutputWindow()) {
+                    outputWindowMinimized = true;
+                }
+            }
+
+            if (ev == SDL_WINDOWEVENT_RESTORED || ev == SDL_WINDOWEVENT_SHOWN) {
+                if (src == window.getMainWindow()) {
+                    previewWindowMinimized = false;
+                } else if (src == window.getOutputWindow()) {
+                    outputWindowMinimized = false;
+                    outputWindowVisible = true;
+                }
+            }
+
+            if (src == window.getMainWindow() && initializationComplete &&
+                (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
+            {
+                window.resetResizeFlag();
+                // Always query fresh drawable size so we get the FINAL
+                // dimensions after async Win32 fullscreen transitions.
+                // (Previously we skipped this when pendingResizeW was 0,
+                //  which meant F12's 0-values got stuck at the old size.)
+                uint32_t w, h;
+                window.getDrawableSize(w, h);
+                pendingResizeW = w;
+                pendingResizeH = h;
+                resizePending = true;
+                // Don't reduce a longer debounce set by fullscreen toggle (F12)
+                auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                resizeDebounceTime = std::max(resizeDebounceTime, newDebounce);
+            }
+
+            if (src == window.getOutputWindow() && initializationComplete &&
+                (ev == SDL_WINDOWEVENT_RESIZED || ev == SDL_WINDOWEVENT_SIZE_CHANGED))
+            {
+                // Always query fresh drawable size so we get the FINAL
+                // dimensions after async Win32 fullscreen transitions.
+                int ow = 0, oh = 0;
+                SDL_Vulkan_GetDrawableSize(window.getOutputWindow(), &ow, &oh);
+                std::cout << "[Event] Output SIZE_CHANGED: " << ow << "x" << oh << "\n";
+                pendingOutputResizeW = static_cast<uint32_t>(ow > 0 ? ow : 0);
+                pendingOutputResizeH = static_cast<uint32_t>(oh > 0 ? oh : 0);
+                outputResizePending = true;
+                // Don't reduce a longer debounce set by fullscreen toggle (F11)
+                auto newDebounce = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                resizeDebounceTime = std::max(resizeDebounceTime, newDebounce);
+            }
+        }
+    }
+}
+
+void Application::frameLimit() {
+    // ── Frame rate limiter (high-precision) ────────────────────────────
+    // std::this_thread::sleep_for has ~15ms resolution on Windows which
+    // makes 60fps impossible. Use a hybrid: sleep for most of the wait,
+    // then spin-wait the last ~2ms for precision.
+    constexpr float targetFrameTime = 1.0f / 60.0f;
+    const auto frameEnd = std::chrono::steady_clock::now();
+    const float elapsed = std::chrono::duration<float>(frameEnd - lastFrameTimestamp).count();
+    if (elapsed < targetFrameTime) {
+        const auto targetTime = lastFrameTimestamp + std::chrono::microseconds(
+            static_cast<int64_t>(targetFrameTime * 1e6f));
+        const auto sleepUntil = targetTime - std::chrono::milliseconds(2);
+        if (sleepUntil > frameEnd)
+            std::this_thread::sleep_until(sleepUntil);
+        // Spin-wait the remaining time for precision
+        while (std::chrono::steady_clock::now() < targetTime) {
+            std::this_thread::yield();
         }
     }
 }
@@ -2786,16 +2848,15 @@ void Application::tickAutoColors(float dt, float energy) {
 
     if (visualControls.system.enableAudioReactive) {
         // Continuous hue rotation driven by energy — no timer, smooth flow
-        static float currentHue = 0.0f;
         float speed = 30.0f + energy * 200.0f; // 30-230 deg/sec based on energy
-        currentHue += speed * dt;
-        if (currentHue >= 360.0f) currentHue -= 360.0f;
+        autoColorHue += speed * dt;
+        if (autoColorHue >= 360.0f) autoColorHue -= 360.0f;
 
         float sat = 0.5f + energy * 0.5f;  // 0.5-1.0
         float val = 0.6f + energy * 0.4f;  // 0.6-1.0
 
-        c.primaryColorTarget   = glm::vec4(hsvToRgb(currentHue, sat, val), 1.f);
-        c.secondaryColorTarget = glm::vec4(hsvToRgb(std::fmod(currentHue + 180.f, 360.f), sat, val), 1.f);
+        c.primaryColorTarget   = glm::vec4(hsvToRgb(autoColorHue, sat, val), 1.f);
+        c.secondaryColorTarget = glm::vec4(hsvToRgb(std::fmod(autoColorHue + 180.f, 360.f), sat, val), 1.f);
     } else {
         // Original timer-based randomization
         c.colorRandomizeElapsed += dt;
@@ -2836,19 +2897,19 @@ void Application::tickAutoRandomize(float dt,
             else           reloadVideoAtIndex2(idx, assets);
             uiSystem.forcePreviewShuffle(slot);
         }
-        isReloadingVideo = false;
+        previewSlots[0].isReloading = false;
     };
 
-    tick(videoRandomizer.autoRandomize,  videoSubsystemInitialized,
-         videoRandomizer,  0, visualControls.playback.selectedVideoFolder);
+    tick(previewSlots[0].randomizer.autoRandomize,  previewSlots[0].initialized,
+         previewSlots[0].randomizer,  0, visualControls.playback.selectedVideoFolder);
 
-    tick(videoRandomizer2.autoRandomize && visualControls.playback.enableDualVideo,
-         videoSubsystemInitialized,
-         videoRandomizer2, 1, visualControls.playback.selectedVideo2Folder);
+    tick(previewSlots[1].randomizer.autoRandomize && visualControls.playback.enableDualVideo,
+         previewSlots[0].initialized,
+         previewSlots[1].randomizer, 1, visualControls.playback.selectedVideo2Folder);
 
-    tick(videoRandomizer3.autoRandomize && visualControls.playback.enableDualVideo,
-         videoSubsystemInitialized,
-         videoRandomizer3, 2, visualControls.playback.selectedVideo3Folder);
+    tick(previewSlots[2].randomizer.autoRandomize && visualControls.playback.enableDualVideo,
+         previewSlots[0].initialized,
+         previewSlots[2].randomizer, 2, visualControls.playback.selectedVideo3Folder);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2863,49 +2924,49 @@ UICallbacks Application::buildUICallbacks() {
     cb.onApplyChanges = [this]() {
         if (!canChangeVideo()) return;
         int slot = 0;
-        std::string path = videoSourcePath;
-        if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_2) { slot = 1; path = videoSourcePath2; }
-        else if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_3) { slot = 2; path = videoSourcePath3; }
+        std::string path = previewSlots[0].sourcePath;
+        if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_2) { slot = 1; path = previewSlots[1].sourcePath; }
+        else if (g_project_state.nleVideoSource == NLEVideoSource::VIDEO_3) { slot = 2; path = previewSlots[2].sourcePath; }
         reloadVideoSlot(slot, path);
     };
 
     cb.onFolderChanged = [this]() {
-        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
-        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
-        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
+        previewSlots[0].randomizer.shuffleQueue.clear();  previewSlots[0].randomizer.currentShuffleIndex  = 0;
+        previewSlots[1].randomizer.shuffleQueue.clear(); previewSlots[1].randomizer.currentShuffleIndex = 0;
+        previewSlots[2].randomizer.shuffleQueue.clear(); previewSlots[2].randomizer.currentShuffleIndex = 0;
     };
 
     cb.onFolderChanged2 = [this]() {
-        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
-        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
-        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
+        previewSlots[0].randomizer.shuffleQueue.clear();  previewSlots[0].randomizer.currentShuffleIndex  = 0;
+        previewSlots[1].randomizer.shuffleQueue.clear(); previewSlots[1].randomizer.currentShuffleIndex = 0;
+        previewSlots[2].randomizer.shuffleQueue.clear(); previewSlots[2].randomizer.currentShuffleIndex = 0;
     };
 
     cb.onFolderChanged3 = [this]() {
-        videoRandomizer.shuffleQueue.clear();  videoRandomizer.currentShuffleIndex  = 0;
-        videoRandomizer2.shuffleQueue.clear(); videoRandomizer2.currentShuffleIndex = 0;
-        videoRandomizer3.shuffleQueue.clear(); videoRandomizer3.currentShuffleIndex = 0;
+        previewSlots[0].randomizer.shuffleQueue.clear();  previewSlots[0].randomizer.currentShuffleIndex  = 0;
+        previewSlots[1].randomizer.shuffleQueue.clear(); previewSlots[1].randomizer.currentShuffleIndex = 0;
+        previewSlots[2].randomizer.shuffleQueue.clear(); previewSlots[2].randomizer.currentShuffleIndex = 0;
     };
 
     cb.onRandomizeVideo = [this]() {
         if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideoFolder);
         if (assets.size() > 1) reloadVideoAtIndex(pickNextVideoIndex(assets), assets);
-        isReloadingVideo = false;
+        previewSlots[0].isReloading = false;
     };
 
     cb.onRandomizeVideo2 = [this]() {
         if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo2Folder);
         if (assets.size() > 1) reloadVideoAtIndex2(pickNextVideoIndex2(assets), assets);
-        isReloadingVideo = false;
+        previewSlots[0].isReloading = false;
     };
 
     cb.onRandomizeVideo3 = [this]() {
         if (!canChangeVideo()) return;
         const auto& assets = videoRegistry.getFilteredAssets(visualControls.playback.selectedVideo3Folder);
         if (assets.size() > 1) reloadVideoAtIndex3(pickNextVideoIndex3(assets), assets);
-        isReloadingVideo = false;
+        previewSlots[0].isReloading = false;
     };
 
     cb.onRandomizePreviewVideo1 = [this]() {
@@ -2921,9 +2982,9 @@ UICallbacks Application::buildUICallbacks() {
     };
 
     cb.onJumpRandom = [this]() {
-        if (!videoSubsystemInitialized) return;
-        const double dur = videoPlayer.durationSeconds();
-        if (dur > 0) videoPlayer.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
+        if (!previewSlots[0].initialized) return;
+        const double dur = previewSlots[0].player.durationSeconds();
+        if (dur > 0) previewSlots[0].player.seekSeconds(std::uniform_real_distribution<double>(0.0, dur)(rng));
     };
 
     cb.onReloadVideo  = [this](const std::string& path) {
@@ -2964,12 +3025,12 @@ UICallbacks Application::buildUICallbacks() {
         visualControls.playback.selectedVideo3Folder.clear();
 
         // Clear saved paths so resolvePath picks fresh defaults from the new root
-        videoSourcePath.clear();
-        videoSourcePath2.clear();
-        videoSourcePath3.clear();
-        selectedVideoAsset = 0;
-        selectedVideoAsset2 = 0;
-        selectedVideoAsset3 = 0;
+        previewSlots[0].sourcePath.clear();
+        previewSlots[1].sourcePath.clear();
+        previewSlots[2].sourcePath.clear();
+        previewSlots[0].selectedVideoAsset = 0;
+        previewSlots[1].selectedVideoAsset = 0;
+        previewSlots[2].selectedVideoAsset = 0;
 
         // Reinitialize video players from the new root
         initVideo();
@@ -2977,7 +3038,7 @@ UICallbacks Application::buildUICallbacks() {
 
         // If MultiPassPipeline wasn't initialized (e.g. app started with no video),
         // initialize it now that video textures are available.
-        if (videoSubsystemInitialized && !multiPassPipeline.isInitialized()) {
+        if (previewSlots[0].initialized && !multiPassPipeline.isInitialized()) {
             initMultiPassPipeline();
         }
 
@@ -2987,6 +3048,8 @@ UICallbacks Application::buildUICallbacks() {
 
     cb.onListPresets = [this]() { return listPresets(); };
     cb.onSavePreset = [this](const std::string& name) { return savePreset(name); };
+    cb.onSavePresetFromPreview = [this](const std::string& name) { return savePresetFromPreview(name); };
+    cb.onSavePresetFromOutput = [this](const std::string& name) { return savePresetFromOutput(name); };
     cb.onLoadPreset = [this](const std::string& name) { return loadPreset(name); };
     cb.onDeletePreset = [this](const std::string& name) { return deletePreset(name); };
     cb.onRenamePreset = [this](const std::string& oldName, const std::string& newName) { return renamePreset(oldName, newName); };
@@ -3080,18 +3143,6 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     } else {
         // Standard Shadertoy behavior: time accumulates at 1.0x speed
         anim.shaderTime += globalDeltaTime;
-    }
-
-    // Debug: Print time values every 60 frames
-    static int debugFrameCount = 0;
-    debugFrameCount++;
-    if (debugFrameCount % 60 == 0) {
-        std::cout << "[DEBUG] shaderTime: " << anim.shaderTime 
-                  << " | globalDeltaTime: " << globalDeltaTime
-                  << " | tempoValue: " << tempoValue
-                  << " | animationSpeed: " << controls.playback.animationSpeed
-                  << " | enableAudioReactive: " << controls.system.enableAudioReactive
-                  << std::endl;
     }
 
     auto& reactive = controls.runtime.audioReactive;
@@ -3509,11 +3560,11 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
     if (vkBeginCommandBuffer(cmd, &begin) != VK_SUCCESS)
         throw std::runtime_error("failed to begin preview command buffer");
 
-    videoTexture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
-    if (videoSubsystemInitialized2 && videoTexture2.isReady())
-        videoTexture2.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
-    if (videoSubsystemInitialized3 && videoTexture3.isReady())
-        videoTexture3.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    previewSlots[0].texture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (previewSlots[1].initialized && previewSlots[1].texture.isReady())
+        previewSlots[1].texture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (previewSlots[2].initialized && previewSlots[2].texture.isReady())
+        previewSlots[2].texture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
 
     if (previewPaused) {
         VkClearValue clear{ .color = {0.f, 0.f, 0.f, 1.f} };
@@ -3538,7 +3589,7 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
         vkCmdSetScissor(cmd, 0, 1, &sc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
         vkCmdEndRenderPass(cmd);
-    } else if (videoSubsystemInitialized && multiPassPipeline.isInitialized()) {
+    } else if (previewSlots[0].initialized && multiPassPipeline.isInitialized()) {
         multiPassPipeline.execute(
             cmd, previewFrame.frameIndex,
             descriptorSetManager.getSet(previewFrame.frameIndex),
@@ -3583,14 +3634,14 @@ void Application::recordOutputCommandBuffer(VkCommandBuffer cmd,
     if (vkBeginCommandBuffer(cmd, &begin) != VK_SUCCESS)
         throw std::runtime_error("failed to begin output command buffer");
 
-    if (outputVideoSubsystemInitialized && outputVideoTexture.isReady())
-        outputVideoTexture.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
-    if (outputVideoSubsystemInitialized2 && outputVideoTexture2.isReady())
-        outputVideoTexture2.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
-    if (outputVideoSubsystemInitialized3 && outputVideoTexture3.isReady())
-        outputVideoTexture3.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (outputSlots[0].initialized && outputSlots[0].texture.isReady())
+        outputSlots[0].texture.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (outputSlots[1].initialized && outputSlots[1].texture.isReady())
+        outputSlots[1].texture.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
+    if (outputSlots[2].initialized && outputSlots[2].texture.isReady())
+        outputSlots[2].texture.recordPendingUpload(cmd, outputFrame.frameIndex, vulkanContext.getGraphicsQueue());
 
-    if (outputVideoSubsystemInitialized && outputMultiPassPipeline.isInitialized()) {
+    if (outputSlots[0].initialized && outputMultiPassPipeline.isInitialized()) {
         outputMultiPassPipeline.execute(
             cmd, outputFrame.frameIndex,
             outputDescriptorSetManager.getSet(outputFrame.frameIndex),
@@ -3633,31 +3684,31 @@ void Application::cleanup() {
 
     // Destroy VideoRenderers FIRST to stop decoder threads before
     // freeing the FFmpeg resources they access (formatCtx, etc.)
-    videoRenderer.reset();
-    videoRenderer2.reset();
-    videoRenderer3.reset();
-    outputVideoRenderer.reset();
-    outputVideoRenderer2.reset();
-    outputVideoRenderer3.reset();
+    previewSlots[0].renderer.reset();
+    previewSlots[1].renderer.reset();
+    previewSlots[2].renderer.reset();
+    outputSlots[0].renderer.reset();
+    outputSlots[1].renderer.reset();
+    outputSlots[2].renderer.reset();
 
-    videoPlayer.shutdown();
-    videoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-    videoTexture.cleanup(resourceSystem);
-    videoPlayer2.shutdown();
-    videoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-    videoTexture2.cleanup(resourceSystem);
-    videoPlayer3.shutdown();
-    videoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
-    videoTexture3.cleanup(resourceSystem);
-    outputVideoPlayer.shutdown();
-    outputVideoTexture.destroy(resourceSystem, vulkanContext.getDevice());
-    outputVideoTexture.cleanup(resourceSystem);
-    outputVideoPlayer2.shutdown();
-    outputVideoTexture2.destroy(resourceSystem, vulkanContext.getDevice());
-    outputVideoTexture2.cleanup(resourceSystem);
-    outputVideoPlayer3.shutdown();
-    outputVideoTexture3.destroy(resourceSystem, vulkanContext.getDevice());
-    outputVideoTexture3.cleanup(resourceSystem);
+    previewSlots[0].player.shutdown();
+    previewSlots[0].texture.destroy(resourceSystem, vulkanContext.getDevice());
+    previewSlots[0].texture.cleanup(resourceSystem);
+    previewSlots[1].player.shutdown();
+    previewSlots[1].texture.destroy(resourceSystem, vulkanContext.getDevice());
+    previewSlots[1].texture.cleanup(resourceSystem);
+    previewSlots[2].player.shutdown();
+    previewSlots[2].texture.destroy(resourceSystem, vulkanContext.getDevice());
+    previewSlots[2].texture.cleanup(resourceSystem);
+    outputSlots[0].player.shutdown();
+    outputSlots[0].texture.destroy(resourceSystem, vulkanContext.getDevice());
+    outputSlots[0].texture.cleanup(resourceSystem);
+    outputSlots[1].player.shutdown();
+    outputSlots[1].texture.destroy(resourceSystem, vulkanContext.getDevice());
+    outputSlots[1].texture.cleanup(resourceSystem);
+    outputSlots[2].player.shutdown();
+    outputSlots[2].texture.destroy(resourceSystem, vulkanContext.getDevice());
+    outputSlots[2].texture.cleanup(resourceSystem);
 
     uniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
     outputUniformBufferManager.destroy(resourceSystem, vulkanContext.getDevice());
