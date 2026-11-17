@@ -31,76 +31,95 @@ float anaglyphSimpleNoise(vec3 p) {
     return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
 }
 
+// Audio-independent: the anaglyph is driven only by time (always moving).
+#define aTime (uTime * 3.0)
+#define aBass   (0.5 + 0.5 * sin(aTime * 0.9))
+#define aMid    (0.5 + 0.5 * sin(aTime * 0.6 + 1.7))
+#define aHigh   (0.5 + 0.5 * sin(aTime * 1.3 + 3.1))
+#define aEnergy (0.5 + 0.5 * sin(aTime * 0.4 + 0.8))
+
 float anaglyphAudioEnergy() {
-    // Stronger audio response with bass emphasis, but keep base shape visible
-    float energy = uBass * 0.6 + uMid * 0.3 + uHigh * 0.15;
-    return max(energy, 0.15); // minimum ensures the object is always partially formed
+    // Synthetic energy in ~[0.35, 0.85] so the object is always formed and breathing
+    return 0.35 + 0.5 * (0.5 + 0.5 * sin(aTime * 0.4));
 }
 
-float anaglyphAssemblyFactor() {
-    // Chaotic assembly — multiple non-harmonic frequencies, never repeats
+// ── Per-pixel precomputed state ─────────────────────────────────────────────
+// Everything below depends only on time, so it is computed ONCE per pixel in
+// anaglyphPrecompute() instead of on every SDF evaluation (was ~40 sin/cos per step).
+float gAnaAssembly;
+mat2  gAnaCamY, gAnaCamX, gAnaCamTwist;
+vec3  gAnaStretch;
+float gAnaWaveArg, gAnaWaveAdd;
+float gAnaDynRange, gAnaDynRadius, gAnaDynBlend, gAnaDynFalloff;
+mat2  gAnaRotA[kAnaglyphLayerCount];
+mat2  gAnaRotB[kAnaglyphLayerCount];
+
+void anaglyphPrecompute() {
+    float bass = aBass, mid = aMid, high = aHigh;
     float audio = anaglyphAudioEnergy();
-    float base = smoothstep(0.05, 0.95, audio) * 0.85;
-    // Multiple incommensurate frequencies create non-repeating motion
-    float o1 = sin(uTime * 0.28 + audio * 3.0) * 0.15;
-    float o2 = sin(uTime * 0.43 + uBass * 4.0) * 0.10;
-    float o3 = cos(uTime * 0.19 + uMid * 3.0) * 0.08;
-    float o4 = sin(uTime * 0.67 + uHigh * 5.0) * 0.05;
-    return clamp(base + o1 + o2 + o3 + o4, 0.05, 0.92);
-}
+    float tm = aTime;
 
-vec3 anaglyphApplyCamera(vec3 pos) {
-    // Continuous chaotic rotation — multiple axes, never stops, never repeats
-    float audio = anaglyphAudioEnergy();
-    float t = uTime;
-    // Slower, smoother rotation — still chaotic but gentler
-    float tiltY = sin(t * 0.06) * 0.5 + cos(t * 0.11 + uBass * 1.0) * 0.3 + uMid * 0.15;
-    float tiltX = cos(t * 0.08) * 0.4 + sin(t * 0.17 + uHigh * 1.0) * 0.25 + audio * 0.15;
-    float twist = sin(t * 0.05 + uBass * 1.5) * 0.5 + cos(t * 0.12 + uMid * 1.0) * 0.3;
+    // Assembly: fixed high base so the object is always fully formed
+    // (zone thresholds top out at ~0.58, so >= 0.62 is always complete).
+    float o1 = sin(tm * 0.28 + audio * 3.0) * 0.15;
+    float o2 = sin(tm * 0.43 + bass * 4.0) * 0.10;
+    float o3 = cos(tm * 0.19 + mid * 3.0) * 0.08;
+    float o4 = sin(tm * 0.67 + high * 5.0) * 0.05;
+    gAnaAssembly = clamp(0.72 + o1 + o2 + o3 + o4, 0.62, 0.92);
 
-    pos.yz *= anaglyphRot(tiltY);
-    pos.xz *= anaglyphRot(tiltX);
-    pos.xy *= anaglyphRot(twist);
-    return pos;
-}
+    // Continuous chaotic camera rotation
+    float tiltY = sin(tm * 0.06) * 0.5 + cos(tm * 0.11 + bass) * 0.3 + mid * 0.15;
+    float tiltX = cos(tm * 0.08) * 0.4 + sin(tm * 0.17 + high) * 0.25 + audio * 0.15;
+    float twist = sin(tm * 0.05 + bass * 1.5) * 0.5 + cos(tm * 0.12 + mid) * 0.3;
+    gAnaCamY = anaglyphRot(tiltY);
+    gAnaCamX = anaglyphRot(tiltX);
+    gAnaCamTwist = anaglyphRot(twist);
 
-vec3 anaglyphStretchSpace(vec3 pos) {
-    // Gentle stretch — fills screen without heavy computation
-    float stretch = 1.0 + uBass * 1.2 + sin(uTime * 0.7) * 0.2;
-    float squash  = 1.0 / (1.0 + uMid * 0.5 + cos(uTime * 0.5) * 0.15);
-    pos.x *= stretch * 1.3;
-    pos.y *= squash * 1.1;
-    pos.z *= mix(stretch, squash, sin(uTime * 0.3) * 0.5 + 0.5) * 1.2;
-    return pos;
-}
+    // Stretch
+    float stretch = 1.0 + bass * 1.2 + sin(tm * 0.7) * 0.2;
+    float squash  = 1.0 / (1.0 + mid * 0.5 + cos(tm * 0.5) * 0.15);
+    gAnaStretch = vec3(stretch * 1.3, squash * 1.1,
+                       mix(stretch, squash, sin(tm * 0.3) * 0.5 + 0.5) * 1.2);
 
-float anaglyphCoreGeometry(vec3 pos) {
-    pos = anaglyphApplyCamera(pos);
-    pos = anaglyphStretchSpace(pos);
-    float a = 1.0;
-    float scene = 1.0;
-    float t = uTime * (0.08 + uTempo * 0.1); // much slower base animation
-
-    // Wave varies with audio
-    float wave = 1.0 + 0.3 * sin(t * 2.0 - length(pos) * 2.0 + anaglyphAudioEnergy() * 2.0)
-                   + uBass * 0.3 + uMid * 0.15;
+    // Wave / SDF parameters
+    float t = tm * 0.18;
+    gAnaWaveArg = t * 2.0 + audio * 2.0;
+    gAnaWaveAdd = bass * 0.3 + mid * 0.15;
     t = floor(t) + pow(fract(t), 0.5);
 
-    // Audio-reactive variation of SDF parameters
-    float dynRange = kAnaglyphRange * (1.0 + uBass * 0.3);
-    float dynRadius = kAnaglyphRadius * (1.0 + uMid * 0.2);
-    float dynBlend = kAnaglyphBlend * (0.8 + uHigh * 0.4);
-    float dynFalloff = kAnaglyphFalloff + sin(t * 0.5) * 0.2;
+    gAnaDynRange   = kAnaglyphRange * (1.0 + bass * 0.3);
+    gAnaDynRadius  = kAnaglyphRadius * (1.0 + mid * 0.2);
+    gAnaDynBlend   = kAnaglyphBlend * (0.8 + high * 0.4);
+    gAnaDynFalloff = kAnaglyphFalloff + sin(t * 0.5) * 0.2;
 
-    for (int i = kAnaglyphLayerCount; i > 0; --i) {
-        float rotSeed = cos(t * 0.5 + uBass * float(i)) * kAnaglyphBalance / a + a * 2.0 + t * 0.5;
-        pos.xy *= anaglyphRot(rotSeed);
-        pos.zy *= anaglyphRot(sin(t * 0.5 + uMid * float(i)) * kAnaglyphBalance / a + a * 2.0 + t * 0.5);
-        pos = abs(pos) - dynRange * a * wave;
-        scene = anaglyphSmoothMin(scene, length(pos) - dynRadius * a, dynBlend * a);
-        a /= dynFalloff;
+    float a = 1.0;
+    for (int k = 0; k < kAnaglyphLayerCount; ++k) {
+        float i = float(kAnaglyphLayerCount - k);
+        gAnaRotA[k] = anaglyphRot(cos(t * 0.5 + bass * i) * kAnaglyphBalance / a + a * 2.0 + t * 0.5);
+        gAnaRotB[k] = anaglyphRot(sin(t * 0.5 + mid * i) * kAnaglyphBalance / a + a * 2.0 + t * 0.5);
+        a /= gAnaDynFalloff;
     }
+}
 
+float anaglyphAssemblyFactor() { return gAnaAssembly; }
+
+float anaglyphCoreGeometry(vec3 pos) {
+    pos.yz *= gAnaCamY;
+    pos.xz *= gAnaCamX;
+    pos.xy *= gAnaCamTwist;
+    pos *= gAnaStretch;
+
+    float wave = 1.0 + 0.3 * sin(gAnaWaveArg - length(pos) * 2.0) + gAnaWaveAdd;
+
+    float a = 1.0;
+    float scene = 1.0;
+    for (int k = 0; k < kAnaglyphLayerCount; ++k) {
+        pos.xy *= gAnaRotA[k];
+        pos.zy *= gAnaRotB[k];
+        pos = abs(pos) - gAnaDynRange * a * wave;
+        scene = anaglyphSmoothMin(scene, length(pos) - gAnaDynRadius * a, gAnaDynBlend * a);
+        a /= gAnaDynFalloff;
+    }
     return scene;
 }
 
@@ -141,7 +160,7 @@ vec3 anaglyphLook(vec3 eye, vec3 target, vec2 anchor, float fov) {
 }
 
 vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
-    float dither = anaglyphRandom(ray.xy + fract(vec2(uTime)));
+    float dither = anaglyphRandom(ray.xy + fract(vec2(aTime)));
     float travel = 0.02 + dither * 0.05;
 
     for (int i = 0; i < kAnaglyphMarchSteps; ++i) {
@@ -157,13 +176,13 @@ vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
             vec3 basePalette = mix(uPrimaryColor, uSecondaryColor, clamp(0.25 + assemblyFactor * 0.6, 0.0, 1.0));
 
             // Brighter, more saturated base color
-            vec3 color = basePalette * (0.35 + diff * (0.7 + uEnergy * 0.35));
+            vec3 color = basePalette * (0.35 + diff * (0.7 + aEnergy * 0.35));
 
             // Specular highlight for extra vibrancy
             vec3 viewDir = normalize(-pos);
             vec3 halfDir = normalize(lightDir + viewDir);
             float spec = pow(max(dot(normal, halfDir), 0.0), 16.0);
-            color += mix(uPrimaryColor, uSecondaryColor, sin(uTime * 0.5)) * spec * (0.3 + uHigh * 0.4);
+            color += mix(uPrimaryColor, uSecondaryColor, sin(aTime * 0.5)) * spec * (0.3 + aHigh * 0.4);
 
             float alpha = clamp(0.6 + diff * 0.3 + assemblyFactor * 0.25, 0.0, 1.0);
             return vec4(clamp(color, 0.0, 1.0), alpha);
@@ -180,14 +199,15 @@ vec4 anaglyphShadeEye(vec3 eye, vec3 ray, vec2 anchor) {
 }
 
 vec4 renderAnaglyphAssembly(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    anaglyphPrecompute();
     vec2 anchor = st * 2.0;
     vec3 target = vec3(0.0);
 
     // Audio-reactive eye divergence — more bass = more stereo separation
-    float audioDivergence = kAnaglyphDivergence * (1.0 + uBass * 3.0);
+    float audioDivergence = kAnaglyphDivergence * (1.0 + aBass * 3.0);
     // Camera closer = object fills more of screen
-    vec3 eyeLeft = vec3(-audioDivergence, 0.0, 3.0 + uMid * 0.3);
-    vec3 eyeRight = vec3(audioDivergence, 0.0, 3.0 + uMid * 0.3);
+    vec3 eyeLeft = vec3(-audioDivergence, 0.0, 3.0 + aMid * 0.3);
+    vec3 eyeRight = vec3(audioDivergence, 0.0, 3.0 + aMid * 0.3);
 
     vec3 rayLeft = anaglyphLook(eyeLeft, target, anchor, kAnaglyphFieldOfView);
     vec3 rayRight = anaglyphLook(eyeRight, target, anchor, kAnaglyphFieldOfView);

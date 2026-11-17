@@ -32,6 +32,7 @@ extern "C" {
 #include <unordered_map>
 #include <set>
 #include <cstring>
+#include <cstdlib>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -1654,6 +1655,129 @@ void UISystem::updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime) {
 
 UISystem::~UISystem() { shutdown(); }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Theme / font
+// ─────────────────────────────────────────────────────────────────────────────
+namespace {
+
+// Loads a clean UI font from the system (Windows ships Segoe UI). Falls back to
+// ImGui's built-in font if none is found, so the app never fails to start.
+void loadUiFont(ImGuiIO& io) {
+    const char* winDir = std::getenv("WINDIR");
+    const std::string base = std::string(winDir ? winDir : "C:/Windows") + "/Fonts/";
+    const char* candidates[] = { "segoeui.ttf", "arial.ttf", "tahoma.ttf" };
+    for (const char* name : candidates) {
+        const std::string path = base + name;
+        if (std::filesystem::exists(path)) {
+            if (io.Fonts->AddFontFromFileTTF(path.c_str(), 16.0f)) return;
+        }
+    }
+    io.Fonts->AddFontDefault();
+}
+
+// Neutral dark surfaces + a single violet accent. Colours are derived from a few
+// base values so the palette can be retuned in one place.
+void applyModernTheme() {
+    ImGuiStyle& st = ImGui::GetStyle();
+    ImGui::StyleColorsDark();
+
+    auto rgb = [](float r, float g, float b, float a = 1.0f) { return ImVec4(r, g, b, a); };
+    const ImVec4 bg      = rgb(0.075f, 0.078f, 0.094f);
+    const ImVec4 panel   = rgb(0.105f, 0.109f, 0.130f);
+    const ImVec4 surface = rgb(0.145f, 0.150f, 0.178f);
+    const ImVec4 hover   = rgb(0.200f, 0.207f, 0.245f);
+    const ImVec4 active  = rgb(0.250f, 0.258f, 0.305f);
+    const ImVec4 border  = rgb(0.230f, 0.238f, 0.280f);
+    const ImVec4 accent  = rgb(0.560f, 0.400f, 1.000f);
+    const ImVec4 accentH = rgb(0.660f, 0.520f, 1.000f);
+    const ImVec4 accentD = rgb(0.400f, 0.280f, 0.760f);
+    const ImVec4 text    = rgb(0.915f, 0.925f, 0.960f);
+    const ImVec4 textDim = rgb(0.560f, 0.575f, 0.640f);
+
+    ImVec4* c = st.Colors;
+    c[ImGuiCol_Text]                  = text;
+    c[ImGuiCol_TextDisabled]          = textDim;
+    c[ImGuiCol_WindowBg]              = bg;
+    c[ImGuiCol_ChildBg]               = rgb(0, 0, 0, 0);
+    c[ImGuiCol_PopupBg]               = panel;
+    c[ImGuiCol_Border]                = border;
+    c[ImGuiCol_BorderShadow]          = rgb(0, 0, 0, 0);
+    c[ImGuiCol_FrameBg]               = surface;
+    c[ImGuiCol_FrameBgHovered]        = hover;
+    c[ImGuiCol_FrameBgActive]         = active;
+    c[ImGuiCol_TitleBg]               = bg;
+    c[ImGuiCol_TitleBgActive]         = panel;
+    c[ImGuiCol_TitleBgCollapsed]      = bg;
+    c[ImGuiCol_MenuBarBg]             = panel;
+    c[ImGuiCol_ScrollbarBg]           = rgb(0, 0, 0, 0);
+    c[ImGuiCol_ScrollbarGrab]         = surface;
+    c[ImGuiCol_ScrollbarGrabHovered]  = hover;
+    c[ImGuiCol_ScrollbarGrabActive]   = active;
+    c[ImGuiCol_CheckMark]             = accentH;
+    c[ImGuiCol_SliderGrab]            = accent;
+    c[ImGuiCol_SliderGrabActive]      = accentH;
+    c[ImGuiCol_Button]                = surface;
+    c[ImGuiCol_ButtonHovered]         = hover;
+    c[ImGuiCol_ButtonActive]          = accentD;
+    c[ImGuiCol_Header]                = surface;
+    c[ImGuiCol_HeaderHovered]         = hover;
+    c[ImGuiCol_HeaderActive]          = accentD;
+    c[ImGuiCol_Separator]             = border;
+    c[ImGuiCol_SeparatorHovered]      = accent;
+    c[ImGuiCol_SeparatorActive]       = accentH;
+    c[ImGuiCol_ResizeGrip]            = rgb(0, 0, 0, 0);
+    c[ImGuiCol_ResizeGripHovered]     = accentD;
+    c[ImGuiCol_ResizeGripActive]      = accent;
+    c[ImGuiCol_Tab]                   = panel;
+    c[ImGuiCol_TabHovered]            = accentD;
+    c[ImGuiCol_TabSelected]           = surface;
+    c[ImGuiCol_TabSelectedOverline]   = accent;
+    c[ImGuiCol_TabDimmed]             = bg;
+    c[ImGuiCol_TabDimmedSelected]     = panel;
+    c[ImGuiCol_TabDimmedSelectedOverline] = accentD;
+    c[ImGuiCol_PlotLines]             = accent;
+    c[ImGuiCol_PlotLinesHovered]      = accentH;
+    c[ImGuiCol_PlotHistogram]         = accent;
+    c[ImGuiCol_PlotHistogramHovered]  = accentH;
+    c[ImGuiCol_TableHeaderBg]         = panel;
+    c[ImGuiCol_TableBorderStrong]     = border;
+    c[ImGuiCol_TableBorderLight]      = rgb(0.17f, 0.175f, 0.21f);
+    c[ImGuiCol_TableRowBg]            = rgb(0, 0, 0, 0);
+    c[ImGuiCol_TableRowBgAlt]         = rgb(1, 1, 1, 0.025f);
+    c[ImGuiCol_TextSelectedBg]        = rgb(accent.x, accent.y, accent.z, 0.35f);
+    c[ImGuiCol_DragDropTarget]        = accentH;
+    c[ImGuiCol_NavCursor]             = accentH;
+    c[ImGuiCol_ModalWindowDimBg]      = rgb(0, 0, 0, 0.55f);
+
+    st.WindowRounding    = 8.f;
+    st.ChildRounding     = 6.f;
+    st.FrameRounding     = 5.f;
+    st.PopupRounding     = 6.f;
+    st.ScrollbarRounding = 8.f;
+    st.GrabRounding      = 5.f;
+    st.TabRounding       = 5.f;
+
+    st.WindowPadding     = ImVec2(12.f, 12.f);
+    st.FramePadding      = ImVec2(8.f, 5.f);
+    st.ItemSpacing       = ImVec2(8.f, 7.f);
+    st.ItemInnerSpacing  = ImVec2(6.f, 4.f);
+    st.ScrollbarSize     = 12.f;
+    st.GrabMinSize       = 12.f;
+    st.IndentSpacing     = 18.f;
+
+    st.WindowBorderSize  = 1.f;
+    st.ChildBorderSize   = 0.f;
+    st.PopupBorderSize   = 1.f;
+    st.FrameBorderSize   = 0.f;
+    st.TabBorderSize     = 0.f;
+    st.TabBarBorderSize  = 1.f;
+    st.SeparatorTextBorderSize = 1.f;
+    st.WindowTitleAlign  = ImVec2(0.0f, 0.5f);
+    st.WindowMenuButtonPosition = ImGuiDir_None;
+}
+
+} // namespace
+
 bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren, float scale) {
     if (initialized) return true;
     window   = win;
@@ -1668,9 +1792,8 @@ bool UISystem::initialize(SDL_Window* win, SDL_Renderer* ren, float scale) {
     io.ConfigNavCaptureKeyboard = false; // Don't let keyboard navigation eat global hotkeys
     io.IniFilename  = "imgui.ini";
 
-    ImGui::StyleColorsDark();
-    ImGui::GetStyle().WindowRounding = 6.f;
-    ImGui::GetStyle().FrameRounding  = 4.f;
+    loadUiFont(io);
+    applyModernTheme();
 
     // Apply DPI scaling to ImGui style and fonts
     if (dpiScale > 1.0f) {

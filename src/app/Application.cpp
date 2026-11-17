@@ -1900,6 +1900,10 @@ void Application::handleOscTrigger(const std::string& action, int arg) {
 }
 
 void Application::commitPreviewToOutput() {
+    // La GPU puede estar usando descriptor sets / texturas de frames en vuelo;
+    // esperar antes de reescribirlos o recrear texturas de video.
+    vkDeviceWaitIdle(vulkanContext.getDevice());
+
     outputVisualControls = visualControls;
     std::string oldOutputVideoSourcePath = outputSlots[0].sourcePath;
     std::string oldOutputVideoSourcePath2 = outputSlots[1].sourcePath;
@@ -3065,9 +3069,12 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
                                       VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
                                       bool vid1Init, bool vid2Init, bool vid3Init,
                                       bool forOutput) {
-    static int lastLoggedMode = -1;
-    if (controls.playback.activeMode != lastLoggedMode) {
-        lastLoggedMode = controls.playback.activeMode;
+    // One tracker per target: preview and output call this every frame and may
+    // legitimately hold different modes (output only changes on "commit").
+    static int lastLoggedMode[2] = {-1, -1};
+    int& lastLogged = lastLoggedMode[forOutput ? 1 : 0];
+    if (controls.playback.activeMode != lastLogged) {
+        lastLogged = controls.playback.activeMode;
         const int mode = controls.playback.activeMode;
         const bool compiled = mode <= 12 || mode == 13 || mode == 14 || mode == 15 ||
                               mode == 16 || mode == 17 || mode == 18 || mode == 19 || mode == 20 ||
@@ -3076,7 +3083,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
                               mode == 78 || mode == 79 || mode == 82 || mode == 83 || mode == 87 ||
                               mode == 89 || mode == 92 || mode == 93 || mode == 95 ||
                               (mode >= 96 && mode <= 110);
-        std::cerr << "[Procedural] activeMode=" << mode
+        std::cerr << "[Procedural] " << (forOutput ? "OUTPUT" : "PREVIEW") << " activeMode=" << mode
                   << (compiled ? " compiled in pass_a_base" : " NOT compiled in pass_a_base")
                   << '\n';
     }
@@ -3151,13 +3158,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
 
     // Shader time: accumulates at tempo speed so procedural layers
     // (Layer 0, Layer 1, Anaglyph) animate with audio energy
-    if (controls.system.enableAudioReactive) {
-        // In audio-reactive mode, use tempo-modulated time
-        anim.shaderTime += globalDeltaTime * tempoValue;
-    } else {
-        // Standard Shadertoy behavior: time accumulates at 1.0x speed
-        anim.shaderTime += globalDeltaTime;
-    }
+    // Procedural layers must always move and NOT depend on audio:
+    // audio-reactive mode -> constant 1.0x; manual mode -> manual tempo (+LFO).
+    anim.shaderTime += globalDeltaTime * speed * (controls.system.enableAudioReactive ? 1.0f : tempoValue);
 
     auto& reactive = controls.runtime.audioReactive;
     reactive.enabled = controls.system.enableAudioReactive;
@@ -3201,7 +3204,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
                                static_cast<float>(presenter.getExtent().height));
     ubo.videoResolution = glm::vec2(static_cast<float>(vid1.getWidth()),
                                     static_cast<float>(vid1.getHeight()));
-    ubo.time = controls.system.enableAudioReactive ? anim.shaderTime : time;
+    ubo.time = anim.shaderTime;
     ubo.mode = controls.playback.activeMode;
     ubo.videoMix = controls.playback.videoMix;
     ubo.videoAvailable = (vid1Init && vid1.isReady()) ? 1.0f : 0.0f;

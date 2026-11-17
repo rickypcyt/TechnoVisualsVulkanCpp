@@ -57,10 +57,10 @@ def main() -> int:
     if not HEADER_PATH.exists():
         raise FileNotFoundError(f"Cannot find {HEADER_PATH}")
 
-    header_source = HEADER_PATH.read_text()
+    header_source = HEADER_PATH.read_text(encoding="utf-8")
     fields = parse_fields(header_source)
     glsl_source = generate_glsl(fields)
-    OUTPUT_PATH.write_text(glsl_source)
+    OUTPUT_PATH.write_text(glsl_source, encoding="utf-8")
     print(f"[gen_ubo_glsl] Generated {OUTPUT_PATH.relative_to(ROOT)} with {len(fields)} fields")
     return 0
 

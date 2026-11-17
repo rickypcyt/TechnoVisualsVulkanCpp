@@ -72,6 +72,9 @@ def convert(name: str, output_binding: int) -> None:
 
     source = source[:main_start] + main_body + source[main_end:]
 
+    # Write only if content changed so unchanged shaders are not recompiled.
+    if comp_path.exists() and comp_path.read_text() == source:
+        return
     comp_path.write_text(source)
     print(f"Created {comp_path}")
 

@@ -312,16 +312,16 @@ vec3 renderMode1(vec2 st) {
 vec4 dispatchMode(int m, vec2 st) {
     if (m == 0) return vec4(renderMode0(st), 1.0);
     if (m == 1) return vec4(renderMode1(st), 1.0);
-    if (m == 2) return vec4(renderPlasmaWave(st), 1.0);
-    if (m == 3) return vec4(renderRadialBurst(st), 1.0);
-    if (m == 4) return vec4(renderGridPulse(st), 1.0);
+    if (m == 2) return vec4(clamp(renderPlasmaWave(st) * 4.0, 0.0, 1.0), 1.0); // gain: effect is authored very dim
+    if (m == 3) return vec4(clamp(renderRadialBurst(st) * 3.0, 0.0, 1.0), 1.0); // gain: effect is authored very dim
+    if (m == 4) return vec4(clamp(renderGridPulse(st) * 3.0, 0.0, 1.0), 1.0); // gain: effect is authored very dim
     if (m == 5) return vec4(renderNoiseFlow(st), 1.0);
     if (m == 6) return vec4(renderCellularVoronoi(st), 1.0);
-    if (m == 7) return vec4(renderMandalaSpin(st), 1.0);
-    if (m == 8) return vec4(renderTerrainScan(st), 1.0);
+    if (m == 7) return vec4(clamp(renderMandalaSpin(st) * 5.0, 0.0, 1.0), 1.0); // gain: effect is authored very dim
+    if (m == 8) return vec4(clamp(renderTerrainScan(st) * 3.0, 0.0, 1.0), 1.0); // gain: effect is authored very dim
     if (m == 9) return vec4(renderWireCube(st), 1.0);
     if (m == 10) return vec4(renderOscilloscope(st), 1.0);
-    if (m == 11) return vec4(renderCornerX(st), 1.0);
+    if (m == 11) return vec4(clamp(renderCornerX(st) * 4.0, 0.0, 1.0), 1.0); // gain: effect is authored very dim
     if (m == 12) return vec4(renderElectricRays(st), 1.0);
     
     // Procedural modes from simple packs (1-2, 5-15)

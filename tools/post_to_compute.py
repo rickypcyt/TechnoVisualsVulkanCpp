@@ -11,6 +11,10 @@ POST_EFFECTS_DIR = Path("post_effects")
 OUTPUT_DIR = Path("shaders/post_effects")
 
 
+# Effects whose .comp is written by hand; must stay in sync with CMakeLists.txt.
+HAND_WRITTEN = {'effect_acid_feedback', 'effect_luminance_shift', 'effect_pixel_sort_threshold', 'effect_pixel_sort_vertical', 'effect_reaction_diffusion', 'effect_threshold_sort'}
+
+
 def convert(glsl_path: Path) -> Path:
     comp_path = OUTPUT_DIR / f"{glsl_path.stem}.comp"
     source = glsl_path.read_text()
@@ -68,12 +72,17 @@ def convert(glsl_path: Path) -> Path:
     source = source[:main_start] + main_body + source[main_end:]
 
     comp_path.parent.mkdir(parents=True, exist_ok=True)
+    # Write only if content changed so unchanged shaders are not recompiled.
+    if comp_path.exists() and comp_path.read_text() == source:
+        return
     comp_path.write_text(source)
     return comp_path
 
 
 if __name__ == "__main__":
     for glsl_path in sorted(POST_EFFECTS_DIR.glob("*.glsl")):
+        if glsl_path.stem in HAND_WRITTEN:
+            continue  # hand-maintained shaders/post_effects/<name>.comp, never regenerate
         if glsl_path.name == "post_common.glsl":
             continue
         if glsl_path.name == "mirror_common.glsl":

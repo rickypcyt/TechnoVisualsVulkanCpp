@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <glm/glm.hpp>
 
 // ============================================================================
@@ -17,7 +18,7 @@ struct GlobalParamsUBO {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
     alignas(16) glm::vec2 resolution;
-    alignas(16) glm::vec2 videoResolution;
+    alignas(8)  glm::vec2 videoResolution; // std140: vec2 aligns to 8 (NOT 16) or every field below shifts
     alignas(4) float time;
     alignas(4) float tempo;
     alignas(4) float energy;
@@ -231,3 +232,15 @@ struct GlobalParamsUBO {
     alignas(4) float postEffectBass;
     alignas(16) glm::vec3 postEffectRgbAdjust;
 };
+
+// Guard against CPU/GPU layout drift (shaders read these at std140 offsets).
+static_assert(offsetof(GlobalParamsUBO, resolution) == 192, "UBO layout mismatch: resolution");
+static_assert(offsetof(GlobalParamsUBO, videoResolution) == 200, "UBO layout mismatch: videoResolution");
+static_assert(offsetof(GlobalParamsUBO, time) == 208, "UBO layout mismatch: time");
+static_assert(offsetof(GlobalParamsUBO, tempo) == 212, "UBO layout mismatch: tempo");
+static_assert(offsetof(GlobalParamsUBO, energy) == 216, "UBO layout mismatch: energy");
+static_assert(offsetof(GlobalParamsUBO, bass) == 220, "UBO layout mismatch: bass");
+static_assert(offsetof(GlobalParamsUBO, mid) == 224, "UBO layout mismatch: mid");
+static_assert(offsetof(GlobalParamsUBO, high) == 228, "UBO layout mismatch: high");
+static_assert(offsetof(GlobalParamsUBO, primaryColor) == 272, "UBO layout mismatch: primaryColor");
+static_assert(offsetof(GlobalParamsUBO, secondaryColor) == 288, "UBO layout mismatch: secondaryColor");

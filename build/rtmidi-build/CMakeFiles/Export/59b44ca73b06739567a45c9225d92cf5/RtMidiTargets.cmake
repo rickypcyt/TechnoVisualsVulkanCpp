@@ -58,7 +58,6 @@ endif()
 add_library(RtMidi::rtmidi STATIC IMPORTED)
 
 set_target_properties(RtMidi::rtmidi PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
   INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:winmm>"
 )
 

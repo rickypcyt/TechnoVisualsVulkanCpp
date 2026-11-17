@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 
 project(VulkanApp)
 
+# Use ccache when available to skip recompiling unchanged translation units
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
@@ -154,6 +162,14 @@ add_custom_command(
     COMMENT "Generating compute shaders from fragment shaders"
 )
 
+# Per-pass include dependencies: only pass_a includes the procedural sources,
+# so editing a procedural/*.glsl must not rebuild the other passes.
+file(GLOB SHADER_COMMON_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.glsl)
+set(PASS_EXTRA_DEPS_pass_a_base ${SHADER_COMMON_GLSL} ${PROCEDURAL_GLSL})
+foreach(p pass_b_spatial pass_c_detail pass_d_temporal pass_e_degradation pass_f_color pass_g_output)
+    set(PASS_EXTRA_DEPS_${p} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shared_ubo.glsl)
+endforeach()
+
 foreach(frag ${PASS_FRAGS})
     get_filename_component(name ${frag} NAME_WE)
     set(comp ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${name}.comp)
@@ -161,7 +177,7 @@ foreach(frag ${PASS_FRAGS})
     add_custom_command(
         OUTPUT ${spv}
         COMMAND ${GLSLC} -fshader-stage=compute ${comp} -o ${spv}
-        DEPENDS ${comp} ${PASS_FRAGS} ${PROCEDURAL_GLSL}
+        DEPENDS ${comp} ${PASS_EXTRA_DEPS_${name}}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Compiling compute shader ${name}.comp"
     )
@@ -174,6 +190,13 @@ add_dependencies(app compile_compute_shaders)
 file(GLOB POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/*.glsl)
 list(REMOVE_ITEM POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/post_common.glsl)
 list(REMOVE_ITEM POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/mirror_common.glsl)
+
+# Hand-written effects: their shaders/post_effects/<name>.comp is maintained by hand
+# (post_to_compute.py skips them too, keep both lists in sync).
+set(HAND_WRITTEN_POST_EFFECTS effect_acid_feedback effect_luminance_shift effect_pixel_sort_threshold effect_pixel_sort_vertical effect_reaction_diffusion effect_threshold_sort)
+foreach(hw ${HAND_WRITTEN_POST_EFFECTS})
+    list(REMOVE_ITEM POST_EFFECT_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/${hw}.glsl)
+endforeach()
 
 set(POST_EFFECT_COMP_FILES)
 set(POST_EFFECT_SPV)
@@ -204,7 +227,10 @@ foreach(glsl ${POST_EFFECT_GLSL})
     add_custom_command(
         OUTPUT ${spv}
         COMMAND ${GLSLC} -fshader-stage=compute ${comp} -o ${spv}
-        DEPENDS ${comp} ${POST_EFFECT_GLSL} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_common_vulkan.glsl
+        DEPENDS ${comp}
+                ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/post_common.glsl
+                ${CMAKE_CURRENT_SOURCE_DIR}/post_effects/mirror_common.glsl
+                ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_common_vulkan.glsl
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Compiling post-effect compute shader ${name}"
     )
@@ -215,9 +241,10 @@ add_dependencies(app compile_post_effects)
 
 # --- Standalone post-effect compute shaders (not generated from .glsl) ---
 # These are hand-written .comp files that don't go through post_to_compute.py
-set(STANDALONE_POST_COMPS
-    # No standalone shaders currently
-)
+set(STANDALONE_POST_COMPS)
+foreach(hw ${HAND_WRITTEN_POST_EFFECTS})
+    list(APPEND STANDALONE_POST_COMPS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/post_effects/${hw}.comp)
+endforeach()
 set(STANDALONE_POST_SPVS)
 foreach(comp ${STANDALONE_POST_COMPS})
     get_filename_component(name ${comp} NAME_WE)

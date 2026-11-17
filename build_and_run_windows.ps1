@@ -49,11 +49,7 @@ if ($null -eq $glslcPath) {
 
 Write-Host "[build_and_run_windows] Compiling shaders..." -ForegroundColor Cyan
 
-# Delete all .spv files to force full recompile
-Write-Host "  Cleaning old .spv files..." -ForegroundColor Cyan
 $postEffectDir = "$shadersDir\post_effects"
-Get-ChildItem -Path "$shadersDir\*.spv" -ErrorAction SilentlyContinue | Remove-Item -Force
-Get-ChildItem -Path "$postEffectDir\*.spv" -ErrorAction SilentlyContinue | Remove-Item -Force
 
 $shaders = @(
     "triangle.vert",
@@ -71,38 +67,13 @@ $shaders = @(
     "pass_g_output.frag"
 )
 
-$oldestSpv = $null
-foreach ($shader in $shaders) {
-    $out = "$shadersDir\$shader.spv"
-    if (Test-Path $out) {
-        if ($null -eq $oldestSpv -or (Get-Item $out).LastWriteTime -lt (Get-Item $oldestSpv).LastWriteTime) {
-            $oldestSpv = $out
-        }
-    }
-}
-
-$forceRecompile = $false
-if ($null -ne $oldestSpv) {
-    foreach ($glsl in Get-ChildItem -Path "$shadersDir\*.glsl" -ErrorAction SilentlyContinue) {
-        if ($glsl.LastWriteTime -gt (Get-Item $oldestSpv).LastWriteTime) {
-            $forceRecompile = $true
-            break
-        }
-    }
-    # Also check procedural/ directory for changes
-    foreach ($glsl in Get-ChildItem -Path "$scriptDir\procedural\*.glsl" -ErrorAction SilentlyContinue) {
-        if ($glsl.LastWriteTime -gt (Get-Item $oldestSpv).LastWriteTime) {
-            $forceRecompile = $true
-            # Also delete pass_a_base.frag.spv to force recompile
-            $passASpv = "$shadersDir\pass_a_base.frag.spv"
-            if (Test-Path $passASpv) {
-                Remove-Item $passASpv -Force
-            }
-            break
-        }
-    }
-} else {
-    $forceRecompile = $true
+# Per-shader include dependencies (only pass_a_base pulls in procedural code)
+$commonGlsl = @(Get-ChildItem -Path "$shadersDir\*.glsl" -ErrorAction SilentlyContinue)
+$proceduralGlsl = @(Get-ChildItem -Path "$scriptDir\procedural\*.glsl" -ErrorAction SilentlyContinue)
+function Get-ShaderDeps([string]$name) {
+    if ($name -eq "pass_a_base.frag") { return $commonGlsl + $proceduralGlsl }
+    if ($name -like "pass_*.frag")    { return @(Get-Item "$shadersDir\shared_ubo.glsl" -ErrorAction SilentlyContinue) }
+    return @()
 }
 
 foreach ($shader in $shaders) {
@@ -117,15 +88,20 @@ foreach ($shader in $shaders) {
     $needsCompile = $false
     if (-not (Test-Path $out)) {
         $needsCompile = $true
-    } elseif ($forceRecompile) {
-        $needsCompile = $true
-    } elseif ((Get-Item $src).LastWriteTime -gt (Get-Item $out).LastWriteTime) {
-        $needsCompile = $true
+    } else {
+        $outTime = (Get-Item $out).LastWriteTime
+        if ((Get-Item $src).LastWriteTime -gt $outTime) {
+            $needsCompile = $true
+        } else {
+            foreach ($dep in (Get-ShaderDeps $shader)) {
+                if ($dep.LastWriteTime -gt $outTime) { $needsCompile = $true; break }
+            }
+        }
     }
 
     if ($needsCompile) {
         Write-Host "  Compiling $shader..." -ForegroundColor Cyan
-        & $glslcPath $src -o $out
+        & $glslcPath -I $shadersDir $src -o $out
         if ($LASTEXITCODE -eq 0) {
             Write-Host "    [OK] $shader compiled" -ForegroundColor Green
         } else {
@@ -140,23 +116,11 @@ foreach ($shader in $shaders) {
 Write-Host "[build_and_run_windows] Compiling post-effect compute shaders..." -ForegroundColor Cyan
 $postEffectDir = "$shadersDir\post_effects"
 if (Test-Path $postEffectDir) {
-    # Check if any shared include file changed — if so, force recompile all
-    $forcePeRecompile = $false
-    $includeFiles = Get-ChildItem -Path "$shadersDir\*.glsl" -ErrorAction SilentlyContinue
-    foreach ($inc in $includeFiles) {
-        $incSpvTime = [datetime]::MaxValue
-        $anySpv = Get-ChildItem -Path $postEffectDir -Filter "*.comp.spv" -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($anySpv) { $incSpvTime = $anySpv.LastWriteTime }
-        if ($inc.LastWriteTime -gt $incSpvTime) { $forcePeRecompile = $true; break }
-    }
-    # Also check includes inside post_effects dir
-    $peIncludes = Get-ChildItem -Path "$postEffectDir\*.glsl" -ErrorAction SilentlyContinue
-    foreach ($inc in $peIncludes) {
-        $incSpvTime = [datetime]::MaxValue
-        $anySpv = Get-ChildItem -Path $postEffectDir -Filter "*.comp.spv" -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($anySpv) { $incSpvTime = $anySpv.LastWriteTime }
-        if ($inc.LastWriteTime -gt $incSpvTime) { $forcePeRecompile = $true; break }
-    }
+    # Newest shared include: a .spv older than this must be rebuilt (per file, not all-or-nothing)
+    $incFiles = @(Get-ChildItem -Path "$shadersDir\shared_ubo.glsl","$shadersDir\post_common_vulkan.glsl" -ErrorAction SilentlyContinue) +
+                @(Get-ChildItem -Path "$postEffectDir\*_common*.glsl" -ErrorAction SilentlyContinue)
+    $incNewest = [datetime]::MinValue
+    foreach ($inc in $incFiles) { if ($inc.LastWriteTime -gt $incNewest) { $incNewest = $inc.LastWriteTime } }
 
     $compShaders = Get-ChildItem -Path $postEffectDir -Filter "*.glsl" -ErrorAction SilentlyContinue
     $peOk = 0
@@ -168,13 +132,12 @@ if (Test-Path $postEffectDir) {
             continue
         }
         $spvOut = $comp.FullName + ".spv"
-        $needsCompile = $forcePeRecompile
-        if (-not $needsCompile) {
-            if (-not (Test-Path $spvOut)) {
-                $needsCompile = $true
-            } elseif ($comp.LastWriteTime -gt (Get-Item $spvOut).LastWriteTime) {
-                $needsCompile = $true
-            }
+        $needsCompile = $false
+        if (-not (Test-Path $spvOut)) {
+            $needsCompile = $true
+        } else {
+            $spvTime = (Get-Item $spvOut).LastWriteTime
+            if ($comp.LastWriteTime -gt $spvTime -or $incNewest -gt $spvTime) { $needsCompile = $true }
         }
         if ($needsCompile) {
             $tmpOut = [System.IO.Path]::GetTempFileName()
@@ -208,7 +171,16 @@ if (Test-Path "$vcpkgDir\scripts\buildsystems\vcpkg.cmake") {
 $cmakeGenerator = "MinGW Makefiles"
 $useMake = $false
 
+$useNinja = $false
+if (Get-Command ninja -ErrorAction SilentlyContinue) {
+    $cmakeGenerator = "Ninja"
+    $useMake = $true
+    $useNinja = $true
+    Write-Host "  [OK] Ninja found, using Ninja generator" -ForegroundColor Green
+}
+
 try {
+    if ($useNinja) { throw "skip" }
     $null = gcc --version 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  [OK] GCC found, using MinGW Makefiles" -ForegroundColor Green
@@ -235,7 +207,26 @@ if (-not $useMake) {
     }
 }
 
+# Generator changed? -> drop stale cache once (otherwise CMake errors out)
+$cachePath = "$buildDir\CMakeCache.txt"
+$needsConfigure = $true
+if (Test-Path $cachePath) {
+    $cachedGen = (Select-String -Path $cachePath -Pattern '^CMAKE_GENERATOR:INTERNAL=(.*)$').Matches.Groups[1].Value
+    if ($cachedGen -ne $cmakeGenerator) {
+        Write-Host "  Generator changed ($cachedGen -> $cmakeGenerator), resetting CMake cache" -ForegroundColor Yellow
+        Remove-Item $cachePath -Force
+        Remove-Item "$buildDir\CMakeFiles" -Recurse -Force -ErrorAction SilentlyContinue
+        # FetchContent sub-builds keep their own generator cache (sources in *-src are kept)
+        Remove-Item "$buildDir\_deps\*-subbuild" -Recurse -Force -ErrorAction SilentlyContinue
+    } else {
+        # Already configured: `cmake --build` re-runs configure by itself if CMakeLists change
+        $needsConfigure = $false
+        Write-Host "  [OK] CMake already configured, skipping" -ForegroundColor Green
+    }
+}
+
 Push-Location $buildDir
+if ($needsConfigure) {
 try {
     $cmakeArgs = @(
         "..",
@@ -264,6 +255,7 @@ try {
     Write-Host "  [ERROR] CMake configuration error: $_" -ForegroundColor Red
     Pop-Location
     exit 1
+}
 }
 Pop-Location
 

@@ -1,3 +1,0 @@
-C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-subbuild/CMakeFiles/boost_math-populate.dir
-C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-subbuild/CMakeFiles/edit_cache.dir
-C:/coding/TechnoVisualsVulkanCpp/build/_deps/boost_math-subbuild/CMakeFiles/rebuild_cache.dir
