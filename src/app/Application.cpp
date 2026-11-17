@@ -3235,10 +3235,22 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
         ubo.secondaryColor.b *= bMod;
     }
     ubo.tempo = tempoValue;
-    ubo.energy = reactive.energy;
-    ubo.bass = reactive.bass;
-    ubo.mid = reactive.mid;
-    ubo.high = reactive.high;
+    // Procedural layers: feed slow synthetic signals instead of the real audio so
+    // every layer renders and animates on its own (silence no longer blanks them).
+    // Set kProceduralIgnoreAudio = false to drive shaders from the live audio again.
+    constexpr bool kProceduralIgnoreAudio = true;
+    if (kProceduralIgnoreAudio) {
+        const float ts = anim.shaderTime;
+        ubo.energy = 0.55f  + 0.25f * std::sin(ts * 0.7f);
+        ubo.bass   = 0.575f + 0.325f * std::sin(ts * 1.3f);
+        ubo.mid    = 0.55f  + 0.30f * std::sin(ts * 0.9f + 1.7f);
+        ubo.high   = 0.50f  + 0.30f * std::sin(ts * 1.7f + 3.1f);
+    } else {
+        ubo.energy = reactive.energy;
+        ubo.bass = reactive.bass;
+        ubo.mid = reactive.mid;
+        ubo.high = reactive.high;
+    }
     ubo.audioReactiveDrive = controls.audio.reactiveDrive;
     
     // Audio reactivity parameters

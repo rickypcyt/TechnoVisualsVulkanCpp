@@ -4,3 +4,5 @@ output.mp4
 output.tmp.*.mp4
 build
 presets/GOD.json
+# Old OpenGL project kept for reference (own nested .git)
+VisualesViejosCpp/
