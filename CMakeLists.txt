@@ -135,6 +135,7 @@ set(PASS_FRAGS
     ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pass_g_output.frag
 )
 
+file(GLOB PROCEDURAL_GLSL ${CMAKE_CURRENT_SOURCE_DIR}/procedural/*.glsl)
 set(PASS_COMP_FILES)
 set(PASS_COMP_SPV)
 foreach(frag ${PASS_FRAGS})
@@ -160,7 +161,7 @@ foreach(frag ${PASS_FRAGS})
     add_custom_command(
         OUTPUT ${spv}
         COMMAND ${GLSLC} -fshader-stage=compute ${comp} -o ${spv}
-        DEPENDS ${comp} ${PASS_FRAGS}
+        DEPENDS ${comp} ${PASS_FRAGS} ${PROCEDURAL_GLSL}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Compiling compute shader ${name}.comp"
     )

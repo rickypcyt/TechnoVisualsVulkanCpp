@@ -14,7 +14,7 @@ const float PI = 3.1415926535;
 #define uPrimaryColor   ubo.primaryColor.rgb
 #define uSecondaryColor ubo.secondaryColor.rgb
 #define uColorBlend     ubo.colorBlend
-#define uCameraZoom     ubo.camera.zoom
+#define uCameraZoom     ubo.cameraZoom
 #define uCameraOffsetX  ubo.cameraPanX
 #define uCameraOffsetY  ubo.cameraPanY
 #define uResolution     ubo.resolution
@@ -345,6 +345,28 @@ vec4 dispatchMode(int m, vec2 st) {
     if (m == 17) return vec4(renderStarfieldWarpWrapper(st), 1.0);
     if (m == 18) return vec4(renderPlasmaClassicWrapper(st), 1.0);
     if (m == 19) return vec4(renderDomainWarpedFractalWrapper(st), 1.0);
+    if (m == 20) return vec4(renderFractalTunnelWrapper(st), 1.0);
+    if (m == 76) return vec4(renderNoiseDotGridWrapper(st), 1.0);
+    if (m == 77) return vec4(renderRecursiveGridsWrapper(st), 1.0);
+    if (m == 84) return vec4(renderFibonacciCurlWrapper(st), 1.0);
+    if (m == 85) return vec4(renderCollatzSpiralWrapper(st), 1.0);
+    if (m == 90) return vec4(renderTriangleParticlesWrapper(st), 1.0);
+    if (m == 91) return vec4(renderBezierPetalsWrapper(st), 1.0);
+    if (m == 92) return vec4(renderKochSnowflakeWrapper(st), 1.0);
+    if (m == 93) return vec4(renderFlowFieldWrapper(st), 1.0);
+    if (m == 95) return vec4(renderWaveCirclesWrapper(st), 1.0);
+    if (m == 78) return vec4(renderGameOfLifeWrapper(st), 1.0);
+    if (m == 79) return vec4(render3DWaveBoxesWrapper(st), 1.0);
+    if (m == 82) return vec4(renderLowresPixelationWrapper(st), 1.0);
+    if (m == 83) return vec4(renderParticleCloudWrapper(st), 1.0);
+    if (m == 87) return vec4(renderStarRingWrapper(st), 1.0);
+    if (m == 89) return vec4(renderCurvedLinesWrapper(st), 1.0);
+    if (m == 96) return vec4(renderNoiseParticlesWrapper(st), 1.0);
+    if (m == 97) return vec4(renderLavaFluidFloorWrapper(st), 1.0);
+    if (m == 98) return vec4(renderCristianCamiloGridWrapper(st), 1.0);
+    if (m == 99) return vec4(renderJuanmiPaganGridWrapper(st), 1.0);
+    if (m == 100) return vec4(renderTizianoSterpaGridWrapper(st), 1.0);
+    if (m == 101) return vec4(renderBohmGridWrapper(st), 1.0);
 
     if (m == 102) return vec4(renderMeltingRedFractalWrapper(st), 1.0);
     if (m == 103) return vec4(renderLiquidKaliFractalWrapper(st), 1.0);

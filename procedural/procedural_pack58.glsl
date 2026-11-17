@@ -5,6 +5,12 @@
 
 
 // Draw arc segment with line
+vec2 fibonacciRotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat2(c, -s, s, c) * v;
+}
+
 float drawArc(vec2 p, float radius, float startAngle, float endAngle, float lineWidth) {
     vec2 toP = p;
     float dist = length(toP);
@@ -117,7 +123,7 @@ vec4 renderFibonacciCurl(
         
         // Rotate for next segment
         currentAngle += halfPi;
-        currentPos = rotate2D(currentPos, halfPi);
+        currentPos = fibonacciRotate2D(currentPos, halfPi);
     }
     
     arcBrightness = clamp(arcBrightness, 0.0, 1.0);

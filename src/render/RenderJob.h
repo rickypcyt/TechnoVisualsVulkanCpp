@@ -72,8 +72,10 @@ struct RenderJob {
         , output_file(s.output_file)
         , render_mode(s.render_mode)
         , do_swap(swap) {
-        // Write directly to output file (no temporary files)
-        temp_file = output_file;
+        const std::filesystem::path outputPath(output_file);
+        const std::string extension = outputPath.extension().string();
+        const std::string baseName = outputPath.stem().string() + ".tmp." + std::to_string(version);
+        temp_file = (outputPath.parent_path() / (baseName + extension)).string();
     }
     
     // Estado del job
@@ -146,22 +148,65 @@ public:
     std::function<void(std::shared_ptr<RenderJob>)> on_render_complete;
 
     void perform_atomic_swap(std::shared_ptr<RenderJob> job) {
-        // Log output file metadata after render
-        std::cout << "[Render] Output file: " << job->output_file << std::endl;
-        std::string probe_cmd = "ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate,avg_frame_rate,duration -of default=noprint_wrappers=1 \"" + job->output_file + "\"";
-        std::cout << "[Render] Running ffprobe on output: " << probe_cmd << std::endl;
-        system(probe_cmd.c_str());
+        std::error_code error;
+        const std::filesystem::path temporaryPath(job->temp_file);
+        const std::filesystem::path outputPath(job->output_file);
+        const std::filesystem::path activePath(job->active_file);
 
-        // Copy output to original file (keeping output intact) if do_swap is true
-        if (job->do_swap && job->output_file != job->active_file) {
-            std::cout << "[Render] Copying output to original: " << job->output_file << " -> " << job->active_file << std::endl;
-            std::filesystem::copy_file(job->output_file, job->active_file, std::filesystem::copy_options::overwrite_existing);
+        if (!std::filesystem::exists(temporaryPath, error) ||
+            error || std::filesystem::file_size(temporaryPath, error) == 0 || error) {
+            job->error_message = "FFmpeg produced no valid output: " + job->temp_file;
+            job->status = RenderJob::Status::FAILED;
+            std::filesystem::remove(temporaryPath, error);
+            return;
+        }
 
-            // Log new file metadata after copy
-            std::cout << "[Render] Original file updated: " << job->active_file << " (output preserved)" << std::endl;
-            std::string probe_cmd_new = "ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate,avg_frame_rate,duration -of default=noprint_wrappers=1 \"" + job->active_file + "\"";
-            std::cout << "[Render] Running ffprobe on original: " << probe_cmd_new << std::endl;
-            system(probe_cmd_new.c_str());
+        const auto replaceFile = [](const std::filesystem::path& source,
+                                    const std::filesystem::path& destination,
+                                    std::error_code& replaceError) {
+#ifdef _WIN32
+            replaceError.clear();
+            if (!MoveFileExW(source.wstring().c_str(), destination.wstring().c_str(),
+                             MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED)) {
+                replaceError = std::error_code(static_cast<int>(GetLastError()),
+                                               std::system_category());
+            }
+#else
+            std::filesystem::rename(source, destination, replaceError);
+#endif
+        };
+
+        replaceFile(temporaryPath, outputPath, error);
+        if (error) {
+            job->error_message = "Failed to publish rendered output: " + error.message();
+            job->status = RenderJob::Status::FAILED;
+            std::filesystem::remove(temporaryPath, error);
+            return;
+        }
+
+        if (job->do_swap && outputPath != activePath) {
+            const std::filesystem::path activeTemporaryPath =
+                activePath.parent_path() /
+                (activePath.stem().string() + ".swap." + std::to_string(job->version) +
+                 activePath.extension().string());
+
+            std::filesystem::copy_file(outputPath, activeTemporaryPath,
+                                       std::filesystem::copy_options::overwrite_existing,
+                                       error);
+            if (!error) {
+                replaceFile(activeTemporaryPath, activePath, error);
+            }
+            if (error) {
+                job->error_message = "Failed to update active file: " + error.message();
+                job->status = RenderJob::Status::FAILED;
+                std::filesystem::remove(activeTemporaryPath, error);
+                return;
+            }
+        }
+
+        std::cout << "[Render] Published output: " << job->output_file << std::endl;
+        if (job->do_swap && outputPath != activePath) {
+            std::cout << "[Render] Updated active file: " << job->active_file << std::endl;
         }
     }
     

@@ -222,6 +222,21 @@ const std::vector<LayerOption>& layerOptions() {
         std::sort(out.begin(), out.end(), [](const LayerOption& a, const LayerOption& b) {
             return a.mode < b.mode;
         });
+
+        std::cerr << "[Procedural] UI discovered " << out.size() << " layer entries\n";
+        for (const auto& option : out) {
+            const int mode = option.mode;
+            const bool compiled = mode <= 12 || (mode >= 13 && mode <= 20) ||
+                                  mode == 40 || mode == 76 || mode == 77 ||
+                                  mode == 84 || mode == 85 || mode == 90 || mode == 91 ||
+                                  mode == 78 || mode == 79 || mode == 82 || mode == 83 || mode == 87 ||
+                                  mode == 89 || mode == 92 || mode == 93 || mode == 95 ||
+                                  (mode >= 96 && mode <= 110);
+            if (!compiled) {
+                std::cerr << "[Procedural] UI entry not present in pass_a_base: mode="
+                          << mode << " name=\"" << option.label << "\"\n";
+            }
+        }
         return out;
     }();
 

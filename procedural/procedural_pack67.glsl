@@ -1,7 +1,7 @@
 // @EFFECT name="Flow Field" index=93 desc="Perlin noise flow field with triangular particles" author="p5.js port"
 
 // Draw triangle
-float drawTriangle(vec2 p, vec2 center, float angle, float base, float height) {
+float flowFieldDrawTriangle(vec2 p, vec2 center, float angle, float base, float height) {
     // Triangle vertices in local space
     vec2 v0 = vec2(base, 0.0);
     vec2 v1 = vec2(-base, 0.0);
@@ -82,7 +82,7 @@ vec4 renderFlowField(
             vec2 center = vec2(x * scl + scl * 0.5, y * scl + scl * 0.5);
             
             // Draw triangle
-            float tri = drawTriangle(st, center, angle, 0.01, scl * 0.04);
+            float tri = flowFieldDrawTriangle(st, center, angle, 0.01, scl * 0.04);
             
             if (tri > 0.0) {
                 // Color (white with transparency from p5.js)

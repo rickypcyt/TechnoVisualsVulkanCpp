@@ -419,6 +419,203 @@ vec3 renderDomainWarpedFractalWrapper(vec2 st) {
     return renderDomainWarpedFractal(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
 }
 
+vec2 rotate2D(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat2(c, -s, s, c) * v;
+}
+
+float hash21(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float snoise(vec2 p) {
+    return noise(p) * 2.0 - 1.0;
+}
+
+float map(float value, float inMin, float inMax, float outMin, float outMax) {
+    return mix(outMin, outMax, (value - inMin) / (inMax - inMin));
+}
+
+float remap(float value, float inMin, float inMax, float outMin, float outMax) {
+    return mix(outMin, outMax, (value - inMin) / (inMax - inMin));
+}
+
+vec3 sphericalToRectangular(float radius, float thetaDegrees, float phiDegrees) {
+    float theta = radians(thetaDegrees);
+    float phi = radians(phiDegrees);
+    return radius * vec3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta));
+}
+
+vec3 hsb2rgb(vec3 c) {
+    vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0,
+                     0.0, 1.0);
+    rgb = rgb * rgb * (3.0 - 2.0 * rgb);
+    return c.z * mix(vec3(1.0), rgb, c.y);
+}
+
+vec4 taylorInvSqrt(vec4 r) {
+    return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+#include "../procedural/procedural_pack50.glsl"
+#include "../procedural/procedural_pack52.glsl"
+#include "../procedural/procedural_pack53.glsl"
+#include "../procedural/procedural_pack56.glsl"
+#include "../procedural/procedural_pack57.glsl"
+#include "../procedural/procedural_pack61.glsl"
+#include "../procedural/procedural_pack63.glsl"
+#include "../procedural/procedural_pack51.glsl"
+#include "../procedural/procedural_pack58.glsl"
+#include "../procedural/procedural_pack59.glsl"
+#include "../procedural/procedural_pack64.glsl"
+#include "../procedural/procedural_pack65.glsl"
+#include "../procedural/procedural_pack66.glsl"
+#include "../procedural/procedural_pack67.glsl"
+#include "../procedural/procedural_pack69.glsl"
+#include "../procedural/procedural_pack70.glsl"
+#include "../procedural/procedural_pack71.glsl"
+#include "../procedural/procedural_pack72.glsl"
+#include "../procedural/procedural_pack73.glsl"
+#include "../procedural/procedural_pack74.glsl"
+#include "../procedural/procedural_pack75.glsl"
+
+vec4 renderFractalTunnel20(vec2 st, float time, float tempo, float energy, float bass, float mid, float high) {
+    vec2 uv = st * (0.25 + energy * 0.05);
+    float twist = sin(time * 0.3) * 0.4 + mid * 0.6;
+    uv = rotate(uv, twist);
+    vec3 dir = normalize(vec3(uv, 0.8));
+    float speed = 1.05 + tempo * 0.7 + energy * 0.45;
+    float travel = time * speed;
+    vec3 accum = vec3(0.0);
+    float alpha = 0.0;
+    float fade = 1.0;
+
+    for (int i = 0; i < 36; ++i) {
+        float t = float(i) * 0.18;
+        vec3 pos = dir * (t + travel);
+        pos.z = mod(pos.z, 4.0) - 2.0;
+        float radius = length(pos.xy);
+        float angle = atan(pos.y, pos.x);
+        float sectors = 6.0 + floor(mid * 8.0);
+        float sectorAngle = 2.0 * PI / max(sectors, 1.0);
+        float folded = abs(mod(angle, sectorAngle) - sectorAngle * 0.5);
+        float petals = exp(-folded * folded * (18.0 + high * 18.0));
+        vec2 coord1 = pos.xy * (2.8 + high * 1.3) + vec2(pos.z * 0.8, pos.z * 0.5);
+        vec2 coord2 = pos.yz * (2.2 + energy * 0.8) - vec2(time * 0.18, time * 0.22);
+        float warpA = fbm(coord1 + vec2(time * 0.25, -time * 0.21));
+        float warpB = fbm(coord2);
+        float shell = sin((pos.z + travel) * (4.0 + bass * 3.5) + warpA * 4.0);
+        float rings = smoothstep(0.25, 0.85, shell * 0.5 + 0.5);
+        float targetRadius = 0.85 + warpA * 0.35 + sin((pos.z + travel) * 1.6) * 0.12;
+        float radial = exp(-pow(radius - targetRadius, 2.0) * (10.0 + bass * 9.0));
+        float density = clamp(petals * rings * (0.55 + warpB * 0.45) * radial, 0.0, 1.0);
+        float distFade = exp(-t * (0.45 + energy * 0.18));
+        vec3 layerColor = mix(uPrimaryColor, uSecondaryColor, clamp(warpA * 0.5 + 0.5, 0.0, 1.0));
+        layerColor += vec3(0.32, 0.14, 0.45) * petals * (0.35 + high * 0.6);
+        layerColor += vec3(0.08, 0.13, 0.18) * rings * (0.3 + bass * 0.45);
+        accum += clamp(layerColor, 0.0, 1.0) * density * distFade * fade;
+        alpha += density * distFade * 0.06 * fade;
+        fade *= 0.96 - high * 0.01;
+    }
+
+    float coreGlow = exp(-dot(uv, uv) * (3.0 + energy * 1.4));
+    vec3 coreColor = mix(uPrimaryColor, uSecondaryColor, clamp(0.5 + 0.5 * sin(travel + high * 2.5), 0.0, 1.0));
+    accum += coreColor * coreGlow * (0.4 + high * 0.4 + energy * 0.3);
+    alpha += coreGlow * (0.18 + energy * 0.15);
+    float brightness = dot(accum, vec3(0.299, 0.587, 0.114));
+    accum = mix(vec3(0.0), accum, smoothstep(0.1, 0.4, brightness));
+    return vec4(clamp(accum * 0.6, 0.0, 1.0), clamp(alpha, 0.0, 1.0));
+}
+
+vec3 renderFractalTunnelWrapper(vec2 st) {
+    return renderFractalTunnel20(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderNoiseDotGridWrapper(vec2 st) {
+    return renderNoiseDotGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderRecursiveGridsWrapper(vec2 st) {
+    return renderRecursiveGrids(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderFibonacciCurlWrapper(vec2 st) {
+    return renderFibonacciCurl(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderCollatzSpiralWrapper(vec2 st) {
+    return renderCollatzSpiral(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderTriangleParticlesWrapper(vec2 st) {
+    return renderTriangleParticles(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderBezierPetalsWrapper(vec2 st) {
+    return renderBezierPetals(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderKochSnowflakeWrapper(vec2 st) {
+    return renderKochSnowflake(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderFlowFieldWrapper(vec2 st) {
+    return renderFlowField(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderWaveCirclesWrapper(vec2 st) {
+    return renderWaveCircles(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderGameOfLifeWrapper(vec2 st) {
+    return renderGameOfLife(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 render3DWaveBoxesWrapper(vec2 st) {
+    return render3DWaveBoxes(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderLowresPixelationWrapper(vec2 st) {
+    return renderLowresPixelation(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderParticleCloudWrapper(vec2 st) {
+    return renderParticleCloud(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderStarRingWrapper(vec2 st) {
+    return renderStarRing(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderCurvedLinesWrapper(vec2 st) {
+    return renderCurvedLines(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderNoiseParticlesWrapper(vec2 st) {
+    return renderNoiseParticles(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderLavaFluidFloorWrapper(vec2 st) {
+    return renderLavaFluidFloor(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderCristianCamiloGridWrapper(vec2 st) {
+    return renderCristianCamiloGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderJuanmiPaganGridWrapper(vec2 st) {
+    return renderJuanmiPaganGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderTizianoSterpaGridWrapper(vec2 st) {
+    return renderTizianoSterpaGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
+vec3 renderBohmGridWrapper(vec2 st) {
+    return renderBohmGrid(st, uTime, uTempo, uEnergy, uBass, uMid, uHigh).rgb;
+}
+
 #include "../procedural/procedural_pack76.glsl"
 
 // Mode 102: Melting Red Fractal

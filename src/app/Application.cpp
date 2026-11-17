@@ -99,7 +99,8 @@ void Application::updateAllDescriptorSets() {
 
 // Reconstruye GPU texture + CPU pool para un slot ya inicializado.
 void Application::rebuildVideoTexture(int slot) {
-    vkDeviceWaitIdle(vulkanContext.getDevice());
+    previewFrameSystem.waitForAllFences();
+    outputFrameSystem.waitForAllFences();
     if (slot == 0) {
         previewSlots[0].texture.destroy(resourceSystem, vulkanContext.getDevice());
         previewSlots[0].texture.cleanup(resourceSystem);
@@ -277,7 +278,8 @@ bool Application::reloadOutputVideoSlot(int slot, const std::string& path) {
         outputSlots[0].player.setPlaybackRate(outputVisualControls.playback.videoPlaybackRate);
 
         // Rebuild texture
-        vkDeviceWaitIdle(vulkanContext.getDevice());
+        previewFrameSystem.waitForAllFences();
+        outputFrameSystem.waitForAllFences();
         outputSlots[0].texture.destroy(resourceSystem, vulkanContext.getDevice());
         outputSlots[0].texture.cleanup(resourceSystem);
         outputSlots[0].texture.createResources(
@@ -315,7 +317,8 @@ bool Application::reloadOutputVideoSlot(int slot, const std::string& path) {
         s.player.setAutoScale(outputVisualControls.playback.autoScaleVideo);
         s.player.setPlaybackRate(rate);
 
-        vkDeviceWaitIdle(vulkanContext.getDevice());
+        previewFrameSystem.waitForAllFences();
+        outputFrameSystem.waitForAllFences();
         s.texture.destroy(resourceSystem, vulkanContext.getDevice());
         s.texture.cleanup(resourceSystem);
         s.texture.createResources(
@@ -1940,7 +1943,7 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
     if (width == 0 || height == 0) return;
 
     std::cout << "[Resize] Preview window: " << width << "x" << height << "\n";
-    vkDeviceWaitIdle(vulkanContext.getDevice());
+    previewFrameSystem.waitForAllFences();
     previewFrameSystem.cleanup();
 
     // Recreate preview swapchain with actual window size
@@ -1968,7 +1971,7 @@ void Application::handleOutputWindowResize(uint32_t width, uint32_t height) {
     if (width == 0 || height == 0) return;
 
     std::cout << "[Resize] Output window requested: " << width << "x" << height << "\n";
-    vkDeviceWaitIdle(vulkanContext.getDevice());
+    outputFrameSystem.waitForAllFences();
     outputFrameSystem.cleanup();
 
     // Recreate output swapchain with actual window size
@@ -1998,9 +2001,9 @@ void Application::handleOutputWindowResize(uint32_t width, uint32_t height) {
 
 void Application::processPendingResizes() {
     // Don't recreate swapchains during Win32 modal loop (window drag/resize).
-    // handleWindowResize/handleOutputWindowResize call vkDeviceWaitIdle() which
-    // blocks the modal loop, preventing WM_TIMER from firing and freezing all
-    // windows. Instead, let tryRenderPreview/tryRenderOutput skip the out-of-date
+    // handleWindowResize/handleOutputWindowResize wait only for the affected
+    // frame fences, avoiding a device-wide stall during the modal loop. Instead,
+    // let tryRenderPreview/tryRenderOutput skip the out-of-date
     // swapchain and continue rendering the other window. The resize is processed
     // when the modal loop ends (WM_EXITSIZEMOVE sets inModalLoop=false and
     // forces resizeDebounceTime to now).
@@ -2339,16 +2342,10 @@ bool Application::tryRenderPreview() {
         return false;
     }
 
-    // Preview renders at 30fps (update UBOs every 2 frames)
-    bool updatePreview = (previewFrameCounter % 2 == 0);
-    ++previewFrameCounter;
-
-    if (updatePreview) {
-        updateUniformBuffer(previewFrame->frameIndex, visualControls,
-                            uniformBufferManager, previewPresenter, previewAnim,
-                            previewSlots[0].texture, previewSlots[1].texture, previewSlots[2].texture,
-                            previewSlots[0].initialized, previewSlots[1].initialized, previewSlots[2].initialized);
-    }
+    updateUniformBuffer(previewFrame->frameIndex, visualControls,
+                        uniformBufferManager, previewPresenter, previewAnim,
+                        previewSlots[0].texture, previewSlots[1].texture, previewSlots[2].texture,
+                        previewSlots[0].initialized, previewSlots[1].initialized, previewSlots[2].initialized);
 
     // Update preview video renderers
     if (!uiSystem.isRendererPaused() && !previewPaused) {
@@ -3068,6 +3065,22 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
                                       VideoTexture& vid1, VideoTexture& vid2, VideoTexture& vid3,
                                       bool vid1Init, bool vid2Init, bool vid3Init,
                                       bool forOutput) {
+    static int lastLoggedMode = -1;
+    if (controls.playback.activeMode != lastLoggedMode) {
+        lastLoggedMode = controls.playback.activeMode;
+        const int mode = controls.playback.activeMode;
+        const bool compiled = mode <= 12 || mode == 13 || mode == 14 || mode == 15 ||
+                              mode == 16 || mode == 17 || mode == 18 || mode == 19 || mode == 20 ||
+                              mode == 40 || mode == 76 || mode == 77 ||
+                              mode == 84 || mode == 85 || mode == 90 || mode == 91 ||
+                              mode == 78 || mode == 79 || mode == 82 || mode == 83 || mode == 87 ||
+                              mode == 89 || mode == 92 || mode == 93 || mode == 95 ||
+                              (mode >= 96 && mode <= 110);
+        std::cerr << "[Procedural] activeMode=" << mode
+                  << (compiled ? " compiled in pass_a_base" : " NOT compiled in pass_a_base")
+                  << '\n';
+    }
+
     GlobalParamsUBO ubo{};
 
     // Calculate time delta and accumulate (similar to your system)
@@ -3080,6 +3093,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
 
     float globalDeltaTime = std::chrono::duration<float>(currentTime - anim.lastGlobalTime).count();
     anim.lastGlobalTime = currentTime;
+    globalDeltaTime = std::clamp(globalDeltaTime, 0.0f, 0.1f);
 
     // Apply animation speed to delta
     float speed = std::max(0.01f, controls.playback.animationSpeed);
@@ -3218,10 +3232,10 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
         ubo.secondaryColor.b *= bMod;
     }
     ubo.tempo = tempoValue;
-    ubo.energy = controls.audio.energy;
-    ubo.bass = controls.audio.bass;
-    ubo.mid = controls.audio.mid;
-    ubo.high = controls.audio.high;
+    ubo.energy = reactive.energy;
+    ubo.bass = reactive.bass;
+    ubo.mid = reactive.mid;
+    ubo.high = reactive.high;
     ubo.audioReactiveDrive = controls.audio.reactiveDrive;
     
     // Audio reactivity parameters
@@ -3413,10 +3427,10 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     // When enabled, audio levels automatically drive effect intensities
     // so the layers animate without manual slider tweaking.
     // ------------------------------------------------------------------
-    float envClamped  = std::clamp(controls.audio.energy, 0.0f, 1.0f);
-    float bassClamped = std::clamp(controls.audio.bass,   0.0f, 1.0f);
-    float midClamped  = std::clamp(controls.audio.mid,    0.0f, 1.0f);
-    float highClamped = std::clamp(controls.audio.high,   0.0f, 1.0f);
+    float envClamped  = std::clamp(reactive.energy, 0.0f, 1.0f);
+    float bassClamped = std::clamp(reactive.bass,   0.0f, 1.0f);
+    float midClamped  = std::clamp(reactive.mid,    0.0f, 1.0f);
+    float highClamped = std::clamp(reactive.high,   0.0f, 1.0f);
 
     float warpGain     = std::max(0.0f, controls.audio.warpResponse);
     float feedbackGain = std::max(0.0f, controls.audio.feedbackResponse);
@@ -3544,7 +3558,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.postEffectStrength = controls.post.postEffectStrength;
     ubo.postEffectIntensity = controls.post.postEffectIntensity;
     ubo.postEffectMode = controls.post.postEffectMode;
-    ubo.postEffectBass = controls.audio.bass;
+    ubo.postEffectBass = reactive.bass;
     ubo.postEffectRgbAdjust = controls.post.postEffectRgbAdjust;
 
     uboManager.update(frameIndex, ubo, vulkanContext.getDevice());

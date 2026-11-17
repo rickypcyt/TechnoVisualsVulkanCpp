@@ -44,7 +44,6 @@ void VulkanPresenter::cleanup() {
 
 void VulkanPresenter::recreate(uint32_t width, uint32_t height, VkRenderPass renderPass) {
     if (device == VK_NULL_HANDLE) return;
-    vkDeviceWaitIdle(device);
 
     destroyFramebuffers();
     destroyImageViews();
