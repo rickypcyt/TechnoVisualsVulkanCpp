@@ -63,6 +63,22 @@ public:
     float getSmoothedMid() const { return smoothedMid.load(); }
     float getSmoothedHigh() const { return smoothedHigh.load(); }
 
+    // ---- Real input devices (PortAudio) ----
+    struct InputDevice {
+        int         paIndex = -1;
+        std::string name;
+        std::string hostApi;      // e.g. "Windows WASAPI", "MME"
+        int         maxChannels = 0;
+        double      sampleRate = 0.0;
+        bool        isSystemDefault = false;
+    };
+    std::vector<InputDevice> listInputDevices() const;
+    int    getSelectedInputDevice() const { return inputDevice; }
+    bool   selectInputDevice(int paIndex);   // switches (and restarts) the capture stream
+    bool   refreshInputDevices();            // re-scans hardware (hot-plugged devices)
+    double getSampleRate() const { return sampleRate; }
+    int    getStreamChannels() const { return streamChannels; }
+
     std::vector<std::string> getInputDeviceNames();
     int getInputDeviceIndex() const { return pulseSourceIndex; }
     bool setInputDevice(int deviceIndex);
@@ -90,6 +106,7 @@ private:
     int inputDevice = paNoDevice;
 
     double sampleRate = 44100.0;
+    int streamChannels = CHANNELS;   // channels actually opened (down-mixed to mono in the callback)
 
     // PulseAudio source listing (monitors, virtual mics, etc.)
     std::vector<std::string> pulseSourceNames;
@@ -153,6 +170,8 @@ private:
 
 private:
     bool openStream();
+    void saveSelectedDevice() const;
+    bool restoreSavedDevice();
 
     static int audioCallback(
         const void* input,

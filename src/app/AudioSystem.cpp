@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <unistd.h>
+#include <algorithm>
+#include <fstream>
 
 AudioSystem::AudioSystem() {
     ringBuffer.resize(FFT_SIZE * 8, 0.0f);
@@ -55,6 +57,7 @@ bool AudioSystem::initialize() {
     }
 
     inputDevice = Pa_GetDefaultInputDevice();
+    restoreSavedDevice();
 
     if (inputDevice == paNoDevice) {
         std::cerr << "No input device\n";
@@ -79,10 +82,12 @@ bool AudioSystem::openStream() {
 
     if (inputMode.load() == InputMode::Microphone) {
         input.device = inputDevice;
-        input.channelCount = CHANNELS;
+        const PaDeviceInfo* inInfo = Pa_GetDeviceInfo(inputDevice);
+        const int devChannels = inInfo ? std::max(1, std::min(inInfo->maxInputChannels, 2)) : 1;
+        input.channelCount = devChannels;      // stereo devices are down-mixed to mono in the callback
+        streamChannels = devChannels;
         input.sampleFormat = paFloat32;
-        input.suggestedLatency =
-            Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
+        input.suggestedLatency = inInfo ? inInfo->defaultLowInputLatency : 0.05;
     } else {
         // File mode: use output stream for playback
         output.device = Pa_GetDefaultOutputDevice();
@@ -102,6 +107,13 @@ bool AudioSystem::openStream() {
         inputMode.load() == InputMode::Microphone ? audioCallback : fileAudioCallback,
         this
     );
+
+    if (err != paNoError && inputMode.load() == InputMode::Microphone && input.channelCount > 1) {
+        // Some drivers only accept mono: retry before giving up
+        input.channelCount = 1;
+        streamChannels = 1;
+        err = Pa_OpenStream(&stream, &input, nullptr, sampleRate, HOP_SIZE, paNoFlag, audioCallback, this);
+    }
 
     if (err != paNoError) {
         std::cerr << "[AudioSystem] Pa_OpenStream failed: " << Pa_GetErrorText(err) << std::endl;
@@ -240,6 +252,89 @@ void AudioSystem::refreshPulseAudioSources() {
               << " PulseAudio sources (default idx=" << pulseSourceIndex << ")\n";
 }
 
+std::vector<AudioSystem::InputDevice> AudioSystem::listInputDevices() const {
+    std::vector<InputDevice> out;
+    const int count = Pa_GetDeviceCount();
+    const int def = Pa_GetDefaultInputDevice();
+    for (int i = 0; i < count; ++i) {
+        const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
+        if (!info || info->maxInputChannels <= 0) continue;
+        const PaHostApiInfo* host = Pa_GetHostApiInfo(info->hostApi);
+        InputDevice d;
+        d.paIndex = i;
+        d.name = info->name ? info->name : "";
+        d.hostApi = host && host->name ? host->name : "";
+        d.maxChannels = info->maxInputChannels;
+        d.sampleRate = info->defaultSampleRate;
+        d.isSystemDefault = (i == def);
+        out.push_back(std::move(d));
+    }
+    return out;
+}
+
+bool AudioSystem::selectInputDevice(int paIndex) {
+    const PaDeviceInfo* info = Pa_GetDeviceInfo(paIndex);
+    if (!info || info->maxInputChannels <= 0) return false;
+
+    const bool wasRunning = running.load();
+    if (wasRunning) stop();
+
+    inputDevice = paIndex;
+    sampleRate = info->defaultSampleRate;
+    saveSelectedDevice();
+    std::cout << "[AudioSystem] Input device selected: " << info->name
+              << " idx=" << paIndex << " sr=" << sampleRate << "\n";
+
+    if (wasRunning) {
+        const bool ok = start();
+        std::cout << "[AudioSystem] Stream restart after device change: " << (ok ? "OK" : "FAILED") << "\n";
+        return ok;
+    }
+    return true;
+}
+
+bool AudioSystem::refreshInputDevices() {
+    const bool wasRunning = running.load();
+    if (wasRunning) stop();
+    // PortAudio only sees hot-plugged devices after a re-initialisation
+    Pa_Terminate();
+    if (Pa_Initialize() != paNoError) return false;
+    inputDevice = Pa_GetDefaultInputDevice();
+    restoreSavedDevice();
+    if (inputDevice != paNoDevice) {
+        const PaDeviceInfo* dev = Pa_GetDeviceInfo(inputDevice);
+        if (dev) sampleRate = dev->defaultSampleRate;
+    }
+    return wasRunning ? start() : true;
+}
+
+// The chosen device is remembered between runs (name + driver, indices are not stable).
+void AudioSystem::saveSelectedDevice() const {
+    const PaDeviceInfo* info = Pa_GetDeviceInfo(inputDevice);
+    if (!info) return;
+    const PaHostApiInfo* host = Pa_GetHostApiInfo(info->hostApi);
+    std::ofstream f("audio_device.txt");
+    if (f) f << (host && host->name ? host->name : "") << "\n" << (info->name ? info->name : "") << "\n";
+}
+
+bool AudioSystem::restoreSavedDevice() {
+    std::ifstream f("audio_device.txt");
+    if (!f) return false;
+    std::string hostName, devName;
+    std::getline(f, hostName);
+    std::getline(f, devName);
+    if (devName.empty()) return false;
+    for (const auto& d : listInputDevices()) {
+        if (d.name == devName && d.hostApi == hostName) {
+            inputDevice = d.paIndex;
+            sampleRate = d.sampleRate;
+            std::cout << "[AudioSystem] Restored saved input device: " << d.name << " (" << d.hostApi << ")\n";
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<std::string> AudioSystem::getInputDeviceNames() {
     return pulseSourceNames;
 }
@@ -295,8 +390,8 @@ bool AudioSystem::restartStream() {
     if (wasRunning) {
         stop();
     }
-    // Re-query default in case it changed externally
-    inputDevice = Pa_GetDefaultInputDevice();
+    // Keep the device the user picked; only fall back to the system default if none is set
+    if (inputDevice == paNoDevice) inputDevice = Pa_GetDefaultInputDevice();
     if (inputDevice != paNoDevice) {
         const PaDeviceInfo* dev = Pa_GetDeviceInfo(inputDevice);
         if (dev) {
@@ -331,8 +426,12 @@ int AudioSystem::audioCallback(
             self->ringMutex
         );
 
+        const int ch = std::max(1, self->streamChannels);
         for (unsigned long i = 0; i < frameCount; i++) {
-            self->ringBuffer[self->writeIndex] = in[i];
+            float mono = in[i * ch];
+            for (int k = 1; k < ch; ++k) mono += in[i * ch + k];
+            mono /= static_cast<float>(ch);
+            self->ringBuffer[self->writeIndex] = mono;
 
             self->writeIndex =
                 (self->writeIndex + 1)

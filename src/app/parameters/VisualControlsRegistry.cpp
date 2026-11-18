@@ -21,7 +21,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("tempoLfoSpeed", &playback.tempoLfoSpeed, 0.0f, 10.0f);
     r.registerFloat("tempoLfoDepth", &playback.tempoLfoDepth, 0.0f, 2.0f);
     r.registerFloat("tempoLfoPhase", &playback.tempoLfoPhase, 0.0f, 6.28f);
-    r.registerInt("activeMode", &playback.activeMode, 0, 40);
+    r.registerInt("activeMode", &playback.activeMode, 0, 255);   // layers go up to 110+; was clamped to 40
 
     // Audio analysis snapshot (exposed for monitoring)
     r.registerFloat("energy", &audio.energy, 0.0f, 1.0f);
@@ -42,9 +42,12 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     // VIDEO
     r.registerFloat("videoMix", &playback.videoMix, 0.0f, 1.0f);
     r.registerFloat("videoPlaybackRate", &playback.videoPlaybackRate, 0.0f, 5.0f);
-    r.registerFloat("videoDecodeOversample", &playback.videoDecodeOversample, 1.0f, 4.0f);
+    r.registerFloat("videoDecodeOversample", &playback.videoDecodeOversample, 1.0f, 8.0f);
     r.registerBool("autoScaleVideo", &playback.autoScaleVideo);
     r.registerInt("outputAspectRatio", &playback.outputAspectRatio, 0, 3);
+    r.registerInt("video1Rotation", &playback.video1Rotation, 0, 3);
+    r.registerInt("video2Rotation", &playback.video2Rotation, 0, 3);
+    r.registerInt("video3Rotation", &playback.video3Rotation, 0, 3);
 
     // DUAL VIDEO
     r.registerBool("enableDualVideo", &playback.enableDualVideo);
@@ -92,7 +95,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("bloomIntensity", &post.bloomIntensity, 0.0f, 5.0f);
     r.registerFloat("bloomThreshold", &post.bloomThreshold, 0.0f, 5.0f);
     r.registerBool("enablePostAberration", &post.enablePostAberration);
-    r.registerFloat("aberrationAmount", &post.aberrationAmount, 0.0f, 0.1f);
+    r.registerFloat("aberrationAmount", &post.aberrationAmount, -0.1f, 0.1f);
     r.registerBool("enablePostGrain", &post.enablePostGrain);
     r.registerFloat("grainStrength", &post.grainStrength, 0.0f, 1.0f);
     r.registerBool("enablePostBend", &post.enablePostBend);
@@ -120,9 +123,9 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     // COLOR GRADING
     r.registerBool("enableColorGrading", &color.enableColorGrading);
     r.registerFloat("gradeBrightness", &color.gradeBrightness, -1.0f, 1.0f);
-    r.registerFloat("gradeContrast", &color.gradeContrast, 0.0f, 2.0f);
-    r.registerFloat("gradeSaturation", &color.gradeSaturation, 0.0f, 2.0f);
-    r.registerFloat("gradeHueShift", &color.gradeHueShift, 0.0f, 6.28f);
+    r.registerFloat("gradeContrast", &color.gradeContrast, 0.0f, 3.0f);
+    r.registerFloat("gradeSaturation", &color.gradeSaturation, 0.0f, 3.0f);
+    r.registerFloat("gradeHueShift", &color.gradeHueShift, -360.0f, 360.0f);   // degrees
     r.registerFloat("gradeGamma", &color.gradeGamma, 0.1f, 3.0f);
     r.registerInt("colorLUTIndex", &color.colorLUTIndex, 0, 10);
     r.registerFloat("splitToneBalance", &color.splitToneBalance, 0.0f, 1.0f);
@@ -141,7 +144,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerBool("enableTemporal", &temporal.enableTemporal);
     r.registerFloat("temporalInterpolation", &playback.temporalInterpolation, 0.0f, 1.0f);
     r.registerFloat("temporalBlendStrength", &playback.temporalBlendStrength, 0.0f, 1.0f);
-    r.registerFloat("slowMotionFactor", &playback.slowMotionFactor, 0.1f, 2.0f);
+    r.registerFloat("slowMotionFactor", &playback.slowMotionFactor, 0.1f, 4.0f);
     r.registerFloat("frameAccumulation", &playback.frameAccumulation, 0.0f, 1.0f);
 
     // SPATIAL DISTORTION
@@ -149,17 +152,17 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("uvWarpStrength", &fx.uvWarpStrength, 0.0f, 5.0f);
     r.registerFloat("rippleStrength", &fx.rippleStrength, 0.0f, 5.0f);
     r.registerFloat("rippleFrequency", &fx.rippleFrequency, 0.1f, 10.0f);
-    r.registerFloat("swirlStrength", &fx.swirlStrength, 0.0f, 5.0f);
+    r.registerFloat("swirlStrength", &fx.swirlStrength, -5.0f, 5.0f);
     r.registerFloat("displacementAmount", &fx.displacementAmount, 0.0f, 2.0f);
     r.registerFloat("kaleidoSegments", &fx.kaleidoSegments, 0.0f, 16.0f);
     r.registerFloat("tunnelDepth", &fx.tunnelDepth, 0.0f, 2.0f);
-    r.registerFloat("tunnelCurvature", &fx.tunnelCurvature, 0.0f, 2.0f);
+    r.registerFloat("tunnelCurvature", &fx.tunnelCurvature, -2.0f, 2.0f);
 
     // BLUR / MOTION
     r.registerBool("enableBlurMotion", &fx.enableBlurMotion);
     r.registerFloat("gaussianBlur", &fx.gaussianBlur, 0.0f, 10.0f);
     r.registerFloat("directionalBlur", &fx.directionalBlur, 0.0f, 10.0f);
-    r.registerFloat("directionalBlurAngle", &fx.directionalBlurAngle, 0.0f, 6.28f);
+    r.registerFloat("directionalBlurAngle", &fx.directionalBlurAngle, 0.0f, 360.0f);   // degrees
     r.registerFloat("zoomBlur", &fx.zoomBlur, 0.0f, 10.0f);
     r.registerFloat("motionBlur", &fx.motionBlur, 0.0f, 10.0f);
     r.registerFloat("temporalBlur", &fx.temporalBlur, 0.0f, 10.0f);
@@ -185,18 +188,18 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerInt("blendModeProcedural", &blending.blendModeProcedural, 0, 10);
     r.registerInt("blendModeVideo", &blending.blendModeVideo, 0, 10);
     r.registerInt("blendModeFeedback", &blending.blendModeFeedback, 0, 10);
-    r.registerFloat("blendProceduralMix", &blending.blendProceduralMix, 0.0f, 1.0f);
-    r.registerFloat("blendVideoMix", &blending.blendVideoMix, 0.0f, 1.0f);
-    r.registerFloat("blendFeedbackMix", &blending.blendFeedbackMix, 0.0f, 1.0f);
+    r.registerFloat("blendProceduralMix", &blending.blendProceduralMix, 0.0f, 2.0f);
+    r.registerFloat("blendVideoMix", &blending.blendVideoMix, 0.0f, 2.0f);
+    r.registerFloat("blendFeedbackMix", &blending.blendFeedbackMix, 0.0f, 2.0f);
 
     // ANALOG / CRT BOOSTER
     r.registerBool("enableAnalog", &post.enableAnalog);
     r.registerFloat("analogScanlineFocus", &post.analogScanlineFocus, 0.0f, 1.0f);
     r.registerFloat("analogMaskBalance", &post.analogMaskBalance, 0.0f, 1.0f);
     r.registerFloat("analogNoise", &post.analogNoise, 0.0f, 1.0f);
-    r.registerFloat("analogBloom", &post.analogBloom, 0.0f, 1.0f);
+    r.registerFloat("analogBloom", &post.analogBloom, 0.0f, 2.0f);
     r.registerFloat("vhsDistortion", &post.vhsDistortion, 0.0f, 1.0f);
-    r.registerFloat("analogChromaticAberration", &post.analogChromaticAberration, 0.0f, 0.1f);
+    r.registerFloat("analogChromaticAberration", &post.analogChromaticAberration, 0.0f, 0.25f);
 
     // SELECTABLE POST-EFFECT SLOT
     r.registerString("postEffectName", &post.postEffectName);
@@ -213,7 +216,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("audioBlurResponse", &audio.blurResponse, 0.0f, 2.0f);
     r.registerFloat("audioColorResponse", &audio.colorResponse, 0.0f, 2.0f);
     r.registerFloat("audioGlitchResponse", &audio.glitchResponse, 0.0f, 2.0f);
-    r.registerFloat("audioBeatSync", &audio.beatSync, 0.0f, 1.0f);
+    r.registerFloat("audioBeatSync", &audio.beatSync, 0.0f, 4.0f);
     r.registerFloat("audioLfoRate", &audio.lfoRate, 0.0f, 5.0f);
     r.registerFloat("audioInputGain", &audio.inputGain, 0.0f, 3.0f);
     r.registerFloat("audioBassGain", &audio.bassGain, 0.0f, 4.0f);
@@ -221,6 +224,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerFloat("audioHighGain", &audio.highGain, 0.0f, 4.0f);
     r.registerFloat("audioReactiveDrive", &audio.reactiveDrive, 0.0f, 10.0f);
     r.registerFloat("audioSmoothAmount", &audio.smoothAmount, 0.0f, 0.95f);
+    r.registerBool("proceduralReactsToAudio", &audio.proceduralReactsToAudio);
 
     // EXTRA EFFECTS / EDGE
     r.registerFloat("pixelateAmount", &fx.pixelateAmount, 0.0f, 1.0f);
@@ -263,7 +267,7 @@ void VisualControlsRegistry::build(ParameterRegistry& r, VisualControls& c) {
     r.registerInt("gridColumns", &grid.columns, 1, 10);
     r.registerBool("gridMirrorCells", &grid.mirrorCells);
     r.registerBool("gridShowLines", &grid.showLines);
-    r.registerFloat("gridLineWidth", &grid.lineWidth, 0.0f, 0.01f);
+    r.registerFloat("gridLineWidth", &grid.lineWidth, 0.0f, 0.05f);
     r.registerFloat("gridLineIntensity", &grid.lineIntensity, 0.0f, 1.0f);
     r.registerVec3("gridLineColor", &grid.lineColor);
 

@@ -32,6 +32,9 @@ struct VisualControls {
         float videoMix = 1.0f;
         bool autoScaleVideo = true;
         int outputAspectRatio = 0;  // 0=original, 1=4:3, 2=16:9, 3=19:10
+        int video1Rotation = 0;     // quarter turns clockwise (0..3), applied in the shader
+        int video2Rotation = 0;
+        int video3Rotation = 0;
         float grayscaleAmount = 0.0f;
         float sharpenAmount = 0.35f;
         bool upscaleEnabled = true;
@@ -257,6 +260,7 @@ struct VisualControls {
         float highGain = 1.0f;       // EQ gain for high band
         float reactiveDrive = 1.0f;
         float smoothAmount = 0.0f;    // 0=raw, 1=very smooth (temporal lerp)
+        bool  proceduralReactsToAudio = false; // false: procedural layers use slow synthetic signals instead of live audio
 
         bool enabled = true;
     } audio;

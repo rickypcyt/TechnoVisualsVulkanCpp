@@ -231,6 +231,11 @@ struct GlobalParamsUBO {
     alignas(4) int postEffectMode;
     alignas(4) float postEffectBass;
     alignas(16) glm::vec3 postEffectRgbAdjust;
+
+    // Video rotation in quarter turns clockwise (0..3), appended at the end on purpose
+    alignas(4) int video1Rotation;
+    alignas(4) int video2Rotation;
+    alignas(4) int video3Rotation;
 };
 
 // Guard against CPU/GPU layout drift (shaders read these at std140 offsets).

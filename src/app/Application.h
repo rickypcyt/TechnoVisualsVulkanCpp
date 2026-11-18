@@ -271,6 +271,9 @@ private:
     // video / control flags
     bool allowDimensionChangeRecreation = false;
     bool controlsDirty = false;
+    bool loadingPreset = false;   // true while a preset is being applied
+    // Fixed internal resolution of the preview image (independent of the window / panel layout)
+    VkExtent2D previewRenderExtent{1280, 720};
     bool transitionActive = false;
 
     // video assets

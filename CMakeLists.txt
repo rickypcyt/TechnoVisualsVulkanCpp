@@ -79,9 +79,10 @@ add_library(imgui STATIC
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdl2.cpp
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer2.cpp
+    ${IMGUI_BACKENDS_DIR}/imgui_impl_vulkan.cpp
 )
 target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${IMGUI_BACKENDS_DIR})
-target_link_libraries(imgui PUBLIC SDL2::SDL2)
+target_link_libraries(imgui PUBLIC SDL2::SDL2 Vulkan::Vulkan)
 
 set(UBO_LAYOUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/ubo_layout.h)
 set(SHARED_UBO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shared_ubo.glsl)

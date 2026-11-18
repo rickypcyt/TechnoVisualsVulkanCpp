@@ -474,7 +474,7 @@ Vulkan_LIBRARY:FILEPATH=C:/VulkanSDK/1.4.350.0/Lib/vulkan-1.lib
 glm_DIR:PATH=C:/msys64/ucrt64/share/glm
 
 //Dependencies for the target
-imgui_LIB_DEPENDS:STATIC=general;SDL2::SDL2;
+imgui_LIB_DEPENDS:STATIC=general;SDL2::SDL2;general;Vulkan::Vulkan;
 
 //Value Computed by CMake
 nlohmann_json_BINARY_DIR:STATIC=C:/coding/TechnoVisualsVulkanCpp/build/_deps/nlohmann_json-build

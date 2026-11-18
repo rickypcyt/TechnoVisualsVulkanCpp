@@ -23,6 +23,7 @@
 #include <functional>
 #include <filesystem>
 #include <nlohmann/json.hpp>
+#include "VideoRotationStore.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #ifdef _WIN32
@@ -187,6 +188,7 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
 
     if (slot == 0) {
         previewSlots[0].sourcePath = path;
+        if (!loadingPreset) visualControls.playback.video1Rotation = VideoRotationStore::get(path);
         previewSlots[0].renderer.reset();
         previewSlots[0].player.shutdown();
 
@@ -208,6 +210,7 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         previewSlots[0].initialized = previewSlots[0].texture.isReady();
     } else if (slot == 1) {
         previewSlots[1].sourcePath = path;
+        if (!loadingPreset) visualControls.playback.video2Rotation = VideoRotationStore::get(path);
         previewSlots[1].renderer.reset();
         previewSlots[1].player.shutdown();
 
@@ -229,6 +232,7 @@ bool Application::reloadVideoSlot(int slot, const std::string& path) {
         previewSlots[1].initialized = previewSlots[1].texture.isReady();
     } else {
         previewSlots[2].sourcePath = path;
+        if (!loadingPreset) visualControls.playback.video3Rotation = VideoRotationStore::get(path);
         previewSlots[2].renderer.reset();
         previewSlots[2].player.shutdown();
 
@@ -397,13 +401,59 @@ std::vector<std::string> Application::listPresets() const {
     return names;
 }
 
+namespace {
+
+// Preset names become file names: strip characters Windows does not allow.
+std::string sanitizePresetName(const std::string& in) {
+    std::string out = in;
+    for (char& c : out) {
+        if (c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+            c = '_';
+    }
+    while (!out.empty() && (out.back() == ' ' || out.back() == '.')) out.pop_back();
+    while (!out.empty() && out.front() == ' ') out.erase(out.begin());
+    return out.empty() ? std::string("preset") : out;
+}
+
+// Write to a temp file first so a crash or full disk never leaves a truncated preset behind.
+bool writeJsonAtomically(const std::string& path, const nlohmann::json& j) {
+    const std::string tmp = path + ".tmp";
+    {
+        std::ofstream f(tmp, std::ios::binary | std::ios::trunc);
+        if (!f.is_open()) return false;
+        f << j.dump(4);
+        f.flush();
+        if (!f.good()) {
+            f.close();
+            std::error_code ec;
+            std::filesystem::remove(tmp, ec);
+            return false;
+        }
+    }
+    std::error_code ec;
+    std::filesystem::rename(tmp, path, ec);
+    if (ec) {                                    // Windows: rename onto an existing file can fail
+        std::filesystem::remove(path, ec);
+        ec.clear();
+        std::filesystem::rename(tmp, path, ec);
+    }
+    if (ec) {
+        std::error_code ec2;
+        std::filesystem::remove(tmp, ec2);
+        return false;
+    }
+    return true;
+}
+
+} // namespace
+
 bool Application::savePreset(const std::string& name) {
     return savePresetFromOutput(name);
 }
 
 bool Application::savePresetFromOutput(const std::string& name) {
     std::filesystem::create_directories(presetsDir);
-    std::string path = presetsDir + "/" + name + ".json";
+    std::string path = presetsDir + "/" + sanitizePresetName(name) + ".json";
 
     // Save OUTPUT controls so the preset captures exactly what is on the final output window.
     ParameterRegistry outputRegistry;
@@ -446,15 +496,12 @@ bool Application::savePresetFromOutput(const std::string& name) {
 
     j["video"] = video;
 
-    std::ofstream file(path);
-    if (!file.is_open()) return false;
-    file << j.dump(4);
-    return true;
+    return writeJsonAtomically(path, j);
 }
 
 bool Application::savePresetFromPreview(const std::string& name) {
     std::filesystem::create_directories(presetsDir);
-    std::string path = presetsDir + "/" + name + ".json";
+    std::string path = presetsDir + "/" + sanitizePresetName(name) + ".json";
 
     // Save PREVIEW controls so the preset captures what is on the preview window.
     ParameterRegistry previewRegistry;
@@ -497,19 +544,23 @@ bool Application::savePresetFromPreview(const std::string& name) {
 
     j["video"] = video;
 
-    std::ofstream file(path);
-    if (!file.is_open()) return false;
-    file << j.dump(4);
-    return true;
+    return writeJsonAtomically(path, j);
 }
 
 bool Application::loadPreset(const std::string& name) {
-    std::string path = presetsDir + "/" + name + ".json";
+    std::string path = presetsDir + "/" + sanitizePresetName(name) + ".json";
     if (!std::filesystem::exists(path)) return false;
+
+    // A half-applied preset (controls changed, videos not) is worse than a refused one.
+    if (!canChangeVideo()) {
+        std::cerr << "[Preset] A video is switching right now, try again in a moment: " << name << std::endl;
+        return false;
+    }
 
     std::ifstream file(path);
     if (!file.is_open()) return false;
 
+    // Validate BEFORE touching any state
     nlohmann::json j;
     try {
         file >> j;
@@ -517,6 +568,15 @@ bool Application::loadPreset(const std::string& name) {
         std::cerr << "[Preset] Invalid JSON: " << path << std::endl;
         return false;
     }
+    if (!j.is_object()) {
+        std::cerr << "[Preset] Not a preset file: " << path << std::endl;
+        return false;
+    }
+
+    loadingPreset = true;   // keeps per-clip rotations from overriding the preset's own values
+
+    // Start from defaults so values the file does not define cannot leak in from the previous state
+    visualControls = VisualControls{};
 
     // Load visual controls
     if (j.contains("visualControls")) {
@@ -593,19 +653,21 @@ bool Application::loadPreset(const std::string& name) {
         updateAllDescriptorSets();
     }
 
+    loadingPreset = false;
     controlsDirty = true;
+    std::cout << "[Preset] Loaded: " << name << std::endl;
     return true;
 }
 
 bool Application::deletePreset(const std::string& name) {
-    std::string path = presetsDir + "/" + name + ".json";
+    std::string path = presetsDir + "/" + sanitizePresetName(name) + ".json";
     if (!std::filesystem::exists(path)) return false;
     return std::filesystem::remove(path);
 }
 
 bool Application::renamePreset(const std::string& oldName, const std::string& newName) {
-    std::string oldPath = presetsDir + "/" + oldName + ".json";
-    std::string newPath = presetsDir + "/" + newName + ".json";
+    std::string oldPath = presetsDir + "/" + sanitizePresetName(oldName) + ".json";
+    std::string newPath = presetsDir + "/" + sanitizePresetName(newName) + ".json";
     if (!std::filesystem::exists(oldPath)) return false;
     if (std::filesystem::exists(newPath)) return false;
     std::filesystem::rename(oldPath, newPath);
@@ -632,15 +694,24 @@ void Application::run() {
     SDL_SetWindowPosition(window.getMainWindow(), (int)(50 * s), (int)(50 * s));
     window.createOutputWindow("[OUTPUT] Final", (int)(1280 * s), (int)(720 * s));
     SDL_SetWindowPosition(window.getOutputWindow(), (int)(50 * s), (int)(820 * s));
-    window.createUiWindow("[CONTROLS] UI", (int)(420 * s), (int)(720 * s));
-    SDL_SetWindowPosition(window.getUiWindow(), (int)(1350 * s), (int)(50 * s));
+    // The UI lives inside the preview window now (single-window layout), no separate controls window.
 
-    initVulkan();
-    initPresenters();
-    initRenderPass();
+    // Per-phase startup timings (so a slow start can be pinned to one step)
+    auto stepStart = std::chrono::steady_clock::now();
+    auto logStep = [&](const char* name) {
+        const auto now = std::chrono::steady_clock::now();
+        std::cout << "[Startup] " << name << ": "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(now - stepStart).count() << " ms" << std::endl;
+        stepStart = now;
+    };
+
+    initVulkan();               logStep("initVulkan");
+    initPresenters();           logStep("initPresenters (swapchains)");
+    initRenderPass();           logStep("initRenderPass");
 
     previewPresenter.createFramebuffers(renderPass);
     outputPresenter.createFramebuffers(renderPass);
+    logStep("framebuffers");
 
     descriptorSetManager.createLayout(vulkanContext.getDevice());
     descriptorSetManager.createPool(vulkanContext.getDevice());
@@ -648,9 +719,11 @@ void Application::run() {
     outputDescriptorSetManager.createPool(vulkanContext.getDevice());
     uniformBufferManager.createBuffers(resourceSystem, vulkanContext.getDevice());
     outputUniformBufferManager.createBuffers(resourceSystem, vulkanContext.getDevice());
+    logStep("descriptors + uniform buffers");
 
     // Cargar estado antes del vídeo para que selectedVideoFolder sea correcto
     JsonSerializer::load(visualControlsPath, parameterRegistry);
+    logStep("load visual_controls.json");
     ControlState::load(
         controlStatePath,
         previewSlots[0].randomizer,
@@ -677,8 +750,9 @@ void Application::run() {
     outputSlots[1].selectedVideoAsset = previewSlots[1].selectedVideoAsset;
     outputSlots[2].selectedVideoAsset = previewSlots[2].selectedVideoAsset;
 
-    initVideo();
-    initOutputVideo();
+    logStep("load controls_state");
+    initVideo();                logStep("initVideo (library scan + decoders)");
+    initOutputVideo();          logStep("initOutputVideo");
 
     descriptorSetManager.createSets(vulkanContext.getDevice());
     outputDescriptorSetManager.createSets(vulkanContext.getDevice());
@@ -699,7 +773,7 @@ void Application::run() {
         );
     }
 
-    initPipelines();
+    initPipelines();            logStep("initPipelines (graphics + compute passes)");
     updateFullscreenDescriptorSets();
     initUI();
     initNLE();
@@ -749,10 +823,18 @@ void Application::initVulkan() {
 }
 
 void Application::initPresenters() {
+    using Clock = std::chrono::steady_clock;
+    const auto t0 = Clock::now();
     previewPresenter.init(vulkanContext.getInstance(), vulkanContext.getPhysicalDevice(),
                           vulkanContext.getDevice(), window.getMainWindow(), 854, 480);
+    const auto t1 = Clock::now();
     outputPresenter.init(vulkanContext.getInstance(), vulkanContext.getPhysicalDevice(),
                          vulkanContext.getDevice(), window.getOutputWindow(), 1920, 1080);
+    const auto t2 = Clock::now();
+    std::cout << "[Startup]   preview swapchain: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+              << " ms, output swapchain: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << std::endl;
 }
 
 void Application::initRenderPass() {
@@ -1137,9 +1219,8 @@ void Application::initVideo() {
     glm::ivec2 screenSize = getScreenSize();
     // Decode preview videos to the preview window size, not full screen.
     // Preview is only 480p, so decoding to 1080p wastes a lot of startup time.
-    glm::ivec2 previewSize = previewPresenter.getExtent().width > 0 && previewPresenter.getExtent().height > 0
-                             ? glm::ivec2(previewPresenter.getExtent().width, previewPresenter.getExtent().height)
-                             : screenSize;
+    (void)screenSize;
+    glm::ivec2 previewSize(static_cast<int>(previewRenderExtent.width), static_cast<int>(previewRenderExtent.height));
 
     // ── Resolve paths ───────────────────────────────────────────────────────
     // Prefer saved paths; validate against the whole registry, then locate
@@ -1443,8 +1524,13 @@ void Application::initOutputVideo() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void Application::initUI() {
-    if (!uiSystem.initialize(window.getUiWindow(), window.getUiRenderer(), window.getDpiScale()))
+    const auto& qf = vulkanContext.getQueueFamilyIndices();
+    if (!uiSystem.initializeVulkan(window.getMainWindow(), vulkanContext.getInstance(),
+                                   vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
+                                   qf.graphicsFamily, vulkanContext.getGraphicsQueue(), renderPass,
+                                   static_cast<uint32_t>(previewPresenter.getImageCount()), window.getDpiScale()))
         throw std::runtime_error("failed to initialize UI system");
+    uiSystem.setPreviewAspect(static_cast<float>(previewRenderExtent.width) / static_cast<float>(previewRenderExtent.height));
     cachedCallbacks = buildUICallbacks();
 }
 
@@ -1521,7 +1607,7 @@ void Application::initMultiPassPipeline() {
         if (!multiPassPipeline.initialize(
                 vulkanContext.getPhysicalDevice(), vulkanContext.getDevice(),
                 vulkanContext.getGraphicsQueue(), queueFamily,
-                previewPresenter.getExtent(), previewPresenter.getFormat(),
+                previewRenderExtent, previewPresenter.getFormat(),
                 previewSlots[0].texture.getSampler(), previewSlots[0].texture.getSampler(),
                 previewSlots[0].texture.getImageView(), previewSlots[0].texture.getImageView(),
                 has2 ? previewSlots[1].texture.getSampler()   : previewSlots[0].texture.getSampler(),
@@ -1953,9 +2039,7 @@ void Application::handleWindowResize(uint32_t width, uint32_t height) {
     // Recreate preview swapchain with actual window size
     previewPresenter.recreate(width, height, renderPass);
 
-    if (previewSlots[0].initialized && multiPassPipeline.isInitialized()) {
-        multiPassPipeline.recreate(previewPresenter.getExtent());
-    }
+    // The preview image has a fixed internal resolution: resizing the window / panels only recreates the swapchain.
 
     updateAllDescriptorSets();
 
@@ -2154,8 +2238,6 @@ void Application::renderOneFrame() {
         else
             snprintf(title, sizeof(title), "[PREVIEW] Vulkan — %.1f FPS", currentFps);
         SDL_SetWindowTitle(window.getMainWindow(), title);
-        snprintf(title, sizeof(title), "[CONTROLS] UI — %.1f FPS", currentFps);
-        SDL_SetWindowTitle(window.getUiWindow(), title);
     }
 
     // ── Render jobs pendientes ───────────────────────────────────────────
@@ -2648,7 +2730,29 @@ void Application::processSDLEvents() {
             }
         }
 
-        bool consumed = uiSystem.processEvent(event);
+        // Only the preview window hosts the UI: do not feed it mouse/keyboard events of other windows.
+        bool consumed = false;
+        {
+            Uint32 evWindow = 0;
+            switch (event.type) {
+                case SDL_MOUSEMOTION:                          evWindow = event.motion.windowID; break;
+                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONUP:                        evWindow = event.button.windowID; break;
+                case SDL_MOUSEWHEEL:                           evWindow = event.wheel.windowID;  break;
+                case SDL_KEYDOWN:
+                case SDL_KEYUP:                                evWindow = event.key.windowID;    break;
+                case SDL_TEXTINPUT:                            evWindow = event.text.windowID;   break;
+                case SDL_TEXTEDITING:                          evWindow = event.edit.windowID;   break;
+                default: break;
+            }
+            if (evWindow == 0 || evWindow == SDL_GetWindowID(window.getMainWindow())) {
+                uiSystem.processEvent(event);
+                // ImGui "handles" every key of its own window; the hotkeys must only yield while a text field is active.
+                const ImGuiIO& uio = ImGui::GetIO();
+                if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_TEXTINPUT || event.type == SDL_TEXTEDITING)
+                    consumed = uio.WantTextInput;
+            }
+        }
 
         if (event.type == SDL_QUIT) { running = false; break; }
 
@@ -3089,6 +3193,7 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     }
 
     GlobalParamsUBO ubo{};
+    const VkExtent2D renderExtent = forOutput ? presenter.getExtent() : previewRenderExtent;
 
     // Calculate time delta and accumulate (similar to your system)
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -3195,13 +3300,13 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     // Set basic UBO values
     ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 2.5f), glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
-    float extW = static_cast<float>(presenter.getExtent().width);
-    float extH = static_cast<float>(presenter.getExtent().height);
+    float extW = static_cast<float>(renderExtent.width);
+    float extH = static_cast<float>(renderExtent.height);
     float aspect = (extH > 0.0f) ? (extW / extH) : 1.0f;
     ubo.proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1.0f;
-    ubo.resolution = glm::vec2(static_cast<float>(presenter.getExtent().width),
-                               static_cast<float>(presenter.getExtent().height));
+    ubo.resolution = glm::vec2(static_cast<float>(renderExtent.width),
+                               static_cast<float>(renderExtent.height));
     ubo.videoResolution = glm::vec2(static_cast<float>(vid1.getWidth()),
                                     static_cast<float>(vid1.getHeight()));
     ubo.time = anim.shaderTime;
@@ -3215,6 +3320,9 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.video3Available = (vid3Init && vid3.isReady()) ? 1.0f : 0.0f;
     ubo.video3BlendMode = controls.playback.video3BlendMode;
     ubo.outputAspectRatio = controls.playback.outputAspectRatio;
+    ubo.video1Rotation = controls.playback.video1Rotation;
+    ubo.video2Rotation = controls.playback.video2Rotation;
+    ubo.video3Rotation = controls.playback.video3Rotation;
 
     // Set visual control values
     ubo.primaryColor = controls.color.primaryColor;
@@ -3237,9 +3345,8 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.tempo = tempoValue;
     // Procedural layers: feed slow synthetic signals instead of the real audio so
     // every layer renders and animates on its own (silence no longer blanks them).
-    // Set kProceduralIgnoreAudio = false to drive shaders from the live audio again.
-    constexpr bool kProceduralIgnoreAudio = true;
-    if (kProceduralIgnoreAudio) {
+    // Audio tab > "Procedural layers react to audio" switches back to the live audio.
+    if (!controls.audio.proceduralReactsToAudio) {
         const float ts = anim.shaderTime;
         ubo.energy = 0.55f  + 0.25f * std::sin(ts * 0.7f);
         ubo.bass   = 0.575f + 0.325f * std::sin(ts * 1.3f);
@@ -3481,7 +3588,8 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
         if (controls.camera.enableMovement) {
             // Strong zoom pulse driven by bass (max 20% closer)
             float zoomPulse = 1.0f + (bassClamped * 0.20f + envClamped * 0.06f) * warpGain;
-            ubo.cameraZoom = std::max(ubo.cameraZoom, zoomPulse);
+            // Multiplicative so the Zoom slider stays authoritative (was max(): any zoom < 1 was ignored)
+            ubo.cameraZoom = ubo.cameraZoom * zoomPulse;
 
             // Fast orbit rotation driven by energy
             ubo.cameraRotation += envClamped * 0.8f * globalDeltaTime * warpGain;
@@ -3589,6 +3697,9 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
     if (vkBeginCommandBuffer(cmd, &begin) != VK_SUCCESS)
         throw std::runtime_error("failed to begin preview command buffer");
 
+    const VkRect2D previewRect = uiSystem.getPreviewRect();
+    const std::function<void(VkCommandBuffer)> uiDraw = [this](VkCommandBuffer c) { uiSystem.recordDrawData(c); };
+
     previewSlots[0].texture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
     if (previewSlots[1].initialized && previewSlots[1].texture.isReady())
         previewSlots[1].texture.recordPendingUpload(cmd, previewFrame.frameIndex, vulkanContext.getGraphicsQueue());
@@ -3614,9 +3725,21 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
 
         VkViewport vp{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
         VkRect2D   sc{ {0,0}, ext };
+        if (previewRect.extent.width > 0 && previewRect.extent.height > 0) {
+            sc = previewRect;
+            vp = { (float)previewRect.offset.x, (float)previewRect.offset.y,
+                   (float)previewRect.extent.width, (float)previewRect.extent.height, 0, 1 };
+        }
         vkCmdSetViewport(cmd, 0, 1, &vp);
         vkCmdSetScissor(cmd, 0, 1, &sc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
+        {
+            VkViewport full{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
+            VkRect2D   fullSc{ {0,0}, ext };
+            vkCmdSetViewport(cmd, 0, 1, &full);
+            vkCmdSetScissor(cmd, 0, 1, &fullSc);
+            uiDraw(cmd);
+        }
         vkCmdEndRenderPass(cmd);
     } else if (previewSlots[0].initialized && multiPassPipeline.isInitialized()) {
         multiPassPipeline.execute(
@@ -3626,7 +3749,8 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
             fullscreenPipeline, pipelineLayout,
             fullscreenDescriptorSets[previewFrame.frameIndex],
             previewPresenter.getExtent(), swapchainSampler,
-            1 // previewOverlay
+            1, // previewOverlay
+            &previewRect, &uiDraw
         );
     } else {
         VkClearValue clear{ .color = {0.f, 0.f, 0.f, 1.f} };
@@ -3647,9 +3771,21 @@ void Application::recordPreviewCommandBuffer(VkCommandBuffer cmd,
 
         VkViewport vp{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
         VkRect2D   sc{ {0,0}, ext };
+        if (previewRect.extent.width > 0 && previewRect.extent.height > 0) {
+            sc = previewRect;
+            vp = { (float)previewRect.offset.x, (float)previewRect.offset.y,
+                   (float)previewRect.extent.width, (float)previewRect.extent.height, 0, 1 };
+        }
         vkCmdSetViewport(cmd, 0, 1, &vp);
         vkCmdSetScissor(cmd, 0, 1, &sc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
+        {
+            VkViewport full{ 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
+            VkRect2D   fullSc{ {0,0}, ext };
+            vkCmdSetViewport(cmd, 0, 1, &full);
+            vkCmdSetScissor(cmd, 0, 1, &fullSc);
+            uiDraw(cmd);
+        }
         vkCmdEndRenderPass(cmd);
     }
 

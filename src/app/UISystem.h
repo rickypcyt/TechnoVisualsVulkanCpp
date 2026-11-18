@@ -7,9 +7,11 @@
 #include <memory>
 #include <vector>
 #include <array>
+#include <vulkan/vulkan.h>
 
 // Forward declarations para no incluir todo en el header
 struct ImGuiContext;
+struct ImTextureData;
 struct VisualControls;
 struct VideoRandomizerState;
 class VideoPlayer;
@@ -129,6 +131,19 @@ public:
     // Inicializa ImGui sobre una ventana SDL + renderer SDL
     bool initialize(SDL_Window* window, SDL_Renderer* renderer, float dpiScale = 1.0f);
 
+    // Single-window mode: ImGui is drawn by the Vulkan backend inside the preview window's render pass.
+    bool initializeVulkan(SDL_Window* window, VkInstance instance, VkPhysicalDevice physicalDevice,
+                          VkDevice device, uint32_t queueFamily, VkQueue queue,
+                          VkRenderPass renderPass, uint32_t imageCount, float dpiScale);
+
+    // Records the UI draw data (call inside the swapchain render pass, after the video quad).
+    void recordDrawData(VkCommandBuffer cmd);
+
+    // Where the preview video must be drawn this frame, in framebuffer pixels (computed by the layout).
+    VkRect2D getPreviewRect() const { return previewRect; }
+    // Aspect of the area reserved for the video (width / height).
+    void setPreviewAspect(float aspect) { previewAspect = aspect > 0.1f ? aspect : 16.0f / 9.0f; }
+
     void shutdown();
 
     // Procesa un evento SDL (llamar antes de newFrame).
@@ -231,7 +246,7 @@ private:
         std::string               loadedPath;
         std::string               lastError;
         std::vector<uint8_t>      frameBuffer;
-        SDL_Texture*              texture            = nullptr;
+        ImTextureData*            texture            = nullptr;   // user texture owned by ImGui backend
         int                       textureWidth       = 0;
         int                       textureHeight      = 0;
         float                     frameAccumulator   = 0.0f;
@@ -398,10 +413,25 @@ private:
         const std::string&    video1Path,
         const std::string&    video2Path,
         const std::string&    video3Path,
-        std::mt19937&         rng);
+        std::mt19937&         rng,
+        const std::string&    videoAssetsRoot);
 
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;
+
+    // Vulkan backend state (single-window mode)
+    bool           vulkanBackend = false;
+    bool           frameReady    = false;      // ImGui::Render() done for this frame
+    VkDevice       vkDevice      = VK_NULL_HANDLE;
+    VkRect2D       previewRect{};              // framebuffer pixels
+    float          previewAspect = 16.0f / 9.0f;
+    float          deckThumbWidth  = 420.0f;   // set by the layout from the panel size
+    float          deckThumbHeight = 240.0f;
+    float          layoutLeftWidth    = 430.0f;   // logical units (multiplied by dpiScale when used)
+    float          layoutBottomHeight = 390.0f;
+    std::vector<ImTextureData*> retiredTextures;   // waiting for the backend to release them
+    void retireTexture(ImTextureData* tex);
+    void reapRetiredTextures();
     ImGuiContext* context  = nullptr;
     bool          initialized = false;
     bool          rendererPaused = false;
@@ -426,4 +456,33 @@ private:
     bool decodePreviewFrame(VideoPreviewSlot& slot);
     bool ensurePreviewTexture(VideoPreviewSlot& slot, int width, int height);
     void updatePreviewSlot(VideoPreviewSlot& slot, float deltaTime);
+
+    // Panel layout: tabs on the left, video top-right, deck (previews + mixers) at the bottom.
+    void drawMainLayout(
+        VisualControls&       controls,
+        VideoRandomizerState& randomizer,
+        VideoRandomizerState& randomizer2,
+        VideoRandomizerState& randomizer3,
+        VideoPlayer&          player,
+        VideoPlayer&          player2,
+        VideoPlayer&          player3,
+        VideoRegistry&        registry,
+        int&                  selectedVideoAsset,
+        int&                  selectedVideoAsset2,
+        int&                  selectedVideoAsset3,
+        float&                transitionDuration,
+        float&                transitionDuration2,
+        float&                transitionDuration3,
+        bool&                 allowDimensionChangeRecreation,
+        bool&                 controlsDirty,
+        std::mt19937&         rng,
+        const UIDiagnostics&  diag,
+        const UICallbacks&    callbacks,
+        MidiSystem&           midiSystem,
+        OscSystem&            oscSystem,
+        AudioSystem&          audioSystem,
+        const std::string&    video1Path,
+        const std::string&    video2Path,
+        const std::string&    video3Path,
+        const std::string&    videoAssetsRoot);
 };

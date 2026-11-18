@@ -178,6 +178,9 @@ layout(set = 0, binding = 0, std140) uniform GlobalParamsUBO {
     int postEffectMode;
     float postEffectBass;
     vec3 postEffectRgbAdjust;
+    int video1Rotation;
+    int video2Rotation;
+    int video3Rotation;
 } ubo;
 
 #endif // SHARED_UBO_GLSL

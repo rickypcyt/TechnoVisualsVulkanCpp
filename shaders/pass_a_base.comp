@@ -52,26 +52,46 @@ float luminance(vec3 c) {
 }
 
 vec2 applyCamera(vec2 uv) {
-    if (ubo.enableCameraMovement == 0) return uv;
     vec2 p = uv - 0.5;
-    float c = cos(ubo.cameraRotation);
-    float s = sin(ubo.cameraRotation);
-    p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+    // Rotation and pan only follow the camera-movement toggle...
+    if (ubo.enableCameraMovement != 0) {
+        float c = cos(ubo.cameraRotation);
+        float s = sin(ubo.cameraRotation);
+        p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+    }
+    // ...but the Zoom slider must always work.
     p /= max(ubo.cameraZoom, 0.0001);
-    p += vec2(ubo.cameraPanX, ubo.cameraPanY);
+    if (ubo.enableCameraMovement != 0) {
+        p += vec2(ubo.cameraPanX, ubo.cameraPanY);
+    }
     return p + 0.5;
 }
 
+// Rotates how a video is sampled by quarter turns (1 = 90 deg clockwise) with a "cover" fit,
+// so a sideways clip fills the screen once turned upright.
+vec2 rotateVideoUV(vec2 p, int rot, vec2 texSize) {
+    rot = rot & 3;
+    if (rot == 0) return p;
+    if (rot == 2) return vec2(1.0) - p;
+    float aspectS = ubo.resolution.x / max(ubo.resolution.y, 1.0);
+    float aspectV = texSize.x / max(texSize.y, 1.0);
+    vec2 q = (p - 0.5) * vec2(aspectS, 1.0);
+    float k = max(aspectS, 1.0 / aspectV);
+    vec2 t = (rot == 1) ? vec2(q.y, -q.x) : vec2(-q.y, q.x);
+    t /= k;
+    return t / vec2(aspectV, 1.0) + 0.5;
+}
+
 vec3 sampleVideo(vec2 p) {
-    return texture(videoTex, clamp(p, 0.0, 1.0)).rgb;
+    return texture(videoTex, clamp(rotateVideoUV(p, ubo.video1Rotation, vec2(textureSize(videoTex, 0))), 0.0, 1.0)).rgb;
 }
 
 vec3 sampleVideo2(vec2 p) {
-    return texture(video2Tex, clamp(p, 0.0, 1.0)).rgb;
+    return texture(video2Tex, clamp(rotateVideoUV(p, ubo.video2Rotation, vec2(textureSize(video2Tex, 0))), 0.0, 1.0)).rgb;
 }
 
 vec3 sampleVideo3(vec2 p) {
-    return texture(video3Tex, clamp(p, 0.0, 1.0)).rgb;
+    return texture(video3Tex, clamp(rotateVideoUV(p, ubo.video3Rotation, vec2(textureSize(video3Tex, 0))), 0.0, 1.0)).rgb;
 }
 
 vec3 sampleBilinear(vec2 p) {
@@ -401,7 +421,7 @@ void main() {
     // Real crossfade transition: mix between frozen previous frame (old video)
     // and current frame (new video) during a video swap
     if (ubo.transitionProgress < 1.0 && ubo.videoAvailable > 0.0) {
-        vec3 oldColor = texture(videoTexPrev, clamp(uv, 0.0, 1.0)).rgb;
+        vec3 oldColor = texture(videoTexPrev, clamp(rotateVideoUV(uv, ubo.video1Rotation, vec2(textureSize(videoTexPrev, 0))), 0.0, 1.0)).rgb;
         videoColor = mix(oldColor, videoColor, ubo.transitionProgress);
     }
 

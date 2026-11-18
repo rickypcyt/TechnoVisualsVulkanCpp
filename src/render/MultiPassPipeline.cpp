@@ -782,7 +782,8 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
                                 VkRenderPass swapchainRenderPass, const std::vector<VkFramebuffer>& swapchainFramebuffers,
                                 uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
                                 VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler,
-                                int previewOverlay) {
+                                int previewOverlay, const VkRect2D* previewRect,
+                                const std::function<void(VkCommandBuffer)>* postDraw) {
     auto ensureLayout = [&](VkImage image, VkImageLayout& currentLayout, VkImageLayout newLayout) {
         if (image == VK_NULL_HANDLE || currentLayout == newLayout) {
             currentLayout = newLayout;
@@ -1107,23 +1108,39 @@ void MultiPassPipeline::execute(VkCommandBuffer cmd, uint32_t frameIndex, VkDesc
     // Push preview overlay flag
     vkCmdPushConstants(cmd, swapchainPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &previewOverlay);
 
-    // Set viewport and scissor
+    // Set viewport and scissor (the video may be confined to a sub-rectangle of the window)
     VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapchainExtent.width);
-    viewport.height = static_cast<float>(swapchainExtent.height);
+    VkRect2D scissor{};
+    if (previewRect && previewRect->extent.width > 0 && previewRect->extent.height > 0) {
+        viewport.x = static_cast<float>(previewRect->offset.x);
+        viewport.y = static_cast<float>(previewRect->offset.y);
+        viewport.width = static_cast<float>(previewRect->extent.width);
+        viewport.height = static_cast<float>(previewRect->extent.height);
+        scissor = *previewRect;
+    } else {
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(swapchainExtent.width);
+        viewport.height = static_cast<float>(swapchainExtent.height);
+        scissor.offset = {0, 0};
+        scissor.extent = swapchainExtent;
+    }
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = swapchainExtent;
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
     // Draw fullscreen quad
     vkCmdDraw(cmd, 4, 1, 0, 0);
+
+    // Anything else that belongs to this window (the UI) is drawn over the whole swapchain image
+    if (postDraw && *postDraw) {
+        VkViewport full{0.0f, 0.0f, static_cast<float>(swapchainExtent.width), static_cast<float>(swapchainExtent.height), 0.0f, 1.0f};
+        VkRect2D fullScissor{{0, 0}, swapchainExtent};
+        vkCmdSetViewport(cmd, 0, 1, &full);
+        vkCmdSetScissor(cmd, 0, 1, &fullScissor);
+        (*postDraw)(cmd);
+    }
 
     vkCmdEndRenderPass(cmd);
 

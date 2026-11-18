@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -78,7 +79,9 @@ public:
                  VkRenderPass swapchainRenderPass, const std::vector<VkFramebuffer>& swapchainFramebuffers,
                  uint32_t swapchainImageIndex, VkPipeline swapchainPipeline, VkPipelineLayout swapchainPipelineLayout,
                  VkDescriptorSet swapchainDescriptorSet, VkExtent2D swapchainExtent, VkSampler swapchainSampler,
-                 int previewOverlay = 0);
+                 int previewOverlay = 0,
+                 const VkRect2D* previewRect = nullptr,
+                 const std::function<void(VkCommandBuffer)>* postDraw = nullptr);
 
     // Get final output framebuffer (for presentation)
     VkImageView getFinalOutput() const { return intermediate[1].imageView; }
