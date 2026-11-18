@@ -98,6 +98,12 @@ vec3 sampleBilinear(vec2 p) {
     return sampleVideo(p);
 }
 
+// Screen only lets 65% of the top layer through: the classic formula blows two bright layers out to white
+// (a = b = 0.7 -> 0.91); this keeps the "lighten" character but stays usable (-> 0.85) and never clips.
+vec3 softScreen(vec3 a, vec3 b) {
+    return 1.0 - (1.0 - a) * (1.0 - b * 0.65);
+}
+
 vec3 blendTwoVideos(vec3 a, vec3 b, int mode, float t) {
     t = clamp(t, 0.0, 1.0);
     if (mode == 0) {
@@ -111,7 +117,7 @@ vec3 blendTwoVideos(vec3 a, vec3 b, int mode, float t) {
         return mix(a, a * b, t);
     } else if (mode == 3) {
         // Screen
-        return mix(a, 1.0 - (1.0 - a) * (1.0 - b), t);
+        return mix(a, softScreen(a, b), t);
     } else if (mode == 4) {
         // Difference
         return mix(a, abs(a - b), t);
@@ -125,7 +131,7 @@ vec3 blendProceduralMode(vec3 base, vec3 layer, int mode) {
         return clamp(base + layer, 0.0, 1.5);
     } else if (mode == 1) {
         // Screen
-        return clamp(1.0 - (1.0 - base) * (1.0 - layer), 0.0, 1.0);
+        return clamp(softScreen(base, layer), 0.0, 1.0);
     } else if (mode == 2) {
         // Multiply
         return clamp(base * layer, 0.0, 1.0);

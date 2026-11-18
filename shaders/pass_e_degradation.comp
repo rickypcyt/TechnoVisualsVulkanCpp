@@ -43,18 +43,11 @@ void main() {
         return;
     }
 
-    float glitchWeight = clamp(
-        ubo.glitchAmount +
-        ubo.glitchDatamosh * 0.12 +
-        ubo.glitchJitter * 0.12 +
-        ubo.glitchRGBSplit * 0.10 +
-        ubo.glitchScanlineBreak * 0.08 +
-        ubo.glitchTearing * 0.10 +
-        ubo.glitchPixelSort * 0.10 +
-        ubo.glitchBufferCorruption * 0.08 +
-        ubo.grainStrength * 0.04,
-        0.0, 1.0
-    );
+    // The strongest glitch slider decides how much of the glitched image shows (it used to be a sum of
+    // ~0.1 weights, so even all sliders at 1.0 blended in only a few percent of the effect).
+    float strongest = max(max(max(ubo.glitchDatamosh, ubo.glitchJitter), max(ubo.glitchRGBSplit, ubo.glitchScanlineBreak)),
+                          max(max(ubo.glitchTearing, ubo.glitchPixelSort), ubo.glitchBufferCorruption));
+    float glitchWeight = smoothstep(0.0, 0.35, max(strongest, ubo.glitchAmount));
     
     if (ubo.enableAudioReactive == 1) {
         glitchWeight *= (1.0 + ubo.energy * ubo.audioGlitchResponse);
@@ -66,39 +59,46 @@ void main() {
         vec2 p = uv;
 
         if (ubo.glitchDatamosh > 0.0001) {
-            p.x += sin(c.y * 80.0 + t * 10.0) * ubo.glitchDatamosh * 0.003;
+            p.x += sin(c.y * 40.0 + t * 8.0) * ubo.glitchDatamosh * 0.05 * (0.5 + 0.5 * sin(t * 1.3));
         }
 
         if (ubo.glitchJitter > 0.0001) {
-            p += (hash21(uv * 400.0 + t) - 0.5) * ubo.glitchJitter * 0.003;
+            p += (hash21(uv * 400.0 + t) - 0.5) * ubo.glitchJitter * 0.03;
         }
 
         vec3 g = texture(inputTex, clamp(p, 0.0, 1.0)).rgb;
 
         if (ubo.glitchRGBSplit > 0.0001) {
             float osc = sin(t * 2.0) * 0.5 + 0.5;
-            vec2 off = (ubo.glitchRGBSplit * osc * 0.001) * c / max(ubo.resolution, vec2(1.0));
+            vec2 off = vec2(ubo.glitchRGBSplit * (0.4 + 0.6 * osc) * 0.025, 0.0);
             g.r = texture(inputTex, clamp(p + off, 0.0, 1.0)).r;
             g.b = texture(inputTex, clamp(p - off, 0.0, 1.0)).b;
         }
 
         if (ubo.glitchScanlineBreak > 0.0001) {
-            float line = step(0.98, fract(uv.y * 200.0 + t * 5.0));
-            g *= 1.0 - line * ubo.glitchScanlineBreak * 0.2;
+            float line = step(0.90, fract(uv.y * 90.0 + t * 5.0));
+            g *= 1.0 - line * ubo.glitchScanlineBreak * 0.85;
         }
 
         if (ubo.glitchTearing > 0.0001) {
-            float tear = step(0.85, hash21(vec2(uv.y * 10.0, t)));
-            g = mix(g, base, 1.0 - tear * ubo.glitchTearing * 0.25);
+            // horizontal bands that slide sideways
+            float band = floor(uv.y * 22.0);
+            float tear = step(0.84, hash21(vec2(band, floor(t * 6.0))));
+            float shift = (hash21(vec2(band + 3.0, floor(t * 6.0))) - 0.5) * 0.30 * ubo.glitchTearing;
+            g = mix(g, texture(inputTex, clamp(vec2(p.x + shift, p.y), 0.0, 1.0)).rgb, tear);
         }
 
         if (ubo.glitchPixelSort > 0.0001) {
-            g = mix(g, rgbSortApprox(g), ubo.glitchPixelSort * 0.08);
+            g = mix(g, rgbSortApprox(g), clamp(ubo.glitchPixelSort * 0.9, 0.0, 1.0));
         }
 
         if (ubo.glitchBufferCorruption > 0.0001) {
-            float rnd = hash21(uv * 600.0 + t * 20.0);
-            g = mix(g, vec3(rnd), ubo.glitchBufferCorruption * 0.05);
+            // random blocks get inverted / replaced by noise
+            vec2 cell = floor(uv * vec2(48.0, 27.0));
+            float bk = hash21(cell + floor(t * 8.0));
+            if (bk > 1.0 - ubo.glitchBufferCorruption * 0.22) {
+                g = (hash21(cell * 1.7 + t) > 0.5) ? (1.0 - g) : vec3(hash21(cell + 9.0 + t));
+            }
         }
 
         if (ubo.grainStrength > 0.0001) {

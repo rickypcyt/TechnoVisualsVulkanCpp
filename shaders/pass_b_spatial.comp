@@ -74,7 +74,7 @@ void main() {
     if (ubo.enableDistortion == 1) {
         float warpMask = clamp(ubo.uvWarpStrength, 0.0, 1.0);
         if (warpMask > 0.0001) {
-            vec2 w = sin((p.yx + t) * 8.0) * warpMask * 0.004;
+            vec2 w = sin((p.yx + t) * 6.0) * warpMask * 0.08;
             float audioMod = 1.0;
             if (ubo.enableAudioReactive == 1) {
                 audioMod = 1.0 + ubo.energy * ubo.audioWarpResponse * 0.5;
@@ -85,7 +85,7 @@ void main() {
         if (ubo.rippleStrength > 0.0001) {
             float r = length(centered);
             float wave = sin(r * max(ubo.rippleFrequency, 0.1) * 10.0 - t * 3.0);
-            p += normalize(centered + 0.0001) * wave * ubo.rippleStrength * 0.004;
+            p += normalize(centered + 0.0001) * wave * ubo.rippleStrength * 0.07;
         }
 
         if (abs(ubo.swirlStrength) > 0.0001) {
@@ -98,7 +98,7 @@ void main() {
 
         if (ubo.displacementAmount > 0.0001) {
             vec2 n = vec2(fbm(centered * 5.0 + t), fbm(centered * 7.0 - t));
-            p += (n - 0.5) * ubo.displacementAmount * 0.018;
+            p += (n - 0.5) * ubo.displacementAmount * 0.16;
         }
 
         if (ubo.tunnelDepth > 0.0001) {

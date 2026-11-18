@@ -2464,6 +2464,34 @@ void UISystem::drawMainLayout(
     const ImVec2 fbScale = io.DisplayFramebufferScale;
     previewRect.offset = {static_cast<int32_t>(vx * fbScale.x), static_cast<int32_t>(vy * fbScale.y)};
     previewRect.extent = {static_cast<uint32_t>(vw * fbScale.x), static_cast<uint32_t>(vh * fbScale.y)};
+
+    // ---- the free space around the video: grey with a faint diagonal hatch, so it never reads as "black video" ----
+    {
+        // use the exact (pixel-rounded) video rectangle so no black seam is left at its edges
+        const float rx0 = previewRect.offset.x / fbScale.x;
+        const float ry0 = previewRect.offset.y / fbScale.y;
+        const float rx1 = (previewRect.offset.x + static_cast<int32_t>(previewRect.extent.width))  / fbScale.x;
+        const float ry1 = (previewRect.offset.y + static_cast<int32_t>(previewRect.extent.height)) / fbScale.y;
+        const float areaX0 = leftW, areaX1 = disp.x, areaY0 = 0.0f, areaY1 = disp.y - bottomH;
+
+        ImDrawList* bg = ImGui::GetBackgroundDrawList();
+        const ImU32 fill = IM_COL32(30, 31, 38, 255);
+        const ImU32 hatch = IM_COL32(46, 48, 58, 255);
+        const float step = 14.0f * dpiScale;
+        auto strip = [&](float x0, float y0, float x1, float y1) {
+            if (x1 - x0 < 0.5f || y1 - y0 < 0.5f) return;
+            bg->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), fill);
+            bg->PushClipRect(ImVec2(x0, y0), ImVec2(x1, y1), true);
+            const float h = y1 - y0;
+            for (float x = x0 - h; x < x1; x += step)
+                bg->AddLine(ImVec2(x, y1), ImVec2(x + h, y0), hatch, 1.0f);
+            bg->PopClipRect();
+        };
+        strip(areaX0, areaY0, areaX1, ry0);        // above the video
+        strip(areaX0, ry1,    areaX1, areaY1);     // below
+        strip(areaX0, ry0,    rx0,    ry1);        // left
+        strip(rx1,    ry0,    areaX1, ry1);        // right
+    }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

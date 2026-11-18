@@ -151,16 +151,10 @@ void main() {
     fragColor = vec4(sampleInput(uv), 1.0);
 
     if (pc.previewOverlay == 1) {
-        // Cyan border
-        float b = 0.012;
+        // The preview already sits in its own frame, so no label: just a hairline edge in the UI accent colour
+        float b = 0.0025;
         if (uv.x < b || uv.x > 1.0 - b || uv.y < b || uv.y > 1.0 - b) {
-            fragColor = mix(fragColor, vec4(0.0, 0.8, 1.0, 1.0), 0.5);
-        }
-
-        // "PREVIEW" label
-        float label = drawPreviewLabel(uv);
-        if (label > 0.5) {
-            fragColor = mix(fragColor, vec4(0.0, 0.9, 1.0, 1.0), 0.85);
+            fragColor = mix(fragColor, vec4(0.56, 0.40, 1.0, 1.0), 0.28);
         }
     }
 }

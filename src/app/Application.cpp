@@ -692,6 +692,8 @@ void Application::run() {
     const float s = window.getDpiScale();
     window.createMainWindow("[PREVIEW] Vulkan", (int)(1280 * s), (int)(720 * s));
     SDL_SetWindowPosition(window.getMainWindow(), (int)(50 * s), (int)(50 * s));
+    // The window hosts the whole UI now: below this size the panels stop being usable
+    SDL_SetWindowMinimumSize(window.getMainWindow(), (int)(1100 * s), (int)(660 * s));
     window.createOutputWindow("[OUTPUT] Final", (int)(1280 * s), (int)(720 * s));
     SDL_SetWindowPosition(window.getOutputWindow(), (int)(50 * s), (int)(820 * s));
     // The UI lives inside the preview window now (single-window layout), no separate controls window.
