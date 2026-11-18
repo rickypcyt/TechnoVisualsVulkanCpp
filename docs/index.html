@@ -29,6 +29,11 @@ h1 em{font-style:normal;color:var(--mut)}
 .btn+.btn{margin-left:10px}
 .meta{margin-top:18px;font-size:.8rem;color:var(--mut)}
 .shot{background:var(--panel);display:block;width:100%;height:auto;margin-top:70px;border:1px solid var(--line);border-radius:10px}
+.step{display:flex;gap:18px;align-items:flex-start;margin-top:56px;padding:22px 24px;background:var(--panel);border:1px solid var(--acc);border-radius:10px}
+.step .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:600}
+.step h3{font-size:1.05rem;font-weight:600;margin-bottom:4px}
+.step p{color:var(--mut);font-size:.94rem}
+.step p b{color:var(--fg);font-weight:500}
 section{padding:80px 0;border-top:1px solid var(--line)}
 .lab{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:18px}
 h2{font-size:clamp(1.6rem,3.6vw,2.3rem);line-height:1.15;letter-spacing:-.025em;font-weight:600;max-width:20ch;margin-bottom:24px}
@@ -48,6 +53,7 @@ td:first-child{color:var(--mut);width:34%;padding-right:20px}
 .dl{padding:100px 0}
 footer{padding:40px 0;color:var(--mut);font-size:.82rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
 @media(max-width:720px){
+.step{margin-top:40px;padding:18px;gap:14px}
 .w{padding:0 18px}
 nav{padding:20px 0}nav a.l{margin-left:16px}nav a.l.x{display:none}
 .hero{padding:56px 0 48px}.lead{font-size:1rem;margin:22px 0 30px}
@@ -77,6 +83,7 @@ footer{flex-direction:column}
 <p class="lead">Monophase is a live visual engine for dark rooms and long sets. Three video sources, a chain of GLSL effects and a compute pipeline running on the GPU, all driven by the music you play.</p>
 <a class="btn p" href="#download">Download for Windows</a><a class="btn" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp">View source</a>
 <p class="meta m">Free · Requires a Vulkan-capable GPU</p>
+<div class="step"><div class="num m">1</div><div><h3>First, select the root folder of your videos.</h3><p>Monophase has no footage of its own. On first launch, use the <b>Folder</b> control to point it at the folder where your video library lives. It scans the folder and its subfolders, and every source picks its clips from there. Until you do this, the sources stay black.</p></div></div>
 <img class="shot" src="image.png" width="1600" height="888" alt="Monophase interface: three video racks with mix and blend controls, post-effect slots and a live preview" fetchpriority="high">
 </header>
 
@@ -122,7 +129,7 @@ footer{flex-direction:column}
 <section id="download" class="dl">
 <div class="lab">Download</div>
 <h2>Free, and it will stay that way.</h2>
-<p class="t">Windows 10 or 11, 64-bit. Unzip and run <code>TechnoVisuals.exe</code>. If it does not open, update your GPU driver first.</p>
+<p class="t">Windows 10 or 11, 64-bit. Unzip and run <code>TechnoVisuals.exe</code> from inside its folder, then select the root folder of your videos before anything else. If it does not open, update your GPU driver first.</p>
 <p style="margin-top:28px"><a class="btn p" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp/releases/latest">Download latest release</a><a class="btn" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp">Build from source</a></p>
 </section>
 

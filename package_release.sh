@@ -31,10 +31,21 @@ resolve build/app.exe
 
 cat > "$OUT/LEEME.txt" <<TXT
 TechnoVisuals $VER
-Ejecuta TechnoVisuals.exe. Requiere GPU con soporte Vulkan y drivers actualizados.
+PRIMER PASO: al abrir, selecciona la carpeta raiz de tus videos (control Folder). Sin eso las fuentes quedan en negro.
+Ejecuta TechnoVisuals.exe desde su propia carpeta. Requiere GPU con soporte Vulkan y drivers actualizados.
 Si falta algo, instala el Visual C++ Redistributable o actualiza el driver de video.
 TXT
 
-( cd dist && powershell -NoProfile -Command "Compress-Archive -Force -Path 'TechnoVisuals-$VER-win64' -DestinationPath 'TechnoVisuals-$VER-win64.zip'" )
+python - "$OUT" <<'PY'
+import sys, os, zipfile
+out = sys.argv[1]
+z = zipfile.ZipFile(out + ".zip", "w", zipfile.ZIP_DEFLATED)
+base = os.path.dirname(out)
+for root, _, files in os.walk(out):
+    for f in files:
+        full = os.path.join(root, f)
+        z.write(full, os.path.relpath(full, base).replace(os.sep, "/"))
+z.close()
+PY
 echo "Listo: dist/TechnoVisuals-$VER-win64.zip"
 ls "$OUT" | grep -ci dll | xargs echo "DLLs incluidas:"
