@@ -2850,11 +2850,11 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
     ImGui::SameLine(); if (ImGui::Button("Reset"))        { reset();       changed = controlsDirty = true; }
 
     TOGGLED_SECTION("1. Color grading dinamico", c.color.enableColorGrading,
-        changed |= ImGui::SliderFloat("Brightness",        &c.color.gradeBrightness,  -0.5f, 0.5f,   "%.2f");
+        changed |= ImGui::SliderFloat("Brightness",        &c.color.gradeBrightness,  -0.3f, 0.3f,   "%.2f");
         changed |= ImGui::SliderFloat("Contrast",          &c.color.gradeContrast,     0.1f,2.5f,  "%.2f");
         changed |= ImGui::SliderFloat("Saturation",        &c.color.gradeSaturation,   0.f, 2.5f,  "%.2f");
         changed |= ImGui::SliderFloat("Hue shift",         &c.color.gradeHueShift,  -180.f,180.f,  "%.1f\xc2\xb0");
-        changed |= ImGui::SliderFloat("Gamma",             &c.color.gradeGamma,        0.4f,3.f,   "%.2f");
+        changed |= ImGui::SliderFloat("Gamma",             &c.color.gradeGamma,        0.6f,2.2f,  "%.2f");
         changed |= ImGui::Combo("LUT",                     &c.color.colorLUTIndex,     LUT_ITEMS);
         changed |= ImGui::SliderFloat("Split tone balance",&c.color.splitToneBalance,  0.f, 1.f,   "%.2f");
         changed |= ImGui::ColorEdit3("Split tone shadows",     glm::value_ptr(c.color.splitToneShadows));
@@ -2863,12 +2863,14 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
     TOGGLED_SECTION("1b. Audio RGB (bass→R, mid→G, high→B)", c.color.enableAudioColorRGB,
         changed |= ImGui::SliderFloat("RGB amount", &c.color.audioColorRGBAmount, 0.f, 2.f, "%.2f");
     )
-    TOGGLED_SECTION("2. Feedback temporal", c.temporal.enableFeedback,
+    TOGGLED_SECTION("2. Feedback & temporal", c.temporal.enableFeedback,
+        ImGui::TextDisabled("Trails, Melt and Decay shape the Feedback: raise Feedback first.");
         changed |= ImGui::SliderFloat("Feedback",              &c.temporal.feedbackAmount,      0,1,"%.2f");
         changed |= ImGui::SliderFloat("Trails",                &c.temporal.trailStrength,       0,1,"%.2f");
-        changed |= ImGui::SliderFloat("Temporal accumulation", &c.temporal.temporalAccumulation,0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Melt (accumulation)",   &c.temporal.temporalAccumulation,0,1,"%.2f");
         changed |= ImGui::SliderFloat("Decay",                 &c.temporal.feedbackDecay,       0,1,"%.2f");
         changed |= ImGui::SliderFloat("Recursive blend",       &c.temporal.recursiveBlend,      0,1,"%.2f");
+        changed |= ImGui::SliderFloat("Frame accumulation",    &c.playback.frameAccumulation,   0,1,"%.2f");
     )
     TOGGLED_SECTION("3. Distorsion espacial", c.fx.enableDistortion,
         changed |= ImGui::SliderFloat("UV warp",      &c.fx.uvWarpStrength,    0.f,  0.5f,"%.3f");
@@ -2876,7 +2878,6 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         changed |= ImGui::SliderFloat("Ripple freq",  &c.fx.rippleFrequency,   0.5f, 6.f, "%.1f");
         changed |= ImGui::SliderFloat("Swirl",        &c.fx.swirlStrength,    -0.5f, 0.5f,"%.3f");
         changed |= ImGui::SliderFloat("Displacement", &c.fx.displacementAmount,0.f,  0.5f,"%.3f");
-        changed |= ImGui::SliderFloat("Kaleido segs", &c.fx.kaleidoSegments,   3.f, 12.f, "%.0f");
         changed |= ImGui::SliderFloat("Tunnel depth", &c.fx.tunnelDepth,       0.f,  0.5f,"%.3f");
         changed |= ImGui::SliderFloat("Tunnel curv",  &c.fx.tunnelCurvature,  -0.5f, 0.5f,"%.3f");
     )
@@ -2901,20 +2902,6 @@ void UISystem::drawVJayBasicsContent(VisualControls& c, bool& controlsDirty, std
         changed |= ImGui::SliderFloat("Tearing",           &c.fx.glitchTearing,         0,1,"%.2f");
         changed |= ImGui::SliderFloat("Pixel sorting",     &c.fx.glitchPixelSort,       0,1,"%.2f");
         changed |= ImGui::SliderFloat("Buffer corruption", &c.fx.glitchBufferCorruption,0,1,"%.2f");
-    )
-    TOGGLED_SECTION("7. CRT / analog simulation", c.post.enableAnalog,
-        changed |= ImGui::SliderFloat("Scanline focus",&c.post.analogScanlineFocus,       0.f,1.f,   "%.2f");
-        changed |= ImGui::SliderFloat("Mask balance",  &c.post.analogMaskBalance,         0.f,1.f,   "%.2f");
-        changed |= ImGui::SliderFloat("Analog noise",  &c.post.analogNoise,               0.f,1.f,   "%.2f");
-        changed |= ImGui::SliderFloat("Analog bloom",  &c.post.analogBloom,               0.f,2.f,   "%.2f");
-        changed |= ImGui::SliderFloat("VHS distortion",&c.post.vhsDistortion,             0.f,1.f,   "%.2f");
-        changed |= ImGui::SliderFloat("Analog chroma", &c.post.analogChromaticAberration, 0.f,0.25f, "%.3f");
-    )
-    TOGGLED_SECTION("9. Temporal speed processing", c.temporal.enableTemporal,
-        changed |= ImGui::SliderFloat("Frame interpolation",&c.playback.temporalInterpolation,0,1, "%.2f");
-        changed |= ImGui::SliderFloat("Temporal blend",     &c.playback.temporalBlendStrength,0,1, "%.2f");
-        changed |= ImGui::SliderFloat("Slow-motion",        &c.playback.slowMotionFactor, 0.1f,4,  "%.2fx");
-        changed |= ImGui::SliderFloat("Frame accumulation", &c.playback.frameAccumulation,    0,1, "%.2f");
     )
 
     if (changed) controlsDirty = true;

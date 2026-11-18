@@ -75,8 +75,9 @@ void main() {
         }
 
         if (ubo.glitchScanlineBreak > 0.0001) {
-            float line = step(0.90, fract(uv.y * 90.0 + t * 5.0));
-            g *= 1.0 - line * ubo.glitchScanlineBreak * 0.85;
+            // wide bands (35% of the period): thin ones fall between pixel rows and never show
+            float line = step(0.65, fract(uv.y * 40.0 + t * 3.0));
+            g *= 1.0 - line * ubo.glitchScanlineBreak * 0.75;
         }
 
         if (ubo.glitchTearing > 0.0001) {

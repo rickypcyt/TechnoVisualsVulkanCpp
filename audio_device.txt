@@ -1,0 +1,2 @@
+Windows DirectSound
+Microphone (Realtek(R) Audio)

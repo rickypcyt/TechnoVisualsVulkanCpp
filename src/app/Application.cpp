@@ -3399,7 +3399,8 @@ void Application::updateUniformBuffer(uint32_t frameIndex, VisualControls& contr
     ubo.enableBlending = controls.blending.enableBlending ? 1 : 0;
     ubo.enableAnalog = controls.post.enableAnalog ? 1 : 0;
     ubo.enableAudioReactive = controls.system.enableAudioReactive ? 1 : 0;
-    ubo.enableTemporal = controls.temporal.enableTemporal ? 1 : 0;
+    // "Frame accumulation" is shown inside the Feedback section, so it must work with that toggle alone
+    ubo.enableTemporal = (controls.temporal.enableTemporal || controls.temporal.enableFeedback) ? 1 : 0;
 
     // Enable/Disable flags for VJAY EXTRA
     ubo.enablePixelate = controls.fx.enablePixelate ? 1 : 0;
