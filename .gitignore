@@ -6,3 +6,4 @@ build
 presets/GOD.json
 # Old OpenGL project kept for reference (own nested .git)
 VisualesViejosCpp/
+dist/

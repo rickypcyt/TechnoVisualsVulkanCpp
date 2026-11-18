@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monophase — one instrument for live visuals</title>
+<meta name="description" content="Monophase is a real-time visual engine written in C++20 and Vulkan. Three video sources, a compute-shader pipeline, 40+ GLSL effects, audio-reactive. Free for Windows.">
+<style>
+:root{--bg:#050608;--fg:#e9ebf0;--mut:#7b8190;--line:#1a1d26;--acc:#2f5bff;--acc2:#b06cff}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:16px/1.65 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+code,.m{font-family:ui-monospace,"JetBrains Mono","Cascadia Mono",Consolas,monospace}
+.w{max-width:960px;margin:0 auto;padding:0 24px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:28px 0;font-size:.9rem}
+nav .logo{font-weight:600;letter-spacing:.02em}
+nav a.l{color:var(--mut);margin-left:28px;transition:color .15s}
+nav a.l:hover{color:var(--fg)}
+.hero{padding:110px 0 90px}
+.eyebrow{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:28px}
+h1{font-size:clamp(2.4rem,6.4vw,4.4rem);line-height:1.04;letter-spacing:-.035em;font-weight:600;max-width:15ch}
+h1 em{font-style:normal;color:var(--mut)}
+.lead{color:var(--mut);max-width:560px;margin:28px 0 40px;font-size:1.08rem}
+.btn{display:inline-block;padding:13px 24px;font-size:.92rem;font-weight:500;border:1px solid var(--line);border-radius:6px;transition:.15s}
+.btn:hover{border-color:#3a3f50}
+.btn.p{background:var(--fg);color:#050608;border-color:var(--fg)}
+.btn.p:hover{background:#fff}
+.btn+.btn{margin-left:10px}
+.meta{margin-top:18px;font-size:.8rem;color:var(--mut)}
+.shot{display:block;width:100%;height:auto;margin-top:70px;border:1px solid var(--line);border-radius:10px}
+section{padding:80px 0;border-top:1px solid var(--line)}
+.lab{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:18px}
+h2{font-size:clamp(1.6rem,3.6vw,2.3rem);line-height:1.15;letter-spacing:-.025em;font-weight:600;max-width:20ch;margin-bottom:24px}
+p.t{color:var(--mut);max-width:640px;margin-bottom:16px}
+p.t b{color:var(--fg);font-weight:500}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:40px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.col{padding:28px;border-right:1px solid var(--line)}
+.col:last-child{border:0}
+.col .n{font-size:.78rem;color:var(--acc2);margin-bottom:14px}
+.col h3{font-size:1.05rem;font-weight:600;margin-bottom:8px}
+.col p{color:var(--mut);font-size:.92rem}
+.flow{margin-top:36px;padding:24px;border:1px solid var(--line);border-radius:10px;font-size:.82rem;color:var(--mut);overflow-x:auto;white-space:pre;line-height:1.9}
+.flow b{color:var(--fg);font-weight:500}
+table{width:100%;border-collapse:collapse;margin-top:36px;font-size:.92rem}
+td{padding:14px 0;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--mut);width:34%;padding-right:20px}
+.dl{padding:100px 0}
+footer{padding:40px 0;color:var(--mut);font-size:.82rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+@media(max-width:720px){
+.w{padding:0 18px}
+nav{padding:20px 0}nav a.l{margin-left:16px}nav a.l.x{display:none}
+.hero{padding:56px 0 48px}.lead{font-size:1rem;margin:22px 0 30px}
+.btn{display:block;text-align:center;width:100%}.btn+.btn{margin:10px 0 0}
+.shot{margin-top:44px}
+section{padding:56px 0}.dl{padding:64px 0}
+.cols{grid-template-columns:1fr}.col{border-right:0;border-bottom:1px solid var(--line);padding:22px}.col:last-child{border:0}
+.flow{display:none}
+table,tbody,tr,td{display:block;width:100%}
+td:first-child{width:100%;padding:14px 0 2px;border-top:1px solid var(--line);font-size:.78rem;text-transform:uppercase;letter-spacing:.1em}
+td{border:0}td:last-child{padding:0 0 14px}
+footer{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<nav>
+<a class="logo" href="#">Monophase</a>
+<div><a class="l x" href="#how">How it works</a><a class="l x" href="#tech">Technical</a><a class="l" href="#download">Download</a><a class="l x" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp">Source</a></div>
+</nav>
+
+<header class="hero">
+<div class="eyebrow">Real-time visuals · Vulkan · Windows</div>
+<h1>Every visual layer, <em>one instrument.</em></h1>
+<p class="lead">Monophase is a live visual engine for dark rooms and long sets. Three video sources, a chain of GLSL effects and a compute pipeline running on the GPU, all driven by the music you play.</p>
+<a class="btn p" href="#download">Download for Windows</a><a class="btn" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp">View source</a>
+<p class="meta m">Free · Requires a Vulkan-capable GPU</p>
+<img class="shot" src="image.png" width="1600" height="888" alt="Monophase interface: three video racks with mix and blend controls, post-effect slots and a live preview" fetchpriority="high">
+</header>
+
+<section id="about">
+<div class="lab">Why it exists</div>
+<h2>Built by someone who lives in techno and minimal.</h2>
+<p class="t">I made Monophase because I wanted visuals that behave like the music: repetitive, patient, slowly mutating, then suddenly hard. Most VJ tools ask you to trigger clips. This one asks you to <b>play</b> the image, the same way you would play a filter on a mixer.</p>
+<p class="t">It is one program instead of a stack of them. Sources, effects, audio analysis and output live in the same Vulkan frame, so nothing is bounced through a capture card or a second window.</p>
+</section>
+
+<section id="how">
+<div class="lab">How it works</div>
+<h2>Three sources in, one image out.</h2>
+<p class="t">Each of the three sources is independent: its own clip, speed, rotation and blend. Mix them, stack them, or let one carry the whole set.</p>
+<div class="cols">
+<div class="col"><div class="n m">01</div><h3>Source A / B / C</h3><p>Video files decoded with FFmpeg and uploaded through a staging ring, plus procedural GLSL generators that need no footage at all.</p></div>
+<div class="col"><div class="n m">02</div><h3>Effect chain</h3><p>More than 40 post effects written in GLSL: feedback, pixel sort, kaleidoscope, bloom, CRT, glitch, reaction-diffusion and more. Stack them in slots.</p></div>
+<div class="col"><div class="n m">03</div><h3>Audio and control</h3><p>FFT analysis of the live input drives parameters. MIDI and OSC let you play it from a controller or another machine.</p></div>
+</div>
+<div class="flow m"><b>video A</b> ─┐
+<b>video B</b> ─┼─▶ <b>compute passes A→G</b> ─▶ <b>effect slots (GLSL)</b> ─▶ <b>swapchain</b>
+<b>video C</b> ─┘        ▲                              ▲
+              <b>audio FFT · MIDI · OSC</b> ─────────┘</div>
+</section>
+
+<section id="tech">
+<div class="lab">Technical</div>
+<h2>Written close to the metal.</h2>
+<p class="t">The renderer is plain Vulkan, no engine on top. The frame is built by a <b>seven-stage compute pipeline</b> (base, spatial, detail, temporal, degradation, color, output), and the final result is presented through a fullscreen graphics pass. Compute work is dispatched in descriptor-driven passes over storage images, so adding a stage is adding a shader.</p>
+<p class="t">Effects are <b>GLSL compiled to SPIR-V</b> ahead of time and loaded as modules. A shared uniform block carries time, audio bands and every control value, which means an effect can read the whole state of the instrument without extra plumbing. The same applies to the procedural generators: they are single GLSL files that you can open, edit and recompile.</p>
+<p class="t">Decoding runs on its own thread. Frames go through a CPU frame pool and a staging ring into GPU textures, so playback of three streams does not stall the render loop. Stereo anaglyph output is a built-in mode for red/cyan glasses.</p>
+<table>
+<tr><td>Language</td><td>C++20</td></tr>
+<tr><td>Graphics API</td><td>Vulkan, compute + graphics, SPIR-V shaders</td></tr>
+<tr><td>Shaders</td><td>GLSL, 40+ post effects, dozens of procedural generators</td></tr>
+<tr><td>Video</td><td>FFmpeg (libavcodec, libavformat, libswscale)</td></tr>
+<tr><td>Audio</td><td>PortAudio input, FFTW real-time spectrum</td></tr>
+<tr><td>Control</td><td>MIDI (RtMidi), OSC (liblo), Dear ImGui interface</td></tr>
+<tr><td>Window and input</td><td>SDL2</td></tr>
+</table>
+</section>
+
+<section id="download" class="dl">
+<div class="lab">Download</div>
+<h2>Free, and it will stay that way.</h2>
+<p class="t">Windows 10 or 11, 64-bit. Unzip and run <code>TechnoVisuals.exe</code>. If it does not open, update your GPU driver first.</p>
+<p style="margin-top:28px"><a class="btn p" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp/releases/latest">Download latest release</a><a class="btn" href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp">Build from source</a></p>
+</section>
+
+<footer>
+<span>Monophase · made by Ricky</span>
+<span><a href="https://github.com/rickypcyt/TechnoVisualsVulkanCpp">GitHub</a></span>
+</footer>
+</div>
+</body>
+</html>
